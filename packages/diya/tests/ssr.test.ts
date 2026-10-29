@@ -22,3 +22,19 @@ it('imports and server-renders the public entries without browser globals', () =
   expect(html).toContain('disabled=""')
   expect(html).toContain('Revenue')
 })
+
+it('server-renders List marks, Side Navigation counts and a full-page Chatbot', () => {
+  const html = renderToString(createElement(core.DiyaProvider, null,
+    createElement(core.SideNavigation, { value: 'inbox', groups: [{ id: 'mail', items: [{ value: 'inbox', label: 'Inbox', href: '/inbox', count: 120 }, { value: 'sent', label: 'Sent' }] }] }),
+    createElement(core.SideNavigation, { value: 'inbox', collapsed: true, groups: [{ id: 'mail', items: [{ value: 'inbox', label: 'Inbox', count: 3 }] }] }),
+    createElement(core.List, { label: 'Inbox', items: [{ id: 'a', label: 'Quarterly plan', current: true }, { id: 'b', label: 'Design review', unread: true }] }),
+    createElement(core.Chatbot, { title: 'Assistant', layout: 'full-page', messages: [{ id: '1', role: 'assistant', text: 'Hello' }], value: '', onValueChange: () => {}, onSend: () => {} }),
+  ))
+  expect(html).toContain('aria-label="Inbox, 120"')
+  expect(html).toContain('>99+</span>')
+  expect(html).toContain('aria-label="Inbox, 3"')
+  expect(html).toContain('class="diya-side-navigation-dot"')
+  expect(html).toContain('<li aria-current="true">')
+  expect(html).toContain('Design review<span class="diya-sr-only">, <!-- -->unread</span>')
+  expect(html).toContain('data-presentation="full-page"')
+})

@@ -11,6 +11,7 @@ import { dialogMessages } from './dialog/messages.js'
 import { drawerMessages } from './workflow/drawer-messages.js'
 import { fileUploadMessages } from './workflow/file-upload-messages.js'
 import { formMessages } from './workflow/form-messages.js'
+import { listMessages } from './list/messages.js'
 import { metricMessages } from './metric/messages.js'
 import { paginationMessages } from './pagination/messages.js'
 import { progressMessages } from './progress/messages.js'
@@ -39,6 +40,7 @@ export const defaultMessages = {
   drawer: drawerMessages,
   fileUpload: fileUploadMessages,
   form: formMessages,
+  list: listMessages,
   metric: metricMessages,
   pagination: paginationMessages,
   progress: progressMessages,

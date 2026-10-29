@@ -90,6 +90,8 @@ dist/link/TextLink.d.ts
 dist/link/TextLink.js
 dist/list/List.d.ts
 dist/list/List.js
+dist/list/messages.d.ts
+dist/list/messages.js
 dist/menu/Menu.d.ts
 dist/menu/Menu.js
 dist/messages-defaults.d.ts

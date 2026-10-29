@@ -53,7 +53,7 @@ export type ChatbotProps = Omit<HTMLAttributes<HTMLElement>, 'title' | 'children
   suggestions?: readonly string[]
   /** Small text under the composer, such as a disclaimer or an error. */
   notice?: ReactNode
-  /** 'embedded' fills its container (default), 'floating' is a narrow raised panel, right-aligned, with a close button when `onOpenChange` is given, 'full-page' fills the page. */
+  /** 'embedded' fills its container's width (default), 'floating' is a narrow raised panel, right-aligned, with a close button when `onOpenChange` is given, 'full-page' fills its container's width and height. The header and composer stay put while the thread scrolls; a height you set on the Chatbot is filled the same way. */
   layout?: 'embedded' | 'floating' | 'full-page'
   /** Shows each message's `timestamp`; defaults to false. */
   showTimestamps?: boolean
@@ -90,6 +90,14 @@ export const Chatbot = forwardRef<HTMLElement, ChatbotProps>(function Chatbot({ 
     return () => { copyOperation.current += 1 }
   }, [open])
   useEffect(() => { if (follows.current && thread.current) thread.current.scrollTop = thread.current.scrollHeight }, [messages, loading, open])
+  // A thread that fills its container changes height with it; keep the latest message in view unless the reader scrolled up.
+  useEffect(() => {
+    const node = thread.current
+    if (!node || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => { if (follows.current) node.scrollTop = node.scrollHeight })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [open])
   useEffect(() => {
     if (previousOpen.current !== open) {
       if (open) composer.current?.focus()

@@ -20,7 +20,11 @@ indeterminate Progress when there is no `value`, Badge `max`, Tag `tone`, Card
 FileUpload. Field checks include Select `onValueChange` beside the native
 `onChange`, Switch `helperText`/`error`, the visible Slider label, Choice
 option descriptions, and `className`/`style` landing on the field wrapper.
-`messages.test.tsx` checks `DiyaProvider` `messages`: overridden strings
+`inbox-contracts.test.tsx` covers List `current` (`aria-current="true"`) and
+`unread` (named after the label, translatable), Side Navigation `count` (the
+99+ cap, the real count in the name, a dot when collapsed), and a Chatbot
+thread that fills the height it is given and follows the latest message when
+it is resized. `messages.test.tsx` checks `DiyaProvider` `messages`: overridden strings
 render, missing keys keep their English defaults, function values interpolate,
 and per-instance label props still win.
 
