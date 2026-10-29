@@ -1,5 +1,6 @@
 'use client'
 import { forwardRef, type HTMLAttributes, type MouseEvent, type ReactNode } from 'react'
+import { countLabel } from '../badge/badge-utils.js'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { useDiyaLinkComponent } from '../internal/link.js'
@@ -22,6 +23,8 @@ export type SideNavigationItem = {
   href?: string
   /** Shows the item but prevents choosing it. */
   disabled?: boolean
+  /** A quiet number after the label, such as unread messages: '99+' above 99, and a dot on the icon when collapsed. The accessible name keeps the real count ("Inbox, 120"). 0 shows nothing. */
+  count?: number
 }
 export type SideNavigationGroup = {
   /** Stable key for the group. */
@@ -59,8 +62,14 @@ export const SideNavigation = forwardRef<HTMLElement, SideNavigationProps>(funct
     {groups.map(group => <div key={group.id}>
       {showGroups && !collapsed && group.label && <small>{group.label}</small>}
       {group.items.map(item => {
-        const shared = { 'aria-current': value === item.value ? 'page' as const : undefined, 'aria-label': collapsed ? item.label : undefined }
-        const inner = <>{item.icon && <span aria-hidden="true">{item.icon}</span>}{collapsed ? !item.icon && <span aria-hidden="true">{Array.from(item.label)[0]}</span> : item.label}</>
+        // Badge's cap: the shown number stops at 99+, the accessible name keeps the real count.
+        const count = countLabel(item.count ?? 0, 99)
+        const counted = count.count > 0
+        const shared = { 'aria-current': value === item.value ? 'page' as const : undefined, 'aria-label': counted ? t.count(item.label, count.count) : collapsed ? item.label : undefined }
+        const glyph = item.icon || (collapsed ? Array.from(item.label)[0] : null)
+        const label = <span className="diya-side-navigation-label">{item.label}</span>
+        const text = collapsed ? null : counted ? <span className="diya-side-navigation-text">{label}<span className="diya-side-navigation-count" aria-hidden="true">{count.text}</span></span> : label
+        const inner = <>{glyph && <span className="diya-side-navigation-icon" aria-hidden="true">{glyph}{collapsed && counted && <span className="diya-side-navigation-dot" />}</span>}{text}</>
         return item.href && !item.disabled
           ? <Link key={item.value} href={item.href} {...shared} onClick={(event: MouseEvent<HTMLAnchorElement>) => {
             if (!onValueChange || event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return

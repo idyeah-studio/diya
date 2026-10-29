@@ -156,7 +156,7 @@ trigger focus; Tab leaves according to the trigger's document position.
 | Tag | `label`, children | `tone`: neutral/brand/success/warning/error/info; `leading="dot"`, `size`, optional `onRemove`. |
 | Metric | `value`, optional `label` | `unit`, `size`, `change` with direction/meaning/comparison; a positive or negative change shows as a tinted chip. Figures are tabular. Values are display strings. |
 | Avatar | `name` | `src`, `size`, `shape`, `status`; initials fallback if the image fails. |
-| List | `label`, `items` | `divided`, `size`; items can have description, leading/trailing content, `onSelect`, disabled. |
+| List | `label`, `items` | `divided`, `size`; items can have description, leading/trailing content, `onSelect`, disabled. For an inbox, `current` marks the open item (`aria-current="true"` and a selected background) and `unread` gives a heavier label, a dot at the row's end, and "unread" after the label for screen readers. |
 | Accordion | `items: {id,label,content}[]` | `multiple`, `divided`, `disabled`; expansion is managed internally. |
 | Badge | `label` | `variant`: indicator/count; `tone`, `size`, `count`, `max` (default 99, shows `99+`), `showZero`. |
 | Alert | `title`, children | `layout`: card/banner; `tone`: info/success/warning/error/brand; optional action and `onDismiss`; `urgent` for urgent announcements. |

@@ -11,6 +11,8 @@
 :where(html[data-catalog='true']) .catalog-review-list dd { margin:0; overflow-wrap:anywhere; }
 :where(html[data-catalog='true']) .catalog-navigation-demo { display:grid; grid-template-columns:auto minmax(0,1fr); width:100%; max-width:800px; border:1px solid var(--diya-color-line); border-radius:16px; overflow:hidden; background:var(--diya-color-raised); }
 :where(html[data-catalog='true']) .catalog-navigation-content { padding:28px; }
+/* A full-page Chatbot fills its container: here, a frame about the height of the screen. */
+:where(html[data-catalog='true']) .catalog-chat-page { height:min(760px, calc(100dvh - 96px)); min-height:440px; }
 :where(html[data-catalog='true']) .catalog-navigation-content h3 { margin:0 0 12px; }
 :where(html[data-catalog='true']) .catalog-navigation-content p { color:var(--diya-color-muted); font-size:14px; line-height:1.6; }
 @media(max-width:620px){

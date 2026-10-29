@@ -30,7 +30,7 @@ Also takes native \`<nav>\` attributes, a ref, \`className\` and \`style\`.
 ## Types
 \`\`\`ts
 type SideNavigationGroup = { id: string; label?: string; items: readonly SideNavigationItem[]; }
-type SideNavigationItem = { value: string; label: string; icon?: ReactNode; href?: string; disabled?: boolean; }
+type SideNavigationItem = { value: string; label: string; icon?: ReactNode; href?: string; disabled?: boolean; count?: number; }
 \`\`\`
 
 Catalog: https://diya13.ai/explore?pattern=side-navigation"

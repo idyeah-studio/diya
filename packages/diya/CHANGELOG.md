@@ -88,6 +88,17 @@ First public release, under the MIT License.
 - `DataViz`'s `formatValue` labels the value axis too, and grid lines run
   along the value axis only.
 - A `List` inside a `Card` or `Drawer` lines up with its title.
+- `List` items take `current`, for the open item (`aria-current="true"` and a
+  selected background), and `unread`: a heavier label, a dot at the row's end,
+  and "unread" after the label for screen readers (`messages.list.unread`).
+- Side Navigation items take `count`, a quiet number after the label. Above 99
+  it shows `99+`; collapsed, a dot on the icon stands in for it. The item's
+  accessible name keeps the real count, "Inbox, 12"
+  (`messages.sideNavigation.count`).
+- A `layout="full-page"` Chatbot fills its container's height: the header and
+  composer stay put and the thread scrolls between them, following the latest
+  message. A height set on any Chatbot is filled the same way; without one,
+  the thread keeps its 280px (380px full-page).
 - `npm create diya@latest` (the `create-diya` package, released with this one
   on the same version) starts a Next.js or Vite app with the provider, styles
   and agent notes in place, from Minimal or from Oriel, a four-screen
