@@ -1428,6 +1428,26 @@
 .diya-root .diya-avatar-status { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--diya-color-surface); background: var(--diya-color-success-fill); }
 .diya-root .diya-avatar-status[data-status='away'] { background: var(--diya-internal-warning-mark); }
 .diya-root .diya-avatar-status[data-status='busy'] { background: var(--diya-color-error-fill); }
+
+/* Rating: neutral stars in the text color on a faint track of the same ink, so they
+   read the same in Light, Dark and Glass. The row is inline text, so it shares a
+   baseline with whatever sits beside it. */
+.diya-root .diya-rating { --diya-internal-rating-star: 16px; --diya-internal-rating-gap: 2px; display: inline-block; color: var(--diya-color-text); font-size: var(--diya-text-body); line-height: var(--diya-leading-tight); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.diya-root .diya-rating[data-size='small'] { --diya-internal-rating-star: 14px; font-size: var(--diya-text-caption); }
+.diya-root .diya-rating[data-size='large'] { --diya-internal-rating-star: 20px; --diya-internal-rating-gap: 3px; font-size: var(--diya-text-large); }
+/* The stars centre on the middle of the capitals and figures beside them (DIYA Sans: .729em). */
+.diya-root .diya-rating-stars { display: inline-flex; gap: var(--diya-internal-rating-gap); vertical-align: calc(.365em - var(--diya-internal-rating-star) / 2); vertical-align: calc(.5cap - var(--diya-internal-rating-star) / 2); }
+.diya-root .diya-rating-stars svg { display: block; flex: none; width: var(--diya-internal-rating-star); height: var(--diya-internal-rating-star); fill: currentColor; }
+.diya-root .diya-rating-empty { fill: color-mix(in srgb, var(--diya-color-text) 22%, transparent); }
+.diya-root[data-theme='light'] .diya-rating-empty { fill: color-mix(in srgb, var(--diya-color-text) 16%, transparent); }
+/* A half star fills from the start of the line, so from the right in right-to-left text. */
+.diya-root .diya-rating-stars svg[data-fill='half']:dir(rtl) { transform: scaleX(-1); }
+.diya-root .diya-rating-value { margin-inline-end: .4em; font-weight: 500; }
+.diya-root .diya-rating-count { margin-inline-start: .4em; color: var(--diya-color-muted); }
+@media (forced-colors: active) {
+  .diya-root .diya-rating-stars { color: CanvasText; }
+  .diya-root .diya-rating .diya-rating-empty { fill: Canvas; stroke: CanvasText; stroke-width: 1.5; }
+}
 .diya-root .diya-tooltip-anchor { display: inline-flex; min-width:0; max-width:100%; }
 .diya-root .diya-tooltip-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; min-width:0; max-width:100%; overflow-wrap:anywhere; padding: 0 18px; border-radius: 999px; border: 1px solid var(--diya-color-line); background: var(--diya-color-hover); color: var(--diya-color-text); font: inherit; font-size: var(--diya-text-body); cursor: help; }
 .diya-root .diya-tooltip-bubble { position: fixed; z-index: 1000; max-width: min(240px, calc(100vw - 16px)); overflow-wrap:anywhere; padding: 10px 14px; border-radius: calc(10px * var(--diya-corner-scale, 1)); background: var(--diya-color-accent, #e5e9e6); color: var(--diya-color-accent-text, #212726); font-size: var(--diya-text-caption); line-height: 1.5; box-shadow: 0 calc(8px * var(--diya-elevation, 1)) calc(24px * var(--diya-elevation, 1)) #0003; }

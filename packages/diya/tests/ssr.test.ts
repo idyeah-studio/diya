@@ -14,6 +14,7 @@ it('imports and server-renders the public entries without browser globals', () =
     createElement(core.Combobox, { label: 'Team', value: '', options: [{ value: 'design', label: 'Design' }], onValueChange: () => {} }),
     createElement(core.DatePicker, { label: 'Due date', value: '', onValueChange: () => {} }),
     createElement(core.Progress, { label: 'Upload', value: 40 }),
+    createElement(core.Rating, { value: 4.3, count: 128, showValue: true }),
     createElement(Chart, { type: 'line', label: 'Revenue', categories: ['Jan'], series: [{ name: 'Revenue', values: [10] }] }),
     createElement(DataViz, { title: 'Regional mix', type: 'donut', data: [{ name: 'East', value: 12 }] }),
   ))
@@ -21,4 +22,5 @@ it('imports and server-renders the public entries without browser globals', () =
   expect(html).toContain('Project name')
   expect(html).toContain('disabled=""')
   expect(html).toContain('Revenue')
+  expect(html).toContain('aria-label="Rated 4.3 out of 5, 128 reviews"')
 })

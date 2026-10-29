@@ -114,6 +114,10 @@ dist/progress/Progress.d.ts
 dist/progress/Progress.js
 dist/progress/messages.d.ts
 dist/progress/messages.js
+dist/rating/Rating.d.ts
+dist/rating/Rating.js
+dist/rating/messages.d.ts
+dist/rating/messages.js
 dist/search/Search.d.ts
 dist/search/Search.js
 dist/select/Select.d.ts

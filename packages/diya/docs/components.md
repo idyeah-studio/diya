@@ -155,6 +155,7 @@ trigger focus; Tab leaves according to the trigger's document position.
 | --- | --- | --- |
 | Tag | `label`, children | `tone`: neutral/brand/success/warning/error/info; `leading="dot"`, `size`, optional `onRemove`. |
 | Metric | `value`, optional `label` | `unit`, `size`, `change` with direction/meaning/comparison; a positive or negative change shows as a tinted chip. Figures are tabular. Values are display strings. |
+| Rating | `value` | Read-only stars from 0 to `max` (default 5). `count` shows the number of reviews after the stars, as `(128)`; `showValue` shows the rating as a number before them, as `4.3`; `size`. |
 | Avatar | `name` | `src`, `size`, `shape`, `status`; initials fallback if the image fails. |
 | List | `label`, `items` | `divided`, `size`; items can have description, leading/trailing content, `onSelect`, disabled. |
 | Accordion | `items: {id,label,content}[]` | `multiple`, `divided`, `disabled`; expansion is managed internally. |
@@ -163,6 +164,19 @@ trigger focus; Tab leaves according to the trigger's document position.
 | Progress | `label`, optional `value` | `variant`: linear/circular; `showValue` (default on). Value is 0–100. Without a `value` it is indeterminate: working, amount unknown. `indeterminate` forces that state. |
 | Tooltip | `content`, your trigger as the child | Wraps one element, such as `<Button iconOnly aria-label="Delete">`, and wires hover, focus and its description. Or give `label` and noninteractive children for a built-in trigger. `placement`; closes with Escape. |
 | Popover | `label`, children | Plain content, or `close => content` to close it from your own controls. `trigger` takes your own element; `open` with `onOpenChange` controls it. `placement`, `disabled`. |
+
+Rating shows a rating; it doesn't collect one. Its stars fill to the nearest
+half, so 4.3 shows four and a half stars, while the number (`showValue`) and
+the accessible name keep one decimal. Values outside 0 to `max` are clamped,
+and one that isn't a number shows as 0. Screen readers hear one phrase, such
+as "Rated 4.3 out of 5, 128 reviews"; the `rating` messages change its words,
+and the provider's `locale` formats its numbers. The stars are neutral, in the
+text color. To ask people for a rating, as in a survey, use Choice with 1 to 5
+as its options.
+
+```tsx
+<Rating value={4.3} count={128} showValue />
+```
 
 Tag, Badge, Alert and Toast share one `Tone` type:
 `'neutral' | 'brand' | 'success' | 'warning' | 'error' | 'info'`. Alert and

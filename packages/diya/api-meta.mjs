@@ -278,13 +278,23 @@ export const items = {
       '--diya-text-caption', '--diya-text-large', '--diya-text-title'],
     messages: 'avatar',
   },
+  rating: {
+    kind: 'component', title: 'Rating', ...v1,
+    exports: ['Rating'],
+    slots: {},
+    children: none,
+    state: [],
+    tokens: ['--diya-color-muted', '--diya-color-text', '--diya-leading-tight', '--diya-text-body',
+      '--diya-text-caption', '--diya-text-large'],
+    messages: 'rating',
+  },
   list: {
     kind: 'component', title: 'List', ...v1,
     exports: ['List'],
     // Selectable rows are buttons, so these stay noninteractive.
     slots: {
       'items[].leading': { accepts: ['avatar'], content: ['icon', 'image'] },
-      'items[].trailing': { accepts: ['badge', 'tag'], content: ['text', 'icon'] },
+      'items[].trailing': { accepts: ['badge', 'tag', 'rating'], content: ['text', 'icon'] },
     },
     children: none,
     state: [],
@@ -438,7 +448,7 @@ export const items = {
       tags: { accepts: ['tag', 'badge'], multiple: true },
       actions: { accepts: ['menu', 'button'] },
       media: { accepts: [], content: ['image'] },
-      footer: { accepts: ['button', 'text-link', 'tag', 'badge', 'avatar'], content: ['text'], multiple: true },
+      footer: { accepts: ['button', 'text-link', 'tag', 'badge', 'avatar', 'rating'], content: ['text'], multiple: true },
     },
     children: { allowed: true, accepts: 'any', content: ['text'], multiple: true },
     state: [],
@@ -451,7 +461,7 @@ export const items = {
     kind: 'pattern', title: 'Table', ...v1,
     exports: ['Table'],
     slots: {
-      'columns[].render': { accepts: ['avatar', 'badge', 'tag', 'text-link', 'progress'], content: ['text', 'icon'], multiple: true, as: 'render' },
+      'columns[].render': { accepts: ['avatar', 'badge', 'tag', 'text-link', 'progress', 'rating'], content: ['text', 'icon'], multiple: true, as: 'render' },
     },
     children: none,
     state: [{ value: 'selectedIds', onChange: 'onSelectionChange' }],

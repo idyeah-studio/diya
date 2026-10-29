@@ -14,6 +14,7 @@ import { formMessages } from './workflow/form-messages.js'
 import { metricMessages } from './metric/messages.js'
 import { paginationMessages } from './pagination/messages.js'
 import { progressMessages } from './progress/messages.js'
+import { ratingMessages } from './rating/messages.js'
 import { selectMessages } from './select/messages.js'
 import { sideNavigationMessages } from './application-patterns/side-navigation-messages.js'
 import { siteHeaderMessages } from './site-header/messages.js'
@@ -42,6 +43,7 @@ export const defaultMessages = {
   metric: metricMessages,
   pagination: paginationMessages,
   progress: progressMessages,
+  rating: ratingMessages,
   select: selectMessages,
   sideNavigation: sideNavigationMessages,
   siteHeader: siteHeaderMessages,
