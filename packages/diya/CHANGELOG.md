@@ -90,6 +90,9 @@ First public release, under the MIT License.
   sit over a dimming layer. `prefers-reduced-transparency` and
   `prefers-contrast: more` get solid surfaces. A pill Tabs track is a capsule
   like its thumb.
+- `--diya-color-scrim` is set in Light and Dark (`#00000088`), not only under
+  Glass, so an overlay or shadow built on it works everywhere. Dialog and
+  Drawer share it, so a Drawer dims the page as much as a Dialog.
 - Button is a pill by default; `shape="rounded"` keeps the control corner.
   Pattern actions, Menu and Popover triggers and Table filters follow.
 - `--diya-radius-surface`, the one corner Card, chart cards, Page Header, Form

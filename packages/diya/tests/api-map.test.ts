@@ -297,7 +297,7 @@ describe('API map', () => {
     expect(api.tokens['--diya-space-4'].defaults).toEqual({ light: '16px', dark: '16px' })
     expect(api.tokens['--diya-font'].setBy).toBe('DiyaProvider.fontFamily')
     expect(api.tokens['--diya-corner-scale'].defaults).toEqual({ light: '1', dark: '1' })
-    expect(api.tokens['--diya-color-scrim'].defaults).toEqual({ light: null, dark: null })
+    expect(api.tokens['--diya-color-scrim'].defaults).toEqual({ light: '#00000088', dark: '#00000088' })
   })
 
   it('describes every messages namespace and key', async () => {
