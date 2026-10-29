@@ -1,6 +1,7 @@
 import { componentIds, patternIds } from '../../lib/catalog-route'
 import type { ItemId } from '../../lib/customize/registry'
 import { snippetFor } from '../code/snippets'
+import { nextPath, screens as allScreens, vitePath, type ScreenEntry } from '../screens/screens-data'
 import { API, defaultText, itemReference, itemUrl, MCP_INSTALL, MCP_URL, publicTokens, SITE, type ItemReference } from './api'
 import { guidance } from './guidance'
 
@@ -88,6 +89,29 @@ More: ${SITE}/llms-full.txt (every component and pattern) · ${SITE}/api.json (m
 `
 }
 
+/** One line per ready screen, with its catalog page. Screens still being built and posters stay out. */
+export function screenLines(list: readonly ScreenEntry[] = allScreens) {
+  return list
+    .filter((screen) => screen.status === 'ready')
+    .map(
+      (screen) =>
+        `- [${screen.name}](${SITE}/explore?area=screens&screen=${screen.id}): ${screen.description} One file: \`${nextPath(screen)}\` in Next.js or \`${vitePath(screen)}\` in Vite; needs \`@idyeah/diya lucide-react${screen.charts ? ' echarts@6' : ''}\`.`
+    )
+}
+
+/** The Screens section of both AI files, or nothing until a screen is ready. */
+function screensSection(list: readonly ScreenEntry[] = allScreens) {
+  const lines = screenLines(list)
+  if (!lines.length) return ''
+  return `## Screens
+
+Whole pages built only from DIYA, each one self-contained file with sample data and working states. Get code on each page gives the file. Icons come from lucide-react.
+
+${lines.join('\n')}
+
+`
+}
+
 /** /llms.txt: the index, per llmstxt.org. */
 export function llmsIndex() {
   const line = (id: ItemId) => {
@@ -118,7 +142,7 @@ ${componentIds.map(line).filter(Boolean).join('\n')}
 ## Patterns
 
 ${patternIds.map(line).filter(Boolean).join('\n')}
-`
+${screensSection() ? `\n${screensSection().trimEnd()}\n` : ''}`
 }
 
 /** /llms-full.txt: the whole library in one Markdown file. */
@@ -155,7 +179,7 @@ ${ids.map((id) => itemSection(id, 2, false)).filter(Boolean).join('\n\n---\n\n')
 
 ---
 
-## Other exports
+${screensSection()}## Other exports
 
 ${otherExports()}
 `

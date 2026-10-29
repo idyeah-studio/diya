@@ -112,6 +112,13 @@ describe('trust block', () => {
     const footer = screen.getByRole('contentinfo')
     expect(within(footer).getByRole('link', { name: 'Changelog' }).getAttribute('href')).toBe('/changelog')
     expect(within(footer).getByRole('link', { name: 'Ask for a component' }).getAttribute('href')).toBe('/ask')
+    const library = within(footer).getByRole('group', { name: 'Library' })
+    expect(within(library).getAllByRole('link').map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
+      ['Components', '/explore?area=components'],
+      ['Patterns', '/explore?area=patterns'],
+      ['Screens', '/explore?area=screens'],
+      ['Ask for a component', '/ask'],
+    ])
     expect(footer.textContent).not.toMatch(/Skills|Coming|colour|licence/)
     expect(footer.textContent).not.toMatch(/vishal@/i)
   })

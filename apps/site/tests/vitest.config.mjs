@@ -21,7 +21,7 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
-    include: ['tests/**/*.test.tsx'],
+    include: ['tests/**/*.test.tsx', 'tests/**/*.test.ts'],
     setupFiles: ['tests/setup.ts'],
     maxWorkers: 1,
     server: { deps: { inline: [/@diya\/ui/, /@testing-library\/react/] } },

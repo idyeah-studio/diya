@@ -228,10 +228,24 @@ html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2p
     box-shadow: var(--site-plate-shadow);
   }
 }
-@media (max-width: 360px) {
+/* Three library links don't fit beside the whole wordmark on a phone, so
+   below 400px the mark shows its D (with the vermilion dot, as the favicon
+   does) and the links tighten. The link keeps a 40px target. */
+@media (max-width: 400px) {
   .site-top-bar { gap: 6px; }
-  .site-top-home { width: 56px; }
-  .site-top-nav a { padding: 7px 9px; }
+  .site-top-home { display: flex; align-items: center; width: 36px; height: 40px; overflow: hidden; }
+  .site-top-home .site-mark { flex: none; width: 72px; clip-path: inset(-20% 72% -20% -20%); }
+  .site-top-nav a { padding: 7px 10px; }
+}
+@media (max-width: 360px) {
+  .site-top-bar { padding: 0 12px; }
+  .site-top-nav a { padding: 7px 8px; }
+}
+@media (max-width: 340px) {
+  .site-top-bar { gap: 4px; padding: 0 10px; }
+  .site-top-home { width: 30px; }
+  .site-top-nav { padding: 2px; gap: 0; }
+  .site-top-nav a { padding: 7px 6px; }
 }
 .site-menu-row {
   display: flex;

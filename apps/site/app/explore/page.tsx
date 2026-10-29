@@ -30,6 +30,9 @@ import { catalogIsOpen, resolveCatalogRoute, type CatalogRoute } from '../../lib
 import { catalogPath, catalogTitle } from '../../lib/catalog-route-meta'
 import { CatalogFrame } from '../../components/catalog/CatalogFrame'
 import { ProPage } from '../../components/catalog/ProPage'
+import { ScreensLibrary } from '../../components/screens/ScreensLibrary'
+import { builtWith, readScreenSource } from '../../components/screens/screen-source'
+import { screenById } from '../../components/screens/screens-data'
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
@@ -54,6 +57,7 @@ export default async function Explore({ searchParams }: Props) {
 
 function CatalogPage({ route }: { route: Exclude<CatalogRoute, { area: 'skills' }> }) {
   if (route.area === 'pro') return <ProPage />
+  if (route.area === 'screens') return <ScreensPage id={route.id} />
   const initial = {
     area: route.area,
     component: route.area === 'components' ? route.id : '',
@@ -106,4 +110,11 @@ function CatalogPage({ route }: { route: Exclude<CatalogRoute, { area: 'skills' 
     return initial.component === 'text-input' ? <TextInputLibrary /> : <ButtonLibrary />
   if (initial.pattern === 'card') return <CardLibrary />
   return initial.pattern === 'site-header' ? <SiteHeaderLibrary /> : <PageHeaderLibrary />
+}
+
+/** The Screens gallery, or one screen with its own file (read here, on the server) for Get code. */
+function ScreensPage({ id }: { id: string | null }) {
+  const screen = screenById(id) ?? null
+  const source = screen && screen.status !== 'poster' ? readScreenSource(screen.id) : null
+  return <ScreensLibrary key={id ?? ''} screen={screen} source={source} builtWith={source ? builtWith(source) : []} />
 }

@@ -60,6 +60,9 @@ export function SiteFooter() {
                 <Link href="/explore?area=patterns">Patterns</Link>
               </li>
               <li>
+                <Link href="/explore?area=screens">Screens</Link>
+              </li>
+              <li>
                 <Link href={ASK_PATH}>Ask for a component</Link>
               </li>
             </ul>

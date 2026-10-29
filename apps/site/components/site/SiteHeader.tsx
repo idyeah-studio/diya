@@ -10,7 +10,7 @@ import { SYSTEM_THEME_SCRIPT } from './system-theme'
 
 export type SiteHeaderProps = {
   /** The library area this page belongs to; that link gets `aria-current="page"`. */
-  current?: 'components' | 'patterns'
+  current?: 'components' | 'patterns' | 'screens'
   /**
    * Id of the element the header floats over (the landing hero): the install
    * chip appears once it scrolls away. Omit it elsewhere: no chip. On every
@@ -21,7 +21,7 @@ export type SiteHeaderProps = {
 }
 
 /**
- * The site header, option C: wordmark | Components · Patterns | GitHub · Appearance.
+ * The site header, option C: wordmark | Components · Patterns · Screens | GitHub · Appearance.
  * Relight (the DIYA Pro waitlist) never appears here. On phones, GitHub, npm, Copy install and
  * Appearance move into a menu sheet. Needs an AppearanceProvider above it and
  * a DIYA provider (`.diya-root`) for its colors.
@@ -134,6 +134,9 @@ export function SiteHeader({ current, heroId }: SiteHeaderProps) {
           </Link>
           <Link href="/explore?area=patterns" aria-current={current === 'patterns' ? 'page' : undefined}>
             Patterns
+          </Link>
+          <Link href="/explore?area=screens" aria-current={current === 'screens' ? 'page' : undefined}>
+            Screens
           </Link>
         </nav>
         <div className="site-top-end">

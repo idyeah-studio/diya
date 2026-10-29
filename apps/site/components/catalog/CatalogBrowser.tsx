@@ -2,27 +2,30 @@
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Search } from '@idyeah/diya'
-import { useCatalogSearch } from '../CatalogSearchProvider'
+import { useCatalogSearch, useListedScreens } from '../CatalogSearchProvider'
 import { useActiveCatalogItem } from '../useActiveCatalogItem'
 import { SidebarFoot } from './SidebarFoot'
-import { catalogGroups, catalogHref, filterGroups, type CatalogListArea } from './catalog-index'
+import { catalogGroups, catalogHref, filterGroups, onlyItems, type CatalogListArea } from './catalog-index'
 import '../AtomicSidebar.css'
 
 const words = {
   components: { title: 'Components', one: 'component', many: 'components', label: 'Component library', nav: 'Choose a component', search: 'Component search' },
   patterns: { title: 'Patterns', one: 'pattern', many: 'patterns', label: 'Patterns', nav: 'Pattern list', search: 'Pattern search' },
+  screens: { title: 'Screens', one: 'screen', many: 'screens', label: 'Screens', nav: 'Screen list', search: 'Screen search' },
 } as const
+const AREAS: readonly CatalogListArea[] = ['components', 'patterns', 'screens']
 
 const count = (n: number, area: CatalogListArea) => `${n} ${n === 1 ? words[area].one : words[area].many}`
+const list = (parts: string[]) => (parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}` : parts[0])
 
 /**
- * The catalog's list of components or patterns, with one search across both:
- * matches from the other area follow under "In Patterns" (or "In Components").
- * From 901px it's the sidebar. Below that, a "Browse" button opens it as a
- * full-height sheet, so the page's specimen comes first.
+ * The catalog's list of components, patterns or screens, with one search
+ * across all three: matches from the other areas follow under "In Patterns",
+ * "In Screens" (or "In Components"). From 901px it's the sidebar. Below
+ * that, a "Browse" button opens it as a full-height sheet, so the page's
+ * specimen comes first.
  */
 export function CatalogBrowser({ area, current, pro = false }: { area: CatalogListArea; current?: string; pro?: boolean }) {
-  const other: CatalogListArea = area === 'components' ? 'patterns' : 'components'
   const [query, setQuery] = useCatalogSearch(area)
   const [open, setOpen] = useState(false)
   const nav = useRef<HTMLElement>(null)
@@ -30,14 +33,17 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
   const opener = useRef<HTMLButtonElement>(null)
   const resultsId = useId()
   const sheetTitle = useId()
-  const own = filterGroups(catalogGroups[area], query)
-  const elsewhere = query.trim() ? filterGroups(catalogGroups[other], query, false).flatMap((group) => group.items) : []
+  const screens = useListedScreens()
+  const groups = (target: CatalogListArea) => (target === 'screens' ? onlyItems(catalogGroups.screens, screens) : catalogGroups[target])
+  const own = filterGroups(groups(area), query)
+  const elsewhere = query.trim()
+    ? AREAS.filter((target) => target !== area)
+        .map((target) => ({ area: target, items: filterGroups(groups(target), query, false).flatMap((group) => group.items) }))
+        .filter((found) => found.items.length > 0)
+    : []
   const ownCount = own.reduce((total, group) => total + group.items.length, 0)
-  const status = !query
-    ? ''
-    : elsewhere.length
-      ? `${ownCount ? `${count(ownCount, area)} and ` : ''}${count(elsewhere.length, other)} found`
-      : `${count(ownCount, area)} found`
+  const found = [...(ownCount ? [count(ownCount, area)] : []), ...elsewhere.map((other) => count(other.items.length, other.area))]
+  const status = !query ? '' : `${found.length ? list(found) : count(0, area)} found`
   useActiveCatalogItem(nav, current ?? '', query)
 
   useEffect(() => {
@@ -85,7 +91,7 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
     <Link
       key={`${target}-${item.id}`}
       href={catalogHref(target, item.id)}
-      className={`atomic-navigation-item${target === 'patterns' ? ' pattern-current' : ''}`}
+      className={`atomic-navigation-item${target !== 'components' ? ' pattern-current' : ''}`}
       aria-current={target === area && current === item.id ? 'page' : undefined}
       onClick={() => setOpen(false)}
     >
@@ -112,7 +118,7 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
       </div>
       <aside
         ref={panel}
-        className={`component-browser atomic-browser${area === 'patterns' ? ' pattern-browser' : ''}`}
+        className={`component-browser atomic-browser${area !== 'components' ? ' pattern-browser' : ''}`}
         aria-label={open ? undefined : words[area].label}
         role={open ? 'dialog' : undefined}
         aria-modal={open || undefined}
@@ -158,14 +164,14 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
               {group.items.map((item) => link(area, item))}
             </section>
           ))}
-          {elsewhere.length > 0 && (
-            <section className="atomic-group catalog-elsewhere" aria-label={`In ${words[other].title}`}>
-              <h2>In {words[other].title}</h2>
-              {elsewhere.map((item) => link(other, item))}
+          {elsewhere.map((other) => (
+            <section className="atomic-group catalog-elsewhere" key={other.area} aria-label={`In ${words[other.area].title}`}>
+              <h2>In {words[other.area].title}</h2>
+              {other.items.map((item) => link(other.area, item))}
             </section>
-          )}
+          ))}
           {ownCount === 0 && elsewhere.length === 0 && (
-            <p className="atomic-empty">No components or patterns match “{query.trim()}”.</p>
+            <p className="atomic-empty">No components, patterns or screens match “{query.trim()}”.</p>
           )}
         </nav>
         <span className="atomic-search-status" role="status" aria-live="polite">
