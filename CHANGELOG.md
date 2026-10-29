@@ -50,6 +50,11 @@ First public release, under the MIT License.
   Navigation, Breadcrumbs, Site Header and Menu items with an `href` are real
   links (`aria-current="page"` on the current one).
 - Button `variant="destructive"`, and Dialog `confirmVariant="destructive"`.
+- A loading Button keeps focus: it is `aria-disabled="true"` and `aria-busy`
+  rather than natively disabled, and ignores clicks, Enter and Space, so a
+  focused Save or Send stays focused while it works and still can't submit
+  twice. Form's Submit, Dialog's confirm and Wizard's Continue follow.
+  `disabled` is still the native attribute.
 - Menu and Popover take your own `trigger` element and a controlled `open`
   with `onOpenChange`; Popover content can be a plain node. Dialog takes a
   `trigger`. Tooltip wraps your own trigger, such as an icon-only Button.
@@ -121,6 +126,16 @@ First public release, under the MIT License.
   composer stay put and the thread scrolls between them, following the latest
   message. A height set on any Chatbot is filled the same way; without one,
   the thread keeps its 280px (380px full-page).
+- Chatbot `showHeader={false}` hides its header for a screen that has its own
+  heading; `title` still names the chat region and its message log.
+- A streaming Chatbot reply replaces "Preparing a response…": the line shows
+  only until the reply's first words arrive. The reply gets its Copy button
+  once it is complete or stopped.
+- A person's Chatbot message is as wide as its text, up to 90% of the thread,
+  in every layout.
+- A tall Chatbot `welcome` stays at its top on a short screen; the thread
+  follows the conversation from the first message. `diya-chat-welcome-title`
+  styles the welcome's heading at any level, as a plain `h3` is styled.
 - `npm create diya@latest` (the `create-diya` package, released with this one
   on the same version) starts a Next.js or Vite app with the provider, styles
   and agent notes in place, from Minimal or from Oriel, a four-screen

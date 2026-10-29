@@ -112,10 +112,15 @@ describe('Button preview to Get code', () => {
     await user.click(screen.getByRole('button', { name: 'Get code' }))
     const before = requestedPackage()
     await user.click(screen.getByRole('radio', { name: state }))
+    // Disabled is the native attribute; Loading stays focusable and inert.
     expect(
       specimens()
         .getAllByRole('button')
-        .every((button) => (button as HTMLButtonElement).disabled)
+        .every((button) =>
+          state === 'Disabled'
+            ? (button as HTMLButtonElement).disabled
+            : !(button as HTMLButtonElement).disabled && button.getAttribute('aria-disabled') === 'true'
+        )
     ).toBe(true)
     expect(getSnapshot().items.button?.options).toEqual(before.button?.options)
     for (const key of ['disabled', 'loading', 'state']) expect(getSnapshot().items.button?.options).not.toHaveProperty(key)

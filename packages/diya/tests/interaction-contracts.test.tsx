@@ -75,9 +75,9 @@ describe('portable interaction boundary regressions', () => {
     act(() => dialog.close())
     expect(screen.queryByRole('dialog')).toBeNull()
     await user.click(opener)
-    const disabledAfterReopen = (screen.getByRole('button', { name: 'Confirm review' }) as HTMLButtonElement).disabled
+    const inertAfterReopen = screen.getByRole('button', { name: 'Confirm review' }).getAttribute('aria-disabled')
     await act(async () => { resolve(false) })
-    expect(disabledAfterReopen).toBe(false)
+    expect(inertAfterReopen).toBe(null)
     expect(screen.getByRole('dialog', { name: 'Transaction review' })).toBeTruthy()
   })
 
