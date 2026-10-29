@@ -41,6 +41,8 @@ function Message({ title, children }: { title: string; children: ReactNode }) {
 /** Marks the document once the screen has rendered, for the thumbnail script. */
 function Loaded({ children }: { children: ReactNode }) {
   useEffect(() => {
+    const heading = document.querySelector('h1')?.textContent?.trim()
+    if (heading) document.title = `${heading} · DIYA screen`
     document.documentElement.dataset.screenReady = 'true'
     if (window.parent !== window) window.parent.postMessage({ source: SOURCE, type: 'loaded', screen: id }, window.location.origin)
   }, [])

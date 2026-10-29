@@ -84,9 +84,13 @@ describe('the Screens gallery', () => {
     }
     const signIn = within(main).getByRole('link', { name: 'Sign in' })
     expect(signIn.getAttribute('href')).toBe('/explore?area=screens&screen=sign-in')
-    const card = signIn.closest('article')!
-    expect(card.textContent).toContain('In progress')
-    expect(card.querySelector('img')).toBeNull()
+    expect(Array.from(signIn.closest('article')!.querySelectorAll('img')).map((image) => image.getAttribute('src'))).toEqual([
+      '/screens/thumbs/sign-in-light.jpg',
+      '/screens/thumbs/sign-in-dark.jpg',
+    ])
+    const building = within(main).getByRole('link', { name: 'Sign up' }).closest('article')!
+    expect(building.textContent).toContain('In progress')
+    expect(building.querySelector('img')).toBeNull()
 
     const board = within(main).getByRole('link', { name: 'Board' }).closest('article')!
     expect(board.textContent).toContain('Coming soon')
@@ -109,8 +113,11 @@ describe('the Screens gallery', () => {
     )
     const main = page()
     expect(within(main).queryByText('In progress')).toBeNull()
-    expect(within(main).queryByRole('link', { name: 'Sign in' })).toBeNull()
-    expect(within(main).getAllByRole('heading', { level: 4 }).map((heading) => heading.textContent)).toEqual(['Board', 'Create & edit', 'SaaS landing page'])
+    expect(within(main).queryByRole('link', { name: 'Sign up' })).toBeNull()
+    expect(within(main).getAllByRole('heading', { level: 4 }).map((heading) => heading.textContent)).toEqual(
+      screens.filter((entry) => entry.status !== 'building').map((entry) => entry.name)
+    )
+    expect(within(main).getByRole('link', { name: 'Sign in' })).toBeTruthy()
   })
 })
 

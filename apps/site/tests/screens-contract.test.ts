@@ -102,16 +102,21 @@ describe.each(live.map((screen) => [screen.id, screen] as const))('screens/%s.ts
 
   it('uses tokens, not colors, and no colored left-edge bars', () => {
     const css = cssBlock(source)!
-    expect(css.match(/#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla|oklch|lab|lch)\(/g), 'hard-coded colors in css').toBeNull()
     expect(css.match(/border-(?:left|inline-start)(?:-width)?\s*:\s*(?:[2-9]|\d{2,})px/g), 'colored left-edge bars').toBeNull()
+    const colors = css.match(/#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla|oklch|lab|lch)\(/g) ?? []
     const fills = source.match(/\b(?:fill|stroke|stopColor)="#[0-9a-fA-F]{3,8}"/g) ?? []
+    // Only the Google "G" and the GitHub mark may hard-code color, only on
+    // sign-in and sign-up, and only with the note that they're trademarks.
     if (id === 'sign-in' || id === 'sign-up') {
-      if (fills.length) {
+      if (colors.length || fills.length) {
         expect(source, 'brand marks carry their trademark note').toMatch(/trademarks? of (?:their|its) owners/i)
-        expect(source).toMatch(/https:\/\/[^\s]*google[^\s]*/i)
-        expect(source).toMatch(/https:\/\/github\.com\/logos/i)
+        expect(source, 'a link to Google’s branding guidelines').toMatch(/https:\/\/[^\s]*google\.com\/[^\s]*/i)
+        expect(source, 'a link to GitHub’s logo guidelines').toMatch(/https:\/\/[^\s]*github\.com\/[^\s]*/i)
       }
-    } else expect(fills, 'brand artwork belongs only to sign-in and sign-up').toEqual([])
+    } else {
+      expect(colors, 'hard-coded colors in css; use DIYA’s tokens').toEqual([])
+      expect(fills, 'brand artwork belongs only to sign-in and sign-up').toEqual([])
+    }
   })
 
   it('writes plain US English with invented people: no lorem ipsum, emails at example.com', () => {

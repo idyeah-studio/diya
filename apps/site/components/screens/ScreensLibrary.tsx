@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { Button, Tag } from '@idyeah/diya'
 import { useAppearance } from '../../app/Appearance'
@@ -132,6 +132,10 @@ function ScreenDocument({ screen, source, builtWith }: { screen: ScreenEntry; so
   const { theme, glass } = useAppearance()
   const [device, setDevice] = useState<Device>('desktop')
   const [drawer, setDrawer] = useState(false)
+  // On a phone, start where the reader is: the phone layout at full size.
+  useEffect(() => {
+    if (window.matchMedia?.('(max-width: 700px)').matches) setDevice('phone')
+  }, [])
   const poster = screen.status === 'poster'
   const viewport = VIEWPORTS[device]
   return (

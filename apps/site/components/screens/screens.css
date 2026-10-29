@@ -388,8 +388,33 @@
   overflow-wrap: anywhere;
 }
 
+/* Glass: cards and the request panel turn to frosted glass over the photo,
+   like the stage beside them. */
+@supports (backdrop-filter: blur(14px)) {
+  :root[data-catalog='true'][data-glass='true'] .screens-card {
+    background: color-mix(in srgb, var(--material-raised) 72%, transparent);
+    border-color: var(--material-edge);
+    border-top-color: var(--material-highlight);
+    backdrop-filter: var(--material-blur);
+  }
+  :root[data-catalog='true'][data-glass='true'] .screens-card-picture {
+    background: color-mix(in srgb, var(--material-recessed) 60%, transparent);
+  }
+  :root[data-catalog='true'][data-glass='true'] .screens-request {
+    background: color-mix(in srgb, var(--material-recessed) 64%, transparent);
+    border-color: var(--material-edge);
+    backdrop-filter: var(--material-blur);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-catalog='true'][data-glass='true'] .screens-card { background: var(--material-raised); backdrop-filter: none; }
+  :root[data-catalog='true'][data-glass='true'] .screens-request { background: var(--material-recessed); backdrop-filter: none; }
+}
+
 @media (max-width: 900px) {
   :where(html[data-catalog='true']) .screens-stage { padding: 20px; }
+  /* The header's Screens link and the "All screens" list already lead back. */
+  :where(html[data-catalog='true']) .screens-back { display: none; }
 }
 @media (max-width: 560px) {
   :where(html[data-catalog='true']) .screens-intro h2,

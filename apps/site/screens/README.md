@@ -15,13 +15,15 @@ If a rule below and a screen disagree, the screen is wrong.
   in `components/screens/screens-data.ts`.
 - **Its first lines** are, in order:
   1. `'use client'`
-  2. `// <Name>: a DIYA screen. Install: npm i @idyeah/diya lucide-react`, with
-     ` echarts@6` appended when the file imports `@idyeah/diya/charts`.
-  3. `// Next.js: save as app/<route>/page.tsx. Vite: save as src/<Name>.tsx and render it inside your DiyaProvider.`
+  2. `// <Display name>: a DIYA screen. Install: npm i @idyeah/diya lucide-react`,
+     with ` echarts@6` appended when the file imports `@idyeah/diya/charts`. The
+     display name is the registry's `name`, such as `Sign in`.
+  3. `// Next.js: save as app/<route>/page.tsx. Vite: save as src/<FileName>.tsx and render it inside your DiyaProvider.`
+     `<FileName>` is the PascalCase name, such as `SignIn`.
 - **Imports come only from** `react`, `@idyeah/diya`, `@idyeah/diya/charts` (only
   for charts) and `lucide-react`. No `next/*`, no relative imports, no CSS
   imports, and no other packages.
-- **There is exactly one export:** `export default function <Name>Screen()`. Types
+- **There is exactly one export:** `export default function <FileName>Screen()`. Types
   and helpers stay private to the file.
 - **No `DiyaProvider` in the file.** The reader's app already has one (Get code,
   step 2), and the site's preview frame supplies it.
@@ -43,6 +45,23 @@ If a rule below and a screen disagree, the screen is wrong.
 - **Keep it readable.** Aim for under about 600 lines. Sample data goes in
   `const`s at the top. A short comment marks each place a reader will change
   (data, API calls); nothing else gets commented.
+
+## The design bar
+
+The bar is premium the way Apple is: clean, calm and generous with whitespace.
+The approved reference is the Sign in screen, `sign-in.tsx`. Match its craft.
+
+- **Whitespace:** generous outer margins and roomy space between groups. Give
+  each view one clear focal point. Hierarchy comes from type, size and space,
+  not from boxes, borders or color.
+- **Containers:** few of them. Don't put cards inside cards, and use dividers
+  only where they truly separate.
+- **Color:** true neutrals. Color carries meaning (status, the one primary
+  action), never decoration.
+- **Data-heavy screens** (dashboards, tables, inboxes) keep that whitespace
+  around and between sections, but rows stay compact enough to scan.
+- **Alignment:** align to one grid, so edges line up and spacing repeats in a
+  rhythm. Nothing should look nudged.
 
 ## What it must get right
 

@@ -82,7 +82,7 @@ describe('the AI channel', () => {
         expect(text).toContain(
           `- [Analytics dashboard](${url('dashboard')}): The owner’s home screen: key figures, a traffic chart, top pages and campaigns, in one app frame. One file: \`app/dashboard/page.tsx\` in Next.js or \`src/Dashboard.tsx\` in Vite; needs \`@idyeah/diya lucide-react echarts@6\`.`
         )
-        expect(text).not.toContain(url('sign-in'))
+        expect(text).not.toContain(url('sign-up'))
       }
       expect(screenLines()).toHaveLength(screens.filter((screen) => screen.status === 'ready').length)
     } finally {

@@ -76,8 +76,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'sign-in',
     component: 'SignIn',
     charts: false,
-    status: 'building',
-    tryThis: 'Sign in with the password “wrong” to see the error, or choose Forgot password to walk through the code and reset steps.',
+    status: 'ready',
+    tryThis: 'Use the password wrong to see the error, or submit with empty fields. Any other password opens two-step sign-in, where 000000 fails and any other six digits sign you in. Forgot password and Email me a sign-in link both lead to Check your email.',
     keywords: 'login log in auth password forgot reset magic link two-step code',
   },
   {
