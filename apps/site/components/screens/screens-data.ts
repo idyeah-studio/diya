@@ -169,8 +169,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'search',
     component: 'SearchResults',
     charts: false,
-    status: 'building',
-    tryThis: 'Search for “zebra” to find nothing, add a filter or two, then narrow the window to see the filters move into a drawer.',
+    status: 'ready',
+    tryThis: 'Pick a recent search, type “onbaording” for a suggestion, “zebra” for tips, then filter by team; on a phone, filters move to a drawer.',
     keywords: 'find query filters results directory global search',
   },
   {
@@ -198,8 +198,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'orders',
     component: 'ResourceTable',
     charts: false,
-    status: 'building',
-    tryThis: 'Select a few rows for bulk actions, search for “zzz” to empty the table, or add an order and watch it arrive.',
+    status: 'ready',
+    tryThis: 'Pick Today for an empty shop, All time for a timeout with Try again, search “zzz”, select rows to export or archive, or open #1048 and mark it shipped.',
     keywords: 'table orders products admin data grid crud bulk export',
   },
   {
@@ -211,8 +211,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'files',
     component: 'FileManager',
     charts: false,
-    status: 'building',
-    tryThis: 'Switch between grid and list, upload a file named “broken” to see a failure with Retry, or open an empty folder.',
+    status: 'ready',
+    tryThis: 'Open Photography for an empty folder, upload a file over 25 MB, rename Logo mark.svg to Logo primary.svg, or select several files in the list.',
     keywords: 'files folders documents assets upload storage drive share',
   },
   {
