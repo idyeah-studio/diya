@@ -2030,7 +2030,7 @@
 .diya-root .diya-chat-thread{padding:24px;flex:1 1 280px;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .diya-root .diya-chat[data-presentation='full-page'] .diya-chat-thread{flex-basis:380px}
 .diya-root .diya-chat-welcome{text-align:center;margin:24px auto;max-width:430px;font-size:var(--diya-text-large)}
-.diya-root .diya-chat-welcome>span{font-size:var(--diya-text-display)}.diya-root .diya-chat-welcome h3:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)){font-size:var(--diya-text-title);margin:16px 0 8px}.diya-root .diya-chat-welcome p:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)){font-size:var(--diya-text-body);color:var(--diya-color-muted)}
+.diya-root .diya-chat-welcome>span{font-size:var(--diya-text-display)}.diya-root .diya-chat-welcome h3:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)),.diya-root .diya-chat-welcome .diya-chat-welcome-title{font-size:var(--diya-text-title);margin:16px 0 8px}.diya-root .diya-chat-welcome p:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)){font-size:var(--diya-text-body);color:var(--diya-color-muted)}
 .diya-root .diya-chat-suggestions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:24px}
 .diya-root .diya-chat-message{margin-bottom:20px;max-width:90%;font-size:var(--diya-text-body);line-height:1.65}.diya-root .diya-chat-message small{color:var(--diya-color-muted);font-size:var(--diya-text-caption)}.diya-root .diya-chat-message p{white-space:pre-wrap;margin:6px 0}
 .diya-root .diya-chat-message[data-role='user']{width:fit-content;margin-left:auto;background:var(--diya-color-selected);padding:12px 16px;border-radius:calc(14px * var(--diya-corner-scale, 1))}
@@ -2657,6 +2657,8 @@
   letter-spacing: -0.015em;
   line-height: var(--diya-leading-tight);
 }
+/* The welcome's heading, at any level: a plain h3, or any heading with this class. */
+.diya-root .diya-chat-welcome .diya-chat-welcome-title { font-weight: 600; letter-spacing: -0.015em; line-height: var(--diya-leading-tight); }
 .diya-root .diya-chat-header > :where(div) > strong { font-size: var(--diya-text-large); font-weight: 600; }
 /* Underline tabs keep their tight inset at every size. */
 .diya-root .diya-tabs[data-variant='underline'][data-size] .diya-tab { padding-inline: 4px; }

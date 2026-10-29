@@ -148,6 +148,15 @@ A screen with its own heading, such as an `h1` beside a model picker, sets
 still names the chat region and its message log; a floating chat keeps its
 close button.
 
+`welcome` shows before the first message, read from its top: the thread starts
+following the conversation with the first message. Give the welcome's heading
+`className="diya-chat-welcome-title"` to style it at any level, such as an `h2`
+under your page's `h1`; a plain `h3` gets the same style.
+
+```tsx
+<Chatbot welcome={<><h2 className="diya-chat-welcome-title">What are we working on?</h2><p>Ask a question.</p></>} … />
+```
+
 Attachment selection hands File objects to your callback. `onRetry`, `onCopy`
 and suggestion controls likewise call your handlers. The library sends no
 messages or attachments anywhere. Keep sensitive data out of sample fixtures.

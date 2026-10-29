@@ -128,6 +128,9 @@ First public release, under the MIT License.
   once it is complete or stopped.
 - A person's Chatbot message is as wide as its text, up to 90% of the thread,
   in every layout.
+- A tall Chatbot `welcome` stays at its top on a short screen; the thread
+  follows the conversation from the first message. `diya-chat-welcome-title`
+  styles the welcome's heading at any level, as a plain `h3` is styled.
 - `npm create diya@latest` (the `create-diya` package, released with this one
   on the same version) starts a Next.js or Vite app with the provider, styles
   and agent notes in place, from Minimal or from Oriel, a four-screen
