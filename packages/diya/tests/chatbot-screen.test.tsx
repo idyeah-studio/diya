@@ -1,6 +1,8 @@
 // What a full-page assistant screen needs from Chatbot: a page heading of its own
 // in place of Chatbot's header, and a streaming reply without a stale "Preparing" line
-// or a Copy button for half a reply.
+// or a Copy button for half a reply, and a user bubble as wide as its words.
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Chatbot, DiyaProvider, type ChatMessage, type ChatbotProps } from '../dist/index.js'
@@ -56,5 +58,21 @@ describe('Chatbot while a reply is on its way', () => {
     // Stopped: what was written so far can be copied.
     view.rerender(chat({ messages: [earlier, question, reply], onStop: noop }))
     expect(copies()).toEqual([expect.stringContaining('Hello again.'), expect.stringContaining('Here’s a calm')])
+  })
+})
+
+describe('Chatbot message width', () => {
+  const css = readFileSync(resolve(process.cwd(), 'dist/styles.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+  const rules = (selector: string) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, selectors]) => selectors.split(',').some((part) => part.trim() === selector))
+    .map(([, , body]) => body).join(';')
+
+  it('sizes a user bubble to its text, up to the message width, in every layout', () => {
+    expect(rules('.diya-root .diya-chat-message')).toMatch(/max-width:\s*90%/)
+    expect(rules(".diya-root .diya-chat-message[data-role='user']")).toMatch(/width:\s*fit-content/)
+    // No layout sets the bubble's width back.
+    for (const [selector] of css.matchAll(/[^{}]+(?=\{)/g)) {
+      if (selector.includes('diya-chat-message') && selector.includes('data-presentation')) throw new Error(`layout rule for messages: ${selector}`)
+    }
   })
 })

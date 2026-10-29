@@ -2033,7 +2033,7 @@
 .diya-root .diya-chat-welcome>span{font-size:var(--diya-text-display)}.diya-root .diya-chat-welcome h3:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)){font-size:var(--diya-text-title);margin:16px 0 8px}.diya-root .diya-chat-welcome p:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)){font-size:var(--diya-text-body);color:var(--diya-color-muted)}
 .diya-root .diya-chat-suggestions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:24px}
 .diya-root .diya-chat-message{margin-bottom:20px;max-width:90%;font-size:var(--diya-text-body);line-height:1.65}.diya-root .diya-chat-message small{color:var(--diya-color-muted);font-size:var(--diya-text-caption)}.diya-root .diya-chat-message p{white-space:pre-wrap;margin:6px 0}
-.diya-root .diya-chat-message[data-role='user']{margin-left:auto;background:var(--diya-color-selected);padding:12px 16px;border-radius:calc(14px * var(--diya-corner-scale, 1))}
+.diya-root .diya-chat-message[data-role='user']{width:fit-content;margin-left:auto;background:var(--diya-color-selected);padding:12px 16px;border-radius:calc(14px * var(--diya-corner-scale, 1))}
 .diya-root .diya-chat-composer{flex:none;margin:0 20px 12px;padding:12px 14px;border:1px solid var(--diya-color-line);border-radius:calc(16px * var(--diya-corner-scale, 1));background:var(--diya-color-glass)}
 .diya-root .diya-chat-composer textarea{display:block;resize:none;border:0;width:100%;background:transparent;color:inherit;font:inherit;font-size:var(--diya-text-body);line-height:1.6;outline:0;min-height:50px}.diya-root .diya-chat-composer:focus-within{outline:2px solid var(--diya-color-text);outline-offset:2px}
 .diya-root .diya-chat-composer textarea::placeholder{color:var(--diya-color-muted);opacity:1}
