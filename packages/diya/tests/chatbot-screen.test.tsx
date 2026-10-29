@@ -1,5 +1,5 @@
 // What a full-page assistant screen needs from Chatbot: a page heading of its own
-// in place of Chatbot's header.
+// in place of Chatbot's header, and a streaming reply without a stale "Preparing" line.
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Chatbot, DiyaProvider, type ChatMessage, type ChatbotProps } from '../dist/index.js'
@@ -27,5 +27,22 @@ describe('Chatbot header', () => {
     render(chat({ showHeader: false, layout: 'floating', onOpenChange: noop, messages }))
     expect(screen.getByRole('button', { name: 'Close chat' })).toBeTruthy()
     expect(screen.queryByText('Lumen')).toBeNull()
+  })
+})
+
+describe('Chatbot while a reply is on its way', () => {
+  const question: ChatMessage = { id: '1', role: 'user', text: 'Plan a weekend in Kyoto' }
+  const reply: ChatMessage = { id: '2', role: 'assistant', text: 'Here’s a calm' }
+
+  it('shows "Preparing a response…" only until the reply’s first words arrive', () => {
+    const view = render(chat({ messages: [question], loading: true }))
+    const log = () => screen.getByRole('log', { name: 'Lumen messages' })
+    expect(screen.getByText('Preparing a response…')).toBeTruthy()
+    expect(log().hasAttribute('aria-busy')).toBe(false)
+    view.rerender(chat({ messages: [question, reply], loading: true }))
+    expect(screen.queryByText('Preparing a response…')).toBeNull()
+    expect(log().getAttribute('aria-busy')).toBe('true')
+    view.rerender(chat({ messages: [question, { ...reply, text: 'Here’s a calm, affordable weekend.' }] }))
+    expect(screen.queryByText('Preparing a response…')).toBeNull()
   })
 })

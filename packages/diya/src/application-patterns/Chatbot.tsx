@@ -33,7 +33,7 @@ export type ChatbotProps = Omit<HTMLAttributes<HTMLElement>, 'title' | 'children
   onValueChange: (value: string) => void
   /** Called with the trimmed text and current attachments on Send, Enter or a suggestion; clear `value` and append messages yourself. */
   onSend: (text: string, attachments: readonly File[]) => void
-  /** A response is on its way: shows "Preparing a response…", blocks sending and offers Stop when `onStop` is given. While the newest message is the assistant's, as when a reply streams in, the log is `aria-busy`, so screen readers read the reply once it is complete. Defaults to false. */
+  /** A response is on its way: blocks sending and offers Stop when `onStop` is given. Until the reply starts, "Preparing a response…" shows; once the newest message is the assistant's, as when a reply streams in, it goes and the log is `aria-busy`, so screen readers read the reply once it is complete. Defaults to false. */
   loading?: boolean
   /** Shows a Stop button in place of Send while loading. */
   onStop?: () => void
@@ -132,7 +132,7 @@ export const Chatbot = forwardRef<HTMLElement, ChatbotProps>(function Chatbot({ 
   }
   if (!open) return onOpenChange ? <Button ref={reopen} onClick={() => onOpenChange(true)}>{t.openChat}</Button> : null
   // A reply being written into the log is held back from screen readers until it is complete. Before it
-  // starts, the log stays live, so "Preparing a response…" is still announced.
+  // starts, the log stays live and shows "Preparing a response…", which goes once the reply's first words arrive.
   const writing = loading && messages[messages.length - 1]?.role === 'assistant'
   const closable = layout === 'floating' && onOpenChange
   return <section aria-label={title} {...props} ref={ref} className={cx('diya-chat diya-app-pattern-surface', className)} data-presentation={layout}>
@@ -140,7 +140,7 @@ export const Chatbot = forwardRef<HTMLElement, ChatbotProps>(function Chatbot({ 
     <div className="diya-chat-thread" ref={thread} role="log" aria-label={t.messages(title)} aria-live="polite" aria-relevant="additions text" aria-busy={writing || undefined} onScroll={() => { const node = thread.current; if (node) follows.current = node.scrollHeight - node.scrollTop - node.clientHeight < 50 }}>
       {!messages.length && (welcome || suggestions.length > 0) && <div className="diya-chat-welcome">{welcome}{suggestions.length > 0 && <div className="diya-chat-suggestions">{suggestions.map(suggestion => <Button key={suggestion} variant="outline" shape="pill" disabled={loading} onClick={() => send(suggestion)}>{suggestion}</Button>)}</div>}</div>}
       {messages.map(message => <article key={message.id} className="diya-chat-message" data-role={message.role}><small>{message.role === 'user' ? userLabel ?? t.you : assistantLabel ?? t.assistant}{showTimestamps && message.timestamp && ` · ${message.timestamp}`}</small><p>{message.text}</p>{message.role === 'assistant' && <Button size="small" variant="quiet" onClick={() => void copy(message)}>{t.copy}</Button>}</article>)}
-      {loading && <p role="status">{t.preparing}</p>}
+      {loading && !writing && <p role="status">{t.preparing}</p>}
     </div>
     <form className="diya-chat-composer" onSubmit={event => { event.preventDefault(); send() }}>
       <label className="diya-chat-sr-only" htmlFor={`${id}-message`}>{t.message}</label><textarea ref={composer} id={`${id}-message`} rows={2} placeholder={t.placeholder} value={value} onChange={event => onValueChange(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); send() } }} />
