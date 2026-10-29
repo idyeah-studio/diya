@@ -52,12 +52,12 @@ describe('Calendar', () => {
     expect(within(rows[1]).getAllByRole('gridcell').map((cell) => cell.textContent)).toEqual(['', '', '', '', '1', '2', '3'])
     expect(within(rows[5]).getAllByRole('gridcell').map((cell) => cell.textContent)).toEqual(['25', '26', '27', '28', '29', '30', '31'])
     // Each day is a native button with the gridcell role, named by its full date.
-    expect(day('Oct 14, 2026').tagName).toBe('BUTTON')
-    expect(day('Oct 14, 2026').getAttribute('aria-selected')).toBe('true')
-    expect(day('Oct 15, 2026').hasAttribute('aria-selected')).toBe(false)
-    expect(day('Oct 14, 2026').hasAttribute('aria-pressed')).toBe(false)
+    expect(day('Wednesday, October 14, 2026').tagName).toBe('BUTTON')
+    expect(day('Wednesday, October 14, 2026').getAttribute('aria-selected')).toBe('true')
+    expect(day('Thursday, October 15, 2026').hasAttribute('aria-selected')).toBe(false)
+    expect(day('Wednesday, October 14, 2026').hasAttribute('aria-pressed')).toBe(false)
     expect(days().filter((cell) => cell.getAttribute('aria-current') === 'date').map((cell) => cell.dataset.date)).toEqual(['2026-10-09'])
-    expect(day('Oct 9, 2026').getAttribute('data-today')).toBe('true')
+    expect(day('Friday, October 9, 2026').getAttribute('data-today')).toBe('true')
   })
 
   it('names the grid again when the month changes', async () => {
@@ -81,17 +81,17 @@ describe('Calendar', () => {
     const changes = vi.fn()
     render(<DiyaProvider><Calendar label="Pick a day" defaultValue="2026-10-14" onValueChange={changes} /></DiyaProvider>)
     expect(selected()).toEqual(['2026-10-14'])
-    await user.click(day('Oct 21, 2026'))
+    await user.click(day('Wednesday, October 21, 2026'))
     expect(changes).toHaveBeenCalledExactlyOnceWith('2026-10-21')
     expect(selected()).toEqual(['2026-10-21'])
-    expect(document.activeElement).toBe(day('Oct 21, 2026'))
+    expect(document.activeElement).toBe(day('Wednesday, October 21, 2026'))
   })
 
   it('follows a controlled value and reports choices without changing on its own', async () => {
     const user = userEvent.setup()
     const changes = vi.fn()
     render(<DiyaProvider><Calendar label="Pick a day" value="2026-10-14" onValueChange={changes} /></DiyaProvider>)
-    await user.click(day('Oct 15, 2026'))
+    await user.click(day('Thursday, October 15, 2026'))
     expect(changes).toHaveBeenCalledExactlyOnceWith('2026-10-15')
     expect(selected()).toEqual(['2026-10-14'])
   })
@@ -114,16 +114,16 @@ describe('Calendar', () => {
     }
     render(<Example />)
     expect(within(calendar()).getByText('Choose start date')).toBeTruthy()
-    await user.click(day('Oct 20, 2026'))
+    await user.click(day('Tuesday, October 20, 2026'))
     expect(changes).toHaveBeenLastCalledWith({ start: '2026-10-20', end: '' })
     expect(within(calendar()).getByText('Choose end date')).toBeTruthy()
-    await user.click(day('Oct 12, 2026'))
+    await user.click(day('Monday, October 12, 2026'))
     expect(changes).toHaveBeenLastCalledWith({ start: '2026-10-12', end: '2026-10-20' })
     // The range is chosen as a whole: its ends and the days between are selected; the ends are marked apart.
     expect(selected()).toEqual(Array.from({ length: 9 }, (_, index) => `2026-10-${12 + index}`))
     expect(days().filter((cell) => cell.dataset.between === 'true').map((cell) => cell.dataset.date)).toEqual(Array.from({ length: 7 }, (_, index) => `2026-10-${13 + index}`))
     expect(within(calendar()).getByText('Choose start date')).toBeTruthy()
-    await user.click(day('Oct 25, 2026'))
+    await user.click(day('Sunday, October 25, 2026'))
     expect(changes).toHaveBeenLastCalledWith({ start: '2026-10-25', end: '' })
   })
 
@@ -137,7 +137,7 @@ describe('Calendar', () => {
     await user.tab()
     expect(document.activeElement?.getAttribute('aria-label')).toBe('Next month')
     await user.tab()
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Oct 14, 2026')
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026')
     await user.tab()
     expect(document.activeElement?.textContent).toBe('After')
   })
@@ -148,12 +148,12 @@ describe('Calendar', () => {
   })
 
   it.each([
-    ['right', '2026-10-31', 'Oct 31, 2026', '{ArrowRight}', '2026-11-01', 'Nov 1, 2026', 'November 2026'],
-    ['left', '2026-10-01', 'Oct 1, 2026', '{ArrowLeft}', '2026-09-30', 'Sep 30, 2026', 'September 2026'],
-    ['down', '2026-10-28', 'Oct 28, 2026', '{ArrowDown}', '2026-11-04', 'Nov 4, 2026', 'November 2026'],
-    ['up', '2026-10-03', 'Oct 3, 2026', '{ArrowUp}', '2026-09-26', 'Sep 26, 2026', 'September 2026'],
-    ['PageUp', '2026-10-31', 'Oct 31, 2026', '{PageUp}', '2026-09-30', 'Sep 30, 2026', 'September 2026'],
-    ['PageDown', '2026-01-31', 'Jan 31, 2026', '{PageDown}', '2026-02-28', 'Feb 28, 2026', 'February 2026'],
+    ['right', '2026-10-31', 'Saturday, October 31, 2026', '{ArrowRight}', '2026-11-01', 'Sunday, November 1, 2026', 'November 2026'],
+    ['left', '2026-10-01', 'Thursday, October 1, 2026', '{ArrowLeft}', '2026-09-30', 'Wednesday, September 30, 2026', 'September 2026'],
+    ['down', '2026-10-28', 'Wednesday, October 28, 2026', '{ArrowDown}', '2026-11-04', 'Wednesday, November 4, 2026', 'November 2026'],
+    ['up', '2026-10-03', 'Saturday, October 3, 2026', '{ArrowUp}', '2026-09-26', 'Saturday, September 26, 2026', 'September 2026'],
+    ['PageUp', '2026-10-31', 'Saturday, October 31, 2026', '{PageUp}', '2026-09-30', 'Wednesday, September 30, 2026', 'September 2026'],
+    ['PageDown', '2026-01-31', 'Saturday, January 31, 2026', '{PageDown}', '2026-02-28', 'Saturday, February 28, 2026', 'February 2026'],
   ])('moves %s across a month boundary and chooses only on Enter', async (_direction, initial, initialLabel, key, next, nextLabel, monthLabel) => {
     const user = userEvent.setup()
     const changes = vi.fn()
@@ -173,8 +173,8 @@ describe('Calendar', () => {
   })
 
   it.each([
-    ['en-US', 'Su', 'Oct 11, 2026', 'Oct 17, 2026', '2026-10-17'],
-    ['en-GB', 'Mo', '12 Oct 2026', '18 Oct 2026', '2026-10-18'],
+    ['en-US', 'Su', 'Sunday, October 11, 2026', 'Saturday, October 17, 2026', '2026-10-17'],
+    ['en-GB', 'Mo', 'Monday, 12 October 2026', 'Sunday, 18 October 2026', '2026-10-18'],
   ])('starts the week on the %s first day, and Home/End follow it', async (locale, firstHeading, home, end, endDate) => {
     const user = userEvent.setup()
     render(<DiyaProvider locale={locale}><Calendar label="Pick a day" defaultValue="2026-10-14" /></DiyaProvider>)
@@ -195,13 +195,13 @@ describe('Calendar', () => {
     expect(unavailable()).toEqual(['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', ...Array.from({ length: 11 }, (_, index) => `2026-10-${21 + index}`)])
     expect((within(calendar()).getByRole('button', { name: 'Previous month' }) as HTMLButtonElement).disabled).toBe(true)
     expect((within(calendar()).getByRole('button', { name: 'Next month' }) as HTMLButtonElement).disabled).toBe(true)
-    await user.click(day('Oct 3, 2026'))
+    await user.click(day('Saturday, October 3, 2026, unavailable'))
     expect(changes).not.toHaveBeenCalled()
-    act(() => day('Oct 6, 2026').focus())
+    act(() => day('Tuesday, October 6, 2026').focus())
     await user.keyboard('{ArrowUp}')
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Oct 5, 2026')
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Monday, October 5, 2026')
     await user.keyboard('{PageDown}')
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Oct 20, 2026')
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Tuesday, October 20, 2026')
     await user.keyboard('{Enter}')
     expect(changes).toHaveBeenCalledExactlyOnceWith('2026-10-20')
   })
@@ -213,15 +213,16 @@ describe('Calendar', () => {
     render(<DiyaProvider><Calendar label="Pick a day" isDateUnavailable={isDateUnavailable} onValueChange={changes} /></DiyaProvider>)
     expect(isDateUnavailable).toHaveBeenCalledWith('2026-10-01')
     expect(unavailable()).toEqual(days().map((button) => button.dataset.date!).filter((date) => weekend(date) || date === '2026-10-14'))
-    expect(day('Oct 10, 2026').getAttribute('aria-disabled')).toBe('true')
-    expect(day('Oct 12, 2026').hasAttribute('aria-disabled')).toBe(false)
+    // An unavailable day says so in words as well as through aria-disabled.
+    expect(day('Saturday, October 10, 2026, unavailable').getAttribute('aria-disabled')).toBe('true')
+    expect(day('Monday, October 12, 2026').hasAttribute('aria-disabled')).toBe(false)
     // Unavailable days stay in the grid's geometry: focusable cells, not removed or natively disabled.
-    expect((day('Oct 10, 2026') as HTMLButtonElement).disabled).toBe(false)
-    await user.click(day('Oct 10, 2026'))
+    expect((day('Saturday, October 10, 2026, unavailable') as HTMLButtonElement).disabled).toBe(false)
+    await user.click(day('Saturday, October 10, 2026, unavailable'))
     expect(changes).not.toHaveBeenCalled()
-    act(() => day('Oct 13, 2026').focus())
+    act(() => day('Tuesday, October 13, 2026').focus())
     await user.keyboard('{ArrowRight}')
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Oct 14, 2026')
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026, unavailable')
     await user.keyboard('{Enter}')
     expect(changes).not.toHaveBeenCalled()
     await user.keyboard('{ArrowRight}{Enter}')
@@ -242,12 +243,12 @@ describe('Calendar', () => {
     const user = userEvent.setup()
     const changes = vi.fn()
     render(<DiyaProvider><Calendar label="Pick a day" range isDateUnavailable={weekend} onValueChange={changes} /></DiyaProvider>)
-    await user.click(day('Oct 10, 2026'))
+    await user.click(day('Saturday, October 10, 2026, unavailable'))
     expect(changes).not.toHaveBeenCalled()
-    await user.click(day('Oct 9, 2026'))
-    await user.click(day('Oct 11, 2026'))
+    await user.click(day('Friday, October 9, 2026'))
+    await user.click(day('Sunday, October 11, 2026, unavailable'))
     expect(changes).toHaveBeenCalledTimes(1)
-    await user.click(day('Oct 13, 2026'))
+    await user.click(day('Tuesday, October 13, 2026'))
     // Days between the ends may be unavailable; only the ends are checked.
     expect(changes).toHaveBeenLastCalledWith({ start: '2026-10-09', end: '2026-10-13' })
     expect(selected()).toEqual(['2026-10-09', '2026-10-10', '2026-10-11', '2026-10-12', '2026-10-13'])
@@ -263,7 +264,7 @@ describe('Calendar', () => {
     await user.click(screen.getByRole('button', { name: 'Before' }))
     await user.tab()
     expect(document.activeElement?.textContent).toBe('After')
-    await user.click(day('Oct 15, 2026'))
+    await user.click(day('Thursday, October 15, 2026'))
     expect(changes).not.toHaveBeenCalled()
     expect(selected()).toEqual(['2026-10-14'])
   })
@@ -300,10 +301,10 @@ describe('Calendar', () => {
       return <DiyaProvider><Calendar label="Pick a day" month={month} onMonthChange={setMonth} defaultValue="2026-10-31" /></DiyaProvider>
     }
     render(<Example />)
-    act(() => day('Oct 31, 2026').focus())
+    act(() => day('Saturday, October 31, 2026').focus())
     await user.keyboard('{ArrowRight}')
     expect(heading()).toBe('November 2026')
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Nov 1, 2026')
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Sunday, November 1, 2026')
   })
 
   it('turns to the month of a value set from outside', () => {
@@ -319,7 +320,8 @@ describe('Calendar', () => {
   })
 
   it('reads its strings from DiyaProvider messages', () => {
-    expect(defaultMessages.calendar).toEqual({ previousMonth: 'Previous month', nextMonth: 'Next month', chooseStart: 'Choose start date', chooseEnd: 'Choose end date' })
+    expect(defaultMessages.calendar).toEqual({ previousMonth: 'Previous month', nextMonth: 'Next month', chooseStart: 'Choose start date', chooseEnd: 'Choose end date', unavailableDay: expect.any(Function) })
+    expect(defaultMessages.calendar.unavailableDay('Thursday, November 12, 2026')).toBe('Thursday, November 12, 2026, unavailable')
     render(<DiyaProvider locale="fr-FR" messages={{ calendar: { previousMonth: 'Mois précédent', chooseStart: 'Choisissez le début' } }}>
       <Calendar label="Choisir un jour" range />
     </DiyaProvider>)
@@ -329,6 +331,18 @@ describe('Calendar', () => {
     expect(within(group).getByText('Choisissez le début')).toBeTruthy()
     expect(group.querySelector('strong')?.textContent).toBe('octobre 2026')
     expect(group.querySelector('.diya-calendar-weekday')?.textContent).toBe('lu')
+  })
+
+  it('names each day with its weekday in the provider locale, and words unavailable days through messages', () => {
+    const view = render(<DiyaProvider><Calendar label="Pick a day" defaultValue="2026-11-12" isDateUnavailable={(date) => date === '2026-11-13'} /></DiyaProvider>)
+    expect(day('Thursday, November 12, 2026').dataset.date).toBe('2026-11-12')
+    expect(day('Friday, November 13, 2026, unavailable').getAttribute('aria-disabled')).toBe('true')
+    view.unmount()
+    render(<DiyaProvider locale="fr-FR" messages={{ calendar: { unavailableDay: (date) => `${date}, indisponible` } }}>
+      <Calendar label="Choisir un jour" defaultValue="2026-11-12" min="2026-11-10" />
+    </DiyaProvider>)
+    expect(day('jeudi 12 novembre 2026', 'Choisir un jour').dataset.date).toBe('2026-11-12')
+    expect(day('lundi 9 novembre 2026, indisponible', 'Choisir un jour').getAttribute('aria-disabled')).toBe('true')
   })
 
   it('server-renders without marking a day as today, then marks it once hydrated', () => {
@@ -378,9 +392,19 @@ describe('DatePicker shares the grid', () => {
       .toEqual(dayButtons.map((button) => button.dataset.date!).filter((date) => weekend(date) || date === '2026-10-09'))
     expect((within(popup()).getByRole('button', { name: 'Today' }) as HTMLButtonElement).disabled).toBe(true)
     expect(dayButtons.filter((button) => button.tabIndex === 0).map((button) => button.dataset.date)).toEqual(['2026-10-01'])
-    await user.click(within(popup()).getByRole('gridcell', { name: 'Oct 10, 2026' }))
+    await user.click(within(popup()).getByRole('gridcell', { name: 'Saturday, October 10, 2026, unavailable' }))
     expect(changes).not.toHaveBeenCalled()
-    await user.click(within(popup()).getByRole('gridcell', { name: 'Oct 12, 2026' }))
+    await user.click(within(popup()).getByRole('gridcell', { name: 'Monday, October 12, 2026' }))
     expect(changes).toHaveBeenCalledExactlyOnceWith('2026-10-12')
+  })
+
+  it('words unavailable days through the datePicker messages', async () => {
+    const user = userEvent.setup()
+    render(<DiyaProvider locale="de-DE" messages={{ datePicker: { unavailableDay: (date) => `${date}, nicht verfügbar` } }}>
+      <DatePicker label="Lieferung" defaultValue="2026-11-12" isDateUnavailable={weekend} />
+    </DiyaProvider>)
+    await user.click(screen.getByRole('button', { name: /Lieferung/ }))
+    expect(within(popup()).getByRole('gridcell', { name: 'Donnerstag, 12. November 2026' }).dataset.date).toBe('2026-11-12')
+    expect(within(popup()).getByRole('gridcell', { name: 'Samstag, 14. November 2026, nicht verfügbar' }).getAttribute('aria-disabled')).toBe('true')
   })
 })

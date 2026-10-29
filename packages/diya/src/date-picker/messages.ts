@@ -1,2 +1,2 @@
 /** datePicker: English defaults, overridable through DiyaProvider `messages`. */
-export const datePickerMessages = { chooseDate: 'Choose date', chooseRange: 'Choose date range', chooseStart: 'Choose start date', chooseEnd: 'Choose end date', endDate: 'End date', previousMonth: 'Previous month', nextMonth: 'Next month', today: 'Today', clear: 'Clear' }
+export const datePickerMessages = { chooseDate: 'Choose date', chooseRange: 'Choose date range', chooseStart: 'Choose start date', chooseEnd: 'Choose end date', endDate: 'End date', previousMonth: 'Previous month', nextMonth: 'Next month', today: 'Today', clear: 'Clear', unavailableDay: (date: string) => `${date}, unavailable` }

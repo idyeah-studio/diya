@@ -54,7 +54,7 @@ const subscribeNever = () => () => {}
 /** Today as an ISO date; '' while hydrating server HTML, so a server in another time zone never marks the wrong day. */
 const useToday = () => useSyncExternalStore(subscribeNever, () => iso(new Date()), () => '')
 
-export type MonthGridStrings = { previousMonth: string; nextMonth: string; chooseStart: string; chooseEnd: string }
+export type MonthGridStrings = { previousMonth: string; nextMonth: string; chooseStart: string; chooseEnd: string; unavailableDay: (date: string) => string }
 type MonthGridOptions = {
   locale: string
   /** The first of the month on show. */
@@ -81,15 +81,18 @@ type MonthGridOptions = {
  * month heading with its buttons, the range hint, then the ARIA date grid of the APG
  * date picker example. The grid is named by the month; a header row of weekday column
  * headers, then a row per week of gridcells. Each day is a native button with the
- * gridcell role: chosen days carry aria-selected, today aria-current="date". One day
- * is a Tab stop; arrows, Home/End and PageUp/PageDown move it, kept inside min and
- * max. Days outside them, or unavailable, are announced and can't be chosen.
+ * gridcell role, named with its weekday ("Thursday, November 12, 2026"): chosen days
+ * carry aria-selected, today aria-current="date". One day is a Tab stop; arrows,
+ * Home/End and PageUp/PageDown move it, kept inside min and max. Days outside them,
+ * or unavailable, say so in their name and aria-disabled, and can't be chosen.
  */
 export function useMonthGrid(options: MonthGridOptions) {
   const { locale, month, onMonthChange, value, range, choosingEnd, min, max, isDateUnavailable, disabled, active, strings: t, onChoose } = options
   const weekStart = useMemo(() => weekStartFor(locale), [locale])
   const weekdays = useMemo(() => weekdaysFor(locale, weekStart), [locale, weekStart])
   const weekdayNames = useMemo(() => weekdayNamesFor(locale, weekStart), [locale, weekStart])
+  // Each day's accessible name, with its weekday: "Thursday, November 12, 2026" in en-US.
+  const dayNames = useMemo(() => new Intl.DateTimeFormat(locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }), [locale])
   const monthId = `${useId()}-month`
   const [cursor, setCursor] = useState('')
   const grid = useRef<HTMLDivElement | null>(null)
@@ -156,7 +159,8 @@ export function useMonthGrid(options: MonthGridOptions) {
             const unavailable = blocked(day)
             // A range is chosen as a whole: its ends and the days between are selected.
             const selected = day === value.start || day === value.end || between(day)
-            return <button type="button" role="gridcell" key={day} data-date={day} aria-label={display(day, locale)} aria-selected={selected || undefined}
+            const name = dayNames.format(parse(day))
+            return <button type="button" role="gridcell" key={day} data-date={day} aria-label={unavailable ? t.unavailableDay(name) : name} aria-selected={selected || undefined}
               aria-current={day === today ? 'date' : undefined} aria-disabled={unavailable || undefined} disabled={disabled || undefined} tabIndex={day === tabbable ? 0 : -1}
               data-between={between(day)} data-today={day === today} onClick={() => onChoose(day)}
               onFocus={() => setCursor(day)} onKeyDown={(event) => moveDay(event, day)}>{Number(day.slice(8))}</button>
