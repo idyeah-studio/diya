@@ -141,8 +141,8 @@ export default async function Privacy() {
         </li>
       </ul>
       <p>
-        Each one handles your details only to provide its service to us. We’re based in the United States and so are
-        they, so your details are stored and processed in the US. Each service’s data-processing terms say how it
+        Each one handles your details only to provide its service to us. We’re based in the United States, and these
+        services store and process your details in the US and the other countries where they run. Each service’s data-processing terms say how it
         protects personal data, including data from the EU and UK: {link('https://vercel.com/legal/dpa', 'Vercel')},{' '}
         {link('https://neon.com/dpa', 'Neon')}, {link('https://postmarkapp.com/dpa', 'Postmark')} and{' '}
         {link('https://www.microsoft.com/licensing/docs/view/Microsoft-Products-and-Services-Data-Protection-Addendum-DPA', 'Microsoft')}.

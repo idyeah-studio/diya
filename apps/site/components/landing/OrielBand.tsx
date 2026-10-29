@@ -16,8 +16,8 @@ export function OrielBand() {
           </p>
           <h2 id="oriel-title">Don’t take the catalog’s word for it. Here’s a whole app.</h2>
           <p className="ld-oriel-lede">
-            Oriel is a small invoicing app made only from DIYA: four screens, no Tailwind, and under 100 lines of
-            its own CSS. Click anything; it starts fresh when you reload.
+            Oriel is a small invoicing app made only from DIYA: four screens, no Tailwind, and one small stylesheet
+            for its layout. Click anything; it starts fresh when you reload.
           </p>
           <p className="ld-oriel-lede">
             Invoices are just the example. The same pieces build a booking tool, a CRM, or your settings page.
