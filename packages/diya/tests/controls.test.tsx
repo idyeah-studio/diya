@@ -256,6 +256,38 @@ describe('portable field contracts', () => {
     expect(slider.value).toBe('65')
   })
 
+  it('formats the shown values, the marks and both handles\' aria-valuetext with formatValue', () => {
+    const dollars = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
+    function Example() {
+      const [value, setValue] = useState<[number, number]>([200, 800])
+      return <DiyaProvider><Slider label="Price" range min={0} max={1000} step={50} showMarks formatValue={dollars} value={value} onValueChange={setValue} /></DiyaProvider>
+    }
+    const { container } = render(<Example />)
+    const start = screen.getByRole('slider', { name: 'Price minimum' })
+    const end = screen.getByRole('slider', { name: 'Price maximum' })
+    expect(start.getAttribute('aria-valuetext')).toBe('$200')
+    expect(end.getAttribute('aria-valuetext')).toBe('$800')
+    expect([...container.querySelectorAll('.diya-slider-values span')].map((node) => node.textContent)).toEqual(['$200', '$800'])
+    expect([...container.querySelectorAll('.diya-slider-marks span')].map((node) => node.textContent)).toEqual(['$0', '$250', '$500', '$750', '$1,000'])
+    // The value attribute stays a plain number for forms; only the announced text is formatted.
+    fireEvent.change(end, { target: { value: '950' } })
+    expect((end as HTMLInputElement).value).toBe('950')
+    expect(end.getAttribute('aria-valuetext')).toBe('$950')
+    expect(container.querySelector('.diya-slider-values')!.textContent).toBe('$200$950')
+  })
+
+  it('formats a single, uncontrolled slider and leaves aria-valuetext alone without formatValue', () => {
+    const view = render(<DiyaProvider><Slider label="Tip" defaultValue={15} formatValue={(value) => `${value}%`} /></DiyaProvider>)
+    const slider = screen.getByRole('slider', { name: 'Tip' })
+    expect(slider.getAttribute('aria-valuetext')).toBe('15%')
+    fireEvent.change(slider, { target: { value: '20' } })
+    expect(slider.getAttribute('aria-valuetext')).toBe('20%')
+    view.unmount()
+    render(<DiyaProvider><Slider label="Volume" defaultValue={40} aria-valuetext="Medium" /></DiyaProvider>)
+    expect(screen.getByRole('slider', { name: 'Volume' }).getAttribute('aria-valuetext')).toBe('Medium')
+    expect(screen.getByText('40')).toBeTruthy()
+  })
+
   it('reports page and page-size changes to the host', async () => {
     const user = userEvent.setup()
     const pageChanges = vi.fn()

@@ -56,7 +56,7 @@ export const guidance: Record<ItemId, Guidance> = {
   slider: {
     use: 'For a value where the rough position matters more than the exact number: volume, a price range.',
     instead: 'An exact number? Text Input with type="number".',
-    access: 'Native range inputs, each with its own accessible name. Arrow keys and Page Up/Down move the handle.',
+    access: 'Native range inputs, each with its own accessible name; with formatValue, each handle also announces its formatted value, like "$40". Arrow keys and Page Up/Down move the handle.',
   },
   search: {
     use: 'For filtering or searching what is on the page or in the app.',

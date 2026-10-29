@@ -35,7 +35,7 @@ button on Menu, Popover and Tooltip, and to the root element everywhere else.
 | Combobox | `label`, `options`, `value`, `onValueChange` | One value as a string (`''` for none); `multiple` uses a string array. `size`, `helperText`, `error`, `disabled`. |
 | Choice | `label`, `options`, `value`, `onValueChange` | Radios with a string by default; `multiple` gives checkboxes and a string array, and allows `selectAll`. An option's `description` shows whenever it has one; options can be `disabled`. `helperText`, `error`. |
 | Switch | `label`, `checked`, `onCheckedChange` | A native checkbox with `role="switch"`; the ref is the `HTMLInputElement`. `defaultChecked`, `name`, `value` (sent while on), `size`, `helperText`, `error`, `hideLabel`, `disabled`. It uses the brand color when on. |
-| Slider | `label`, `value`, `onValueChange` | One number by default; `range` uses `[start, end]`. `min` (default 0), `max` (default 100), `step` (default 1), `showValues` (default on), `showMarks`, `hideLabel`, `disabled`. |
+| Slider | `label`, `value`, `onValueChange` | One number by default; `range` uses `[start, end]`. `min` (default 0), `max` (default 100), `step` (default 1), `showValues` (default on), `showMarks`, `formatValue`, `hideLabel`, `disabled`. |
 | Search | `label`, `value`, `onValueChange` | Rounded by default, like the other fields; `shape="pill"`, `clearable`, `size`; normal input attributes. |
 
 A controlled value updates only when your callback updates your React state.
@@ -58,7 +58,9 @@ and helper text together. Every other attribute, such as `name`, `required`,
 `autoComplete` or `data-*`, goes on the input itself.
 
 Slider shows its label above the track; `hideLabel` hides it visually and the
-inputs keep their accessible names.
+inputs keep their accessible names. `formatValue`, such as
+`(value) => '$' + value`, formats the numbers it shows (values and marks) and
+sets each handle's `aria-valuetext`, so screen readers hear "$40", not "40".
 
 ### One value or several
 

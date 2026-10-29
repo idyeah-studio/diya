@@ -57,6 +57,9 @@ First public release, under the MIT License.
   (`defaultValue`, `defaultChecked`) and reset with their form, and pass native
   `name`, `onChange` and `onBlur` through, so react-hook-form's `register()`
   works without a `Controller`. Combobox and DatePicker take `name`.
+- Slider takes `formatValue`, such as `(value) => '$' + value`: it formats the
+  values and marks it shows and sets each handle's `aria-valuetext`, both
+  handles in range mode.
 - Slider takes `min`, `max` and `step`. DatePicker takes `min` and `max`, keeps
   one Tab stop in its calendar (arrows, Home/End and PageUp/PageDown move), and
   starts weeks on the locale's first day.

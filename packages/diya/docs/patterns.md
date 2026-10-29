@@ -160,8 +160,9 @@ Choose `variant` where appropriate: `smooth` for lines, `stacked` for Cartesian
 series, `horizontal` for bars, `thin` for donut rings (default `standard`). `legend`, `grid`, `tooltip`
 and `palette` control presentation. `formatValue` changes value formatting;
 `centerLabel` labels the donut total.
-`formatValue` applies to tooltips, data tables, donut totals and treemap labels;
-Cartesian axis ticks use the renderer's default formatting.
+`formatValue` applies to tooltips, data tables, donut totals, treemap labels
+and the value axis's ticks; without it, the ticks use the renderer's default
+formatting.
 
 Keep `height` (default 300px) and `valueDomain` constant when comparing simple
 and dense views. More series/slices make the view dense; they do not require
