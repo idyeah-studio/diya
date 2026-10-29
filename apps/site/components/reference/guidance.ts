@@ -93,6 +93,11 @@ export const guidance: Record<ItemId, Guidance> = {
     instead: 'A trend over time? Data Viz.',
     access: 'The change is announced as increased, decreased or unchanged, and whether that is good, not just shown as an arrow and a color.',
   },
+  rating: {
+    use: 'For how people rated something, such as a product, a place or an app. Add the review count, so the stars carry their weight.',
+    instead: 'Asking people for a rating? Choice, with 1 to 5 as its options. A score that isn’t out of stars? Metric.',
+    access: 'One image, named like "Rated 4.3 out of 5, 128 reviews"; the stars themselves are hidden. Stars fill to the nearest half, and the name keeps the exact value.',
+  },
   avatar: {
     use: 'For a person: their photo, or initials when there is none.',
     access: 'Named by the person’s name. A presence dot is announced as part of that name, not by color alone.',

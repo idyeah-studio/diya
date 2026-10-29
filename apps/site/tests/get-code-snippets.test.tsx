@@ -20,6 +20,7 @@ import { DataVizLibrary } from '../components/DataVizLibrary'
 import { DialogLibrary } from '../components/DialogLibrary'
 import { MoreAtomsLibrary } from '../components/MoreAtomsLibrary'
 import { PageHeaderLibrary } from '../components/PageHeaderLibrary'
+import { RatingLibrary } from '../components/RatingLibrary'
 import { SelectLibrary } from '../components/SelectLibrary'
 import { SiteHeaderLibrary } from '../components/SiteHeaderLibrary'
 import { TableLibrary } from '../components/TableLibrary'
@@ -128,7 +129,7 @@ function knownFunctions(snippet: Snippet) {
 
 describe('Get code snippets', () => {
   it('covers every catalog item, with a non-default playground that changes the code', () => {
-    expect(ids).toHaveLength(38)
+    expect(ids).toHaveLength(39)
     for (const id of ids) {
       const base = snippetFor(id, {}).code
       expect(variants[id].length, id).toBeGreaterThan(0)
@@ -323,6 +324,7 @@ describe('Get code follows the live playground', () => {
     menu: () => <CollectionsLibrary component="menu" />,
     tag: () => <DataAtomsLibrary component="tag" />,
     metric: () => <DataAtomsLibrary component="metric" />,
+    rating: () => <RatingLibrary />,
     avatar: () => <MoreAtomsLibrary component="avatar" />,
     list: () => <CollectionsLibrary component="list" />,
     accordion: () => <CollectionsLibrary component="accordion" />,

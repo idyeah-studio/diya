@@ -61,6 +61,10 @@ export const variants: Record<ItemId, { playground: Playground; options?: Record
     { playground: { Color: 'Success', Leading: 'Dot' } },
   ],
   metric: [{ playground: { Size: 'Large', Options: [] } }],
+  rating: [
+    { playground: { Size: 'Large', Options: ['Number'] } },
+    { playground: { Size: 'Small', Options: ['Number', 'Review count'] } },
+  ],
   avatar: [{ playground: { Size: 'Small', Shape: 'Rounded', Status: 'Busy' } }],
   list: [
     { playground: { Size: 'Large', Leading: 'Avatar', Options: [], State: 'Disabled' } },

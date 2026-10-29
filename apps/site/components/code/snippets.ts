@@ -278,9 +278,9 @@ function walk(value: unknown, found: Found, key?: string): void {
 const MAIN_EXPORTS = new Set([
   'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Card', 'Chatbot', 'Choice',
   'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'FileUpload', 'Form', 'List', 'Menu',
-  'Metric', 'PageHeader', 'Pagination', 'Popover', 'Progress', 'Search', 'Select', 'SideNavigation',
-  'SiteHeader', 'Slider', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput', 'TextLink', 'Toast',
-  'Tooltip', 'Wizard',
+  'Metric', 'PageHeader', 'Pagination', 'Popover', 'Progress', 'Rating', 'Search', 'Select',
+  'SideNavigation', 'SiteHeader', 'Slider', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput',
+  'TextLink', 'Toast', 'Tooltip', 'Wizard',
 ])
 const CHART_EXPORTS = new Set(['Chart', 'DataViz'])
 
@@ -289,8 +289,9 @@ const COMPONENT_NAMES: Partial<Record<ItemId, string>> = {
   button: 'Button', 'text-input': 'TextInput', 'text-area': 'TextArea', select: 'Select',
   'date-picker': 'DatePicker', combobox: 'Combobox', choice: 'Choice', switch: 'Switch', slider: 'Slider',
   search: 'Search', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
-  menu: 'Menu', tag: 'Tag', metric: 'Metric', avatar: 'Avatar', list: 'List', accordion: 'Accordion',
-  badge: 'Badge', alert: 'Alert', progress: 'Progress', tooltip: 'Tooltip', popover: 'Popover',
+  menu: 'Menu', tag: 'Tag', metric: 'Metric', rating: 'Rating', avatar: 'Avatar', list: 'List',
+  accordion: 'Accordion', badge: 'Badge', alert: 'Alert', progress: 'Progress', tooltip: 'Tooltip',
+  popover: 'Popover',
 }
 
 /**
@@ -1015,6 +1016,17 @@ function metric(p: Playground): Snippet {
         meaning: 'positive',
         comparison: 'vs. last month',
       },
+    }),
+  })
+}
+
+function rating(p: Playground): Snippet {
+  return build('rating', {
+    jsx: h('Rating', {
+      value: 4.3,
+      count: on(p, 'Options', 'Review count', true) && 128,
+      showValue: on(p, 'Options', 'Number', false),
+      size: sized(sizeOf(p)),
     }),
   })
 }
@@ -1941,6 +1953,7 @@ const SNIPPETS: Record<ItemId, (p: Playground, o: Options) => Snippet> = {
   menu,
   tag,
   metric,
+  rating,
   avatar,
   list,
   accordion,
