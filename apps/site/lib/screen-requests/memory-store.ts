@@ -12,7 +12,7 @@ export class MemoryScreenRequestStore implements ScreenRequestStore {
   }
 
   async insert(input: ScreenRequestInput, now: Date) {
-    const request: ScreenRequest = { ...input, id: String(this.nextId++), createdAt: now, status: 'new', repliedAt: null }
+    const request: ScreenRequest = { ...input, id: String(this.nextId++), createdAt: now, screenName: null, status: 'new', repliedAt: null, shippedAt: null }
     this.requests.set(request.id, request)
     return { ...request }
   }
@@ -21,21 +21,33 @@ export class MemoryScreenRequestStore implements ScreenRequestStore {
     this.requests.delete(id)
   }
 
-  async purge({ repliedBefore, unansweredBefore }: PurgeRule) {
-    let gone = 0
+  async purge({ repliedBefore, unansweredBefore, readySince }: PurgeRule) {
+    let deleted = 0
+    let trimmed = 0
     for (const [id, request] of this.requests) {
-      const expired =
-        request.status === 'closed' ||
-        (request.repliedAt ? request.repliedAt < repliedBefore : request.createdAt < unansweredBefore)
-      if (expired && this.requests.delete(id)) gone++
+      const past = request.repliedAt ? request.repliedAt < repliedBefore : request.createdAt < unansweredBefore
+      const held = request.notifyWhenReady && !request.shippedAt && request.createdAt >= readySince
+      if (request.status === 'closed' || (past && !held)) {
+        this.requests.delete(id)
+        deleted++
+      } else if (past && request.text !== null) {
+        Object.assign(request, { text: null, image: null, ipHash: null })
+        trimmed++
+      }
     }
-    return gone
+    return { deleted, trimmed }
   }
 
   /** Marks a request answered, as the manual query in db/ENV.md does. */
   reply(id: string, at: Date) {
     const request = this.requests.get(id)
     if (request) Object.assign(request, { status: 'replied', repliedAt: at })
+  }
+
+  /** Records that the screen shipped, as the manual query in db/ENV.md does. */
+  ship(id: string, at: Date) {
+    const request = this.requests.get(id)
+    if (request) request.shippedAt = at
   }
 
   close(id: string) {

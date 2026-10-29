@@ -20,14 +20,16 @@ function toRequest(row: Row): ScreenRequest {
     id: String(row.id),
     createdAt: date(row.created_at)!,
     email: String(row.email),
-    text: String(row.request_text),
+    text: (row.request_text as string | null) ?? null,
     posterId: (row.poster_id as string | null) ?? null,
+    screenName: (row.screen_name as string | null) ?? null,
     notifyWhenReady: row.notify_when_ready === true,
     consentVersion: String(row.consent_version),
     image: image && row.image_type ? { bytes: image, type: row.image_type as ImageType } : null,
-    ipHash: String(row.ip_hash),
+    ipHash: (row.ip_hash as string | null) ?? null,
     status: row.status as RequestStatus,
     repliedAt: date(row.replied_at),
+    shippedAt: date(row.shipped_at),
   }
 }
 
@@ -64,15 +66,20 @@ export class NeonScreenRequestStore implements ScreenRequestStore {
     await this.db.query(`delete from diya_screen_requests where id = $1`, [id])
   }
 
-  async purge({ repliedBefore, unansweredBefore }: PurgeRule) {
-    const rows = await this.db.query(
-      `delete from diya_screen_requests
-       where status = 'closed'
-          or replied_at < $1
-          or (replied_at is null and created_at < $2)
-       returning id`,
-      [repliedBefore, unansweredBefore],
-    )
-    return rows.length
+  async purge({ repliedBefore, unansweredBefore, readySince }: PurgeRule) {
+    const past = `(replied_at < $1 or (replied_at is null and created_at < $2))`
+    const held = `(notify_when_ready and shipped_at is null and created_at >= $3)`
+    const params = [repliedBefore, unansweredBefore, readySince]
+    const [deleted, trimmed] = await this.db.transaction([
+      [`delete from diya_screen_requests where status = 'closed' or (${past} and not ${held}) returning id`, params],
+      [
+        `update diya_screen_requests
+         set request_text = null, image = null, image_type = null, image_bytes = null, ip_hash = null
+         where ${past} and ${held} and request_text is not null
+         returning id`,
+        params,
+      ],
+    ])
+    return { deleted: deleted.length, trimmed: trimmed.length }
   }
 }

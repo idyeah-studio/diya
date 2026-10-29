@@ -3,7 +3,7 @@ import { CONSENT_VERSION, MIN_FILL_MS } from '../waitlist/config'
 import { emailProblem, normalizeEmail } from '../waitlist/email-address'
 import type { WaitlistSender } from '../waitlist/sender'
 import { formTokenAge, keyedHash } from '../waitlist/tokens'
-import { IMAGE_MAX_BYTES, RATE_LIMITS, REPLIED_RETENTION_MS, UNANSWERED_RETENTION_MS } from './config'
+import { IMAGE_MAX_BYTES, RATE_LIMITS, READY_RETENTION_MS, REPLIED_RETENTION_MS, UNANSWERED_RETENTION_MS } from './config'
 import { screenRequestEmail } from './email'
 import { imageType } from './image'
 import type { RequestImage, ScreenRequestStore } from './store'
@@ -115,6 +115,7 @@ export async function submit(deps: ScreenRequestDeps, request: ScreenRequestSubm
   await store.purge({
     repliedBefore: new Date(now.getTime() - REPLIED_RETENTION_MS),
     unansweredBefore: new Date(now.getTime() - UNANSWERED_RETENTION_MS),
+    readySince: new Date(now.getTime() - READY_RETENTION_MS),
   })
   const saved = await store.insert(
     {

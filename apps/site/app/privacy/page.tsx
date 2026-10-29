@@ -136,12 +136,16 @@ export default async function Privacy() {
           copy of each message, your address included, for 45 days, and keeps addresses that bounce or report us as spam
           on a do-not-send list.
         </li>
+        <li>
+          <strong>Microsoft 365</strong> holds our email, including the copy of each screen request that comes to us.
+        </li>
       </ul>
       <p>
         Each one handles your details only to provide its service to us. We’re based in the United States and so are
         they, so your details are stored and processed in the US. Each service’s data-processing terms say how it
         protects personal data, including data from the EU and UK: {link('https://vercel.com/legal/dpa', 'Vercel')},{' '}
-        {link('https://neon.com/dpa', 'Neon')} and {link('https://postmarkapp.com/dpa', 'Postmark')}.
+        {link('https://neon.com/dpa', 'Neon')}, {link('https://postmarkapp.com/dpa', 'Postmark')} and{' '}
+        {link('https://www.microsoft.com/licensing/docs/view/Microsoft-Products-and-Services-Data-Protection-Addendum-DPA', 'Microsoft')}.
       </p>
 
       <h2 id="screen-requests">Screen requests</h2>
@@ -174,12 +178,13 @@ export default async function Privacy() {
           <strong>For how long:</strong> we delete the request, its picture and the email that brought it 90 days after
           we reply, or 365 days after you sent it if we never do. If we close a request, as we would spam, it goes at
           the next clean-up. The clean-up runs whenever someone sends a request, so on a quiet day it can happen a little
-          later. If your screen isn’t ready by the time we delete your request, the “when it’s ready” email goes with
-          it.
+          later. If you ticked “Also tell me when it’s ready”, we keep only your email address, which screen it was, the
+          version of this page you agreed to and the dates, until that screen ships or 2 years after your request,
+          whichever comes first. Your words and your picture still go on the schedule above.
         </li>
         <li>
-          <strong>Who helps:</strong> Vercel receives the request, Neon stores it and Postmark carries it to us, as
-          described above.
+          <strong>Who helps:</strong> Vercel receives the request, Neon stores it, Postmark carries it to us and
+          Microsoft 365 holds that email, as described above.
         </li>
         <li>
           <strong>To delete it sooner,</strong> write to {contact} from the address you used, and we’ll delete it.
