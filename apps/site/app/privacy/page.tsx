@@ -136,12 +136,16 @@ export default async function Privacy() {
           copy of each message, your address included, for 45 days, and keeps addresses that bounce or report us as spam
           on a do-not-send list.
         </li>
+        <li>
+          <strong>Microsoft 365</strong> holds our email, including the copy of each screen request that comes to us.
+        </li>
       </ul>
       <p>
         Each one handles your details only to provide its service to us. We’re based in the United States and so are
         they, so your details are stored and processed in the US. Each service’s data-processing terms say how it
         protects personal data, including data from the EU and UK: {link('https://vercel.com/legal/dpa', 'Vercel')},{' '}
-        {link('https://neon.com/dpa', 'Neon')} and {link('https://postmarkapp.com/dpa', 'Postmark')}.
+        {link('https://neon.com/dpa', 'Neon')}, {link('https://postmarkapp.com/dpa', 'Postmark')} and{' '}
+        {link('https://www.microsoft.com/licensing/docs/view/Microsoft-Products-and-Services-Data-Protection-Addendum-DPA', 'Microsoft')}.
       </p>
 
       <h2 id="screen-requests">Screen requests</h2>
@@ -179,8 +183,8 @@ export default async function Privacy() {
           whichever comes first. Your words and your picture still go on the schedule above.
         </li>
         <li>
-          <strong>Who helps:</strong> Vercel receives the request, Neon stores it and Postmark carries it to us, as
-          described above.
+          <strong>Who helps:</strong> Vercel receives the request, Neon stores it, Postmark carries it to us and
+          Microsoft 365 holds that email, as described above.
         </li>
         <li>
           <strong>To delete it sooner,</strong> write to {contact} from the address you used, and we’ll delete it.

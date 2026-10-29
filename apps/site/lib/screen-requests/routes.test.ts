@@ -318,6 +318,8 @@ describe('Opening and closing', () => {
     expect(text).toContain('Also tell me when it’s ready')
     expect(text).toContain(`until that screen ships or ${READY_RETENTION_MS / (365 * DAY)} years after your request, whichever comes first`)
     expect(text).not.toContain('email goes with it')
+    expect(text).toContain('<strong>Microsoft 365</strong> holds our email, including the copy of each screen request that comes to us.')
+    expect(text).toContain('Microsoft 365 holds that email')
   })
 
   it('no route serves a request or its picture', () => {

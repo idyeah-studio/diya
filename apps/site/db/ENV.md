@@ -40,7 +40,7 @@ Each email ends with the query that marks the request answered. Run it after you
 - The clean-up runs each time a request arrives. To run it by hand, both statements in order:
   - `delete from diya_screen_requests where status = 'closed' or ((replied_at < now() - interval '90 days' or (replied_at is null and created_at < now() - interval '365 days')) and not (notify_when_ready and shipped_at is null and created_at >= now() - interval '730 days'));`
   - `update diya_screen_requests set request_text = null, image = null, image_type = null, image_bytes = null, ip_hash = null where (replied_at < now() - interval '90 days' or (replied_at is null and created_at < now() - interval '365 days')) and notify_when_ready and shipped_at is null and created_at >= now() - interval '730 days' and request_text is not null;`
-- The emails that brought requests sit in the `DIYA_REQUESTS_TO` inbox and in Postmark (45 days). The privacy page promises the inbox copy goes on the same schedule as the request's words and picture (90 days after the reply, 365 unanswered), so delete it there too.
+- The emails that brought requests sit in the `DIYA_REQUESTS_TO` inbox (an alias delivering to a Microsoft 365 mailbox, named on the privacy page) and in Postmark (45 days). The privacy page promises the inbox copy goes on the same schedule as the request's words and picture (90 days after the reply, 365 unanswered), so delete it there too.
 
 ## Migrations
 
