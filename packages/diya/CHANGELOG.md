@@ -10,7 +10,7 @@ First public release, under the MIT License.
 
 ### Added
 
-- 25 React components and 13 patterns. `Chart` and `DataViz` are exported from
+- 26 React components and 13 patterns. `Chart` and `DataViz` are exported from
   `@idyeah/diya/charts` and render with the optional `echarts` peer dependency;
   everything else is exported from `@idyeah/diya`.
 - `DiyaProvider` with Light, Dark and Glass appearances, brand color, font,
@@ -85,6 +85,10 @@ First public release, under the MIT License.
 - Figures are tabular: Metric, Table numbers, chart data and Progress line up
   digit for digit, in DIYA Sans's own 0 and 1. A positive or negative
   `Metric` change shows as a tinted chip.
+- `Rating`, read-only stars for products, places and reviews. The stars fill
+  to the nearest half of `value` (out of `max`, 5 by default); `count` adds
+  the number of reviews and `showValue` the rating as a number. Screen readers
+  hear one phrase, such as "Rated 4.3 out of 5, 128 reviews".
 - `DataViz`'s `formatValue` labels the value axis too, and grid lines run
   along the value axis only.
 - A `List` inside a `Card` or `Drawer` lines up with its title.

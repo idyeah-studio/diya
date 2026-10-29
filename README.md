@@ -5,7 +5,7 @@
   </picture>
 </h1>
 
-**A library for your next app.** 25 components and 13 patterns for React. Free, MIT, yours to own.
+**A library for your next app.** 26 components and 13 patterns for React. Free, MIT, yours to own.
 
 [Catalog](https://diya13.ai/explore) ·
 [Components](https://diya13.ai/explore?area=components) ·

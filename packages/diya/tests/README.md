@@ -14,7 +14,8 @@ Table defaults are checked directly: 10 rows a page, `defaultPageSize` and
 `pageSizeOptions`, no checkboxes until there are bulk actions or a selection
 handler, no search until `searchText`, and filter state kept by `key` so two
 filters with the same label stay independent. Display checks cover an
-indeterminate Progress when there is no `value`, Badge `max`, Tag `tone`, Card
+indeterminate Progress when there is no `value`, Rating's half-star rounding,
+clamping and single accessible name, Badge `max`, Tag `tone`, Card
 `tags`/`actions`, pill Tabs, Breadcrumbs `showHomeIcon`, Wizard
 `showStepCount`, Chatbot `layout`/`showTimestamps` and single or `multiple`
 FileUpload. Field checks include Select `onValueChange` beside the native

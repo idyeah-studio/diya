@@ -17,6 +17,7 @@ import { CollectionsLibrary, type CollectionAtom } from '../../components/Collec
 import { MoreAtomsLibrary, type MoreAtom } from '../../components/MoreAtomsLibrary'
 import { TabsLibrary } from '../../components/TabsLibrary'
 import { BadgeLibrary } from '../../components/BadgeLibrary'
+import { RatingLibrary } from '../../components/RatingLibrary'
 import { ChoiceLibrary } from '../../components/ChoiceLibrary'
 import { SelectLibrary } from '../../components/SelectLibrary'
 import { PageHeaderLibrary } from '../../components/PageHeaderLibrary'
@@ -93,6 +94,7 @@ function CatalogPage({ route }: { route: Exclude<CatalogRoute, { area: 'skills' 
       <CollectionsLibrary key={initial.component} component={initial.component as CollectionAtom} />
     )
   if (initial.area === 'components' && initial.component === 'badge') return <BadgeLibrary />
+  if (initial.area === 'components' && initial.component === 'rating') return <RatingLibrary />
   if (initial.area === 'components' && initial.component === 'choice') return <ChoiceLibrary />
   if (initial.area === 'components' && initial.component === 'select') return <SelectLibrary />
   if (initial.area === 'components')

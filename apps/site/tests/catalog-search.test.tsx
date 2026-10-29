@@ -119,7 +119,7 @@ describe('catalog search continuity', () => {
     await user.click(screen.getByRole('button', { name: 'Clear search components' }))
     expect(componentSearch.value).toBe('')
     expect(document.activeElement).toBe(componentSearch)
-    expect(links('Choose a component')).toHaveLength(25)
+    expect(links('Choose a component')).toHaveLength(26)
 
     preview.rerender(<Preview area="patterns" pattern="site-header" />)
     const returnedPatternSearch = screen.getByRole('searchbox', {
@@ -135,7 +135,7 @@ describe('catalog search continuity', () => {
     expect(
       (screen.getByRole('searchbox', { name: 'Search components' }) as HTMLInputElement).value
     ).toBe('')
-    expect(links('Choose a component')).toHaveLength(25)
+    expect(links('Choose a component')).toHaveLength(26)
   })
 
   it('still supports isolated sidebar previews without a catalog search provider', async () => {

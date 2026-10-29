@@ -22,6 +22,7 @@ export const componentGroups = [
   { title: 'Content', items: [
     { id: 'tag', title: 'Tag', keywords: 'label chip removable' },
     { id: 'metric', title: 'Metric', keywords: 'number statistic trend delta value' },
+    { id: 'rating', title: 'Rating', keywords: 'stars reviews score product feedback' },
     { id: 'avatar', title: 'Avatar', keywords: 'profile image initials user' },
     { id: 'list', title: 'List', keywords: 'rows items divider' },
     { id: 'accordion', title: 'Accordion', keywords: 'expand collapse disclosure faq' },

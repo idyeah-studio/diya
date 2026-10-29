@@ -99,7 +99,7 @@ describe('the time switch on the server', () => {
     const after = await generateMetadata()
     expect(after.title).toBe('DIYA — React components and patterns, free under MIT')
     expect(after.description).toBe(
-      '25 components and 13 patterns for React, with Light, Dark and Glass. Free, MIT, yours to own. npm install @idyeah/diya',
+      '26 components and 13 patterns for React, with Light, Dark and Glass. Free, MIT, yours to own. npm install @idyeah/diya',
     )
     expect((after.openGraph as { title?: string }).title).toBe('DIYA — a library for your next app')
     const card = {
@@ -317,7 +317,7 @@ describe('the launched landing', () => {
     expect(container.querySelector('section#pro')).toBeTruthy()
     const text = container.textContent ?? ''
     for (const line of [
-      '25 components and 13 patterns for React. Free, MIT, yours to own.',
+      '26 components and 13 patterns for React. Free, MIT, yours to own.',
       'Explore the library',
       'What’s in the package',
       'One install. Nothing held back for later.',

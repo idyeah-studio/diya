@@ -18,6 +18,7 @@ export const componentIds = [
   'menu',
   'tag',
   'metric',
+  'rating',
   'avatar',
   'list',
   'accordion',

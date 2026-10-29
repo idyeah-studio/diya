@@ -44,6 +44,7 @@ const items: CustomizeItem[] = [
   { id: 'menu', title: 'Menu', kind: 'component', text: 'Menu items', roles: { raised: 'Menu panel', lines: 'Panel edge and dividers' } },
   { id: 'tag', title: 'Tag', kind: 'component', text: 'Neutral tags', roles: { accent: 'Brand tags, as a soft tint' }, status: 'Success, warning, error and info tags' },
   { id: 'metric', title: 'Metric', kind: 'component', text: 'Label and value', roles: {}, status: 'Rises (success) and falls (error)' },
+  { id: 'rating', title: 'Rating', kind: 'component', text: 'Stars, number and review count', roles: {} },
   { id: 'avatar', title: 'Avatar', kind: 'component', text: 'Initials', roles: {}, status: 'Presence dot' },
   { id: 'list', title: 'List', kind: 'component', text: 'Row text', roles: { accent: 'Unread dots', lines: 'Dividers between rows' } },
   { id: 'accordion', title: 'Accordion', kind: 'component', text: 'Headings and content', roles: { lines: 'Dividers between sections' } },
