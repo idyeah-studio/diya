@@ -1498,23 +1498,29 @@
 .diya-root .diya-accordion-heading button { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 24px; padding: 18px 12px; border: 0; border-radius: calc(8px * var(--diya-corner-scale, 1)); color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; }
 .diya-root .diya-accordion-heading button:hover:not(:disabled) { background: var(--diya-color-hover); }
 .diya-root .diya-accordion-heading button:disabled { opacity: .4; cursor: not-allowed; }
-.diya-root .diya-accordion[data-divided='true'] .diya-accordion-item + .diya-accordion-item { border-top: 1px solid var(--diya-color-line); }
+/* Accordion panels, Table cells and Chatbot's welcome take your content, so their rules for plain
+   elements end in the same guard as Dialog's below. Table's guard passes its own diya-table parts. */
+.diya-root .diya-accordion[data-divided='true'] > .diya-accordion-item + .diya-accordion-item { border-top: 1px solid var(--diya-color-line); }
 .diya-root .diya-accordion-content { padding: 0 12px 20px; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: 1.7; }
 .diya-root .diya-accordion-content[hidden] { display: none; }
 .diya-root .diya-dialog { width: min(480px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); overflow: auto; margin: auto; padding: 28px; border: 1px solid var(--diya-color-line); border-radius: calc(22px * var(--diya-corner-scale, 1)); background: var(--diya-color-surface); color: var(--diya-color-text); box-shadow: var(--diya-shadow-raised); box-sizing: border-box; }
 .diya-root .diya-dialog[data-size='small'] { width: min(380px, calc(100vw - 48px)); }
 .diya-root .diya-dialog[data-size='large'] { width: min(640px, calc(100vw - 48px)); }
 .diya-root .diya-dialog::backdrop { background: var(--diya-color-scrim, #0008); backdrop-filter: blur(5px); }
-.diya-root .diya-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-.diya-root .diya-dialog h3 { margin: 0; font-size: var(--diya-text-title); font-weight: 500; }
+/* Container rules for plain elements (Dialog, Card, Drawer, Form and the other workflow surfaces) end in
+   the guard Prose uses: they reach your own plain elements, never a DIYA component placed inside, nor
+   anything it renders. Parts at a fixed place are reached with child combinators instead. Neither
+   changes specificity. */
+.diya-root .diya-dialog header:not(:where([class*='diya-'], .diya-dialog [class*='diya-']:not(.diya-dialog, .diya-dialog-layout, .diya-dialog-content) *)) { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.diya-root .diya-dialog h3:not(:where([class*='diya-'], .diya-dialog [class*='diya-']:not(.diya-dialog, .diya-dialog-layout, .diya-dialog-content) *)) { margin: 0; font-size: var(--diya-text-title); font-weight: 500; }
 .diya-root .diya-dialog-close { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--diya-color-muted); cursor: pointer; }
 .diya-root .diya-dialog-close:hover { background: var(--diya-color-hover); }
 .diya-root .diya-dialog-description { margin: 12px 0 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: 1.6; }
 .diya-root .diya-dialog-content { margin-top: 24px; }
-.diya-root .diya-dialog footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.diya-root .diya-dialog footer:not(:where([class*='diya-'], .diya-dialog [class*='diya-']:not(.diya-dialog, .diya-dialog-layout, .diya-dialog-content) *)) { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .diya-root .diya-list-row:focus-visible,
-.diya-root  .diya-accordion button:focus-visible,
-.diya-root  .diya-dialog button:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
+.diya-root  .diya-accordion button:not(:where([class*='diya-'], .diya-accordion [class*='diya-']:not([class*='diya-accordion']) *)):focus-visible,
+.diya-root  .diya-dialog button:not(:where([class*='diya-'], .diya-dialog [class*='diya-']:not(.diya-dialog, .diya-dialog-layout, .diya-dialog-content) *)):focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
 @media (forced-colors: active) { .diya-root  .diya-dialog { border: 1px solid CanvasText; background: Canvas; color: CanvasText; } }
 
 
@@ -1708,7 +1714,7 @@
 .diya-root .diya-card-header { display:flex; align-items:flex-start; gap:16px; justify-content:space-between; }
 .diya-root .diya-card-header > div:first-child { min-width:0; }
 .diya-root .diya-card-title { font-size:var(--diya-text-title); line-height:var(--diya-leading-tight); letter-spacing:-.015em; font-weight:600; margin:0; overflow-wrap:anywhere; }
-.diya-root .diya-card-header p { color:var(--diya-color-muted); font-size:var(--diya-text-body); line-height:1.6; margin:10px 0 0; }
+.diya-root .diya-card-header p:not(:where([class*='diya-'], .diya-card-header [class*='diya-'] *)) { color:var(--diya-color-muted); font-size:var(--diya-text-body); line-height:1.6; margin:10px 0 0; }
 .diya-root .diya-card-tag { margin-bottom:16px; }
 .diya-root .diya-card-menu { flex-shrink:0; }
 .diya-root .diya-card-menu .diya-button { width:32px; height:32px; min-height:32px; padding:6px; }
@@ -1721,7 +1727,7 @@
 .diya-root .diya-card-footer { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:24px; }
 .diya-root .diya-card-footer[data-divider='true'] { border-top:1px solid var(--diya-color-line); padding-top:20px; }
 .diya-root .diya-card-media { aspect-ratio:2/1; overflow:hidden; }
-.diya-root .diya-card-media img { width:100%; height:100%; object-fit:cover; display:block; }
+.diya-root .diya-card-media img:not(:where([class*='diya-'], .diya-card-media [class*='diya-'] *)) { width:100%; height:100%; object-fit:cover; display:block; }
 
 .diya-root .diya-card[data-shadow="true"] { box-shadow:var(--diya-shadow-raised); }
 
@@ -1763,14 +1769,14 @@
 .diya-root .diya-table-toolbar .diya-search { margin-left:auto; width:240px; max-width:100%; }
 .diya-root .diya-table-scroll { position:relative; overflow:auto; border:1px solid var(--diya-color-line); border-radius:var(--diya-radius-surface); }
 .diya-root .diya-table-scroll:focus-visible { outline:2px solid var(--diya-color-text); outline-offset:4px; }
-.diya-root .diya-table table { width:100%; border-collapse:separate; border-spacing:0; text-align:left; }
-.diya-root .diya-table th { background:var(--diya-internal-table-surface); color:var(--diya-color-muted); font-size:var(--diya-text-caption); font-weight:500; height:48px; }
-.diya-root .diya-table th,
-.diya-root .diya-table td { padding:12px 16px; box-sizing:border-box; vertical-align:middle; }
-.diya-root .diya-table td { height:60px; border-top:1px solid color-mix(in srgb, var(--diya-color-line) 70%, transparent); background:var(--diya-internal-table-surface); }
-.diya-root .diya-table[data-density='compact'] td { height:48px; padding-top:6px; padding-bottom:6px; }
-.diya-root .diya-table tbody tr:hover td { background:var(--diya-internal-table-hover); }
-.diya-root .diya-table tbody tr[data-selected] td { background:var(--diya-color-selected); }
+.diya-root .diya-table table:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { width:100%; border-collapse:separate; border-spacing:0; text-align:left; }
+.diya-root .diya-table th:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { background:var(--diya-internal-table-surface); color:var(--diya-color-muted); font-size:var(--diya-text-caption); font-weight:500; height:48px; }
+.diya-root .diya-table th:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)),
+.diya-root .diya-table td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { padding:12px 16px; box-sizing:border-box; vertical-align:middle; }
+.diya-root .diya-table td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { height:60px; border-top:1px solid color-mix(in srgb, var(--diya-color-line) 70%, transparent); background:var(--diya-internal-table-surface); }
+.diya-root .diya-table[data-density='compact'] td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { height:48px; padding-top:6px; padding-bottom:6px; }
+.diya-root .diya-table tbody tr:hover td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { background:var(--diya-internal-table-hover); }
+.diya-root .diya-table tbody tr[data-selected] td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { background:var(--diya-color-selected); }
 /* Data figures are tabular, so a column of amounts lines up digit for digit. */
 .diya-root .diya-table .diya-table-numeric { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .diya-root .diya-table-sort { display:inline-flex; align-items:center; gap:8px; padding:4px 0; border:0; background:none; color:inherit; font:inherit; cursor:pointer; }
@@ -1778,7 +1784,7 @@
 .diya-root .diya-table-sort:focus-visible { outline:2px solid var(--diya-color-text); outline-offset:4px; border-radius:3px; }
 .diya-root .diya-table-scroll :is(button, input, a) { scroll-margin:8px 24px; }
 .diya-root .diya-table .diya-table-check { width:48px; padding-right:8px; }
-.diya-root .diya-table input[type='checkbox'] { width:16px; height:16px; margin:0; accent-color:var(--diya-color-text); cursor:pointer; vertical-align:middle; }
+.diya-root .diya-table input[type='checkbox']:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { width:16px; height:16px; margin:0; accent-color:var(--diya-color-text); cursor:pointer; vertical-align:middle; }
 .diya-root .diya-table .diya-table-actions { width:56px; padding:8px; position:sticky; right:0; box-shadow:-1px 0 var(--diya-color-line); }
 .diya-root .diya-table .diya-pagination { margin-top:20px; }
 .diya-root .diya-table-bulk { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 16px; margin-bottom:8px; border:1px solid var(--diya-color-line); border-radius:calc(12px * var(--diya-corner-scale, 1)); background:var(--diya-color-selected); }
@@ -1814,24 +1820,24 @@
 .diya-root .diya-table-resource { border:0; padding:0; background:none; color:var(--diya-color-text); font:inherit; text-decoration:underline; text-underline-offset:3px; white-space:nowrap; cursor:pointer; }
 
 
-.diya-root .diya-table[data-sticky] tbody tr[data-selected] td { background:color-mix(in srgb,var(--diya-color-text) calc(var(--diya-internal-table-selected-weight) + 2%),var(--diya-internal-table-surface)); }
-.diya-root .diya-table time { white-space:nowrap; }
+.diya-root .diya-table[data-sticky] tbody tr[data-selected] td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { background:color-mix(in srgb,var(--diya-color-text) calc(var(--diya-internal-table-selected-weight) + 2%),var(--diya-internal-table-surface)); }
+.diya-root .diya-table time:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { white-space:nowrap; }
 .diya-root .diya-table .diya-metric-number { font-size:var(--diya-text-body); }
 .diya-root .diya-table { --diya-internal-table-rule:color-mix(in srgb,var(--diya-color-line) 62%,transparent); }
-.diya-root .diya-table table { table-layout:fixed; }
-.diya-root .diya-table th { height:44px; background:color-mix(in srgb,var(--diya-color-text) 3%,var(--diya-internal-table-surface)); }
-.diya-root .diya-table th,
-.diya-root .diya-table td { padding-left:16px; padding-right:16px; }
-.diya-root .diya-table td { border-top-color:var(--diya-internal-table-rule); height:60px; }
+.diya-root .diya-table table:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { table-layout:fixed; }
+.diya-root .diya-table th:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { height:44px; background:color-mix(in srgb,var(--diya-color-text) 3%,var(--diya-internal-table-surface)); }
+.diya-root .diya-table th:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)),
+.diya-root .diya-table td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { padding-left:16px; padding-right:16px; }
+.diya-root .diya-table td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { border-top-color:var(--diya-internal-table-rule); height:60px; }
 .diya-root .diya-table .diya-table-actions { position:static; box-shadow:none; padding:8px; text-align:center; }
 .diya-root .diya-table[data-sticky] .diya-table-actions { position:sticky; right:0; box-shadow:-1px 0 var(--diya-color-line); }
-.diya-root .diya-table tbody tr[data-selected] td { background:color-mix(in srgb,var(--diya-color-text) var(--diya-internal-table-selected-weight),var(--diya-internal-table-surface)); }
+.diya-root .diya-table tbody tr[data-selected] td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { background:color-mix(in srgb,var(--diya-color-text) var(--diya-internal-table-selected-weight),var(--diya-internal-table-surface)); }
 .diya-root .diya-table-sort { gap:6px; line-height:20px; }
 .diya-root .diya-table-sort svg { opacity:.45; flex-shrink:0; }
 .diya-root .diya-table th[aria-sort='ascending'] .diya-table-sort,
 .diya-root .diya-table th[aria-sort='descending'] .diya-table-sort { color:var(--diya-color-text); }
-.diya-root .diya-table th[aria-sort='ascending'] svg,
-.diya-root .diya-table th[aria-sort='descending'] svg,
+.diya-root .diya-table th[aria-sort='ascending'] svg:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)),
+.diya-root .diya-table th[aria-sort='descending'] svg:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)),
 .diya-root .diya-table-sort:hover svg { opacity:1; }
 .diya-root .diya-table-sort:disabled { cursor:default; }
 .diya-root .diya-table .diya-pagination { display:grid; grid-template-columns:1fr auto 1fr; gap:16px; margin-top:16px; }
@@ -1962,8 +1968,11 @@
 
 /* workflow/WorkflowPatterns.css: portable component rules. */
 .diya-root .diya-workflow-surface { background:var(--diya-color-raised,var(--diya-color-surface)); color:var(--diya-color-text); border:1px solid var(--diya-color-line); border-radius:var(--diya-radius-surface); }
-.diya-root .diya-workflow-surface h3 { margin:0; font-size:var(--diya-text-title); font-weight:600; letter-spacing:-.025em; }
-.diya-root .diya-workflow-surface p:not(:where(.diya-text-field-description, .diya-field-help, .diya-switch-description)) { color:var(--diya-color-muted); font-size:var(--diya-text-body); line-height:1.6; margin:8px 0 0; }
+.diya-root .diya-workflow-surface h3:not(:where([class*='diya-'], .diya-workflow-surface [class*='diya-']:not(.diya-workflow-surface, .diya-drawer-body, .diya-wizard-body) *)) { margin:0; font-size:var(--diya-text-title); font-weight:600; letter-spacing:-.025em; }
+/* A surface's own paragraphs (its description, FileUpload's error) are pinned by place, so they hold
+   however deep the surface sits; plain paragraphs in your content take the same style. */
+.diya-root .diya-workflow-surface p:where(.diya-workflow-surface > *, .diya-workflow-surface > header > *, .diya-drawer-modal > header > div > *, .diya-wizard-body > form > header > *, .diya-upload-drop > *, .diya-content-state > div > *),
+.diya-root .diya-workflow-surface p:not(:where([class*='diya-'], .diya-workflow-surface [class*='diya-']:not(.diya-workflow-surface, .diya-drawer-body, .diya-wizard-body) *)) { color:var(--diya-color-muted); font-size:var(--diya-text-body); line-height:1.6; margin:8px 0 0; }
 .diya-root .diya-workflow-symbol { display:grid; place-items:center; width:52px; height:52px; border-radius:50%; background:var(--diya-color-hover); margin:0 auto 18px; }
 .diya-root .diya-workflow-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
 .diya-root .diya-upload { max-width:600px; margin:auto; padding:20px; }
@@ -1973,10 +1982,10 @@
 .diya-root .diya-upload-files { margin:16px 0 0; padding:0; list-style:none; }.diya-root .diya-upload-files li { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--diya-color-line); }.diya-root .diya-upload-files li:last-child { border:0; }.diya-root .diya-upload-files li>span { flex:1; min-width:0; }.diya-root .diya-upload-files strong { display:block; font-size:var(--diya-text-body); overflow-wrap:anywhere; font-weight:500; }.diya-root .diya-upload-files small { display:block; color:var(--diya-color-muted); font-size:var(--diya-text-caption); margin-top:4px; }
 .diya-root .diya-workflow-surface .diya-workflow-error { color:var(--diya-color-error); }
 .diya-root :is(.diya-project-form-title, .diya-upload-title) { margin:0; font-size:var(--diya-text-title); font-weight:600; letter-spacing:-0.015em; line-height:var(--diya-leading-tight); }
-.diya-root .diya-project-form { max-width:520px; margin:auto; padding:24px; display:grid; gap:24px; }.diya-root .diya-project-form footer { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:12px; padding-top:8px; }
+.diya-root .diya-project-form { max-width:520px; margin:auto; padding:24px; display:grid; gap:24px; }.diya-root .diya-project-form > footer { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:12px; padding-top:8px; }
 .diya-root .diya-workflow-eyebrow { font-size:var(--diya-text-caption); letter-spacing:0; color:var(--diya-color-muted); display:block; margin-bottom:16px; }
-.diya-root .diya-drawer-modal>header { display:flex; gap:16px; align-items:flex-start; padding:24px; border-bottom:1px solid var(--diya-color-line); }.diya-root .diya-drawer-body { padding:24px; }.diya-root .diya-drawer-body h4 { font-size:var(--diya-text-title); margin:0; }.diya-root .diya-drawer-body dl { margin:24px 0 0; }.diya-root .diya-drawer-body dl div { display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid var(--diya-color-line); font-size:var(--diya-text-body); }.diya-root .diya-drawer-body dt { color:var(--diya-color-muted); }.diya-root .diya-drawer-body dd { margin:0; }.diya-root .diya-drawer-modal footer { display:flex; justify-content:flex-end; gap:12px; padding:20px 24px; border-top:1px solid var(--diya-color-line); }
-.diya-root .diya-drawer-modal { position:fixed; inset:0 0 0 auto; width:min(440px,100vw); height:100dvh; max-height:100dvh; max-width:100vw; padding:0; margin:0; border-radius:calc(16px * var(--diya-corner-scale, 1)) 0 0 calc(16px * var(--diya-corner-scale, 1)); overflow:hidden; }.diya-root .diya-drawer-modal[data-side='left'] { inset:0 auto 0 0; border-radius:0 calc(16px * var(--diya-corner-scale, 1)) calc(16px * var(--diya-corner-scale, 1)) 0; }.diya-root .diya-drawer-modal::backdrop { background:var(--diya-color-scrim, #0006); backdrop-filter:blur(4px); }.diya-root .diya-drawer-modal>header>div { flex:1; min-width:0; overflow-wrap:anywhere; }.diya-root .diya-drawer-modal>header>.diya-button { flex-shrink:0; }.diya-root .diya-drawer-modal[open] { display:flex; flex-direction:column; }.diya-root .diya-drawer-modal footer { margin-top:auto; flex-wrap:wrap; }
+.diya-root .diya-drawer-modal>header { display:flex; gap:16px; align-items:flex-start; padding:24px; border-bottom:1px solid var(--diya-color-line); }.diya-root .diya-drawer-body { padding:24px; }.diya-root .diya-drawer-body h4:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { font-size:var(--diya-text-title); margin:0; }.diya-root .diya-drawer-body dl:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { margin:24px 0 0; }.diya-root .diya-drawer-body dl div:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid var(--diya-color-line); font-size:var(--diya-text-body); }.diya-root .diya-drawer-body dt:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { color:var(--diya-color-muted); }.diya-root .diya-drawer-body dd:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { margin:0; }.diya-root .diya-drawer-modal > footer { display:flex; justify-content:flex-end; gap:12px; padding:20px 24px; border-top:1px solid var(--diya-color-line); }
+.diya-root .diya-drawer-modal { position:fixed; inset:0 0 0 auto; width:min(440px,100vw); height:100dvh; max-height:100dvh; max-width:100vw; padding:0; margin:0; border-radius:calc(16px * var(--diya-corner-scale, 1)) 0 0 calc(16px * var(--diya-corner-scale, 1)); overflow:hidden; }.diya-root .diya-drawer-modal[data-side='left'] { inset:0 auto 0 0; border-radius:0 calc(16px * var(--diya-corner-scale, 1)) calc(16px * var(--diya-corner-scale, 1)) 0; }.diya-root .diya-drawer-modal::backdrop { background:var(--diya-color-scrim, #0006); backdrop-filter:blur(4px); }.diya-root .diya-drawer-modal>header>div { flex:1; min-width:0; overflow-wrap:anywhere; }.diya-root .diya-drawer-modal>header>.diya-button { flex-shrink:0; }.diya-root .diya-drawer-modal[open] { display:flex; flex-direction:column; }.diya-root .diya-drawer-modal > footer { margin-top:auto; flex-wrap:wrap; }
 .diya-root .diya-content-state { max-width:600px; margin:auto; padding:44px 32px; text-align:center; }.diya-root .diya-content-state p { max-width:360px; margin:10px auto 24px; }
 .diya-root .diya-workflow-surface :is(.diya-content-state-title, .diya-wizard-title) { margin:0; font-size:var(--diya-text-title); font-weight:600; letter-spacing:-.015em; line-height:var(--diya-leading-tight); }
 @media(max-width:700px) {.diya-root .diya-project-form { padding:20px; } }
@@ -1985,8 +1994,8 @@
 .diya-root .diya-project-form .diya-combobox,
 .diya-root .diya-project-form .diya-date-field{max-width:none;width:100%}.diya-root .diya-form-columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:24px}
 .diya-root .diya-wizard{max-width:720px;margin:auto;width:100%;padding:28px;container-type:inline-size;container-name:diya-wizard}.diya-root .diya-wizard-steps{list-style:none;display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;padding:0 0 24px;margin:0 0 28px;border-bottom:1px solid var(--diya-color-line)}.diya-root .diya-wizard-steps li{display:flex;align-items:center;gap:10px;min-width:0;max-width:100%;color:var(--diya-color-muted);font-size:var(--diya-text-body)}.diya-root .diya-wizard-steps li>span{display:grid;place-items:center;flex-shrink:0;width:28px;height:28px;border:1px solid var(--diya-color-line);border-radius:50%;font-size:var(--diya-text-caption)}.diya-root .diya-wizard-steps strong{min-width:0;font-weight:500;overflow-wrap:anywhere}.diya-root .diya-wizard-steps li[aria-current],
-.diya-root .diya-wizard-steps li[data-complete='true']{color:var(--diya-color-text)}.diya-root .diya-wizard-steps li[aria-current]>span{background:var(--diya-color-accent);color:var(--diya-color-accent-text,var(--diya-color-raised))}.diya-root .diya-wizard-body form{display:grid;gap:24px}.diya-root .diya-wizard-body .diya-text-field,
-.diya-root .diya-wizard-body .diya-combobox{max-width:none}.diya-root .diya-wizard-body{flex:1;min-width:0}.diya-root .diya-wizard-body footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:8px}.diya-root .diya-wizard-summary{font-size:var(--diya-text-caption);color:var(--diya-color-muted)}.diya-root .diya-wizard-review{margin:0;display:grid;gap:16px}.diya-root .diya-wizard-review>div{display:grid;grid-template-columns:90px 1fr;gap:20px;font-size:var(--diya-text-body)}.diya-root .diya-wizard-review dt{color:var(--diya-color-muted)}.diya-root .diya-wizard-review dd{margin:0;overflow-wrap:anywhere}.diya-root .diya-wizard-complete{text-align:center;padding:32px 0}.diya-root .diya-wizard-complete .diya-button{margin-top:24px}.diya-root .diya-wizard[data-orientation='vertical']{display:flex;flex-wrap:wrap;gap:28px}.diya-root .diya-wizard[data-orientation='vertical'] .diya-wizard-steps{flex:0 0 140px;flex-direction:column;justify-content:flex-start;border-bottom:0;border-right:1px solid var(--diya-color-line);padding:0 24px 0 0;margin:0;gap:28px}
+.diya-root .diya-wizard-steps li[data-complete='true']{color:var(--diya-color-text)}.diya-root .diya-wizard-steps li[aria-current]>span{background:var(--diya-color-accent);color:var(--diya-color-accent-text,var(--diya-color-raised))}.diya-root .diya-wizard-body > form{display:grid;gap:24px}.diya-root .diya-wizard-body .diya-text-field,
+.diya-root .diya-wizard-body .diya-combobox{max-width:none}.diya-root .diya-wizard-body{flex:1;min-width:0}.diya-root .diya-wizard-body > :where(form) > footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:8px}.diya-root .diya-wizard-summary{font-size:var(--diya-text-caption);color:var(--diya-color-muted)}.diya-root .diya-wizard-review{margin:0;display:grid;gap:16px}.diya-root .diya-wizard-review>div{display:grid;grid-template-columns:90px 1fr;gap:20px;font-size:var(--diya-text-body)}.diya-root .diya-wizard-review dt{color:var(--diya-color-muted)}.diya-root .diya-wizard-review dd{margin:0;overflow-wrap:anywhere}.diya-root .diya-wizard-complete{text-align:center;padding:32px 0}.diya-root .diya-wizard-complete .diya-button{margin-top:24px}.diya-root .diya-wizard[data-orientation='vertical']{display:flex;flex-wrap:wrap;gap:28px}.diya-root .diya-wizard[data-orientation='vertical'] .diya-wizard-steps{flex:0 0 140px;flex-direction:column;justify-content:flex-start;border-bottom:0;border-right:1px solid var(--diya-color-line);padding:0 24px 0 0;margin:0;gap:28px}
 @media(max-width:700px){.diya-root .diya-wizard{padding:20px}.diya-root .diya-wizard-steps{gap:12px}.diya-root .diya-wizard-steps li{gap:6px}}
 /* A 140px rail plus 28px gap leaves at least 232px for fields before stacking. */
 @container diya-wizard (max-width:400px) {
@@ -2015,13 +2024,13 @@
 .diya-root .diya-chat[data-presentation='floating']{max-width:380px;margin-left:auto;box-shadow:0 calc(12px * var(--diya-elevation, 1)) calc(32px * var(--diya-elevation, 1)) #0002}
 .diya-root .diya-chat[data-presentation='full-page']{max-width:none;height:100%;min-height:0}
 .diya-root .diya-chat-header{flex:none;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--diya-color-line)}
-.diya-root .diya-chat-header small{display:block;color:var(--diya-color-muted);font-size:var(--diya-text-caption);margin-top:5px}
+.diya-root .diya-chat-header > :where(div) > small{display:block;color:var(--diya-color-muted);font-size:var(--diya-text-caption);margin-top:5px}
 /* The thread takes what the header and composer leave: 280px (380px full-page) when the chat sizes
    itself, and the rest of any height the chat is given, scrolling inside. */
 .diya-root .diya-chat-thread{padding:24px;flex:1 1 280px;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .diya-root .diya-chat[data-presentation='full-page'] .diya-chat-thread{flex-basis:380px}
 .diya-root .diya-chat-welcome{text-align:center;margin:24px auto;max-width:430px;font-size:var(--diya-text-large)}
-.diya-root .diya-chat-welcome>span{font-size:var(--diya-text-display)}.diya-root .diya-chat-welcome h3{font-size:var(--diya-text-title);margin:16px 0 8px}.diya-root .diya-chat-welcome p{font-size:var(--diya-text-body);color:var(--diya-color-muted)}
+.diya-root .diya-chat-welcome>span{font-size:var(--diya-text-display)}.diya-root .diya-chat-welcome h3:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)){font-size:var(--diya-text-title);margin:16px 0 8px}.diya-root .diya-chat-welcome p:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)){font-size:var(--diya-text-body);color:var(--diya-color-muted)}
 .diya-root .diya-chat-suggestions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:24px}
 .diya-root .diya-chat-message{margin-bottom:20px;max-width:90%;font-size:var(--diya-text-body);line-height:1.65}.diya-root .diya-chat-message small{color:var(--diya-color-muted);font-size:var(--diya-text-caption)}.diya-root .diya-chat-message p{white-space:pre-wrap;margin:6px 0}
 .diya-root .diya-chat-message[data-role='user']{margin-left:auto;background:var(--diya-color-selected);padding:12px 16px;border-radius:calc(14px * var(--diya-corner-scale, 1))}
@@ -2605,7 +2614,7 @@
     box-shadow: none;
   }
 
-  .diya-root .diya-table tbody tr[data-selected] td {
+  .diya-root .diya-table tbody tr[data-selected] td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) {
     outline: 1px solid Highlight;
     outline-offset: -1px;
   }
@@ -2643,25 +2652,25 @@
 
 /* Type roles. Every title-role heading shares one spec now that DIYA Sans
    renders real medium and semibold weights. */
-.diya-root :is(.diya-card-header h3, .diya-dialog h3, .diya-dialog-heading h3, .diya-table-title, .diya-workflow-surface h3, .diya-drawer-body h4, .diya-chat-welcome h3, .diya-side-navigation > strong) {
+.diya-root :is(.diya-card-header h3:not(:where([class*='diya-'], .diya-card-header [class*='diya-'] *)), .diya-dialog h3:not(:where([class*='diya-'], .diya-dialog [class*='diya-']:not(.diya-dialog, .diya-dialog-layout, .diya-dialog-content) *)), .diya-dialog-heading h3, .diya-table-title, .diya-workflow-surface h3:not(:where([class*='diya-'], .diya-workflow-surface [class*='diya-']:not(.diya-workflow-surface, .diya-drawer-body, .diya-wizard-body) *)), .diya-drawer-body h4:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)), .diya-chat-welcome h3:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)), .diya-side-navigation > strong) {
   font-weight: 600;
   letter-spacing: -0.015em;
   line-height: var(--diya-leading-tight);
 }
-.diya-root .diya-chat-header strong { font-size: var(--diya-text-large); font-weight: 600; }
+.diya-root .diya-chat-header > :where(div) > strong { font-size: var(--diya-text-large); font-weight: 600; }
 /* Underline tabs keep their tight inset at every size. */
 .diya-root .diya-tabs[data-variant='underline'][data-size] .diya-tab { padding-inline: 4px; }
 .diya-root .diya-switch-description[data-invalid] { color: var(--diya-color-error); }
 .diya-root .diya-slider-label { display: block; font-size: var(--diya-text-body); font-weight: 500; margin-bottom: 10px; overflow-wrap: anywhere; }
 
 /* In-page surface titles are quiet: 15px at 550, so the content leads, not the frame. */
-.diya-root :is(.diya-card-title, .diya-analytics-title, .diya-project-form-title, .diya-upload-title, .diya-table-title, .diya-card-header h3, .diya-workflow-surface h3) {
+.diya-root :is(.diya-card-title, .diya-analytics-title, .diya-project-form-title, .diya-upload-title, .diya-table-title, .diya-card-header h3:not(:where([class*='diya-'], .diya-card-header [class*='diya-'] *)), .diya-workflow-surface h3:not(:where([class*='diya-'], .diya-workflow-surface [class*='diya-']:not(.diya-workflow-surface, .diya-drawer-body, .diya-wizard-body) *))) {
   font-size: var(--diya-text-body);
   font-weight: 550;
   letter-spacing: -0.01em;
   line-height: 1.35;
 }
-.diya-root .diya-card-header p { font-size: var(--diya-text-caption); margin-top: 4px; line-height: 1.55; }
+.diya-root .diya-card-header p:not(:where([class*='diya-'], .diya-card-header [class*='diya-'] *)) { font-size: var(--diya-text-caption); margin-top: 4px; line-height: 1.55; }
 .diya-root .diya-analytics-title { margin-bottom: 4px; }
 .diya-root .diya-card-content { margin-top: 20px; }
 
