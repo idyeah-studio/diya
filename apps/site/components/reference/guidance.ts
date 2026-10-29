@@ -36,7 +36,7 @@ export const guidance: Record<ItemId, Guidance> = {
   calendar: {
     use: 'For a screen where picking the day is the main job: booking a time, or choosing the day an agenda shows. The month stays on the page.',
     instead: 'A date inside a form? Date Picker keeps it to one field.',
-    access: 'A labelled group of day buttons with one Tab stop: arrow keys move by day and week, Page Up/Down by month, Home/End to the week’s ends. The chosen day is announced as pressed; unavailable days are announced and can’t be chosen.',
+    access: 'An ARIA date grid named by its month, with one Tab stop: arrow keys move by day and week, Page Up/Down by month, Home/End to the week’s ends. Chosen days are announced as selected and today as the current date; unavailable days are announced and can’t be chosen.',
   },
   combobox: {
     use: 'For one or several choices from a long list people would rather search than scroll.',

@@ -23,6 +23,7 @@ it('imports and server-renders the public entries without browser globals', () =
   expect(html).toContain('disabled=""')
   expect(html).toContain('Revenue')
   expect(html).toContain('Booking day')
-  expect(html).toMatch(/data-date="2026-10-14"[^>]*aria-pressed="true"/)
+  expect(html).toMatch(/role="grid"/)
+  expect(html).toMatch(/data-date="2026-10-14"[^>]*aria-selected="true"/)
   expect(html).toMatch(/data-date="2026-10-15"[^>]*aria-disabled="true"/)
 })

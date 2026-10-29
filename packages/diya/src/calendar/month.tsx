@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react'
 
 /** A date range as ISO dates (YYYY-MM-DD); '' while a bound is unset. */
 export type DateRange = { start: string; end: string }
@@ -30,6 +30,11 @@ const weekdaysFor = (locale: string, start: number) => {
   const names = Array.from({ length: 7 }, (_, index) => format.format(new Date(2023, 0, 1 + ((start + index) % 7))))
   const short = names.map((name) => Array.from(name).slice(0, 2).join(''))
   return new Set(short).size === 7 ? short : names
+}
+// The full names, which name each column for assistive tech (the APG example's `abbr`).
+const weekdayNamesFor = (locale: string, start: number) => {
+  const format = new Intl.DateTimeFormat(locale, { weekday: 'long' })
+  return Array.from({ length: 7 }, (_, index) => format.format(new Date(2023, 0, 1 + ((start + index) % 7))))
 }
 export const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 
@@ -73,14 +78,19 @@ type MonthGridOptions = {
 
 /**
  * The month grid DatePicker shows in its popup and Calendar shows on the page: the
- * month heading with its buttons, the range hint, the weekday headings and the days.
- * One day is a Tab stop; arrows, Home/End and PageUp/PageDown move it, kept inside
- * min and max. Days outside them, or unavailable, are announced and can't be chosen.
+ * month heading with its buttons, the range hint, then the ARIA date grid of the APG
+ * date picker example. The grid is named by the month; a header row of weekday column
+ * headers, then a row per week of gridcells. Each day is a native button with the
+ * gridcell role: chosen days carry aria-selected, today aria-current="date". One day
+ * is a Tab stop; arrows, Home/End and PageUp/PageDown move it, kept inside min and
+ * max. Days outside them, or unavailable, are announced and can't be chosen.
  */
 export function useMonthGrid(options: MonthGridOptions) {
   const { locale, month, onMonthChange, value, range, choosingEnd, min, max, isDateUnavailable, disabled, active, strings: t, onChoose } = options
   const weekStart = useMemo(() => weekStartFor(locale), [locale])
   const weekdays = useMemo(() => weekdaysFor(locale, weekStart), [locale, weekStart])
+  const weekdayNames = useMemo(() => weekdayNamesFor(locale, weekStart), [locale, weekStart])
+  const monthId = `${useId()}-month`
   const [cursor, setCursor] = useState('')
   const grid = useRef<HTMLDivElement | null>(null)
   const focusDate = useRef<string | null>(null)
@@ -122,25 +132,36 @@ export function useMonthGrid(options: MonthGridOptions) {
     // Roving tabindex: one day in the grid is a Tab stop; arrows move it.
     const tabbable = cursor && monthDays.includes(cursor) ? cursor
       : [value.start, value.end, today].find((day) => monthDays.includes(day) && !blocked(day)) ?? monthDays.find((day) => !blocked(day)) ?? monthDays[0]
+    // Weeks of seven cells, empty before the 1st and after the last day.
+    const cells: (string | null)[] = [...Array.from({ length: (first.getDay() - weekStart + 7) % 7 }, () => null), ...monthDays]
+    while (cells.length % 7) cells.push(null)
+    const weeks = Array.from({ length: cells.length / 7 }, (_, week) => cells.slice(week * 7, week * 7 + 7))
+    const between = (day: string) => !!value.end && day > value.start && day < value.end
     const previousDisabled = !!min && iso(new Date(month.getFullYear(), month.getMonth(), 0)) < min
     const nextDisabled = !!max && iso(new Date(month.getFullYear(), month.getMonth() + 1, 1)) > max
     return <>
       <div className="diya-calendar-heading">
         <button type="button" aria-label={t.previousMonth} disabled={disabled || previousDisabled} onClick={() => { setCursor(''); onMonthChange(new Date(month.getFullYear(), month.getMonth() - 1, 1)) }}>‹</button>
-        <strong aria-live="polite">{month.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}</strong>
+        <strong id={monthId} aria-live="polite">{month.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}</strong>
         <button type="button" aria-label={t.nextMonth} disabled={disabled || nextDisabled} onClick={() => { setCursor(''); onMonthChange(new Date(month.getFullYear(), month.getMonth() + 1, 1)) }}>›</button>
       </div>
       {range && <p className="diya-calendar-hint">{choosingEnd ? t.chooseEnd : t.chooseStart}</p>}
-      <div ref={grid} className="diya-calendar-grid">
-        {weekdays.map((day, index) => <span key={index} className="diya-calendar-weekday">{day}</span>)}
-        {Array.from({ length: (first.getDay() - weekStart + 7) % 7 }, (_, index) => <span key={`space-${index}`} />)}
-        {monthDays.map((day, index) => {
-          const unavailable = blocked(day)
-          return <button type="button" key={day} data-date={day} aria-label={display(day, locale)} aria-pressed={day === value.start || day === value.end}
-            aria-disabled={unavailable || undefined} disabled={disabled || undefined} tabIndex={day === tabbable ? 0 : -1}
-            data-between={!!value.end && day > value.start && day < value.end} data-today={day === today} onClick={() => onChoose(day)}
-            onFocus={() => setCursor(day)} onKeyDown={(event) => moveDay(event, day)}>{index + 1}</button>
-        })}
+      <div ref={grid} role="grid" aria-labelledby={monthId} className="diya-calendar-grid">
+        <div role="row" className="diya-calendar-row">
+          {weekdays.map((day, index) => <span key={index} role="columnheader" aria-label={weekdayNames[index]} className="diya-calendar-weekday">{day}</span>)}
+        </div>
+        {weeks.map((week, row) => <div key={row} role="row" className="diya-calendar-row">
+          {week.map((day, column) => {
+            if (!day) return <span key={`space-${column}`} role="gridcell" />
+            const unavailable = blocked(day)
+            // A range is chosen as a whole: its ends and the days between are selected.
+            const selected = day === value.start || day === value.end || between(day)
+            return <button type="button" role="gridcell" key={day} data-date={day} aria-label={display(day, locale)} aria-selected={selected || undefined}
+              aria-current={day === today ? 'date' : undefined} aria-disabled={unavailable || undefined} disabled={disabled || undefined} tabIndex={day === tabbable ? 0 : -1}
+              data-between={between(day)} data-today={day === today} onClick={() => onChoose(day)}
+              onFocus={() => setCursor(day)} onKeyDown={(event) => moveDay(event, day)}>{Number(day.slice(8))}</button>
+          })}
+        </div>)}
       </div>
     </>
   }

@@ -132,7 +132,11 @@ calendar keyboard navigation and Escape: the month grid is one Tab stop, and
 arrows, Home/End and PageUp/PageDown move within it. Weeks start on the
 locale's first day, and `min` and `max` disable (and announce) the days
 outside them. `isDateUnavailable` marks any other day the same way: it is
-announced and can't be chosen, and the arrows still move through it. Popups
+announced and can't be chosen, and the arrows still move through it. The month
+follows the ARIA date grid pattern: a `grid` named by the month, weekday column
+headers with full names, a row per week, and each day a `gridcell` with
+`aria-selected` when chosen (every day of a chosen range) and
+`aria-current="date"` on today. Popups
 preserve the provider's appearance and stay within an open dialog's focus
 boundary.
 

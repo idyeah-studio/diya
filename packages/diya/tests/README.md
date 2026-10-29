@@ -33,8 +33,9 @@ DatePicker checks include reopening the selected month and keyboard navigation
 across calendar boundaries. Calendar checks cover the same keyboard on the page,
 single and range choices, `min`/`max` and `isDateUnavailable` days (announced,
 refused, still reachable by arrow), `disabled`, a controlled `month`, server
-rendering without a time-zone-dependent "today", and that DatePicker's popup
-keeps its markup now that the two share the grid.
+rendering without a time-zone-dependent "today", and the ARIA date grid both
+share: a grid named by its month, weekday column headers, a row per week, and
+gridcells with `aria-selected` and `aria-current="date"`.
 
 HappyDOM supplies a DOM, not browser layout or accessibility conformance evidence.
 The setup emulates the basic native dialog open/close boundary and defaults to the
