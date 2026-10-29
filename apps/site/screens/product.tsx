@@ -140,7 +140,16 @@ export default function ProductDetailScreen() {
                 </p>
               </header>
 
-              <Choice label="Glaze" options={GLAZES} value={glaze} onValueChange={(next) => { setGlaze(next); setRefused(undefined) }} />
+              <Choice
+                label="Glaze"
+                options={GLAZES.map(({ value, label, description, color }) => ({
+                  value,
+                  description,
+                  label: <span className="product-glaze-option"><span className="product-swatch" aria-hidden="true" style={{ background: color }} />{label}</span>,
+                }))}
+                value={glaze}
+                onValueChange={(next) => { setGlaze(next); setRefused(undefined) }}
+              />
               <Select
                 className="product-full"
                 label="Size"
@@ -437,6 +446,8 @@ const css = `
 .product-ship svg { flex: none; margin-top: 2px; }
 .product-copy { margin: 0; font-size: var(--diya-text-body); line-height: var(--diya-leading-body); text-wrap: pretty; }
 .product-strong { font-weight: 600; }
+.product-glaze-option { display: inline-flex; align-items: center; gap: var(--diya-space-2); }
+.product-swatch { width: 14px; height: 14px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--diya-color-text) 16%, transparent); }
 .product-soldout { display: grid; gap: var(--diya-space-4); }
 .product-notify { display: flex; align-items: start; gap: var(--diya-space-3); }
 .product-notify-field { flex: 1; }

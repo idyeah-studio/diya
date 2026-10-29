@@ -136,14 +136,16 @@ export default function GettingStartedScreen() {
             brand={<Brand />}
             value="home"
             groups={[{ id: 'main', items: NAV }, { id: 'workspace', label: WORKSPACE, items: NAV_MORE }]}
+            footer={
+              <div className="getting-started-account">
+                <Avatar name={ME.name} size="small" />
+                <span>
+                  <strong>{ME.name}</strong>
+                  <span className="getting-started-quiet">{WORKSPACE}</span>
+                </span>
+              </div>
+            }
           />
-          <div className="getting-started-account">
-            <Avatar name={ME.name} size="small" />
-            <span>
-              <strong>{ME.name}</strong>
-              <span className="getting-started-quiet">{WORKSPACE}</span>
-            </span>
-          </div>
         </div>
         <div className="getting-started-top">
           <SiteHeader brand={<Brand />} brandHref="/" brandLabel={`${PRODUCT}, home`} value="home" items={[...NAV, ...NAV_MORE].map(({ value, label, href }) => ({ value, label, href }))} avatar={<Avatar name={ME.name} size="small" />} />
@@ -343,7 +345,7 @@ const css = `
   background: var(--diya-color-accent); color: var(--diya-color-accent-text);
   font-size: var(--diya-text-body); font-weight: 650; line-height: 1;
 }
-.getting-started-account { display: flex; align-items: center; gap: var(--diya-space-3); padding: var(--diya-space-4) var(--diya-space-5) var(--diya-space-5); border-top: 1px solid var(--diya-color-line); font-size: var(--diya-text-caption); }
+.getting-started-account { display: flex; align-items: center; gap: var(--diya-space-3); padding: var(--diya-space-4) var(--diya-space-3) 0; border-top: 1px solid var(--diya-color-line); font-size: var(--diya-text-caption); }
 .getting-started-account > span { display: grid; min-width: 0; }
 .getting-started-quiet { color: var(--diya-color-muted); font-size: var(--diya-text-caption); white-space: nowrap; }
 .getting-started-top { display: none; }

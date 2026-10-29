@@ -144,7 +144,11 @@ announced and can't be chosen, and the arrows still move through it. The month
 follows the ARIA date grid pattern: a `grid` named by the month, weekday column
 headers with full names, a row per week, and each day a `gridcell` with
 `aria-selected` when chosen (every day of a chosen range) and
-`aria-current="date"` on today. Popups
+`aria-current="date"` on today. Each day's name includes its weekday in the
+provider's locale ("Thursday, November 12, 2026" in `en-US`), and an
+unavailable day says so in words ("…, unavailable") as well as through
+`aria-disabled`; the `unavailableDay` message in `calendar` and `datePicker`
+changes that wording. Popups
 preserve the provider's appearance and stay within an open dialog's focus
 boundary.
 

@@ -22,8 +22,8 @@ describe('DatePicker controlled month and keyboard contracts', () => {
     await user.click(screen.getByRole('button', { name: /Reporting range/ }))
 
     expect(within(calendar()).getByText('September 2026')).toBeTruthy()
-    expect(within(calendar()).getByRole('gridcell', { name: 'Sep 1, 2026' }).getAttribute('aria-selected')).toBe('true')
-    expect(within(calendar()).getByRole('gridcell', { name: 'Sep 30, 2026' }).getAttribute('aria-selected')).toBe('true')
+    expect(within(calendar()).getByRole('gridcell', { name: 'Tuesday, September 1, 2026' }).getAttribute('aria-selected')).toBe('true')
+    expect(within(calendar()).getByRole('gridcell', { name: 'Wednesday, September 30, 2026' }).getAttribute('aria-selected')).toBe('true')
   })
 
   it('uses a changed controlled value when reopening a previously browsed calendar', async () => {
@@ -59,7 +59,7 @@ describe('DatePicker controlled month and keyboard contracts', () => {
     await user.click(trigger)
 
     expect(within(calendar()).getByText('October 2026')).toBeTruthy()
-    expect(within(calendar()).getByRole('gridcell', { name: 'Oct 14, 2026' }).getAttribute('aria-selected')).toBe('true')
+    expect(within(calendar()).getByRole('gridcell', { name: 'Wednesday, October 14, 2026' }).getAttribute('aria-selected')).toBe('true')
     expect(changes).not.toHaveBeenCalled()
   })
 
@@ -74,13 +74,13 @@ describe('DatePicker controlled month and keyboard contracts', () => {
     const trigger = screen.getByRole('button', { name: /Reporting range/ })
 
     await user.click(trigger)
-    await user.click(within(calendar()).getByRole('gridcell', { name: 'Sep 20, 2026' }))
+    await user.click(within(calendar()).getByRole('gridcell', { name: 'Sunday, September 20, 2026' }))
     expect(changes).toHaveBeenLastCalledWith({ start: '2026-09-20', end: '' })
     await user.keyboard('{Escape}')
     await user.click(trigger)
 
     expect(within(calendar()).getByText('Choose end date')).toBeTruthy()
-    await user.click(within(calendar()).getByRole('gridcell', { name: 'Sep 25, 2026' }))
+    await user.click(within(calendar()).getByRole('gridcell', { name: 'Friday, September 25, 2026' }))
 
     expect(changes).toHaveBeenLastCalledWith({ start: '2026-09-20', end: '2026-09-25' })
     expect(changes).toHaveBeenCalledTimes(2)
@@ -89,12 +89,12 @@ describe('DatePicker controlled month and keyboard contracts', () => {
   })
 
   it.each([
-    ['right', '2026-10-31', 'Oct 31, 2026', '{ArrowRight}', '2026-11-01', 'Nov 1, 2026', 'November 2026'],
-    ['left', '2026-10-01', 'Oct 1, 2026', '{ArrowLeft}', '2026-09-30', 'Sep 30, 2026', 'September 2026'],
-    ['down', '2026-10-28', 'Oct 28, 2026', '{ArrowDown}', '2026-11-04', 'Nov 4, 2026', 'November 2026'],
-    ['up', '2026-10-03', 'Oct 3, 2026', '{ArrowUp}', '2026-09-26', 'Sep 26, 2026', 'September 2026'],
-    ['PageUp', '2026-10-31', 'Oct 31, 2026', '{PageUp}', '2026-09-30', 'Sep 30, 2026', 'September 2026'],
-    ['PageDown', '2026-01-31', 'Jan 31, 2026', '{PageDown}', '2026-02-28', 'Feb 28, 2026', 'February 2026'],
+    ['right', '2026-10-31', 'Saturday, October 31, 2026', '{ArrowRight}', '2026-11-01', 'Sunday, November 1, 2026', 'November 2026'],
+    ['left', '2026-10-01', 'Thursday, October 1, 2026', '{ArrowLeft}', '2026-09-30', 'Wednesday, September 30, 2026', 'September 2026'],
+    ['down', '2026-10-28', 'Wednesday, October 28, 2026', '{ArrowDown}', '2026-11-04', 'Wednesday, November 4, 2026', 'November 2026'],
+    ['up', '2026-10-03', 'Saturday, October 3, 2026', '{ArrowUp}', '2026-09-26', 'Saturday, September 26, 2026', 'September 2026'],
+    ['PageUp', '2026-10-31', 'Saturday, October 31, 2026', '{PageUp}', '2026-09-30', 'Wednesday, September 30, 2026', 'September 2026'],
+    ['PageDown', '2026-01-31', 'Saturday, January 31, 2026', '{PageDown}', '2026-02-28', 'Saturday, February 28, 2026', 'February 2026'],
   ])('moves %s across a month boundary without selecting until Enter', async (_direction, initial, initialLabel, key, next, nextLabel, monthLabel) => {
     const user = userEvent.setup()
     const changes = vi.fn()

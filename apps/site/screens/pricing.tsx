@@ -236,7 +236,7 @@ function Calculator({ period, onPeriodChange, onTalk }: { period: Period; onPeri
         }
       >
         <div className="pricing-calc-body">
-          <Slider label="People on your team" min={1} max={MAX_SEATS} value={seats} onValueChange={setSeats} className="pricing-full" />
+          <Slider label="People on your team" min={1} max={MAX_SEATS} value={seats} onValueChange={setSeats} formatValue={people} className="pricing-full" />
           <div className="pricing-calc-results" aria-live="polite">
             {paid.map((plan) => {
               const price = priceOf(plan, period)

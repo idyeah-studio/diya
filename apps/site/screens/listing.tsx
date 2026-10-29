@@ -99,7 +99,8 @@ async function searchProducts(filters: Filters, page: number) {
 const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 const money = (amount: number) => usd.format(amount)
 const keyOf = (filters: Filters, page: number) => `${JSON.stringify(filters)} ${page}`
-const priceRange = ([low, high]: [number, number]) => `${money(low)} – ${money(high)}${high === PRICE_TOP ? '+' : ''}`
+const priceLabel = (price: number) => `${money(price)}${price === PRICE_TOP ? '+' : ''}`
+const priceRange = ([low, high]: [number, number]) => `${priceLabel(low)} – ${priceLabel(high)}`
 
 export default function ListingScreen() {
   const [filters, setFilters] = useState(NO_FILTERS)
@@ -267,13 +268,8 @@ function FilterControls({ filters, update }: { filters: Filters; update: (patch:
   return (
     <div className="listing-filters">
       <Choice label="Category" options={CATEGORIES} value={filters.category} onValueChange={(category) => update({ category })} />
-      <div>
-        <p className="listing-price-label" aria-hidden="true">
-          Price <span className="listing-price-range">{priceRange(filters.price)}</span>
-        </p>
-        <Slider range hideLabel label="Price" min={0} max={PRICE_TOP} step={5} showValues={false}
-          value={filters.price} onValueChange={(price) => update({ price })} />
-      </div>
+      <Slider range label="Price" min={0} max={PRICE_TOP} step={5} formatValue={priceLabel}
+        value={filters.price} onValueChange={(price) => update({ price })} />
       <Switch label="In stock only" checked={filters.inStock} onCheckedChange={(inStock) => update({ inStock })} />
       <Choice label="Rating" options={RATINGS} value={filters.rating} onValueChange={(rating) => update({ rating })} />
     </div>
@@ -355,8 +351,6 @@ const css = `
 .listing-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--diya-space-8); align-items: start; }
 .listing-aside { position: sticky; top: var(--diya-space-5); }
 .listing-filters { display: grid; gap: var(--diya-space-6); }
-.listing-price-label { display: flex; justify-content: space-between; gap: var(--diya-space-3); margin: 0 0 var(--diya-space-3); font-size: var(--diya-text-body); font-weight: 500; }
-.listing-price-range { color: var(--diya-color-muted); font-weight: 400; font-variant-numeric: tabular-nums; }
 .listing-toolbar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--diya-space-4); margin-bottom: var(--diya-space-5); }
 .listing-heading { display: flex; align-items: baseline; gap: var(--diya-space-3); min-width: 0; }
 .listing-results-title { margin: 0; font-size: var(--diya-text-heading); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }

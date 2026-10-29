@@ -238,11 +238,12 @@ export default function AssistantScreen() {
             {PRODUCT}
           </p>
           <NewChat onClick={() => open('')} />
-          <History chats={chats} value={openId} onOpen={open} />
-          <p className="ai-account">
-            <Avatar name={USER} size="small" aria-hidden="true" />
-            {USER}
-          </p>
+          <History chats={chats} value={openId} onOpen={open} footer={
+            <p className="ai-account">
+              <Avatar name={USER} size="small" aria-hidden="true" />
+              {USER}
+            </p>
+          } />
         </aside>
 
         <main className="ai-main">
@@ -265,8 +266,8 @@ export default function AssistantScreen() {
           <Chatbot
             className="ai-chat"
             layout="full-page"
+            showHeader={false}
             title={PRODUCT}
-            description={MODELS.find((entry) => entry.value === model)?.note}
             assistantLabel={PRODUCT}
             messages={chat?.messages ?? []}
             value={draft}
@@ -284,7 +285,7 @@ export default function AssistantScreen() {
               <div className="ai-welcome">
                 <span className="ai-welcome-mark" aria-hidden="true"><Sparkles /></span>
                 <h2 className="ai-welcome-title">What are we working on?</h2>
-                <p className="ai-welcome-text">Ask a question, paste a draft or attach a file. {PRODUCT} is good with plans, numbers and first drafts.</p>
+                <p className="ai-welcome-text">Ask a question, paste a draft or attach a file. {MODELS.find((entry) => entry.value === model)?.note}</p>
               </div>
             }
           />
@@ -326,19 +327,23 @@ export default function AssistantScreen() {
   )
 }
 
-function History({ chats, value, onOpen }: { chats: Chat[]; value: string; onOpen: (id: string) => void }) {
-  if (!chats.length) {
-    return (
-      <p className="ai-history-empty">
-        <strong className="ai-strong">No chats yet.</strong> Your conversations will show up here.
-      </p>
-    )
-  }
+function History({ chats, value, onOpen, footer }: { chats: Chat[]; value: string; onOpen: (id: string) => void; footer?: ReactNode }) {
   const groups = GROUPS.map((group) => ({
     ...group,
     items: chats.filter((entry) => entry.group === group.id).map((entry) => ({ value: entry.id, label: entry.title })),
   })).filter((group) => group.items.length > 0)
-  return <SideNavigation className="ai-history" label="Chat history" groups={groups} value={value} onValueChange={onOpen} />
+  return (
+    <>
+      {!chats.length && (
+        <p className="ai-history-empty">
+          <strong className="ai-strong">No chats yet.</strong> Your conversations will show up here.
+        </p>
+      )}
+      {(groups.length > 0 || footer) && (
+        <SideNavigation className="ai-history" label="Chat history" groups={groups} value={value} onValueChange={onOpen} footer={footer} />
+      )}
+    </>
+  )
 }
 
 function NewChat({ onClick }: { onClick: () => void }) {
@@ -446,12 +451,12 @@ const css = `
   display: flex;
   align-items: center;
   gap: var(--diya-space-3);
-  margin: auto 0 0;
+  margin: 0;
   padding: var(--diya-space-4) var(--diya-space-3) 0;
   border-top: 1px solid var(--diya-color-line);
   font-size: var(--diya-text-caption);
 }
-.ai-history { width: auto; padding: 0; border: 0; border-radius: 0; background: transparent; backdrop-filter: none; box-shadow: none; overflow: visible; }
+.ai-history { flex: 1 0 auto; width: auto; padding: 0; border: 0; border-radius: 0; background: transparent; backdrop-filter: none; box-shadow: none; overflow: visible; }
 .ai-history-empty { margin: 0; padding: var(--diya-space-2) var(--diya-space-3); color: var(--diya-color-muted); font-size: var(--diya-text-caption); line-height: var(--diya-leading-body); }
 .ai-strong { display: block; color: var(--diya-color-text); font-weight: 600; }
 .ai-main {
@@ -478,17 +483,12 @@ const css = `
 .ai-title:focus { outline: none; }
 .ai-model { width: 112px; }
 .ai-chat { flex: 1 1 0; width: 100%; max-width: 880px; min-height: 0; margin-inline: auto; }
-.ai-welcome { display: grid; justify-items: center; gap: var(--diya-space-3); padding-top: var(--diya-space-6); }
+.ai-welcome { display: grid; justify-items: center; gap: var(--diya-space-3); padding-top: clamp(0px, 14dvh - 64px, var(--diya-space-8)); }
 .ai-welcome-mark { width: 44px; height: 44px; border-radius: calc(13px * var(--diya-corner-scale, 1)); }
 .ai-welcome-title { margin: var(--diya-space-2) 0 0; font-size: var(--diya-text-heading); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
 .ai-welcome-text { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: var(--diya-leading-body); text-wrap: pretty; }
 .ai-failed { display: inline-flex; align-items: center; gap: var(--diya-space-2); color: var(--diya-color-error); }
 .ai-drawer-body { display: grid; gap: var(--diya-space-4); }
-@media (max-height: 720px) {
-  .ai-welcome { padding-top: 0; }
-  .ai-welcome-mark,
-  .ai-welcome-text { display: none; }
-}
 @media (max-width: 880px) {
   .ai { grid-template-columns: minmax(0, 1fr); }
   .ai-rail { display: none; }

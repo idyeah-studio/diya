@@ -128,9 +128,8 @@ function SignInStep({ email, setEmail, go, titleRef, onEmailed }: StepProps & { 
       <p className="sign-in-or">or</p>
       <Stack gap={4}>
         {failed && (
-          <Alert tone="error" urgent action={{ label: 'Reset your password', onClick: () => go('forgot') }}>
-            <strong className="sign-in-strong">That email and password don’t match.</strong> Check for typos and caps
-            lock, then try again.
+          <Alert tone="error" urgent title="That email and password don’t match." action={{ label: 'Reset your password', onClick: () => go('forgot') }}>
+            Check for typos and caps lock, then try again.
           </Alert>
         )}
         <TextInput ref={emailField} label="Email" type="email" autoComplete="username" value={email} error={errors.email}

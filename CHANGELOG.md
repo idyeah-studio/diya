@@ -78,7 +78,9 @@ First public release, under the MIT License.
   `isDateUnavailable` to mark days that can't be chosen, such as days with no
   open slots. Both follow the ARIA date grid pattern: a grid named by its
   month, weekday column headers, gridcells with `aria-selected` on chosen days
-  and `aria-current="date"` on today.
+  and `aria-current="date"` on today. Each day's name includes its weekday
+  ("Thursday, November 12, 2026"), and an unavailable day says so in words,
+  through the `unavailableDay` message.
 - `headingLevel` on every pattern that renders a heading; Form's `title` is
   optional.
 - Pagination fits at 320 to 390px.

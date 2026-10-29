@@ -261,15 +261,16 @@ export default function DashboardScreen() {
 
         <aside className="dashboard-side" aria-label="Sidebar">
           <SideNavigation className="dashboard-nav" brand={brand} collapsedBrand={<span className="dashboard-mark" aria-hidden="true">{PRODUCT[0]}</span>}
-            collapsed={collapsed} value="overview" groups={groups} />
-          <div className="dashboard-foot" data-collapsed={collapsed}>
-            {account}
-            <Tooltip content={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="right">
-              <Button variant="quiet" iconOnly size="small" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={() => setCollapsed(!collapsed)}>
-                {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
-              </Button>
-            </Tooltip>
-          </div>
+            collapsed={collapsed} value="overview" groups={groups} footer={
+              <div className="dashboard-foot" data-collapsed={collapsed}>
+                {account}
+                <Tooltip content={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="right">
+                  <Button variant="quiet" iconOnly size="small" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={() => setCollapsed(!collapsed)}>
+                    {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+                  </Button>
+                </Tooltip>
+              </div>
+            } />
         </aside>
 
         <header className="dashboard-bar">
@@ -411,7 +412,7 @@ const css = `
 .dashboard-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
 
 .dashboard-side { position: sticky; top: 0; height: 100dvh; display: flex; }
-.dashboard-nav { height: 100%; overflow-y: auto; padding-bottom: 120px; }
+.dashboard-nav { height: 100%; overflow-y: auto; }
 .dashboard-brand { display: inline-flex; align-items: center; gap: 10px; font-size: var(--diya-text-large); font-weight: 600; letter-spacing: -0.01em; color: var(--diya-color-text); }
 .dashboard-mark {
   display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none;
@@ -419,8 +420,8 @@ const css = `
   background: var(--diya-color-accent); color: var(--diya-color-accent-text);
   font-size: var(--diya-text-body); font-weight: 650; line-height: 1;
 }
-.dashboard-foot { position: absolute; inset: auto 1px 0 0; display: flex; align-items: center; gap: 2px; padding: 12px 8px 16px 10px; }
-.dashboard-foot[data-collapsed='true'] { flex-direction: column; padding-inline: 12px; }
+.dashboard-foot { display: flex; align-items: center; gap: 2px; margin-inline: -6px; }
+.dashboard-foot[data-collapsed='true'] { flex-direction: column; margin-inline: 0; }
 .dashboard-account {
   display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; padding: 6px; border: 0; border-radius: calc(10px * var(--diya-corner-scale, 1));
   background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
