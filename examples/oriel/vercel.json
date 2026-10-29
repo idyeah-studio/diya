@@ -3,6 +3,5 @@
   "framework": "nextjs",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "buildCommand": "cd ../.. && pnpm build && pnpm --filter ./examples/oriel build",
-  "outputDirectory": ".next",
-  "git": { "deploymentEnabled": false }
+  "outputDirectory": ".next"
 }
