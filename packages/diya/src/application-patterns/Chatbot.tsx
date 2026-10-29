@@ -15,7 +15,7 @@ declare module '../messages.js' {
 export type ChatMessage = {
   /** Stable key for the message. */
   id: string
-  /** Who wrote it; assistant messages get a Copy button. */
+  /** Who wrote it; assistant messages get a Copy button, once they are no longer being written. */
   role: 'user' | 'assistant'
   /** The message, shown as plain text. */
   text: string
@@ -139,7 +139,7 @@ export const Chatbot = forwardRef<HTMLElement, ChatbotProps>(function Chatbot({ 
     {(showHeader || closable) && <header className="diya-chat-header"><div>{showHeader && <><strong>{title}</strong>{description && <small>{description}</small>}</>}</div>{closable && <Button variant="quiet" iconOnly aria-label={t.closeChat} onClick={() => onOpenChange(false)}><Icon name="close" /></Button>}</header>}
     <div className="diya-chat-thread" ref={thread} role="log" aria-label={t.messages(title)} aria-live="polite" aria-relevant="additions text" aria-busy={writing || undefined} onScroll={() => { const node = thread.current; if (node) follows.current = node.scrollHeight - node.scrollTop - node.clientHeight < 50 }}>
       {!messages.length && (welcome || suggestions.length > 0) && <div className="diya-chat-welcome">{welcome}{suggestions.length > 0 && <div className="diya-chat-suggestions">{suggestions.map(suggestion => <Button key={suggestion} variant="outline" shape="pill" disabled={loading} onClick={() => send(suggestion)}>{suggestion}</Button>)}</div>}</div>}
-      {messages.map(message => <article key={message.id} className="diya-chat-message" data-role={message.role}><small>{message.role === 'user' ? userLabel ?? t.you : assistantLabel ?? t.assistant}{showTimestamps && message.timestamp && ` · ${message.timestamp}`}</small><p>{message.text}</p>{message.role === 'assistant' && <Button size="small" variant="quiet" onClick={() => void copy(message)}>{t.copy}</Button>}</article>)}
+      {messages.map((message, index) => <article key={message.id} className="diya-chat-message" data-role={message.role}><small>{message.role === 'user' ? userLabel ?? t.you : assistantLabel ?? t.assistant}{showTimestamps && message.timestamp && ` · ${message.timestamp}`}</small><p>{message.text}</p>{message.role === 'assistant' && !(writing && index === messages.length - 1) && <Button size="small" variant="quiet" onClick={() => void copy(message)}>{t.copy}</Button>}</article>)}
       {loading && !writing && <p role="status">{t.preparing}</p>}
     </div>
     <form className="diya-chat-composer" onSubmit={event => { event.preventDefault(); send() }}>

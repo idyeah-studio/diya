@@ -128,7 +128,9 @@ its reply when it succeeds. Keep `loading` true during the request and connect
 `onStop` to a real cancellation operation when offered. If you stream the reply
 into an assistant message, keep `loading` true until it is complete: the log is
 marked busy meanwhile, so screen readers read the reply once, not word by word.
-"Preparing a response…" shows only until the reply's first words arrive.
+"Preparing a response…" shows only until the reply's first words arrive, and
+the reply gets its Copy button once `loading` is off. A reply stopped partway
+keeps what was written, and can be copied too.
 
 `layout="full-page"` fills its container's width and height: the header and
 composer stay put, and the thread takes the rest and scrolls, following the

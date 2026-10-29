@@ -124,7 +124,8 @@ First public release, under the MIT License.
 - Chatbot `showHeader={false}` hides its header for a screen that has its own
   heading; `title` still names the chat region and its message log.
 - A streaming Chatbot reply replaces "Preparing a response…": the line shows
-  only until the reply's first words arrive.
+  only until the reply's first words arrive. The reply gets its Copy button
+  once it is complete or stopped.
 - `npm create diya@latest` (the `create-diya` package, released with this one
   on the same version) starts a Next.js or Vite app with the provider, styles
   and agent notes in place, from Minimal or from Oriel, a four-screen

@@ -1,5 +1,6 @@
 // What a full-page assistant screen needs from Chatbot: a page heading of its own
-// in place of Chatbot's header, and a streaming reply without a stale "Preparing" line.
+// in place of Chatbot's header, and a streaming reply without a stale "Preparing" line
+// or a Copy button for half a reply.
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Chatbot, DiyaProvider, type ChatMessage, type ChatbotProps } from '../dist/index.js'
@@ -44,5 +45,16 @@ describe('Chatbot while a reply is on its way', () => {
     expect(log().getAttribute('aria-busy')).toBe('true')
     view.rerender(chat({ messages: [question, { ...reply, text: 'Here’s a calm, affordable weekend.' }] }))
     expect(screen.queryByText('Preparing a response…')).toBeNull()
+  })
+
+  it('offers Copy on a reply once it is no longer being written, including one stopped partway', () => {
+    const earlier: ChatMessage = { id: '0', role: 'assistant', text: 'Hello again.' }
+    const view = render(chat({ messages: [earlier, question, reply], loading: true, onStop: noop }))
+    const copies = () => screen.queryAllByRole('button', { name: 'Copy' }).map(button => button.closest('article')?.textContent)
+    // Streaming: earlier replies keep Copy, the one being written has none.
+    expect(copies()).toEqual([expect.stringContaining('Hello again.')])
+    // Stopped: what was written so far can be copied.
+    view.rerender(chat({ messages: [earlier, question, reply], onStop: noop }))
+    expect(copies()).toEqual([expect.stringContaining('Hello again.'), expect.stringContaining('Here’s a calm')])
   })
 })
