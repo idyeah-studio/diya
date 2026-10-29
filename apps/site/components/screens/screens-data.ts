@@ -333,8 +333,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'assistant',
     component: 'Assistant',
     charts: false,
-    status: 'building',
-    tryThis: 'Pick a suggestion, stop a reply halfway, or ask “fail” to see the error with Retry.',
+    status: 'ready',
+    tryThis: 'Pick a suggestion and press Stop halfway, or ask anything with “fail” in it to see the error with Retry. Attach a file, open Kitchen remodel budget for a long thread, or use Chat options to rename, delete or clear every chat.',
     keywords: 'ai chat assistant chatbot conversation llm',
   },
   {
@@ -346,8 +346,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'inbox',
     component: 'Inbox',
     charts: false,
-    status: 'building',
-    tryThis: 'Open a message to reply, switch to an empty folder, or narrow the window to watch the panes take turns.',
+    status: 'ready',
+    tryThis: 'Open a message to mark it read and watch the count drop. Reply with “fail” in it to see a send error, then Try again. Archive all six for Inbox zero, or open Spam for an empty folder. With a row focused, J and K move through messages.',
     keywords: 'inbox email messages support tickets mail',
   },
   {
