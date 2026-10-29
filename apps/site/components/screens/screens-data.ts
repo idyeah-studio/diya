@@ -305,8 +305,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'settings/api-keys',
     component: 'ApiKeys',
     charts: true,
-    status: 'building',
-    tryThis: 'Create a key to see it shown once, revoke one, or turn on an integration that needs setting up.',
+    status: 'ready',
+    tryThis: 'Create a key to see it shown once (reuse “Billing worker” for the name error), revoke one, switch to Sandbox for no keys yet, open the failing webhook and send it a test, add an endpoint with http:// or localhost, or connect Pebblestack, which needs a dataset name.',
     keywords: 'api keys tokens integrations webhooks developer',
   },
   {
@@ -318,8 +318,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'profile',
     component: 'Profile',
     charts: false,
-    status: 'building',
-    tryThis: 'Switch between your own profile and a teammate’s, then open a new member’s activity for the empty state.',
+    status: 'ready',
+    tryThis: 'Open Activity or Team to see them load, then Edit profile, clear About and save for the empty state and the save toast.',
     keywords: 'profile user person member about people',
   },
 
@@ -548,8 +548,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'errors',
     component: 'ErrorPages',
     charts: false,
-    status: 'building',
-    tryThis: 'Move between the pages, copy the error ID on the server error, or request access on the no-access page.',
+    status: 'ready',
+    tryThis: 'Move between the pages, copy the error ID on the server error, request access on the no-access page, or send a new link on the expired one.',
     keywords: 'error 404 500 403 not found maintenance offline expired',
   },
 ]
