@@ -112,7 +112,7 @@ describe('scoped and anchored popups', () => {
     const { rerender } = render(<Example />)
     await user.click(screen.getByRole('button', { name: /Reporting period/ }))
     const calendar = screen.getByRole('group', { name: 'Choose date' })
-    const days = within(calendar).getAllByRole('button', { name: /^[A-Za-z]+ \d{1,2}, \d{4}$/ })
+    const days = within(calendar).getAllByRole('gridcell', { name: /^[A-Za-z]+ \d{1,2}, \d{4}$/ })
     await user.click(days[0])
     expect(changes.mock.lastCall?.[0].start).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     expect(changes.mock.lastCall?.[0].end).toBe('')

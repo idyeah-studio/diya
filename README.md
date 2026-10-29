@@ -5,7 +5,7 @@
   </picture>
 </h1>
 
-**A library for your next app.** 28 components and 13 patterns for React. Free, MIT, yours to own.
+**A library for your next app.** 29 components and 13 patterns for React. Free, MIT, yours to own.
 
 [Catalog](https://diya13.ai/explore) ·
 [Components](https://diya13.ai/explore?area=components) ·
@@ -370,7 +370,7 @@ const { register, handleSubmit } = useForm<{ name: string; volume: number; alert
 
 Slider needs `valueAsNumber: true` to give you a number. Combobox and
 DatePicker need a `Controller`; in a plain form they post their value through
-`name`.
+`name`. Calendar takes no `name`, so it always goes through a `Controller`.
 
 ## Charts
 

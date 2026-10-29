@@ -12,6 +12,7 @@ import { AlertLibrary } from '../components/AlertLibrary'
 import { BadgeLibrary } from '../components/BadgeLibrary'
 import { ButtonLibrary } from '../components/ButtonLibrary'
 import { CardLibrary } from '../components/CardLibrary'
+import { CalendarLibrary } from '../components/CalendarLibrary'
 import { CatalogProvider } from '../components/CatalogProvider'
 import { ChoiceLibrary } from '../components/ChoiceLibrary'
 import { CollectionsLibrary } from '../components/CollectionsLibrary'
@@ -130,7 +131,7 @@ function knownFunctions(snippet: Snippet) {
 
 describe('Get code snippets', () => {
   it('covers every catalog item, with a non-default playground that changes the code', () => {
-    expect(ids).toHaveLength(41)
+    expect(ids).toHaveLength(42)
     for (const id of ids) {
       const base = snippetFor(id, {}).code
       expect(variants[id].length, id).toBeGreaterThan(0)
@@ -313,6 +314,7 @@ describe('Get code follows the live playground', () => {
     'text-area': () => <MoreAtomsLibrary component="text-area" />,
     select: () => <SelectLibrary />,
     'date-picker': () => <DatePickerLibrary />,
+    calendar: () => <CalendarLibrary />,
     combobox: () => <ComboboxLibrary />,
     choice: () => <ChoiceLibrary />,
     switch: () => <MoreAtomsLibrary component="switch" />,

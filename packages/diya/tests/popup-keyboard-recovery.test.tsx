@@ -100,7 +100,7 @@ describe('popup keyboard traversal and dismissal recovery', () => {
     const trigger = screen.getByRole('button', { name: /Due date/ })
     await user.click(trigger)
     const calendar = screen.getByRole('group', { name: 'Choose date' })
-    const day = within(calendar).getByRole('button', { name: 'Oct 14, 2026' })
+    const day = within(calendar).getByRole('gridcell', { name: 'Oct 14, 2026' })
     act(() => day.focus())
     fireEvent.scroll(calendar)
     expect(document.activeElement).toBe(day)

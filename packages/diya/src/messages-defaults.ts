@@ -2,6 +2,7 @@ import { alertMessages } from './alert/messages.js'
 import { avatarMessages } from './avatar/messages.js'
 import { badgeMessages } from './badge/messages.js'
 import { breadcrumbsMessages } from './breadcrumbs/messages.js'
+import { calendarMessages } from './calendar/messages.js'
 import { chartMessages } from './data-viz/messages.js'
 import { chatbotMessages } from './application-patterns/chatbot-messages.js'
 import { choiceMessages } from './choice/messages.js'
@@ -33,6 +34,7 @@ export const defaultMessages = {
   avatar: avatarMessages,
   badge: badgeMessages,
   breadcrumbs: breadcrumbsMessages,
+  calendar: calendarMessages,
   chart: chartMessages,
   chatbot: chatbotMessages,
   choice: choiceMessages,

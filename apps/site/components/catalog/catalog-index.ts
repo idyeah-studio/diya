@@ -6,6 +6,7 @@ export const componentGroups = [
     { id: 'text-area', title: 'Text Area', keywords: 'textarea multiline field' },
     { id: 'select', title: 'Select', keywords: 'dropdown combobox picker' },
     { id: 'date-picker', title: 'Date Picker', keywords: 'date calendar range' },
+    { id: 'calendar', title: 'Calendar', keywords: 'date day month booking schedule agenda availability range' },
     { id: 'combobox', title: 'Combobox', keywords: 'search select multiple multiselect' },
     { id: 'choice', title: 'Choice', keywords: 'radio checkbox single multiple' },
     { id: 'switch', title: 'Switch', keywords: 'toggle boolean on off' },

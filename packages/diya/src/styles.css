@@ -1593,12 +1593,26 @@
 .diya-root .diya-calendar{position:absolute;top:calc(100% + 8px);left:0;width:300px;z-index:30;padding:16px;background:var(--diya-color-raised);border:1px solid var(--diya-color-line);border-radius:calc(16px * var(--diya-corner-scale, 1));box-shadow:0 calc(12px * var(--diya-elevation, 1)) calc(36px * var(--diya-elevation, 1)) #0003}
 .diya-root .diya-calendar-heading,
 .diya-root .diya-calendar-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}.diya-root .diya-calendar-heading strong{font-size:var(--diya-text-body)}.diya-root .diya-calendar-heading button{width:30px;height:30px;border-radius:calc(8px * var(--diya-corner-scale, 1));color:inherit;font-size:var(--diya-text-title)}.diya-root .diya-calendar-hint{font-size:var(--diya-text-caption);color:var(--diya-color-muted);margin:8px 0}
-.diya-root .diya-calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:12px}.diya-root .diya-calendar-weekday{font-size:var(--diya-text-caption);color:var(--diya-color-muted);text-align:center;padding:6px 0}.diya-root .diya-calendar-grid button{height:34px;border-radius:calc(8px * var(--diya-corner-scale, 1));font-size:var(--diya-text-body);color:inherit}.diya-root .diya-calendar-grid button:hover,
-.diya-root .diya-calendar-heading button:hover{background:var(--diya-color-hover)}.diya-root .diya-calendar-grid button[aria-pressed='true']{background:var(--diya-color-accent);color:var(--diya-color-accent-text)}.diya-root .diya-calendar-grid button[data-between='true']{background:var(--diya-color-accent-soft, var(--diya-color-hover))}.diya-root .diya-calendar-grid button[data-today='true']{text-decoration:underline;text-underline-offset:4px}.diya-root .diya-calendar-footer{border-top:1px solid var(--diya-color-line);margin-top:12px;padding-top:12px}.diya-root .diya-calendar-footer button{font-size:var(--diya-text-caption);color:inherit;padding:4px 6px}
+.diya-root .diya-calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:12px}.diya-root .diya-calendar-row{display:grid;grid-column:1/-1;gap:3px;grid-template-columns:repeat(7,1fr);grid-template-columns:subgrid}.diya-root .diya-calendar-weekday{font-size:var(--diya-text-caption);color:var(--diya-color-muted);text-align:center;padding:6px 0}.diya-root .diya-calendar-grid button{height:34px;border-radius:calc(8px * var(--diya-corner-scale, 1));font-size:var(--diya-text-body);color:inherit}.diya-root .diya-calendar-grid button:hover,
+.diya-root .diya-calendar-heading button:hover{background:var(--diya-color-hover)}.diya-root .diya-calendar-grid button[aria-selected='true']:not([data-between='true']){background:var(--diya-color-accent);color:var(--diya-color-accent-text)}.diya-root .diya-calendar-grid button[data-between='true']{background:var(--diya-color-accent-soft, var(--diya-color-hover))}.diya-root .diya-calendar-grid button[data-today='true']{text-decoration:underline;text-underline-offset:4px}.diya-root .diya-calendar-footer{border-top:1px solid var(--diya-color-line);margin-top:12px;padding-top:12px}.diya-root .diya-calendar-footer button{font-size:var(--diya-text-caption);color:inherit;padding:4px 6px}
 .diya-root .diya-date-field button:focus-visible{outline:2px solid var(--diya-color-accent);outline-offset:3px}
 .diya-root .diya-calendar[popover]{position:fixed;margin:0;inset:auto;color:var(--diya-color-text)}
 .diya-root .diya-calendar-grid button[aria-disabled='true']{color:var(--diya-color-muted);opacity:.45;cursor:not-allowed}
 .diya-root .diya-calendar-grid button[aria-disabled='true']:hover{background:transparent}
+/* Calendar: the same month grid, on the page. No surface of its own, so it sits on a card or the page;
+   days are as tall as a field of the same size, and seven of them set its widest. */
+.diya-root .diya-inline-calendar{--diya-internal-field-height:40px;--diya-internal-field-font-size:var(--diya-text-body);position:relative;width:100%;min-width:0;max-width:calc(7 * var(--diya-internal-field-height) + 18px);color:var(--diya-color-text)}
+.diya-root .diya-inline-calendar[data-size='small']{--diya-internal-field-height:32px;--diya-internal-field-font-size:var(--diya-text-caption)}
+.diya-root .diya-inline-calendar[data-size='large']{--diya-internal-field-height:48px;--diya-internal-field-font-size:var(--diya-text-large)}
+.diya-root .diya-inline-calendar>.diya-calendar-label{display:block;font-size:var(--diya-text-body);font-weight:500;margin-bottom:10px;overflow-wrap:anywhere}
+.diya-root .diya-inline-calendar .diya-calendar-heading button{width:var(--diya-internal-field-height);height:var(--diya-internal-field-height)}
+.diya-root .diya-inline-calendar .diya-calendar-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
+.diya-root .diya-inline-calendar .diya-calendar-row{grid-template-columns:repeat(7,minmax(0,1fr));grid-template-columns:subgrid}
+.diya-root .diya-inline-calendar .diya-calendar-grid button{height:var(--diya-internal-field-height);font-size:var(--diya-internal-field-font-size)}
+.diya-root .diya-inline-calendar button:focus-visible{outline:2px solid var(--diya-color-accent);outline-offset:3px}
+.diya-root .diya-inline-calendar button:disabled:hover{background:transparent}
+.diya-root .diya-inline-calendar[data-disabled='true'] :is(.diya-calendar-heading,.diya-calendar-hint,.diya-calendar-grid){opacity:.45}
+.diya-root .diya-inline-calendar[data-disabled='true'] button:disabled{opacity:1}
 
 
 /* alert/Alert.css: portable component rules. */
@@ -2603,7 +2617,7 @@
     opacity: 1;
   }
 
-  .diya-root .diya-calendar-grid button[aria-pressed='true'],
+  .diya-root .diya-calendar-grid button[aria-selected='true']:not([data-between='true']),
   .diya-root .diya-site-nav [aria-current],
   .diya-root .diya-site-mobile-nav [aria-current],
   .diya-root .diya-side-navigation [aria-current],

@@ -1,4 +1,5 @@
 import { DatePickerLibrary, ComboboxLibrary } from '../../components/AdvancedInputsLibrary'
+import { CalendarLibrary } from '../../components/CalendarLibrary'
 import { V1WorkflowLibrary, type WorkflowPattern } from '../../components/V1WorkflowLibrary'
 import {
   V1ApplicationLibrary,
@@ -61,6 +62,7 @@ function CatalogPage({ route }: { route: Exclude<CatalogRoute, { area: 'skills' 
   if (initial.area === 'components' && initial.component === 'date-picker')
     return <DatePickerLibrary />
   if (initial.area === 'components' && initial.component === 'combobox') return <ComboboxLibrary />
+  if (initial.area === 'components' && initial.component === 'calendar') return <CalendarLibrary />
   if (['file-upload', 'form', 'drawer', 'empty-state', 'wizard'].includes(initial.pattern))
     return <V1WorkflowLibrary key={initial.pattern} pattern={initial.pattern as WorkflowPattern} />
   if (['side-navigation', 'chatbot'].includes(initial.pattern))

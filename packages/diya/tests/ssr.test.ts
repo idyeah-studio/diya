@@ -13,6 +13,7 @@ it('imports and server-renders the public entries without browser globals', () =
     createElement(core.TextInput, { label: 'Project name', name: 'project', value: 'Launch', onValueChange: () => {} }),
     createElement(core.Combobox, { label: 'Team', value: '', options: [{ value: 'design', label: 'Design' }], onValueChange: () => {} }),
     createElement(core.DatePicker, { label: 'Due date', value: '', onValueChange: () => {} }),
+    createElement(core.Calendar, { label: 'Booking day', value: '2026-10-14', onValueChange: () => {}, isDateUnavailable: (date: string) => date === '2026-10-15' }),
     createElement(core.Progress, { label: 'Upload', value: 40 }),
     createElement(core.Rating, { value: 4.3, count: 128, showValue: true }),
     createElement(core.Prose, null, createElement('h2', null, 'Release notes'), createElement('p', null, 'Plain words.')),
@@ -24,6 +25,10 @@ it('imports and server-renders the public entries without browser globals', () =
   expect(html).toContain('Project name')
   expect(html).toContain('disabled=""')
   expect(html).toContain('Revenue')
+  expect(html).toContain('Booking day')
+  expect(html).toMatch(/role="grid"/)
+  expect(html).toMatch(/data-date="2026-10-14"[^>]*aria-selected="true"/)
+  expect(html).toMatch(/data-date="2026-10-15"[^>]*aria-disabled="true"/)
   expect(html).toContain('aria-label="Rated 4.3 out of 5, 128 reviews"')
   expect(html).toContain('<div class="diya-prose" data-size="medium"><h2>Release notes</h2>')
   expect(html).toContain('<pre class="diya-code-block-code" tabindex="0" role="region" aria-label="Shell code"><code>npm install @idyeah/diya</code></pre>')

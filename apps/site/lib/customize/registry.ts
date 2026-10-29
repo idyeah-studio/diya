@@ -32,6 +32,7 @@ const items: CustomizeItem[] = [
   { id: 'text-area', title: 'Text Area', kind: 'component', text: 'Labels, typed text and field edges', roles: {} },
   { id: 'select', title: 'Select', kind: 'component', text: 'Label, chosen option and field edge', roles: {} },
   { id: 'date-picker', title: 'Date Picker', kind: 'component', text: 'Label, dates and field edge', roles: { accent: 'Selected day', raised: 'Calendar panel', lines: 'Calendar edge' }, status: 'Error: invalid date' },
+  { id: 'calendar', title: 'Calendar', kind: 'component', text: 'Label, month and days', roles: { accent: 'Selected day, and the days between in a range' } },
   { id: 'combobox', title: 'Combobox', kind: 'component', text: 'Label, typed text and field edge', roles: { raised: 'Option list', lines: 'Option list edge' }, status: 'Error: invalid entry' },
   { id: 'choice', title: 'Choice', kind: 'component', text: 'Option labels and unchecked boxes', roles: { accent: 'Checked boxes and radios' } },
   { id: 'switch', title: 'Switch', kind: 'component', text: 'Label', roles: { accent: 'Track when on', lines: 'Edge of the track' } },

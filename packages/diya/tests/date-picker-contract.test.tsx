@@ -22,8 +22,8 @@ describe('DatePicker controlled month and keyboard contracts', () => {
     await user.click(screen.getByRole('button', { name: /Reporting range/ }))
 
     expect(within(calendar()).getByText('September 2026')).toBeTruthy()
-    expect(within(calendar()).getByRole('button', { name: 'Sep 1, 2026' }).getAttribute('aria-pressed')).toBe('true')
-    expect(within(calendar()).getByRole('button', { name: 'Sep 30, 2026' }).getAttribute('aria-pressed')).toBe('true')
+    expect(within(calendar()).getByRole('gridcell', { name: 'Sep 1, 2026' }).getAttribute('aria-selected')).toBe('true')
+    expect(within(calendar()).getByRole('gridcell', { name: 'Sep 30, 2026' }).getAttribute('aria-selected')).toBe('true')
   })
 
   it('uses a changed controlled value when reopening a previously browsed calendar', async () => {
@@ -59,7 +59,7 @@ describe('DatePicker controlled month and keyboard contracts', () => {
     await user.click(trigger)
 
     expect(within(calendar()).getByText('October 2026')).toBeTruthy()
-    expect(within(calendar()).getByRole('button', { name: 'Oct 14, 2026' }).getAttribute('aria-pressed')).toBe('true')
+    expect(within(calendar()).getByRole('gridcell', { name: 'Oct 14, 2026' }).getAttribute('aria-selected')).toBe('true')
     expect(changes).not.toHaveBeenCalled()
   })
 
@@ -74,13 +74,13 @@ describe('DatePicker controlled month and keyboard contracts', () => {
     const trigger = screen.getByRole('button', { name: /Reporting range/ })
 
     await user.click(trigger)
-    await user.click(within(calendar()).getByRole('button', { name: 'Sep 20, 2026' }))
+    await user.click(within(calendar()).getByRole('gridcell', { name: 'Sep 20, 2026' }))
     expect(changes).toHaveBeenLastCalledWith({ start: '2026-09-20', end: '' })
     await user.keyboard('{Escape}')
     await user.click(trigger)
 
     expect(within(calendar()).getByText('Choose end date')).toBeTruthy()
-    await user.click(within(calendar()).getByRole('button', { name: 'Sep 25, 2026' }))
+    await user.click(within(calendar()).getByRole('gridcell', { name: 'Sep 25, 2026' }))
 
     expect(changes).toHaveBeenLastCalledWith({ start: '2026-09-20', end: '2026-09-25' })
     expect(changes).toHaveBeenCalledTimes(2)
@@ -102,7 +102,7 @@ describe('DatePicker controlled month and keyboard contracts', () => {
 
     const trigger = screen.getByRole('button', { name: /Payment date/ })
     await user.click(trigger)
-    act(() => within(calendar()).getByRole('button', { name: initialLabel }).focus())
+    act(() => within(calendar()).getByRole('gridcell', { name: initialLabel }).focus())
     await user.keyboard(key)
 
     expect(document.activeElement?.getAttribute('aria-label')).toBe(nextLabel)

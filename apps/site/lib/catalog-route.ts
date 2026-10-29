@@ -6,6 +6,7 @@ export const componentIds = [
   'text-area',
   'select',
   'date-picker',
+  'calendar',
   'combobox',
   'choice',
   'switch',

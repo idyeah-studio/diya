@@ -31,6 +31,7 @@ button on Menu, Popover and Tooltip, and to the root element everywhere else.
 | TextArea | `label`, `value`, `onValueChange` | `size`, `rows`, `maxLength`, `showCount`, `resizable`, `error`. |
 | Select | `label`, `options`, `value`, `onValueChange` | Native select keyboard behavior; `size`, `placeholder`, `helperText`, `error`, `disabled`. The native `onChange(event)` still works. |
 | DatePicker | `label`, `value`, `onValueChange` | One ISO date (`YYYY-MM-DD`, `''` for none); `range` uses `{start,end}` (`DateRange`). `size`, `error`, `disabled`. `label` is required. |
+| Calendar | `label`, `value`, `onValueChange` | DatePicker's month grid, always on the page. The same values and `range`; `min`, `max`, `isDateUnavailable`, `size`, `disabled`, `hideLabel`. `month` (`YYYY-MM`) with `onMonthChange` controls the month on show. |
 | Combobox | `label`, `options`, `value`, `onValueChange` | One value as a string (`''` for none); `multiple` uses a string array. `size`, `helperText`, `error`, `disabled`. |
 | Choice | `label`, `options`, `value`, `onValueChange` | Radios with a string by default; `multiple` gives checkboxes and a string array, and allows `selectAll`. An option's `description` shows whenever it has one; options can be `disabled`. `helperText`, `error`. |
 | Switch | `label`, `checked`, `onCheckedChange` | A native checkbox with `role="switch"`; the ref is the `HTMLInputElement`. `defaultChecked`, `name`, `value` (sent while on), `size`, `helperText`, `error`, `hideLabel`, `disabled`. It uses the brand color when on. |
@@ -61,7 +62,7 @@ inputs keep their accessible names.
 
 ### One value or several
 
-Combobox, Choice, Slider and DatePicker take a value shaped like their mode.
+Combobox, Choice, Slider, DatePicker and Calendar take a value shaped like their mode.
 By default they hold one value; `multiple` switches to a list and `range` to a
 start/end pair.
 
@@ -84,6 +85,7 @@ const [teams, setTeams] = useState<string[]>([])
 | Choice | `value: string` (radios) | `multiple`: `value: string[]` (checkboxes) |
 | Slider | `value: number` | `range`: `value: [number, number]` |
 | DatePicker | `value: string` (ISO date) | `range`: `value: DateRange` (`{ start, end }`) |
+| Calendar | `value: string` (ISO date) | `range`: `value: DateRange` (`{ start, end }`) |
 
 ```tsx
 import { DatePicker, type DateRange } from '@idyeah/diya'
@@ -109,8 +111,9 @@ const mode = many
 
 **Wrapping a field.** Each mode has its own exported type:
 `ComboboxSingleProps`/`ComboboxMultipleProps`, `ChoiceSingleProps`/
-`ChoiceMultipleProps`, `SliderSingleProps`/`SliderRangeProps` and
-`DatePickerSingleProps`/`DatePickerRangeProps`. Build a wrapper on the one you
+`ChoiceMultipleProps`, `SliderSingleProps`/`SliderRangeProps`,
+`DatePickerSingleProps`/`DatePickerRangeProps` and
+`CalendarSingleProps`/`CalendarRangeProps`. Build a wrapper on the one you
 need. `Omit` on the combined `ComboboxProps` loses the link between `multiple`
 and `value`.
 
@@ -128,8 +131,36 @@ Escape dismissal and multiple-selection removal. Date Picker supports
 calendar keyboard navigation and Escape: the month grid is one Tab stop, and
 arrows, Home/End and PageUp/PageDown move within it. Weeks start on the
 locale's first day, and `min` and `max` disable (and announce) the days
-outside them. Popups preserve the provider's
-appearance and stay within an open dialog's focus boundary.
+outside them. `isDateUnavailable` marks any other day the same way: it is
+announced and can't be chosen, and the arrows still move through it. The month
+follows the ARIA date grid pattern: a `grid` named by the month, weekday column
+headers with full names, a row per week, and each day a `gridcell` with
+`aria-selected` when chosen (every day of a chosen range) and
+`aria-current="date"` on today. Popups
+preserve the provider's appearance and stay within an open dialog's focus
+boundary.
+
+Calendar is the same month grid, kept on the page, with the same keyboard: the
+month buttons, then one day as a Tab stop. Use it where picking the day is the
+screen's main job, such as booking a time. It has no surface of its own, so it
+sits on a Card or straight on the page, and its days are as tall as a field of
+the same `size`.
+
+```tsx
+import { Calendar } from '@idyeah/diya'
+
+const [day, setDay] = useState('')
+const [month, setMonth] = useState('2026-11')  // load that month's open slots
+<Calendar
+  label="Pick a day"
+  value={day}
+  onValueChange={setDay}
+  month={month}
+  onMonthChange={setMonth}
+  min={today}
+  isDateUnavailable={(date) => !openDays.has(date)}
+/>
+```
 
 Keep form field sizes consistent: use the same `size` (for example
 `size="medium"`) on every field. Helper text and multiline fields naturally add

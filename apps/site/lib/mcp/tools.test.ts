@@ -19,6 +19,8 @@ describe('search_components', () => {
       ['sidebar navigation', 'SideNavigation'],
       ['empty state when there are no projects', 'ContentState'],
       ['date range', 'DatePicker'],
+      ['calendar to book an appointment', 'Calendar'],
+      ['calendar', 'Calendar'],
       ['upload a CSV', 'FileUpload'],
       ['stepper for onboarding', 'Wizard'],
       ['kpi number', 'Metric'],

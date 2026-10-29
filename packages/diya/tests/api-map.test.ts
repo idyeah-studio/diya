@@ -184,7 +184,7 @@ describe('API map', () => {
         expect(owners.get(name), `${name} needs exactly one item`).toHaveLength(1)
       }
     }
-    expect(Object.keys(api.items)).toHaveLength(45)
+    expect(Object.keys(api.items)).toHaveLength(46)
     expect(api.items['data-viz'].exports.map(({ name }) => name)).toEqual(['DataViz', 'Chart'])
     expect(api.items['data-viz'].requires.peers).toEqual(['echarts'])
     // Ids are the first export's name in kebab-case.
@@ -238,6 +238,7 @@ describe('API map', () => {
     expect(api.items.switch.state).toEqual([{ value: 'checked', onChange: 'onCheckedChange', default: 'defaultChecked' }])
     for (const id of ['text-input', 'text-area', 'choice', 'slider', 'combobox', 'date-picker', 'search'])
       expect(api.items[id].state, id).toEqual([{ value: 'value', onChange: 'onValueChange', default: 'defaultValue' }])
+    expect(api.items.calendar.state).toEqual([{ value: 'value', onChange: 'onValueChange', default: 'defaultValue' }, { value: 'month', onChange: 'onMonthChange' }])
     for (const [id, item] of Object.entries(api.items)) {
       const name = item.exports[0].name
       for (const pair of item.state) {
@@ -340,7 +341,12 @@ describe('API map', () => {
     expect(valueTypes('Choice')?.map(([, value]) => value)).toEqual(['string', 'string[]'])
     expect(valueTypes('DatePicker')?.map(([, value]) => value)).toEqual(['string', 'DateRange'])
     expect(api.components.DatePicker.props.label.required).toBe(true)
-    for (const name of ['Combobox', 'Choice', 'Slider', 'DatePicker']) {
+    expect(valueTypes('Calendar')).toEqual([
+      [{ range: false }, 'string', '(value: string) => void'],
+      [{ range: true }, 'DateRange', '(value: DateRange) => void'],
+    ])
+    expect(api.components.Calendar.props.label.required).toBe(true)
+    for (const name of ['Combobox', 'Choice', 'Slider', 'DatePicker', 'Calendar']) {
       expect(api.components[name].modes?.[0].default).toBe(true)
       expect(api.components[name].props.value).toBeUndefined()
       expect(api.components[name].props.onValueChange).toBeUndefined()

@@ -21,6 +21,10 @@ export const variants: Record<ItemId, { playground: Playground; options?: Record
     { playground: { Type: 'Range', Options: [], State: 'Error' } },
     { playground: { Size: 'Large', State: 'Disabled' } },
   ],
+  calendar: [
+    { playground: { Type: 'Range', Size: 'Large', Options: ['Unavailable days'], State: 'Disabled' } },
+    { playground: { Size: 'Small', Options: ['Label', 'Unavailable days'] } },
+  ],
   combobox: [{ playground: { Type: 'Multiple', Options: ['Label'], State: 'Error', Size: 'Small' } }],
   choice: [
     { playground: { Type: 'Multiple', Size: 'Large', Options: ['Label', 'Descriptions', 'Select all', 'Helper text'], State: 'Error' } },
