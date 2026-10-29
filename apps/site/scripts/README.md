@@ -18,7 +18,18 @@ pnpm --filter diya-site verify:production
 
 ## Get code snippets
 
-`check-snippets.mjs` type-checks every Get code "complete file" against the SDK's types, with the real `tsc`. Pass `--sdk <dist>` to check against another build, such as `packages/diya/dist`.
+`check-snippets.mjs` type-checks every Get code "complete file", and every Screens file in `screens/`, against the SDK's types, with the real `tsc` (screens also against `lucide-react`). Pass `--sdk <dist>` to check against another build, such as `packages/diya/dist`.
+
+## Screens thumbnails
+
+`screens-thumbnails.mjs` renders the Screens gallery's thumbnails from the built preview frame: every ready screen and every poster, at 1440×900 in Light and Dark, as compact JPEGs in `public/screens/thumbs/`. It serves `public/` itself on port 3106 (`--port` to change it). Playwright isn't a dependency of this repo, so point the script at a copy:
+
+```sh
+pnpm --filter diya-site build:frame
+PLAYWRIGHT=<path to the playwright package> pnpm --filter diya-site screens:thumbs
+```
+
+`--only sign-in,team` renders just those; `--all` adds screens still being built, and `--out <dir>` writes elsewhere, to check the pipeline without touching `public/`.
 
 ## Fonts
 

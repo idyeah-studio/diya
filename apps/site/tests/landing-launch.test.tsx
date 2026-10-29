@@ -373,9 +373,11 @@ describe('site header', () => {
       </WithAppearance>,
     )
     const links = Array.from(screen.getByRole('navigation', { name: 'Library' }).querySelectorAll('a'))
-    expect(links.map((a) => a.textContent)).toEqual(['Components', 'Patterns'])
+    expect(links.map((a) => a.textContent)).toEqual(['Components', 'Patterns', 'Screens'])
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/explore?area=components', '/explore?area=patterns', '/explore?area=screens'])
     expect(links[0].getAttribute('aria-current')).toBeNull()
     expect(links[1].getAttribute('aria-current')).toBe('page')
+    expect(links[2].getAttribute('aria-current')).toBeNull()
     expect(document.body.textContent).not.toContain('Relight')
     expect(screen.getByRole('link', { name: 'GitHub' }).getAttribute('href')).toBe('https://github.com/idyeah-studio/diya')
   })

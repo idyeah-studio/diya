@@ -1,12 +1,14 @@
-// Type-checks every Get code "complete file" against the SDK's types.
+// Type-checks every Get code "complete file", and every Screens file, against
+// the SDK's types.
 //
 //   node scripts/check-snippets.mjs                 # against the installed @idyeah/diya
 //   node scripts/check-snippets.mjs --sdk <dist>    # against another build, e.g. ../../packages/diya/dist
-//   node scripts/check-snippets.mjs --out <dir>     # keep the generated .tsx files and tsconfig there
+//   node scripts/check-snippets.mjs --out <dir>     # keep the generated files there, in complete-files/ and screens/
 //
-// It runs tests/get-code-files.test.tsx, which writes each file to disk and
-// runs the real `tsc --noEmit` under the strictest of a fresh Vite and
-// Next.js App Router config. Exit code 0 means every file compiles.
+// It runs tests/get-code-files.test.tsx and tests/screens-compile.test.ts,
+// which write each file to disk and run the real `tsc --noEmit` under the
+// strictest of a fresh Vite and Next.js App Router config (screens also
+// against lucide-react). Exit code 0 means every file compiles.
 import { spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { dirname, resolve } from 'node:path'
@@ -22,13 +24,16 @@ const env = { ...process.env }
 const sdk = option('--sdk')
 const out = option('--out')
 if (sdk) env.DIYA_SDK_DIST = sdk
-if (out) env.DIYA_SNIPPETS_OUT = out
+if (out) {
+  env.DIYA_SNIPPETS_OUT = resolve(out, 'complete-files')
+  env.DIYA_SCREENS_OUT = resolve(out, 'screens')
+}
 
 /* Resolve vitest the way Node would from the app. */
 const vitest = resolve(dirname(createRequire(resolve(app, 'package.json')).resolve('vitest/package.json')), 'vitest.mjs')
 const result = spawnSync(
   process.execPath,
-  [vitest, 'run', '--config', 'tests/vitest.config.mjs', 'tests/get-code-files.test.tsx'],
+  [vitest, 'run', '--config', 'tests/vitest.config.mjs', 'tests/get-code-files.test.tsx', 'tests/screens-compile.test.ts'],
   { cwd: app, env, stdio: 'inherit' }
 )
 process.exit(result.status ?? 1)

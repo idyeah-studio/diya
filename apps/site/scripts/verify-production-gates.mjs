@@ -17,6 +17,10 @@ export function siteConstant(source, name) {
 }
 export const SITE = siteConstant(readFileSync(new URL('../lib/site.ts', import.meta.url), 'utf8'), 'SITE')
 const componentPath = '/explore?area=components&component=button'
+/* Screens open with the catalog; their static preview frame is public either way (noindex, disallowed). */
+const screensPath = '/explore?area=screens'
+const screenPath = '/explore?area=screens&screen=sign-in'
+const framePath = '/screens-frame?screen=sign-in&theme=dark&glass=0'
 /* The ZIP download routes are retired: they must not exist in either mode. */
 const retiredRouteCases = [
   ['/api/preview-packages/button', 'GET', 404],
@@ -183,8 +187,8 @@ export async function verifyProductionGates({ root = appRoot, signal } = {}) {
   const checks = []
   const documents = [], crawlerRules = [], assets = [], launch = [], mcp = [], launched = []
   for (const [flag, cases] of [
-    ['0', [['/', 'GET', 200], ['/explore', 'GET', 404], [componentPath, 'GET', 404], ...launchedRoutes.map(([path]) => [path, 'GET', 404]), ...mcpCases(false), ['/missing-launch-review-route', 'GET', 404], ['/robots.txt', 'GET', 200], ['/api/launch', 'GET', 200], ...retiredRouteCases]],
-    ['1', [['/', 'GET', 200], ['/explore', 'GET', 200], [componentPath, 'GET', 200], ...launchedRoutes.map(([path]) => [path, 'GET', 200]), ...mcpCases(true), ['/missing-launch-review-route', 'GET', 404], ['/robots.txt', 'GET', 200], ['/api/launch', 'GET', 200], ...retiredRouteCases]],
+    ['0', [['/', 'GET', 200], ['/explore', 'GET', 404], [componentPath, 'GET', 404], [screensPath, 'GET', 404], [screenPath, 'GET', 404], [framePath, 'GET', 200], ...launchedRoutes.map(([path]) => [path, 'GET', 404]), ...mcpCases(false), ['/missing-launch-review-route', 'GET', 404], ['/robots.txt', 'GET', 200], ['/api/launch', 'GET', 200], ...retiredRouteCases]],
+    ['1', [['/', 'GET', 200], ['/explore', 'GET', 200], [componentPath, 'GET', 200], [screensPath, 'GET', 200], [screenPath, 'GET', 200], [framePath, 'GET', 200], ...launchedRoutes.map(([path]) => [path, 'GET', 200]), ...mcpCases(true), ['/missing-launch-review-route', 'GET', 404], ['/robots.txt', 'GET', 200], ['/api/launch', 'GET', 200], ...retiredRouteCases]],
     // After the launch moment (no preview flag): only the landing and its card.
     ['launched', [['/', 'GET', 200]]],
   ]) {
@@ -244,12 +248,12 @@ export async function verifyProductionGates({ root = appRoot, signal } = {}) {
         launched.push({ previewFlag: flag, now: LAUNCHED_NOW, ...await launchedCard(origin, document, signal) })
         continue
       }
-      for (const path of flag === '1' ? ['/', '/explore', componentPath] : ['/']) {
+      for (const path of flag === '1' ? ['/', '/explore', componentPath, screensPath] : ['/']) {
         const document = documentContract(pages.get(path), flag === '1', path)
         documents.push({ previewFlag: flag, path, indexing: document.indexing, canonical: canonicalFor(path).at(-1) })
         if (flag === '0' && path === '/') assets.push(...await brandAssets(origin, document, signal))
       }
-      for (const path of flag === '1' ? ['/missing-launch-review-route'] : ['/explore', componentPath, '/missing-launch-review-route']) {
+      for (const path of flag === '1' ? ['/missing-launch-review-route'] : ['/explore', componentPath, screensPath, '/missing-launch-review-route']) {
         const html = pages.get(path)
         const recovery = [...html.matchAll(/<a\b[^>]*>/gi)].map(([tag]) => attributes(tag))
         const noindex = [...html.matchAll(/<meta\b[^>]*>/gi)].map(([tag]) => attributes(tag)).some(meta => meta.name === 'robots' && (meta.content ?? '').split(/\s*,\s*/).includes('noindex'))
@@ -257,9 +261,12 @@ export async function verifyProductionGates({ root = appRoot, signal } = {}) {
           throw new Error(`404 recovery missing for ${path}`)
         documents.push({ previewFlag: flag, path, recovery: '/' })
       }
+      if (!/<meta name="robots" content="noindex/.test(pages.get(framePath)))
+        throw new Error('The Screens preview frame must say noindex')
       const robots = pages.get('/robots.txt')
       if (!/^User-Agent:\s*\*\s*$/im.test(robots) || !/^Allow:\s*\/\s*$/im.test(robots) || /^Disallow:\s*\/(?:explore)?\s*$/im.test(robots))
         throw new Error('Crawler rules prevent reading noindex or block the public landing page')
+      if (!/^Disallow:\s*\/screens-frame\s*$/im.test(robots)) throw new Error('Crawler rules must keep the Screens preview frame out')
       crawlerRules.push({ previewFlag: flag, allow: '/', previewNoindexReadable: true })
       launch.push({ previewFlag: flag, ...launchContract(pages.get('/api/launch'), flag === '0' ? pages.get('/') : null) })
       if (flag === '1') mcp.push({ previewFlag: flag, ...mcpContract(pages.get('MCP')) })

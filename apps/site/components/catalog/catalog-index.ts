@@ -1,4 +1,6 @@
-/** Everything the catalog lists, in sidebar order. Search reads both areas. */
+import { CATEGORIES, screens } from '../screens/screens-data'
+
+/** Everything the catalog lists, in sidebar order. Search reads every area. */
 export const componentGroups = [
   { title: 'Inputs', items: [
     { id: 'button', title: 'Button', keywords: 'action icon button' },
@@ -61,7 +63,15 @@ export const patternGroups = [
   ] },
 ] as const
 
-export type CatalogListArea = 'components' | 'patterns'
+/** Every screen, by category. Which of them a build lists is the sidebar's call (see CatalogSearchProvider). */
+export const screenGroups = CATEGORIES.map((category) => ({
+  title: category,
+  items: screens
+    .filter((screen) => screen.category === category)
+    .map((screen) => ({ id: screen.id, title: screen.name, keywords: screen.keywords })),
+}))
+
+export type CatalogListArea = 'components' | 'patterns' | 'screens'
 export type ComponentId = (typeof componentGroups)[number]['items'][number]['id']
 export type PatternId = (typeof patternGroups)[number]['items'][number]['id']
 
@@ -70,10 +80,19 @@ type Group = { title: string; items: readonly { id: string; title: string; keywo
 export const catalogGroups: Record<CatalogListArea, readonly Group[]> = {
   components: componentGroups,
   patterns: patternGroups,
+  screens: screenGroups,
 }
 
 export function catalogHref(area: CatalogListArea, id: string) {
+  if (area === 'screens') return `/explore?area=screens&screen=${id}`
   return area === 'components' ? `/explore?area=components&component=${id}` : `/explore?pattern=${id}`
+}
+
+/** Only the items in `ids`; groups left empty drop out. */
+export function onlyItems(groups: readonly Group[], ids: ReadonlySet<string>) {
+  return groups
+    .map((group) => ({ ...group, items: group.items.filter((item) => ids.has(item.id)) }))
+    .filter((group) => group.items.length > 0)
 }
 
 /** Groups whose items match every word of `query`: title, keywords and, unless `byGroup` is false, the group's title. */

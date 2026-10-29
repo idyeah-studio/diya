@@ -30,7 +30,8 @@ if (${JSON.stringify(mode)} === 'exit') process.exit(2)
 const port = Number(process.argv[process.argv.indexOf('--port') + 1])
 createServer((req, res) => {
   if (${JSON.stringify(mode)} === 'hang') return
-  res.statusCode = ['/', '/robots.txt', '/api/launch'].includes(req.url) ? 200 : (${JSON.stringify(mode)} === 'exposed' ? 200 : 404)
+  // The Screens preview frame is a static file: public in every mode.
+  res.statusCode = ['/', '/robots.txt', '/api/launch'].includes(req.url) || req.url.startsWith('/screens-frame?') ? 200 : (${JSON.stringify(mode)} === 'exposed' ? 200 : 404)
   const mode = ${JSON.stringify(mode)}
   if (mode === 'conflicting-indexing' || mode === 'wrong-target') {
     const robots = mode === 'conflicting-indexing' ? 'index, follow, noindex' : 'index, follow'

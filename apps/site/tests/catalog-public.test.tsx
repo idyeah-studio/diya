@@ -54,7 +54,7 @@ describe('catalog sidebar foot', () => {
     expect(proEntry().getAttribute('aria-current')).toBe('page')
     expect(screen.getByRole('navigation', { name: 'Choose a component' }).querySelector('[aria-current]')).toBeNull()
     await user.type(screen.getByRole('searchbox', { name: 'Search components' }), 'no such thing')
-    screen.getByText('No components or patterns match “no such thing”.')
+    screen.getByText('No components, patterns or screens match “no such thing”.')
     expect(proEntry().getAttribute('aria-current')).toBe('page')
   })
 })

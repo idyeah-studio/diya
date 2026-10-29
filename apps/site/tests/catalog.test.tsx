@@ -205,12 +205,12 @@ describe('Patterns discovery', () => {
     const search = screen.getByRole('searchbox', { name: 'Search patterns' }) as HTMLInputElement
     await user.type(search, 'zzzz-missing-pattern')
     expect(patternLinks()).toHaveLength(0)
-    expect(screen.getByText('No components or patterns match “zzzz-missing-pattern”.')).toBeDefined()
+    expect(screen.getByText('No components, patterns or screens match “zzzz-missing-pattern”.')).toBeDefined()
     expect(searchStatus().textContent).toBe('0 patterns found')
     await user.keyboard('{Escape}')
     expect(search.value).toBe('')
     expect(patternLinks()).toHaveLength(13)
-    expect(screen.queryByText(/No components or patterns match/)).toBeNull()
+    expect(screen.queryByText(/No components, patterns or screens match/)).toBeNull()
     expect(
       screen.getByRole('link', { name: 'Content State' }).getAttribute('aria-current')
     ).toBe('page')

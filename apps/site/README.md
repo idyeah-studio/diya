@@ -45,6 +45,30 @@ DIYA_CATALOG_PREVIEW=1 pnpm --filter diya-site exec next dev --hostname 127.0.0.
 
 Open `http://127.0.0.1:3017/explore`.
 
+## Screens
+
+`/explore?area=screens` is the Screens gallery, and `&screen=<id>` one screen.
+Each screen is one file, `screens/<id>.tsx`, written to the contract in
+[`screens/README.md`](screens/README.md) and listed in
+`components/screens/screens-data.ts`. Posters (pages waiting on a DIYA piece)
+live in `screens/posters/` and are only ever thumbnails.
+
+The catalog previews a screen in an iframe at a real 1440×900 or 390×844
+viewport, not under the site's own layout and styles. That frame is a small
+static Vite app, `screens-frame/`, that renders a screen the way a fresh
+`npm create diya` Vite app does, and it's built into `public/screens-frame/`
+(gitignored): `pnpm --filter diya-site build` builds it before `next build`,
+so Vercel's build command needs nothing extra. In development, keep it
+rebuilding beside `next dev`:
+
+```sh
+pnpm --filter diya-site dev:frame
+```
+
+Then `/screens-frame?screen=sign-in&theme=dark&glass=0` is the bare page
+(`&poster=1` for a poster). The gallery's thumbnails come from the built frame
+with `pnpm --filter diya-site screens:thumbs` (see `scripts/README.md`).
+
 ## Checks
 
 From the repository root, after building the package:
@@ -56,7 +80,7 @@ pnpm --filter diya-site test:lib
 pnpm --filter diya-site test:scripts
 pnpm --filter diya-site build
 pnpm --filter diya-site verify:production
-pnpm --filter diya-site check:snippets
+pnpm --filter diya-site check:snippets   # Get code files and every screen, with strict tsc
 ```
 
 The waitlist's environment is in `db/ENV.md`.
