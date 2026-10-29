@@ -60,6 +60,12 @@ export function Icon({
     ),
     plus: <path d="M12 5v14M5 12h14" />,
     check: <path d="m5 12 4 4L19 6" />,
+    copy: (
+      <>
+        <rect x="8" y="8" width="12" height="12" rx="2.5" />
+        <path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8" />
+      </>
+    ),
     compass: (
       <>
         <circle cx="12" cy="12" r="9" />

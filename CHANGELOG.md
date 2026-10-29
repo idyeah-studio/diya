@@ -10,7 +10,7 @@ First public release, under the MIT License.
 
 ### Added
 
-- 26 React components and 13 patterns. `Chart` and `DataViz` are exported from
+- 28 React components and 13 patterns. `Chart` and `DataViz` are exported from
   `@idyeah/diya/charts` and render with the optional `echarts` peer dependency;
   everything else is exported from `@idyeah/diya`.
 - `DiyaProvider` with Light, Dark and Glass appearances, brand color, font,
@@ -23,6 +23,11 @@ First public release, under the MIT License.
   entry has no `'use client'` directive, so `defaultMessages` and types can be
   imported in Server Components, and each interactive component carries its own
   directive.
+- `Prose` sets your own long-form HTML (articles, docs pages, changelogs and
+  legal pages) in DIYA's type and rhythm, at three sizes, and leaves DIYA
+  components inside it as they are. `CodeBlock` shows code with a Copy button
+  that announces its result, and long lines scroll in a region the keyboard
+  can reach.
 - `Stack` and `Inline` layout primitives, with `gap` on a public spacing scale
   (`--diya-space-1` to `--diya-space-8`), `align`, `justify`, `wrap` and `as`.
 - Every component takes `className`, `style` and its root element's other

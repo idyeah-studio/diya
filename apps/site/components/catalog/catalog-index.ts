@@ -26,6 +26,8 @@ export const componentGroups = [
     { id: 'avatar', title: 'Avatar', keywords: 'profile image initials user' },
     { id: 'list', title: 'List', keywords: 'rows items divider' },
     { id: 'accordion', title: 'Accordion', keywords: 'expand collapse disclosure faq' },
+    { id: 'prose', title: 'Prose', keywords: 'article docs markdown typography blog changelog terms long-form text' },
+    { id: 'code-block', title: 'Code Block', keywords: 'code snippet copy clipboard pre monospace' },
   ] },
   { title: 'Feedback', items: [
     { id: 'badge', title: 'Badge', keywords: 'indicator count status dot' },

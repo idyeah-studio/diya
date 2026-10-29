@@ -15,6 +15,7 @@ import { CardLibrary } from '../components/CardLibrary'
 import { CatalogProvider } from '../components/CatalogProvider'
 import { ChoiceLibrary } from '../components/ChoiceLibrary'
 import { CollectionsLibrary } from '../components/CollectionsLibrary'
+import { ContentLibrary } from '../components/ContentLibrary'
 import { DataAtomsLibrary } from '../components/DataAtomsLibrary'
 import { DataVizLibrary } from '../components/DataVizLibrary'
 import { DialogLibrary } from '../components/DialogLibrary'
@@ -129,7 +130,7 @@ function knownFunctions(snippet: Snippet) {
 
 describe('Get code snippets', () => {
   it('covers every catalog item, with a non-default playground that changes the code', () => {
-    expect(ids).toHaveLength(39)
+    expect(ids).toHaveLength(41)
     for (const id of ids) {
       const base = snippetFor(id, {}).code
       expect(variants[id].length, id).toBeGreaterThan(0)
@@ -328,6 +329,8 @@ describe('Get code follows the live playground', () => {
     avatar: () => <MoreAtomsLibrary component="avatar" />,
     list: () => <CollectionsLibrary component="list" />,
     accordion: () => <CollectionsLibrary component="accordion" />,
+    prose: () => <ContentLibrary component="prose" />,
+    'code-block': () => <ContentLibrary component="code-block" />,
     badge: () => <BadgeLibrary />,
     alert: () => <AlertLibrary />,
     progress: () => <UtilityLibrary component="progress" />,

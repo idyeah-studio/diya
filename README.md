@@ -5,7 +5,7 @@
   </picture>
 </h1>
 
-**A library for your next app.** 26 components and 13 patterns for React. Free, MIT, yours to own.
+**A library for your next app.** 28 components and 13 patterns for React. Free, MIT, yours to own.
 
 [Catalog](https://diya13.ai/explore) ·
 [Components](https://diya13.ai/explore?area=components) ·
@@ -281,7 +281,8 @@ Everything in `styles.css` sits in a CSS cascade layer named `diya`. Rules
 outside a layer beat every layered rule, so your own CSS, and any `className`
 or `style` you pass to a component, wins over DIYA's without `!important`.
 DIYA's base styles also reach only its own elements: your headings, paragraphs
-and links inside the provider keep the styles you give them.
+and links inside the provider keep the styles you give them. To give your own
+articles DIYA's type, wrap them in `Prose`.
 
 One thing to watch: a global reset of your own, such as
 `button { background: none; border: 0 }` or `* { margin: 0; padding: 0 }`,

@@ -1,6 +1,6 @@
 # Files in the @idyeah/diya npm tarball. Regenerate with: pnpm snapshot:tarball
 # budget packed <= 516994 bytes
-# budget unpacked <= 1115705 bytes
+# budget unpacked <= 1149534 bytes
 CHANGELOG.md
 LICENSE
 NOTICE
@@ -47,6 +47,10 @@ dist/choice/Choice.d.ts
 dist/choice/Choice.js
 dist/choice/messages.d.ts
 dist/choice/messages.js
+dist/code-block/CodeBlock.d.ts
+dist/code-block/CodeBlock.js
+dist/code-block/messages.d.ts
+dist/code-block/messages.js
 dist/combobox/Combobox.d.ts
 dist/combobox/Combobox.js
 dist/combobox/messages.d.ts
@@ -116,6 +120,8 @@ dist/progress/Progress.d.ts
 dist/progress/Progress.js
 dist/progress/messages.d.ts
 dist/progress/messages.js
+dist/prose/Prose.d.ts
+dist/prose/Prose.js
 dist/rating/Rating.d.ts
 dist/rating/Rating.js
 dist/rating/messages.d.ts

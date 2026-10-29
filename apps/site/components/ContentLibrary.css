@@ -1,0 +1,8 @@
+/* Prose and Code Block previews: the article reads at its own measure, centered on the stage. */
+:where(html[data-catalog='true']) .content-example { flex: 1; display: flex; justify-content: center; min-width: 0; padding: 40px 16px 48px; }
+:where(html[data-catalog='true']) .content-example > * { width: 100%; }
+:where(html[data-catalog='true']) .content-example[data-component='code-block'] { align-items: center; min-height: 240px; }
+:where(html[data-catalog='true']) .content-example[data-component='code-block'] > * { max-width: 620px; }
+@media (max-width: 640px) {
+  :where(html[data-catalog='true']) .content-example { padding: 28px 0 32px; }
+}
