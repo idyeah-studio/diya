@@ -42,7 +42,9 @@ const SYNONYMS: Record<string, string[]> = {
   theme: ['diya-provider'], provider: ['diya-provider'], dark: ['diya-provider'], brand: ['diya-provider'],
   settings: ['form', 'switch', 'choice'], profile: ['form', 'avatar'], login: ['form', 'text-input'], signup: ['form', 'text-input'],
   user: ['avatar'], dashboard: ['metric', 'data-viz', 'table', 'side-navigation'], action: ['button'], cta: ['button'],
-  submit: ['button', 'form'], save: ['button'], tile: ['card'],
+  submit: ['button', 'form'], save: ['button'], tile: ['card'], article: ['prose'], markdown: ['prose'],
+  typography: ['prose'], docs: ['prose'], blog: ['prose'], changelog: ['prose'], terms: ['prose'], snippet: ['code-block'],
+  pre: ['code-block'], clipboard: ['code-block'], monospace: ['code-block'],
 }
 
 /** Things people ask for that DIYA doesn't have, with the honest answer. */

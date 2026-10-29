@@ -67,6 +67,12 @@ export const variants: Record<ItemId, { playground: Playground; options?: Record
     { playground: { Leading: 'None', Options: ['Divider'] } },
   ],
   accordion: [{ playground: { Style: 'Plain', Expand: 'Multiple', State: 'Disabled' } }],
+  prose: [{ playground: { Size: 'Large' } }, { playground: { Size: 'Small' } }],
+  'code-block': [
+    { playground: { Content: 'Command', Options: ['Label'] } },
+    { playground: { Content: 'File', Options: [] } },
+    { playground: { Content: 'Command', Options: [] } },
+  ],
   badge: [
     { playground: { Variant: 'Count', Size: 'Large', Color: 'Error' } },
     { playground: { Color: 'Brand', 'Brand color': '#123456' } },

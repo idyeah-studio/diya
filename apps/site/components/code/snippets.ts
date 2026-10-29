@@ -2,6 +2,7 @@ import { customizeItems, type ItemId } from '../../lib/customize/registry'
 import { acquisitionTotal, allocationData, channels, chartData } from '../catalog-data'
 import type { Playground } from './playground'
 import { CONTENT_TEXT, ICON_PATHS, isIcon } from './stand-ins'
+import { FORMAT_FILE, FORMAT_SOURCE, INSTALL_COMMAND } from './content-examples'
 
 export type Snippet = {
   /** Full step-3 code: import line(s), a blank line, then optional consts, then JSX. No DiyaProvider (that is step 2), no component function wrapper, no 'use client'. */
@@ -277,8 +278,8 @@ function walk(value: unknown, found: Found, key?: string): void {
 
 const MAIN_EXPORTS = new Set([
   'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Card', 'Chatbot', 'Choice',
-  'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'FileUpload', 'Form', 'List', 'Menu',
-  'Metric', 'PageHeader', 'Pagination', 'Popover', 'Progress', 'Search', 'Select', 'SideNavigation',
+  'CodeBlock', 'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'FileUpload', 'Form', 'List', 'Menu',
+  'Metric', 'PageHeader', 'Pagination', 'Popover', 'Progress', 'Prose', 'Search', 'Select', 'SideNavigation',
   'SiteHeader', 'Slider', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput', 'TextLink', 'Toast',
   'Tooltip', 'Wizard',
 ])
@@ -290,6 +291,7 @@ const COMPONENT_NAMES: Partial<Record<ItemId, string>> = {
   'date-picker': 'DatePicker', combobox: 'Combobox', choice: 'Choice', switch: 'Switch', slider: 'Slider',
   search: 'Search', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
   menu: 'Menu', tag: 'Tag', metric: 'Metric', avatar: 'Avatar', list: 'List', accordion: 'Accordion',
+  prose: 'Prose', 'code-block': 'CodeBlock',
   badge: 'Badge', alert: 'Alert', progress: 'Progress', tooltip: 'Tooltip', popover: 'Popover',
 }
 
@@ -1087,6 +1089,90 @@ function accordion(p: Playground): Snippet {
         },
       ],
     }),
+  })
+}
+
+const formatSource = { name: 'formatSource', value: raw(`\`${FORMAT_SOURCE}\``) }
+
+/** The article Prose shows, as JSX. The catalog page renders the same article. */
+const PROSE_ARTICLE = `  <h2>Send your first invoice</h2>
+  <p>
+    Invoices go out from <strong>Billing</strong>. Each one gets a number, a due
+    date and a link your client can pay from. Drafts save as you type.
+  </p>
+  <ol>
+    <li>Choose a client, or add one with their billing email.</li>
+    <li>
+      Add line items. Amounts are in cents, so <code>12500</code> is $125.00.
+    </li>
+    <li>
+      Press <kbd>⌘</kbd> <kbd>Enter</kbd> to send it, or save it as a draft.
+    </li>
+  </ol>
+  <h3>Payment terms</h3>
+  <p>
+    Terms set the due date from the day you send. Most teams start with
+    Net&nbsp;30 and change it for a client when they need to.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Term</th>
+        <th>Due</th>
+        <th>First reminder</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Due on receipt</td>
+        <td>The same day</td>
+        <td>After 3 days</td>
+      </tr>
+      <tr>
+        <td>Net 15</td>
+        <td>15 days after sending</td>
+        <td>3 days before</td>
+      </tr>
+      <tr>
+        <td>Net 30</td>
+        <td>30 days after sending</td>
+        <td>5 days before</td>
+      </tr>
+    </tbody>
+  </table>
+  <blockquote>
+    <p>
+      Send reminders from the invoice, not your inbox. Each one is logged, so
+      nobody is chased twice.
+    </p>
+  </blockquote>
+  <h3>Format amounts</h3>
+  <p>
+    Use one helper wherever amounts appear, so totals round the same way on
+    every screen. <a href="/docs/currencies">Currencies</a> lists the rest.
+  </p>
+  <CodeBlock label="${FORMAT_FILE}" code={formatSource} />`
+
+function prose(p: Playground): Snippet {
+  const size = sized(sizeOf(p))
+  const snippet = build('prose', {
+    jsx: h('Prose', { size }, h('CodeBlock', { label: FORMAT_FILE, code: raw('formatSource') })),
+    consts: [formatSource],
+    code: `<Prose${size ? ` size="${size}"` : ''}>\n${PROSE_ARTICLE}\n</Prose>`,
+  })
+  /* Prose's links are your own anchors, so the provider's linkComponent doesn't take them over. */
+  return { ...snippet, links: false }
+}
+
+function codeBlock(p: Playground): Snippet {
+  const command = one(p, 'Content', 'File') === 'Command'
+  const label = on(p, 'Options', 'Label', true)
+  return build('code-block', {
+    jsx: h('CodeBlock', {
+      label: label && (command ? 'Shell' : FORMAT_FILE),
+      code: command ? INSTALL_COMMAND : raw('formatSource'),
+    }),
+    consts: command ? [] : [formatSource],
   })
 }
 
@@ -1944,6 +2030,8 @@ const SNIPPETS: Record<ItemId, (p: Playground, o: Options) => Snippet> = {
   avatar,
   list,
   accordion,
+  prose,
+  'code-block': codeBlock,
   badge,
   alert,
   progress,

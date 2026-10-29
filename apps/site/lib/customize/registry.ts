@@ -47,6 +47,8 @@ const items: CustomizeItem[] = [
   { id: 'avatar', title: 'Avatar', kind: 'component', text: 'Initials', roles: {}, status: 'Presence dot' },
   { id: 'list', title: 'List', kind: 'component', text: 'Row text', roles: { lines: 'Dividers between rows' } },
   { id: 'accordion', title: 'Accordion', kind: 'component', text: 'Headings and content', roles: { lines: 'Dividers between sections' } },
+  { id: 'prose', title: 'Prose', kind: 'component', text: 'Headings, paragraphs, links and lists', roles: { lines: 'Table rules, the divider and key caps' } },
+  { id: 'code-block', title: 'Code Block', kind: 'component', text: 'Code, its label and Copy', roles: {} },
   { id: 'badge', title: 'Badge', kind: 'component', text: 'Neutral badges', roles: { accent: 'Brand badges' }, status: 'Success, warning, error and info badges' },
   { id: 'alert', title: 'Alert', kind: 'component', text: 'Message text', roles: { accent: 'Brand alerts' }, status: 'Info, success, warning and error alerts' },
   { id: 'progress', title: 'Progress', kind: 'component', text: 'Label and percentage', roles: { accent: 'Completed part' } },

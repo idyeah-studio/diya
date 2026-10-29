@@ -107,6 +107,16 @@ export const guidance: Record<ItemId, Guidance> = {
     instead: 'Content everyone needs? Show it. Views of the same thing? Tabs.',
     access: 'Each heading holds a button with aria-expanded that controls its section.',
   },
+  prose: {
+    use: 'For writing people read from top to bottom: articles, docs pages, changelog entries, terms and privacy pages. Put your own headings, paragraphs, lists, tables and quotes inside, or HTML rendered from Markdown.',
+    instead: 'A line of text with a link? Text Link. Code people copy? Code Block, which Prose spaces like the rest of the page.',
+    access: 'Prose styles your markup and leaves its structure to you: one h1, headings in order and alt text on images. Links are underlined, not marked by color alone, and keep DIYA’s focus ring. A wide table scrolls in a region you name with aria-label and give tabIndex={0}.',
+  },
+  'code-block': {
+    use: 'For code or a command people copy: an install line, a config file, an API call.',
+    instead: 'A name or value inside a sentence? A plain code element in Prose.',
+    access: 'The code sits in a region named after its label, so long lines scroll with the keyboard. Copy is a real button, and its result is announced politely; if the browser blocks the clipboard, the code is selected instead.',
+  },
   badge: {
     use: 'For a small count or dot on something else: unread messages, a new item.',
     instead: 'A status in words? Tag.',

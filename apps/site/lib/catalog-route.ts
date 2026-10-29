@@ -21,6 +21,8 @@ export const componentIds = [
   'avatar',
   'list',
   'accordion',
+  'prose',
+  'code-block',
   'badge',
   'alert',
   'progress',

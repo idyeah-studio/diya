@@ -37,6 +37,7 @@ export const EXPORT_NAMES: Record<ItemId, string> = {
   'date-picker': 'DatePicker', combobox: 'Combobox', choice: 'Choice', switch: 'Switch', slider: 'Slider',
   search: 'Search', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
   menu: 'Menu', tag: 'Tag', metric: 'Metric', avatar: 'Avatar', list: 'List', accordion: 'Accordion',
+  prose: 'Prose', 'code-block': 'CodeBlock',
   badge: 'Badge', alert: 'Alert', progress: 'Progress', tooltip: 'Tooltip', popover: 'Popover',
   'page-header': 'PageHeader', 'site-header': 'SiteHeader', 'side-navigation': 'SideNavigation', card: 'Card',
   table: 'Table', 'data-viz': 'DataViz', form: 'Form', wizard: 'Wizard', 'file-upload': 'FileUpload',

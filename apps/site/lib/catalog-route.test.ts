@@ -142,7 +142,7 @@ describe('Catalog page addresses and titles', () => {
   it('lists every component and pattern once for the sitemap, each resolving to itself', () => {
     const paths = catalogItemPaths()
     expect(paths).toHaveLength(componentIds.length + patternIds.length)
-    expect(paths).toHaveLength(38)
+    expect(paths).toHaveLength(40)
     expect(new Set(paths).size).toBe(paths.length)
     for (const path of paths) {
       const route = resolveCatalogRoute(Object.fromEntries(new URL(path, 'https://diya13.ai').searchParams))

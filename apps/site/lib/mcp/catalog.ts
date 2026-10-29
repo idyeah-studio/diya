@@ -61,7 +61,7 @@ export type McpEntry = {
   item: McpItem
   component: McpComponent | undefined
   variants: string[]
-  /** Present for the 38 catalog items: their page, guidance and complete file. */
+  /** Present for the 40 catalog items: their page, guidance and complete file. */
   catalog?: { id: ItemId; url: string; guidance: Guidance; fileName: string; file: string }
 }
 
