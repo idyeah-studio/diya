@@ -308,7 +308,8 @@ describe('Errors', () => {
   })
 
   const cases: [string, Reply, string][] = [
-    ['a rate limit', { status: 429, body: { error: 'rate_limited' } }, COPY.rateLimited],
+    ['too many from one place', { status: 429, body: { error: 'rate_limited', scope: 'ip' } }, COPY.rateLimited],
+    ['too many from one email', { status: 429, body: { error: 'rate_limited', scope: 'email' } }, COPY.rateLimitedEmail],
     ['the daily cap', { status: 503, body: { error: 'busy' } }, COPY.full],
     ['a server error', { status: 500, body: { error: 'server' } }, COPY.server],
     ['a failed email', { status: 502, body: { error: 'server' } }, COPY.server],

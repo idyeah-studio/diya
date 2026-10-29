@@ -45,6 +45,7 @@ export const REQUEST_COPY = {
   sentHeading: 'Got it',
   again: 'Send another',
   rateLimited: 'Too many requests from here. Try again in an hour.',
+  rateLimitedEmail: 'You’ve sent a few requests today. Try again tomorrow.',
   server: 'That didn’t go through. Try again in a moment.',
   full: 'I’ve had a lot of requests today. Try again tomorrow.',
   offline: 'You seem to be offline. Your request is still here for when you’re back.',
@@ -268,13 +269,13 @@ function RequestForm({ want, onClosed }: { want: string | null; onClosed: () => 
         response = await send(token, image)
       }
       if (response.ok) return succeeded()
-      const body = (await response.json().catch(() => ({}))) as { error?: string; field?: string }
+      const body = (await response.json().catch(() => ({}))) as { error?: string; field?: string; scope?: string }
       if (response.status === 400 && (body.field === 'text' || body.field === 'email')) {
         setServerField(body.field)
         ;(body.field === 'text' ? textField : emailField).current?.focus()
       } else if (response.status === 413 || body.field === 'image') {
         setPictureError(COPY.pictureRefused)
-      } else if (response.status === 429) setFormError(COPY.rateLimited)
+      } else if (response.status === 429) setFormError(body.scope === 'email' ? COPY.rateLimitedEmail : COPY.rateLimited)
       else if (response.status === 503 && body.error === 'busy') setFormError(COPY.full)
       else setFormError(COPY.server)
     } catch {

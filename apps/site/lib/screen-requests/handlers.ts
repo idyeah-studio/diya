@@ -69,7 +69,7 @@ export async function handleSubmit(request: Request, deps: ScreenRequestDeps | n
       case 'busy':
         return json({ error: 'busy' }, 503, { 'Retry-After': String(outcome.retryAfterSeconds) })
       case 'rate_limited':
-        return json({ error: 'rate_limited' }, 429, { 'Retry-After': String(outcome.retryAfterSeconds) })
+        return json({ error: 'rate_limited', scope: outcome.scope }, 429, { 'Retry-After': String(outcome.retryAfterSeconds) })
       case 'failed':
         return json({ error: 'server' }, 502)
     }

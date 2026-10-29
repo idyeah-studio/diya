@@ -43,7 +43,8 @@ export type SubmitOutcome =
   | { kind: 'accepted' }
   /** Missing, forged, or issued to another IP: the form fetches a fresh one and tries again. */
   | { kind: 'token' }
-  | { kind: 'rate_limited'; retryAfterSeconds: number }
+  /** Too many from this IP (an hour) or this email (a day): each gets its own message. */
+  | { kind: 'rate_limited'; scope: 'ip' | 'email'; retryAfterSeconds: number }
   /** The cap on every request from everyone is reached. */
   | { kind: 'busy'; retryAfterSeconds: number }
   | { kind: 'failed' }
@@ -105,9 +106,9 @@ export async function submit(deps: ScreenRequestDeps, request: ScreenRequestSubm
 
   const { ip: perIp, email: perEmail, global } = RATE_LIMITS
   if ((await store.countAttempt(keyedHash(secret, 'request-ip', ip), perIp.windowMs, now)) > perIp.max)
-    return { kind: 'rate_limited', retryAfterSeconds: perIp.windowMs / 1000 }
+    return { kind: 'rate_limited', scope: 'ip', retryAfterSeconds: perIp.windowMs / 1000 }
   if ((await store.countAttempt(keyedHash(secret, 'request-email', request.email), perEmail.windowMs, now)) > perEmail.max)
-    return { kind: 'rate_limited', retryAfterSeconds: perEmail.windowMs / 1000 }
+    return { kind: 'rate_limited', scope: 'email', retryAfterSeconds: perEmail.windowMs / 1000 }
   if ((await store.countAttempt(GLOBAL_CAP_KEY, global.windowMs, now)) > global.max)
     return { kind: 'busy', retryAfterSeconds: 60 * 60 }
 

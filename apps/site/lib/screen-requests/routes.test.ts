@@ -171,7 +171,7 @@ describe('POST /api/screen-requests', () => {
     for (let i = 0; i < RATE_LIMITS.ip.max + 1; i++) last = await post(form({ email: `p${i}@x.dev` }))
     expect(last!.status).toBe(429)
     expect(last!.headers.get('retry-after')).toBe('3600')
-    expect(await last!.json()).toEqual({ error: 'rate_limited' })
+    expect(await last!.json()).toEqual({ error: 'rate_limited', scope: 'ip' })
     expect(only()).toHaveLength(RATE_LIMITS.ip.max)
   })
 
@@ -183,6 +183,7 @@ describe('POST /api/screen-requests', () => {
     }
     expect(last!.status).toBe(429)
     expect(last!.headers.get('retry-after')).toBe(String(DAY / 1000))
+    expect(await last!.json()).toEqual({ error: 'rate_limited', scope: 'email' })
     expect(only()).toHaveLength(RATE_LIMITS.email.max)
   })
 
