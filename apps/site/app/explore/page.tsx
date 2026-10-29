@@ -33,6 +33,7 @@ import { ProPage } from '../../components/catalog/ProPage'
 import { ScreensLibrary } from '../../components/screens/ScreensLibrary'
 import { builtWith, readScreenSource } from '../../components/screens/screen-source'
 import { screenById } from '../../components/screens/screens-data'
+import { screenRequestsOpen } from '../../lib/screen-requests/runtime'
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
@@ -44,20 +45,21 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function Explore({ searchParams }: Props) {
   if (!catalogIsOpen()) notFound()
-  const route = resolveCatalogRoute(await searchParams)
+  const params = await searchParams
+  const route = resolveCatalogRoute(params)
   if ('redirect' in route) redirect(route.redirect)
   // Skills & Prompts was retired before launch; old links land on the library.
   if (route.area === 'skills') redirect('/explore')
   return (
     <CatalogFrame area={route.area} title={catalogTitle(route)} path={catalogPath(route)}>
-      <CatalogPage route={route} />
+      <CatalogPage route={route} want={typeof params.want === 'string' ? params.want : null} />
     </CatalogFrame>
   )
 }
 
-function CatalogPage({ route }: { route: Exclude<CatalogRoute, { area: 'skills' }> }) {
+function CatalogPage({ route, want }: { route: Exclude<CatalogRoute, { area: 'skills' }>; want: string | null }) {
   if (route.area === 'pro') return <ProPage />
-  if (route.area === 'screens') return <ScreensPage id={route.id} />
+  if (route.area === 'screens') return <ScreensPage id={route.id} want={want} />
   const initial = {
     area: route.area,
     component: route.area === 'components' ? route.id : '',
@@ -112,9 +114,22 @@ function CatalogPage({ route }: { route: Exclude<CatalogRoute, { area: 'skills' 
   return initial.pattern === 'site-header' ? <SiteHeaderLibrary /> : <PageHeaderLibrary />
 }
 
-/** The Screens gallery, or one screen with its own file (read here, on the server) for Get code. */
-function ScreensPage({ id }: { id: string | null }) {
+/**
+ * The Screens gallery, or one screen with its own file (read here, on the
+ * server) for Get code. The gallery ends with the request form, open or closed
+ * as its API is, and started from a poster when `want` names one.
+ */
+function ScreensPage({ id, want }: { id: string | null; want: string | null }) {
   const screen = screenById(id) ?? null
   const source = screen && screen.status !== 'poster' ? readScreenSource(screen.id) : null
-  return <ScreensLibrary key={id ?? ''} screen={screen} source={source} builtWith={source ? builtWith(source) : []} />
+  return (
+    <ScreensLibrary
+      key={id ?? ''}
+      screen={screen}
+      source={source}
+      builtWith={source ? builtWith(source) : []}
+      requestsOpen={screen ? false : screenRequestsOpen()}
+      want={want}
+    />
+  )
 }

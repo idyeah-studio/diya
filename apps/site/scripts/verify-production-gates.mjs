@@ -21,6 +21,21 @@ const componentPath = '/explore?area=components&component=button'
 const screensPath = '/explore?area=screens'
 const screenPath = '/explore?area=screens&screen=sign-in'
 const framePath = '/screens-frame?screen=sign-in&theme=dark&glass=0'
+/* The screen request form's API is closed before launch, whatever is set:
+   GET says so with no form token, POST answers 503. It closes itself (the
+   proxy leaves it alone), the way the waitlist's API does. */
+const screenRequestsPath = '/api/screen-requests'
+const screenRequestCases = [[screenRequestsPath, 'GET', 200], [screenRequestsPath, 'POST', 503]]
+
+/** A closed /api/screen-requests: exactly { open: false }, uncached. */
+export function screenRequestsClosedContract(response) {
+  if (!/(^|,)\s*no-store\s*(,|$)/i.test(response?.cacheControl ?? '')) throw new Error('Screen requests status must not be cached')
+  let body
+  try { body = JSON.parse(response.body) } catch { body = undefined }
+  if (!body || body.open !== false || Object.keys(body).length !== 1) throw new Error('Screen requests must be closed before launch, with no form token')
+  return { open: false, cacheControl: response.cacheControl }
+}
+
 /* The ZIP download routes are retired: they must not exist in either mode. */
 const retiredRouteCases = [
   ['/api/preview-packages/button', 'GET', 404],
@@ -185,9 +200,9 @@ export async function verifyProductionGates({ root = appRoot, signal } = {}) {
   const require = createRequire(join(root, 'package.json'))
   const next = require.resolve('next/dist/bin/next')
   const checks = []
-  const documents = [], crawlerRules = [], assets = [], launch = [], mcp = [], launched = []
+  const documents = [], crawlerRules = [], assets = [], launch = [], mcp = [], launched = [], screenRequests = []
   for (const [flag, cases] of [
-    ['0', [['/', 'GET', 200], ['/explore', 'GET', 404], [componentPath, 'GET', 404], [screensPath, 'GET', 404], [screenPath, 'GET', 404], [framePath, 'GET', 200], ...launchedRoutes.map(([path]) => [path, 'GET', 404]), ...mcpCases(false), ['/missing-launch-review-route', 'GET', 404], ['/robots.txt', 'GET', 200], ['/api/launch', 'GET', 200], ...retiredRouteCases]],
+    ['0', [['/', 'GET', 200], ['/explore', 'GET', 404], [componentPath, 'GET', 404], [screensPath, 'GET', 404], [screenPath, 'GET', 404], [framePath, 'GET', 200], ...launchedRoutes.map(([path]) => [path, 'GET', 404]), ...mcpCases(false), ['/missing-launch-review-route', 'GET', 404], ['/robots.txt', 'GET', 200], ['/api/launch', 'GET', 200], ...screenRequestCases, ...retiredRouteCases]],
     ['1', [['/', 'GET', 200], ['/explore', 'GET', 200], [componentPath, 'GET', 200], [screensPath, 'GET', 200], [screenPath, 'GET', 200], [framePath, 'GET', 200], ...launchedRoutes.map(([path]) => [path, 'GET', 200]), ...mcpCases(true), ['/missing-launch-review-route', 'GET', 404], ['/robots.txt', 'GET', 200], ['/api/launch', 'GET', 200], ...retiredRouteCases]],
     // After the launch moment (no preview flag): only the landing and its card.
     ['launched', [['/', 'GET', 200]]],
@@ -234,7 +249,7 @@ export async function verifyProductionGates({ root = appRoot, signal } = {}) {
           ...(method === 'POST' ? { headers: { Origin: origin, 'Content-Type': 'application/json' }, body: '{}' } : {}),
           ...(method === 'MCP' ? { headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' }, body: MCP_INITIALIZE } : {}),
         })
-        if (path === '/api/launch') pages.set(path, { cacheControl: response.headers.get('cache-control'), body: await response.text() })
+        if (path === '/api/launch' || (path === screenRequestsPath && method === 'GET')) pages.set(path, { cacheControl: response.headers.get('cache-control'), body: await response.text() })
         else if (method === 'MCP') pages.set('MCP', { cacheControl: response.headers.get('cache-control'), body: await response.text() })
         else if (method === 'GET' && !path.startsWith('/api/')) pages.set(path, await response.text())
         else await response.body?.cancel()
@@ -270,6 +285,7 @@ export async function verifyProductionGates({ root = appRoot, signal } = {}) {
       crawlerRules.push({ previewFlag: flag, allow: '/', previewNoindexReadable: true })
       launch.push({ previewFlag: flag, ...launchContract(pages.get('/api/launch'), flag === '0' ? pages.get('/') : null) })
       if (flag === '1') mcp.push({ previewFlag: flag, ...mcpContract(pages.get('MCP')) })
+      if (flag === '0') screenRequests.push({ previewFlag: flag, ...screenRequestsClosedContract(pages.get(screenRequestsPath)) })
     } finally {
       signal?.removeEventListener('abort', stop)
       stop()
@@ -277,7 +293,7 @@ export async function verifyProductionGates({ root = appRoot, signal } = {}) {
       try { await exited } finally { clearTimeout(forceStop) }
     }
   }
-  return { status: 'passed', checks, documents, crawlerRules, assets, launch, mcp, launched }
+  return { status: 'passed', checks, documents, crawlerRules, assets, launch, mcp, launched, screenRequests }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -9,6 +9,7 @@ import { useListedScreens } from '../CatalogSearchProvider'
 import { Icon } from '../Icon'
 import { PreviewSetting } from '../PreviewControls'
 import { GetScreenCodeDrawer } from './GetScreenCodeDrawer'
+import { ScreenRequest } from './ScreenRequest'
 import { ScreenStage, VIEWPORTS, type Device } from './ScreenStage'
 import { CATEGORIES, frameHref, screens, thumbnailSrc, type LiveScreen, type PosterScreen, type ScreenEntry } from './screens-data'
 import type { BuiltWithItem } from './screen-source'
@@ -20,27 +21,35 @@ import './screens.css'
 
 const GALLERY = '/explore?area=screens'
 const screenHref = (id: string) => `/explore?area=screens&screen=${id}`
-/** The request section, carrying the poster someone wants. The form arrives in a later step. */
+/** The request section, carrying the poster someone wants: the form starts with its name. */
 const requestHref = (id: string) => `/explore?area=screens&want=${id}#request`
 
 /**
  * The Screens area: the gallery (no screen chosen) or one screen's page, in
  * the catalog's own frame: the sidebar, then the document.
  */
-export function ScreensLibrary(props: { screen: ScreenEntry | null; source?: string | null; builtWith?: BuiltWithItem[] }) {
+export function ScreensLibrary(props: {
+  screen: ScreenEntry | null
+  source?: string | null
+  builtWith?: BuiltWithItem[]
+  /** Whether the gallery's request form takes requests (lib/screen-requests/runtime.ts). */
+  requestsOpen?: boolean
+  /** The poster a "Want this one?" link asked for (`want=` in the address). */
+  want?: string | null
+}) {
   const { screen } = props
   return (
     <main id="content" className="gallery-study component-library pattern-library screens-library">
       <div className="gallery-study-backdrop" aria-hidden="true" />
       <CatalogBrowser area="screens" current={screen?.id} />
       <div className="component-document">
-        {screen ? <ScreenDocument key={screen.id} screen={screen} source={props.source ?? null} builtWith={props.builtWith ?? []} /> : <ScreensGallery />}
+        {screen ? <ScreenDocument key={screen.id} screen={screen} source={props.source ?? null} builtWith={props.builtWith ?? []} /> : <ScreensGallery requestsOpen={props.requestsOpen ?? false} want={props.want ?? null} />}
       </div>
     </main>
   )
 }
 
-function ScreensGallery() {
+function ScreensGallery({ requestsOpen, want }: { requestsOpen: boolean; want: string | null }) {
   const listed = useListedScreens()
   const shown = screens.filter((screen) => listed.has(screen.id))
   return (
@@ -65,10 +74,7 @@ function ScreensGallery() {
           </section>
         )
       })}
-      <section id="request" className="screens-request" aria-labelledby="screens-request-title">
-        <h3 id="screens-request-title">Don’t see your screen?</h3>
-        <p>Tell us which page you need next. The request form opens here soon.</p>
-      </section>
+      <ScreenRequest open={requestsOpen} want={want} />
     </>
   )
 }
@@ -218,7 +224,7 @@ function PosterNotes({ screen }: { screen: PosterScreen }) {
         <p>{screen.note}</p>
         <p>
           <Link className="screens-want" href={requestHref(screen.id)}>
-            Want this one? Tell us
+            Want this one? Tell me
           </Link>
         </p>
       </section>

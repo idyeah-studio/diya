@@ -12,13 +12,18 @@ import { choiceLabel, CONTACT_EMAIL, POSTAL_ADDRESS_IN_TRANSACTIONAL, postalAddr
 
 export type EmailHeader = { name: string; value: string }
 
+export type EmailAttachment = { name: string; contentType: string; content: Uint8Array }
+
 export type ComposedEmail = {
   subject: string
   /** Plain text is the primary part; the HTML says the same thing. */
   text: string
   html: string
   headers: EmailHeader[]
-  tag: 'waitlist-confirm' | 'waitlist-already'
+  tag: 'waitlist-confirm' | 'waitlist-already' | 'screen-request'
+  /** Overrides the sender's Reply-To for this one message. */
+  replyTo?: string
+  attachments?: EmailAttachment[]
 }
 
 export type EmailLinks = {

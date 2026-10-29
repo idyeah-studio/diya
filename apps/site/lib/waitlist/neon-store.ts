@@ -21,6 +21,21 @@ export function neonRunner(databaseUrl: string): SqlRunner {
   }
 }
 
+/**
+ * Records one attempt under a hashed key and returns how many fall inside the
+ * window, this one included. Prunes rows past ATTEMPT_RETENTION_MS as it goes.
+ * Screen requests count in the same table, under their own keys.
+ */
+export async function countAttemptIn(db: SqlRunner, keyHash: string, windowMs: number, now: Date) {
+  const [row] = await db.query(
+    `with pruned as (delete from diya_waitlist_attempts where at < $4),
+          added as (insert into diya_waitlist_attempts (key_hash, at) values ($1, $2))
+     select count(*)::int + 1 as n from diya_waitlist_attempts where key_hash = $1 and at > $3`,
+    [keyHash, now, new Date(now.getTime() - windowMs), new Date(now.getTime() - ATTEMPT_RETENTION_MS)],
+  )
+  return Number(row.n)
+}
+
 // Serialises confirmations, so two people confirming at once can't both take the 200th spot.
 const FOUNDING_LOCK = 73160200
 
@@ -46,14 +61,8 @@ function toSignup(row: Row): Signup {
 export class NeonWaitlistStore implements WaitlistStore {
   constructor(private readonly db: SqlRunner) {}
 
-  async countAttempt(keyHash: string, windowMs: number, now: Date) {
-    const [row] = await this.db.query(
-      `with pruned as (delete from diya_waitlist_attempts where at < $4),
-            added as (insert into diya_waitlist_attempts (key_hash, at) values ($1, $2))
-       select count(*)::int + 1 as n from diya_waitlist_attempts where key_hash = $1 and at > $3`,
-      [keyHash, now, new Date(now.getTime() - windowMs), new Date(now.getTime() - ATTEMPT_RETENTION_MS)],
-    )
-    return Number(row.n)
+  countAttempt(keyHash: string, windowMs: number, now: Date) {
+    return countAttemptIn(this.db, keyHash, windowMs, now)
   }
 
   async findByEmail(email: string) {

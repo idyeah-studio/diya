@@ -1,4 +1,4 @@
-# Waitlist (Relight, part of DIYA Pro): environment
+# Waitlist (Relight, part of DIYA Pro) and screen requests: environment
 
 Set these on the Vercel `diya` project (Production, and Preview if you want previews to take real signups).
 The list opens at `LAUNCH_AT` (`lib/launch.ts`). Before then the form, the API and the `/waitlist/*` pages are closed, whatever is set, unless `DIYA_CATALOG_PREVIEW=1`; locally, `DIYA_NOW` can pin the clock past launch to try it.
@@ -11,13 +11,34 @@ After launch, when any of the six required variables is missing in production, t
 | `POSTMARK_STREAM` | yes | Message stream ID that waitlist mail goes out on. | `diya-waitlist` |
 | `DIYA_WAITLIST_FROM` | yes | Sender, exactly as it appears in the From line. Use DIYA's public alias under Vishal's name, never a personal address. The address must be a confirmed Postmark sender or on a verified domain. | `Vishal <diya@idyeah.studio>` |
 | `DIYA_SITE_URL` | yes | Public origin used in email links (confirm, leave the list, privacy). Always the site's public origin. | `https://diya13.ai` |
-| `DIYA_WAITLIST_SECRET` | yes | Random key for the keyed hashes of IP addresses and emails in rate-limit records, and for signing the form's fill-time token. 32+ random bytes. Changing it only resets rate limits. | output of `openssl rand -hex 32` |
+| `DIYA_WAITLIST_SECRET` | yes | Random key for the keyed hashes of IP addresses and emails in rate-limit records (the waitlist's and screen requests'), and for signing both forms' fill-time tokens. 32+ random bytes. Changing it only resets rate limits. | output of `openssl rand -hex 32` |
 | `DIYA_POSTAL_ADDRESS` | no | The sender's postal address for email footers: a USPS PO box or a registered private mailbox. Unset or blank means no address is printed anywhere. Keep it out of the repository; set it only in the deployment's environment. | `PO Box 100, Springfield, ST 00000` |
 | `DIYA_WAITLIST_REPLY_TO` | no | Reply-To, if replies should go somewhere other than DIYA's public alias. Defaults to `Vishal <diya@idyeah.studio>` (`DEFAULT_REPLY_TO` in `lib/waitlist/config.ts`). | `Vishal <diya@idyeah.studio>` |
 
+## Screen requests
+
+"Don't see your screen?" at the end of the Screens gallery (`/explore?area=screens#request`) takes a description, an optional picture and an email, stores them in `diya_screen_requests` and emails each one to DIYA. It uses the same six variables as the waitlist and opens and closes by the same rules: closed before `LAUNCH_AT` (unless `DIYA_CATALOG_PREVIEW=1`), closed in production when any of the six is missing (the section says "Requests open with the launch." and `POST /api/screen-requests` answers 503), and in local development an in-memory store with the email printed to the server log instead of sent. Nothing is ever sent to the person who asked.
+
+| Variable | Required | What it's for | Example |
+|---|---|---|---|
+| `DIYA_REQUESTS_TO` | no | Where each request is emailed, with the picture attached and Reply-To set to the person's address. Defaults to `CONTACT_EMAIL` (`diya@idyeah.studio`, in `lib/waitlist/config.ts`). It goes out from `DIYA_WAITLIST_FROM` on `POSTMARK_STREAM`, tagged `screen-request`. | `Vishal <diya@idyeah.studio>` |
+
+Limits live in `lib/screen-requests/config.ts`: 20 to 2,000 characters; one PNG, JPEG or WebP picture, shrunk in the browser to 2,000px and under 3 MB, refused by the server over 3.5 MB or when its first bytes aren't one of those three; a 4 MB body; 5 requests an hour per IP, 3 a day per email, 100 a day in all. Its attempt counts share `diya_waitlist_attempts`, under their own keys. No route serves a request or its picture.
+
+Each email ends with the query that marks the request answered. Run it after you reply, or the request stays for 365 days instead of 90.
+
+- New requests, oldest first: `select id, created_at, email, poster_id, notify_when_ready, image_bytes, request_text from diya_screen_requests where status = 'new' order by created_at;`
+- Mark one replied (it's deleted 90 days later): `update diya_screen_requests set status = 'replied', replied_at = now() where id = 12;`
+- Close one, such as spam (it's deleted at the next clean-up): `update diya_screen_requests set status = 'closed' where id = 12;`
+- Delete someone's requests on request: `delete from diya_screen_requests where email = lower('person@example.com');`
+- People to tell when a screen is ready: `select email from diya_screen_requests where poster_id = 'board' and notify_when_ready;` (that one email is a commercial email; see below).
+- Save a picture (psql): `\copy (select encode(image, 'base64') from diya_screen_requests where id = 12) to 'request-12.b64'`, then `base64 -d -i request-12.b64 -o request-12.webp` (the type is in `image_type`).
+- The clean-up runs each time a request arrives. To run it by hand: `delete from diya_screen_requests where status = 'closed' or replied_at < now() - interval '90 days' or (replied_at is null and created_at < now() - interval '365 days');`
+- The emails that brought requests sit in the `DIYA_REQUESTS_TO` inbox and in Postmark (45 days). The privacy page promises the inbox copy goes on the same schedule as the row, so delete it there too.
+
 ## Migrations
 
-Run each `*.sql` file in this folder once, in order, against the DIYA database (Neon SQL Editor, or `psql "$DIYA_DATABASE_URL" -f db/001_waitlist.sql`). The files are safe to re-run.
+Run each `*.sql` file in this folder once, in order, against the DIYA database (Neon SQL Editor, or `psql "$DIYA_DATABASE_URL" -f db/001_waitlist.sql`). The files are safe to re-run. `003_screen_requests.sql` must run before the gallery's form opens in production.
 
 ## Day-to-day
 

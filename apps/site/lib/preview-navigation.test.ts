@@ -54,7 +54,7 @@ describe('catalog navigation before and after launch', () => {
 
   it('leaves the public site, API routes and image delivery to their own handlers', () => {
     vi.stubEnv('DIYA_CATALOG_PREVIEW', '0')
-    for (const path of ['/', '/robots.txt', '/sitemap.xml', '/api/launch', '/_next/image?url=hero.png', '/explore-extra', '/screens-frame?screen=sign-in']) {
+    for (const path of ['/', '/robots.txt', '/sitemap.xml', '/api/launch', '/api/screen-requests', '/_next/image?url=hero.png', '/explore-extra', '/screens-frame?screen=sign-in']) {
       const response = proxy(new NextRequest(`https://diya13.ai${path}`))
       expect(response.headers.get('x-middleware-next')).toBe('1')
       expect(response.headers.get('x-middleware-rewrite')).toBeNull()
