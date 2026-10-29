@@ -74,6 +74,27 @@ function Frame() {
     return () => window.removeEventListener('message', listen)
   }, [])
 
+  // A screen's links point at the reader's own routes, which don't exist in the
+  // preview. Keep the frame on the screen instead of loading a 404 into it; links
+  // to other sites still open, in a new tab.
+  useEffect(() => {
+    const stay = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0) return
+      const link = (event.target as Element | null)?.closest?.('a[href]')
+      if (!(link instanceof HTMLAnchorElement) || link.hasAttribute('download')) return
+      const url = new URL(link.href, window.location.href)
+      if (url.origin !== window.location.origin) {
+        event.preventDefault()
+        window.open(url.href, '_blank', 'noopener,noreferrer')
+        return
+      }
+      if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return
+      event.preventDefault()
+    }
+    document.addEventListener('click', stay)
+    return () => document.removeEventListener('click', stay)
+  }, [])
+
   // Scrollbars and native controls outside the provider follow the theme too.
   useEffect(() => {
     document.documentElement.style.colorScheme = theme
