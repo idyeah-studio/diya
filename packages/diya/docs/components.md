@@ -270,6 +270,10 @@ not communicate status. Icon-only buttons need their own `aria-label`.
   `type="submit"` explicitly in a form.
 - **Loading and disabled:** set these while a real operation runs, and clear
   loading on both success and failure. Keep a field's `error` text actionable.
+  A loading Button keeps focus and is inert (`aria-disabled="true"` and
+  `aria-busy`; clicks, Enter and Space do nothing, so it can't submit twice),
+  so a focused Save or Send doesn't drop focus while it works. `disabled` sets
+  the native attribute and takes the button out of the tab order.
 - **Icons:** any React icon can go in an icon slot. Give icon-only buttons an
   `aria-label`, and hide decorative SVGs from assistive technology.
 - **Slots:** omitted Page Header and Card slots collapse. Put real controls in
@@ -293,5 +297,5 @@ not communicate status. Icon-only buttons need their own `aria-label`.
 | A chart is blank | Supply matching `categories` and `series`, or positive `pie`/`donut`/`treemap` data, and give its container a width. |
 | The font hasn't changed | DIYA Sans loads from `dist/fonts` beside `styles.css`; your bundler copies it. For another font, load it yourself and check the family name in `fontFamily`. |
 | Glass looks solid | Check the backdrop behind it, browser support and the reader's transparency setting. |
-| A button stays disabled | Clear `loading` on success and on failure. |
+| A button stays disabled or busy | Clear `loading` on success and on failure. |
 | An event handler errors in Next.js | Functions can't be passed from a Server Component. Move the component into a file that starts with `'use client'`. |

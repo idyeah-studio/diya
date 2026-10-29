@@ -11,7 +11,7 @@ export const guidance: Record<ItemId, Guidance> = {
   button: {
     use: 'For an action on this page: save, send, open a dialog. One solid button per area marks the main action; outline and quiet ones sit beside it.',
     instead: 'Going to another page? Use Text Link, or a Button with href.',
-    access: 'A native button, so Enter and Space work. An icon-only button needs an aria-label. Loading sets aria-busy and keeps the label for screen readers.',
+    access: 'A native button, so Enter and Space work. An icon-only button needs an aria-label. Loading sets aria-busy and aria-disabled, keeps the label for screen readers, and keeps focus on the button while it ignores presses.',
   },
   'text-input': {
     use: 'For one line of free text: a name, an email, a URL.',

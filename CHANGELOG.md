@@ -50,6 +50,11 @@ First public release, under the MIT License.
   Navigation, Breadcrumbs, Site Header and Menu items with an `href` are real
   links (`aria-current="page"` on the current one).
 - Button `variant="destructive"`, and Dialog `confirmVariant="destructive"`.
+- A loading Button keeps focus: it is `aria-disabled="true"` and `aria-busy`
+  rather than natively disabled, and ignores clicks, Enter and Space, so a
+  focused Save or Send stays focused while it works and still can't submit
+  twice. Form's Submit, Dialog's confirm and Wizard's Continue follow.
+  `disabled` is still the native attribute.
 - Menu and Popover take your own `trigger` element and a controlled `open`
   with `onOpenChange`; Popover content can be a plain node. Dialog takes a
   `trigger`. Tooltip wraps your own trigger, such as an icon-only Button.
