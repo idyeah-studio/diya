@@ -174,8 +174,9 @@ export default async function Privacy() {
           <strong>For how long:</strong> we delete the request, its picture and the email that brought it 90 days after
           we reply, or 365 days after you sent it if we never do. If we close a request, as we would spam, it goes at
           the next clean-up. The clean-up runs whenever someone sends a request, so on a quiet day it can happen a little
-          later. If your screen isn’t ready by the time we delete your request, the “when it’s ready” email goes with
-          it.
+          later. If you ticked “Also tell me when it’s ready”, we keep only your email address, which screen it was, the
+          version of this page you agreed to and the dates, until that screen ships or 2 years after your request,
+          whichever comes first. Your words and your picture still go on the schedule above.
         </li>
         <li>
           <strong>Who helps:</strong> Vercel receives the request, Neon stores it and Postmark carries it to us, as

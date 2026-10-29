@@ -4,7 +4,7 @@ import { GET as statusRoute, POST as submitRoute } from '../../app/api/screen-re
 import { CONSENT_VERSION, MIN_FILL_MS } from '../waitlist/config'
 import { FakeSender, PostmarkSender } from '../waitlist/sender'
 import { issueFormToken, keyedHash } from '../waitlist/tokens'
-import { BODY_MAX_BYTES, IMAGE_MAX_BYTES, RATE_LIMITS, REPLIED_RETENTION_MS, UNANSWERED_RETENTION_MS } from './config'
+import { BODY_MAX_BYTES, IMAGE_MAX_BYTES, RATE_LIMITS, READY_RETENTION_MS, REPLIED_RETENTION_MS, UNANSWERED_RETENTION_MS } from './config'
 import { MemoryScreenRequestStore } from './memory-store'
 import { NeonScreenRequestStore } from './neon-store'
 import { screenRequestDeps, screenRequestsOpen, setScreenRequestDeps } from './runtime'
@@ -232,6 +232,15 @@ describe('POST /api/screen-requests', () => {
     expect(store.requests.has(old.id)).toBe(false)
   })
 
+  it('a new request trims an old “when it’s ready” one to its email, poster and dates', async () => {
+    const ready = await store.insert(
+      { email: 'sam@x.dev', text: TEXT, posterId: 'board', notifyWhenReady: true, consentVersion: 'v', image: { bytes: WEBP, type: 'image/webp' }, ipHash: 'h' },
+      new Date(Date.now() - UNANSWERED_RETENTION_MS - DAY),
+    )
+    expect((await post(form())).status).toBe(202)
+    expect(store.requests.get(ready.id)).toMatchObject({ email: 'sam@x.dev', posterId: 'board', consentVersion: 'v', text: null, image: null, ipHash: null })
+  })
+
   it('refuses anything but multipart/form-data', async () => {
     expect((await post(JSON.stringify({ text: TEXT }), { 'Content-Type': 'application/json' })).status).toBe(415)
     expect((await post('nope', { 'Content-Type': 'multipart/form-data; boundary=x' })).status).toBe(400)
@@ -307,6 +316,8 @@ describe('Opening and closing', () => {
     expect(text).toContain(`${REPLIED_RETENTION_MS / DAY} days after we reply`)
     expect(text).toContain(`${UNANSWERED_RETENTION_MS / DAY} days after you sent it`)
     expect(text).toContain('Also tell me when it’s ready')
+    expect(text).toContain(`until that screen ships or ${READY_RETENTION_MS / (365 * DAY)} years after your request, whichever comes first`)
+    expect(text).not.toContain('email goes with it')
   })
 
   it('no route serves a request or its picture', () => {

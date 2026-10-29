@@ -35,6 +35,12 @@ export const RATE_LIMITS = {
 export const REPLIED_RETENTION_MS = 90 * DAY
 /** Requests that never get a reply are deleted this long after they arrive. */
 export const UNANSWERED_RETENTION_MS = 365 * DAY
+/**
+ * "Also tell me when it's ready": past the times above, only the email, the
+ * poster or screen name, the consent version and the dates stay, until the
+ * screen ships or this long after the request, whichever comes first.
+ */
+export const READY_RETENTION_MS = 2 * 365 * DAY
 
 /** Where each request is emailed: DIYA_REQUESTS_TO, or DIYA's public contact. */
 export function requestsTo(env: Record<string, string | undefined> = process.env) {

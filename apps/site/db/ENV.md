@@ -23,6 +23,8 @@ After launch, when any of the six required variables is missing in production, t
 |---|---|---|---|
 | `DIYA_REQUESTS_TO` | no | Where each request is emailed, with the picture attached and Reply-To set to the person's address. Defaults to `CONTACT_EMAIL` (`diya@idyeah.studio`, in `lib/waitlist/config.ts`). It goes out from `DIYA_WAITLIST_FROM` on `POSTMARK_STREAM`, tagged `screen-request`. | `Vishal <diya@idyeah.studio>` |
 
+Requests where the person ticked "Also tell me when it's ready" are trimmed rather than deleted at those times: the words, the picture and the IP hash go, and the email, `poster_id` or `screen_name`, the consent version and the dates stay, until you record that the screen shipped or 2 years after the request, whichever comes first. The email asks you to fill in `screen_name` when such a request didn't come from a poster.
+
 Limits live in `lib/screen-requests/config.ts`: 20 to 2,000 characters; one PNG, JPEG or WebP picture, shrunk in the browser to 2,000px and under 3 MB, refused by the server over 3.5 MB or when its first bytes aren't one of those three; a 4 MB body; 5 requests an hour per IP, 3 a day per email, 100 a day in all. Its attempt counts share `diya_waitlist_attempts`, under their own keys. No route serves a request or its picture.
 
 Each email ends with the query that marks the request answered. Run it after you reply, or the request stays for 365 days instead of 90.
@@ -31,10 +33,14 @@ Each email ends with the query that marks the request answered. Run it after you
 - Mark one replied (it's deleted 90 days later): `update diya_screen_requests set status = 'replied', replied_at = now() where id = 12;`
 - Close one, such as spam (it's deleted at the next clean-up): `update diya_screen_requests set status = 'closed' where id = 12;`
 - Delete someone's requests on request: `delete from diya_screen_requests where email = lower('person@example.com');`
-- People to tell when a screen is ready: `select email from diya_screen_requests where poster_id = 'board' and notify_when_ready;` (that one email is a commercial email; see below).
+- Name the screen of a "when it's ready" request that didn't come from a poster (do it when you reply): `update diya_screen_requests set screen_name = 'Support queue' where id = 12;`
+- People to tell when a screen is ready: `select id, email from diya_screen_requests where (poster_id = 'board' or screen_name = 'Board') and notify_when_ready and shipped_at is null;` Send each one its email by hand (that one email is most likely a commercial email; see below).
+- Then record that it shipped, so those rows go at the next clean-up: `update diya_screen_requests set shipped_at = now() where (poster_id = 'board' or screen_name = 'Board') and notify_when_ready and shipped_at is null;`
 - Save a picture (psql): `\copy (select encode(image, 'base64') from diya_screen_requests where id = 12) to 'request-12.b64'`, then `base64 -d -i request-12.b64 -o request-12.webp` (the type is in `image_type`).
-- The clean-up runs each time a request arrives. To run it by hand: `delete from diya_screen_requests where status = 'closed' or replied_at < now() - interval '90 days' or (replied_at is null and created_at < now() - interval '365 days');`
-- The emails that brought requests sit in the `DIYA_REQUESTS_TO` inbox and in Postmark (45 days). The privacy page promises the inbox copy goes on the same schedule as the row, so delete it there too.
+- The clean-up runs each time a request arrives. To run it by hand, both statements in order:
+  - `delete from diya_screen_requests where status = 'closed' or ((replied_at < now() - interval '90 days' or (replied_at is null and created_at < now() - interval '365 days')) and not (notify_when_ready and shipped_at is null and created_at >= now() - interval '730 days'));`
+  - `update diya_screen_requests set request_text = null, image = null, image_type = null, image_bytes = null, ip_hash = null where (replied_at < now() - interval '90 days' or (replied_at is null and created_at < now() - interval '365 days')) and notify_when_ready and shipped_at is null and created_at >= now() - interval '730 days' and request_text is not null;`
+- The emails that brought requests sit in the `DIYA_REQUESTS_TO` inbox and in Postmark (45 days). The privacy page promises the inbox copy goes on the same schedule as the request's words and picture (90 days after the reply, 365 unanswered), so delete it there too.
 
 ## Migrations
 

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { PostmarkSender } from '../waitlist/sender'
-import { repliedQuery, screenRequestEmail } from './email'
+import { repliedQuery, screenNameQuery, screenRequestEmail } from './email'
 import type { ScreenRequest } from './store'
 
 const WEBP = Uint8Array.from([...Buffer.from('RIFF'), 9, 0, 0, 0, ...Buffer.from('WEBPVP8 '), 1, 2, 3])
@@ -15,8 +15,10 @@ const request = (extra: Partial<ScreenRequest> = {}): ScreenRequest => ({
   consentVersion: '2026-11-07',
   image: null,
   ipHash: 'h',
+  screenName: null,
   status: 'new',
   repliedAt: null,
+  shippedAt: null,
   ...extra,
 })
 
@@ -62,6 +64,16 @@ describe('The email to DIYA for each request', () => {
     expect(email.html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
     expect(email.html).toContain('&quot;quotes&quot; &amp; more')
     expect(email.subject).not.toMatch(/[\r\n]/)
+  })
+
+  it('asks for the screen’s name when the person wants to hear when it’s ready and there’s no poster', () => {
+    const ask = 'name the screen when you reply:\n' + screenNameQuery('12')
+    const plain = screenRequestEmail({ request: request({ notifyWhenReady: true }), posterName: null, siteUrl: 'https://diya13.ai' })
+    expect(plain.text).toContain(ask)
+    expect(plain.html).toContain(`set screen_name = &#39;Name of the screen&#39; where id = 12;`)
+    const fromPoster = screenRequestEmail({ request: request({ notifyWhenReady: true, posterId: 'board' }), posterName: 'Board', siteUrl: 'https://diya13.ai' })
+    expect(fromPoster.text).not.toContain('screen_name')
+    expect(screenRequestEmail({ request: request(), posterName: null, siteUrl: 'https://diya13.ai' }).text).not.toContain('screen_name')
   })
 
   it('the mark-as-replied query only ever takes a number', () => {

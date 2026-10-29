@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { PGlite } from '@electric-sql/pglite'
 import { describe, expect, it, vi } from 'vitest'
 import type { SqlRunner } from '../waitlist/neon-store'
-import { REPLIED_RETENTION_MS, UNANSWERED_RETENTION_MS } from './config'
+import { READY_RETENTION_MS, REPLIED_RETENTION_MS, UNANSWERED_RETENTION_MS } from './config'
 import { MemoryScreenRequestStore } from './memory-store'
 import { NeonScreenRequestStore } from './neon-store'
 import type { ScreenRequestInput, ScreenRequestStore } from './store'
@@ -36,6 +36,12 @@ const T0 = new Date('2026-11-08T12:00:00Z')
 const at = (days: number) => new Date(T0.getTime() + days * DAY)
 const WEBP = Uint8Array.from([...Buffer.from('RIFF'), 0, 0, 0, 0, ...Buffer.from('WEBPVP8 '), 1, 2, 3])
 
+const ruleAt = (now: Date) => ({
+  repliedBefore: new Date(now.getTime() - REPLIED_RETENTION_MS),
+  unansweredBefore: new Date(now.getTime() - UNANSWERED_RETENTION_MS),
+  readySince: new Date(now.getTime() - READY_RETENTION_MS),
+})
+
 const input = (extra: Partial<ScreenRequestInput> = {}): ScreenRequestInput => ({
   email: 'maya@studio.co',
   text: 'A support queue where each priority has its own column.',
@@ -47,10 +53,12 @@ const input = (extra: Partial<ScreenRequestInput> = {}): ScreenRequestInput => (
   ...extra,
 })
 
-/** Marks a request answered or closed, the way the manual queries in db/ENV.md do. */
-type Mark = (store: ScreenRequestStore, id: string, how: { repliedAt?: Date; closed?: boolean }) => Promise<void>
+/** Marks a request answered, closed or shipped, the way the manual queries in db/ENV.md do. */
+type Mark = (store: ScreenRequestStore, id: string, how: { repliedAt?: Date; closed?: boolean; shippedAt?: Date }) => Promise<void>
+/** What a row still holds, for checking what the clean-up trimmed. */
+type Kept = { id: string; email: string; text: string | null; image: boolean; ipHash: string | null; posterId: string | null; consentVersion: string; createdAt: number; repliedAt: number | null }
 
-const stores: [string, () => Promise<{ store: ScreenRequestStore; mark: Mark; ids: () => Promise<string[]> }>][] = [
+const stores: [string, () => Promise<{ store: ScreenRequestStore; mark: Mark; ids: () => Promise<string[]>; rows: () => Promise<Kept[]> }>][] = [
   [
     'memory',
     async () => {
@@ -60,8 +68,21 @@ const stores: [string, () => Promise<{ store: ScreenRequestStore; mark: Mark; id
         mark: async (_, id, how) => {
           if (how.repliedAt) store.reply(id, how.repliedAt)
           if (how.closed) store.close(id)
+          if (how.shippedAt) store.ship(id, how.shippedAt)
         },
         ids: async () => [...store.requests.keys()],
+        rows: async () =>
+          [...store.requests.values()].map((r) => ({
+            id: r.id,
+            email: r.email,
+            text: r.text,
+            image: !!r.image,
+            ipHash: r.ipHash,
+            posterId: r.posterId,
+            consentVersion: r.consentVersion,
+            createdAt: r.createdAt.getTime(),
+            repliedAt: r.repliedAt?.getTime() ?? null,
+          })),
       }
     },
   ],
@@ -74,8 +95,25 @@ const stores: [string, () => Promise<{ store: ScreenRequestStore; mark: Mark; id
         mark: async (_, id, how) => {
           if (how.repliedAt) await pg.query(`update diya_screen_requests set status = 'replied', replied_at = $2 where id = $1`, [id, how.repliedAt])
           if (how.closed) await pg.query(`update diya_screen_requests set status = 'closed' where id = $1`, [id])
+          if (how.shippedAt) await pg.query(`update diya_screen_requests set shipped_at = $2 where id = $1`, [id, how.shippedAt])
         },
         ids: async () => (await pg.query<{ id: string }>(`select id::text from diya_screen_requests order by id`)).rows.map((r) => r.id),
+        rows: async () =>
+          (
+            await pg.query<Record<string, unknown>>(
+              `select id::text, email, request_text, image is not null as image, ip_hash, poster_id, consent_version, created_at, replied_at from diya_screen_requests order by id`,
+            )
+          ).rows.map((r) => ({
+            id: String(r.id),
+            email: String(r.email),
+            text: (r.request_text as string | null) ?? null,
+            image: r.image === true,
+            ipHash: (r.ip_hash as string | null) ?? null,
+            posterId: (r.poster_id as string | null) ?? null,
+            consentVersion: String(r.consent_version),
+            createdAt: new Date(r.created_at as string).getTime(),
+            repliedAt: r.replied_at ? new Date(r.replied_at as string).getTime() : null,
+          })),
       }
     },
   ],
@@ -114,10 +152,7 @@ describe.each(stores)('Screen request store contract: %s', (_, make) => {
   it('the clean-up deletes closed requests, replies past 90 days and unanswered ones past 365, and nothing else', async () => {
     const { store, mark, ids } = await make()
     const now = at(400)
-    const rule = {
-      repliedBefore: new Date(now.getTime() - REPLIED_RETENTION_MS),
-      unansweredBefore: new Date(now.getTime() - UNANSWERED_RETENTION_MS),
-    }
+    const rule = ruleAt(now)
     await store.insert(input(), at(400 - 366))
     const unansweredRecent = await store.insert(input(), at(400 - 364))
     const repliedOld = await store.insert(input(), at(0))
@@ -127,8 +162,66 @@ describe.each(stores)('Screen request store contract: %s', (_, make) => {
     const closed = await store.insert(input(), at(399))
     await mark(store, closed.id, { closed: true })
 
-    expect(await store.purge(rule)).toBe(3)
+    expect(await store.purge(rule)).toEqual({ deleted: 3, trimmed: 0 })
     expect(await ids()).toEqual([unansweredRecent.id, repliedRecent.id])
+  })
+
+  it('“when it’s ready”: past its time, a request keeps only the email, the poster, the consent version and the dates', async () => {
+    const { store, mark, rows } = await make()
+    const picture = { bytes: WEBP, type: 'image/webp' as const }
+    const replied = await store.insert(input({ notifyWhenReady: true, posterId: 'board', image: picture }), at(0))
+    await mark(store, replied.id, { repliedAt: at(1) })
+    const unanswered = await store.insert(input({ notifyWhenReady: true, email: 'sam@x.dev' }), at(0))
+    const recent = await store.insert(input({ notifyWhenReady: true, email: 'kai@x.dev', image: picture }), at(380))
+
+    expect(await store.purge(ruleAt(at(400)))).toEqual({ deleted: 0, trimmed: 2 })
+    const kept = await rows()
+    expect(kept.find((r) => r.id === replied.id)).toEqual({
+      id: replied.id,
+      email: 'maya@studio.co',
+      text: null,
+      image: false,
+      ipHash: null,
+      posterId: 'board',
+      consentVersion: '2026-11-07',
+      createdAt: at(0).getTime(),
+      repliedAt: at(1).getTime(),
+    })
+    expect(kept.find((r) => r.id === unanswered.id)).toMatchObject({ text: null, image: false, ipHash: null, email: 'sam@x.dev' })
+    // Still within its own time: untouched.
+    expect(kept.find((r) => r.id === recent.id)).toMatchObject({ text: input().text, image: true, ipHash: 'a'.repeat(64) })
+    // Running again changes nothing.
+    expect(await store.purge(ruleAt(at(400)))).toEqual({ deleted: 0, trimmed: 0 })
+  })
+
+  it('“when it’s ready” rows go once the screen ships, or 2 years after the request, whichever comes first', async () => {
+    const { store, mark, ids } = await make()
+    const shipped = await store.insert(input({ notifyWhenReady: true, posterId: 'board' }), at(0))
+    const waiting = await store.insert(input({ notifyWhenReady: true, posterId: 'landing' }), at(0))
+    const shippedEarly = await store.insert(input({ notifyWhenReady: true, posterId: 'board' }), at(390))
+    await store.purge(ruleAt(at(400)))
+    await mark(store, shipped.id, { shippedAt: at(500) })
+    await mark(store, shippedEarly.id, { shippedAt: at(500) })
+
+    // Shipped and past its time: deleted. Shipped but still within its time: kept until then, as usual.
+    expect(await store.purge(ruleAt(at(501)))).toEqual({ deleted: 1, trimmed: 0 })
+    expect(await ids()).toEqual([waiting.id, shippedEarly.id])
+    // The one still waiting stays until 2 years after the request, then goes.
+    const twoYears = READY_RETENTION_MS / DAY
+    expect(await store.purge(ruleAt(at(twoYears - 1)))).toEqual({ deleted: 0, trimmed: 0 })
+    expect(await store.purge(ruleAt(at(twoYears + 1)))).toEqual({ deleted: 1, trimmed: 0 })
+    expect(await ids()).toEqual([shippedEarly.id])
+    // The early one, shipped, goes on its normal schedule: 365 days unanswered.
+    expect(await store.purge(ruleAt(at(390 + 366)))).toEqual({ deleted: 1, trimmed: 0 })
+    expect(await ids()).toEqual([])
+  })
+
+  it('a closed request is deleted, “when it’s ready” or not', async () => {
+    const { store, mark, ids } = await make()
+    const spam = await store.insert(input({ notifyWhenReady: true }), at(0))
+    await mark(store, spam.id, { closed: true })
+    expect(await store.purge(ruleAt(at(1)))).toEqual({ deleted: 1, trimmed: 0 })
+    expect(await ids()).toEqual([])
   })
 
   it('counts attempts inside the window only', async () => {
@@ -151,6 +244,15 @@ describe('The screen requests table', () => {
     await expect(insert('email, request_text, image', `'maya@studio.co', '${'x'.repeat(20)}', '\\x00'`)).rejects.toThrow()
     await expect(insert('email, request_text, image_type', `'maya@studio.co', '${'x'.repeat(20)}', 'image/gif'`)).rejects.toThrow()
     await expect(insert('email, request_text, status', `'maya@studio.co', '${'x'.repeat(20)}', 'replied'`)).rejects.toThrow()
+    // Only a "when it's ready" request may lose its words, and then its IP hash goes too.
+    await expect(insert('email, request_text', `'maya@studio.co', null`)).rejects.toThrow()
+    await expect(insert('email, request_text, notify_when_ready', `'maya@studio.co', null, true`)).rejects.toThrow()
+    await expect(
+      pg.query(`insert into diya_screen_requests (created_at, consent_version, email, request_text) values (now(), 'v', 'a@x.dev', '${'x'.repeat(20)}')`),
+    ).rejects.toThrow()
+    await expect(
+      pg.query(`insert into diya_screen_requests (created_at, consent_version, email, poster_id, notify_when_ready) values (now(), 'v', 'a@x.dev', 'board', true)`),
+    ).resolves.toBeTruthy()
     await expect(insert('email, request_text', `'maya@studio.co', '${'x'.repeat(20)}'`)).resolves.toBeTruthy()
   })
 })

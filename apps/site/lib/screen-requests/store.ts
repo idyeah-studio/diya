@@ -18,20 +18,33 @@ export type ScreenRequestInput = {
   ipHash: string
 }
 
-export type ScreenRequest = Omit<ScreenRequestInput, 'image'> & {
+export type ScreenRequest = Omit<ScreenRequestInput, 'image' | 'text' | 'ipHash'> & {
   id: string
   createdAt: Date
+  /** Null once trimmed: past its time, kept only for "when it's ready". */
+  text: string | null
   image: RequestImage | null
+  ipHash: string | null
+  /** For "when it's ready" without a poster, named by hand on reply. */
+  screenName: string | null
   status: RequestStatus
   repliedAt: Date | null
+  /** When the screen shipped and its "when it's ready" email went out, recorded by hand. */
+  shippedAt: Date | null
 }
 
-/** What the clean-up deletes, besides every closed request. */
+/**
+ * The clean-up. A request is past its time once its reply is older than
+ * `repliedBefore`, or it arrived unanswered before `unansweredBefore`. Then it
+ * is deleted, unless it asked for "when it's ready", its screen hasn't
+ * shipped and it arrived after `readySince`: that one is trimmed to the email,
+ * the poster or screen name, the consent version and the dates. Closed
+ * requests are always deleted.
+ */
 export type PurgeRule = {
-  /** Replied requests whose reply is older than this. */
   repliedBefore: Date
-  /** Unanswered requests that arrived before this. */
   unansweredBefore: Date
+  readySince: Date
 }
 
 /**
@@ -44,6 +57,6 @@ export interface ScreenRequestStore {
   insert(input: ScreenRequestInput, now: Date): Promise<ScreenRequest>
   /** Takes back a request whose notification couldn't be sent, so a retry doesn't leave a twin. */
   remove(id: string): Promise<void>
-  /** Deletes closed requests, replied ones past their time and unanswered ones past theirs. Returns how many went. */
-  purge(rule: PurgeRule): Promise<number>
+  /** Applies the clean-up (see PurgeRule). Returns how many were deleted and how many trimmed. */
+  purge(rule: PurgeRule): Promise<{ deleted: number; trimmed: number }>
 }
