@@ -10,7 +10,7 @@ First public release, under the MIT License.
 
 ### Added
 
-- 25 React components and 13 patterns. `Chart` and `DataViz` are exported from
+- 26 React components and 13 patterns. `Chart` and `DataViz` are exported from
   `@idyeah/diya/charts` and render with the optional `echarts` peer dependency;
   everything else is exported from `@idyeah/diya`.
 - `DiyaProvider` with Light, Dark and Glass appearances, brand color, font,
@@ -55,6 +55,12 @@ First public release, under the MIT License.
 - Slider takes `min`, `max` and `step`. DatePicker takes `min` and `max`, keeps
   one Tab stop in its calendar (arrows, Home/End and PageUp/PageDown move), and
   starts weeks on the locale's first day.
+- `Calendar`, the month grid DatePicker opens, kept on the page: for screens
+  like booking a time or a day's agenda. It shares DatePicker's code, keyboard,
+  `value` and `range` shapes, `min` and `max`, and adds a controlled `month`
+  (`YYYY-MM`) with `onMonthChange`. Calendar and DatePicker take
+  `isDateUnavailable` to mark days that can't be chosen, such as days with no
+  open slots.
 - `headingLevel` on every pattern that renders a heading; Form's `title` is
   optional.
 - Pagination fits at 320 to 390px.

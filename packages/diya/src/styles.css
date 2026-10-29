@@ -1573,6 +1573,19 @@
 .diya-root .diya-calendar[popover]{position:fixed;margin:0;inset:auto;color:var(--diya-color-text)}
 .diya-root .diya-calendar-grid button[aria-disabled='true']{color:var(--diya-color-muted);opacity:.45;cursor:not-allowed}
 .diya-root .diya-calendar-grid button[aria-disabled='true']:hover{background:transparent}
+/* Calendar: the same month grid, on the page. No surface of its own, so it sits on a card or the page;
+   days are as tall as a field of the same size, and seven of them set its widest. */
+.diya-root .diya-inline-calendar{--diya-internal-field-height:40px;--diya-internal-field-font-size:var(--diya-text-body);position:relative;width:100%;min-width:0;max-width:calc(7 * var(--diya-internal-field-height) + 18px);color:var(--diya-color-text)}
+.diya-root .diya-inline-calendar[data-size='small']{--diya-internal-field-height:32px;--diya-internal-field-font-size:var(--diya-text-caption)}
+.diya-root .diya-inline-calendar[data-size='large']{--diya-internal-field-height:48px;--diya-internal-field-font-size:var(--diya-text-large)}
+.diya-root .diya-inline-calendar>.diya-calendar-label{display:block;font-size:var(--diya-text-body);font-weight:500;margin-bottom:10px;overflow-wrap:anywhere}
+.diya-root .diya-inline-calendar .diya-calendar-heading button{width:var(--diya-internal-field-height);height:var(--diya-internal-field-height)}
+.diya-root .diya-inline-calendar .diya-calendar-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
+.diya-root .diya-inline-calendar .diya-calendar-grid button{height:var(--diya-internal-field-height);font-size:var(--diya-internal-field-font-size)}
+.diya-root .diya-inline-calendar button:focus-visible{outline:2px solid var(--diya-color-accent);outline-offset:3px}
+.diya-root .diya-inline-calendar button:disabled:hover{background:transparent}
+.diya-root .diya-inline-calendar[data-disabled='true'] :is(.diya-calendar-heading,.diya-calendar-hint,.diya-calendar-grid){opacity:.45}
+.diya-root .diya-inline-calendar[data-disabled='true'] button:disabled{opacity:1}
 
 
 /* alert/Alert.css: portable component rules. */

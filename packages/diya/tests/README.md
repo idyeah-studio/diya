@@ -30,7 +30,11 @@ removing a Combobox chip, and native Dialog close/reopen while an old confirmati
 is pending. Menu navigation recovers when disabled choices become available;
 Tabs keeps a matching panel and keyboard stop when the supplied value is disabled.
 DatePicker checks include reopening the selected month and keyboard navigation
-across calendar boundaries.
+across calendar boundaries. Calendar checks cover the same keyboard on the page,
+single and range choices, `min`/`max` and `isDateUnavailable` days (announced,
+refused, still reachable by arrow), `disabled`, a controlled `month`, server
+rendering without a time-zone-dependent "today", and that DatePicker's popup
+keeps its markup now that the two share the grid.
 
 HappyDOM supplies a DOM, not browser layout or accessibility conformance evidence.
 The setup emulates the basic native dialog open/close boundary and defaults to the
@@ -48,7 +52,7 @@ real-browser checks.
 
 Current API boundaries are deliberate: TextInput/TextArea/Search use controlled
 values; custom controls use their documented callbacks rather than generic form
-registration props; Combobox, Choice, Slider and DatePicker return one value by
+registration props; Combobox, Choice, Slider, DatePicker and Calendar return one value by
 default and a list or range with `multiple`/`range`; Slider uses a 0–100 domain;
 DatePicker expects ISO date strings and formats them with the provider's
 `locale`; Accordion owns

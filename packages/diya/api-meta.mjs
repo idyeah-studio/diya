@@ -115,6 +115,17 @@ export const items = {
       '--diya-text-title'],
     messages: 'datePicker',
   },
+  calendar: {
+    kind: 'component', title: 'Calendar', ...v1,
+    exports: ['Calendar'],
+    slots: {},
+    children: none,
+    state: [...uncontrolledFieldState, { value: 'month', onChange: 'onMonthChange' }],
+    tokens: ['--diya-color-accent-soft', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-hover',
+      '--diya-color-muted', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption',
+      '--diya-text-large', '--diya-text-title'],
+    messages: 'calendar',
+  },
   combobox: {
     kind: 'component', title: 'Combobox', ...v1,
     exports: ['Combobox'],
