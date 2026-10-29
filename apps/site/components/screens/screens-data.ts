@@ -266,8 +266,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'settings',
     component: 'Settings',
     charts: false,
-    status: 'building',
-    tryThis: 'Change a field to see unsaved changes, use taken@example.com as your email for the error, or delete the account by typing its name.',
+    status: 'ready',
+    tryThis: 'Change your name to see unsaved changes, save taken@example.com as your email for the error, use wrong as your current password or 000000 as the two-step code, or delete the account by typing your email.',
     keywords: 'settings preferences profile security password account appearance',
   },
   {
@@ -279,8 +279,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'settings/billing',
     component: 'Billing',
     charts: false,
-    status: 'building',
-    tryThis: 'Change plans to compare them, or cancel to pick a reason and see when access ends.',
+    status: 'ready',
+    tryThis: 'Upgrade from the trial banner: the card on file has expired, so the payment fails until you update it (4000 0000 0000 0002 is declined). Try Starter to see why it doesn\'t fit, or cancel to pick a reason.',
     keywords: 'billing subscription plan usage payment invoices upgrade cancel',
   },
   {
@@ -292,8 +292,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'settings/team',
     component: 'Team',
     charts: false,
-    status: 'building',
-    tryThis: 'Invite people until the seats run out, or try to remove the last owner.',
+    status: 'ready',
+    tryThis: 'Invite two people to run out of seats, change your own role or Leave team to see why the last owner stays, or select everyone and remove them to see an empty team.',
     keywords: 'team members roles permissions invite users seats',
   },
   {
