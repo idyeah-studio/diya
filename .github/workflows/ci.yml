@@ -1,0 +1,234 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    name: Package checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Build
+        run: pnpm build
+      - name: Test
+        run: pnpm test
+      - name: publint
+        run: pnpm exec publint packages/diya --strict
+      - name: Are the types wrong (ESM only)
+        run: pnpm exec attw --pack packages/diya --profile esm-only --exclude-entrypoints ./styles.css
+      - name: Tarball snapshot and size budget
+        run: node scripts/tarball.mjs --check
+      - name: Leak scan (repository)
+        run: node scripts/leak-scan.mjs .
+      - name: Leak scan (tarballs)
+        run: |
+          node scripts/leak-scan.mjs --pack packages/diya
+          node scripts/leak-scan.mjs --pack packages/create-diya
+      - name: Vite example
+        run: pnpm --filter ./examples/vite build
+      - name: create-diya tests
+        run: node --test packages/create-diya/test/*.test.mjs
+      - name: create-diya templates agree, and Dashboard matches Oriel
+        run: |
+          node packages/create-diya/scripts/check-templates.mjs
+          if [ -f examples/oriel/package.json ]; then
+            node packages/create-diya/scripts/sync-oriel.mjs --check
+          else
+            echo "::notice::examples/oriel is absent; skipping the Oriel sync check."
+          fi
+
+  # Scaffolds every create-diya template the way a user gets it, against the
+  # package built from this commit, then runs the template's production build.
+  templates:
+    name: create-diya ${{ matrix.template }} (${{ matrix.framework }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { template: minimal, framework: next }
+          - { template: minimal, framework: vite }
+          - { template: dashboard, framework: next }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build and pack @idyeah/diya
+        working-directory: packages/diya
+        run: |
+          pnpm build
+          npm pack --ignore-scripts --json --pack-destination "$RUNNER_TEMP" > "$RUNNER_TEMP/pack.json"
+          echo "DIYA_TGZ=$RUNNER_TEMP/$(node -p "require(process.argv[1])[0].filename" "$RUNNER_TEMP/pack.json")" >> "$GITHUB_ENV"
+      - name: Scaffold
+        env:
+          TEMPLATE: ${{ matrix.template }}
+          FRAMEWORK: ${{ matrix.framework }}
+        run: >-
+          node packages/create-diya/index.mjs "$RUNNER_TEMP/app" --yes
+          --template "$TEMPLATE" --framework "$FRAMEWORK" --pm npm
+          --diya-spec "file:$DIYA_TGZ"
+      - name: Production build
+        working-directory: ${{ runner.temp }}/app
+        run: npm run build
+
+  oriel:
+    name: Oriel example
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Find Oriel
+        id: example
+        run: |
+          if [ -f examples/oriel/package.json ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::examples/oriel is absent; skipping the Oriel build."
+          fi
+      - if: steps.example.outputs.present == 'true'
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - if: steps.example.outputs.present == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        if: steps.example.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Build the package and Oriel
+        if: steps.example.outputs.present == 'true'
+        run: |
+          pnpm build
+          pnpm --filter ./examples/oriel build
+
+  # diya13.ai: the site's tests, its production build against the package
+  # built from this commit, and its launch gates (countdown before LAUNCH_AT,
+  # catalog in preview, landing after launch).
+  site:
+    name: Site
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      DIYA_CATALOG_PREVIEW: '0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build the package
+        run: pnpm build
+      - name: Test the site scripts
+        run: pnpm --filter diya-site test:scripts
+      - name: Test the catalog
+        run: pnpm --filter diya-site test:catalog
+      - name: Test the site library (launch, routes, Customize, MCP, waitlist)
+        run: pnpm --filter diya-site test:lib --maxWorkers=2
+      - name: Build and typecheck the site
+        run: |
+          pnpm --filter diya-site build
+          pnpm --filter diya-site typecheck
+      - name: Verify production gates
+        run: pnpm --filter diya-site verify:production
+      - name: Type-check every Get code complete file against the built package
+        run: node apps/site/scripts/check-snippets.mjs --sdk packages/diya/dist
+
+  next:
+    name: Next example (React ${{ matrix.react }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        react: ['18', '19']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Find the Next example
+        id: example
+        run: |
+          if [ -f examples/next/package.json ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::examples/next is absent; skipping the Next build."
+          fi
+      - if: steps.example.outputs.present == 'true'
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - if: steps.example.outputs.present == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        if: steps.example.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Build the package
+        if: steps.example.outputs.present == 'true'
+        run: pnpm build
+      - name: Pack the package
+        if: steps.example.outputs.present == 'true'
+        run: pnpm --filter @idyeah/diya pack --pack-destination "$RUNNER_TEMP/pack"
+      # Outside the workspace, so the app sees one React and one @types/react, as a
+      # real app does (in the workspace, Next is shared with React 19 examples).
+      - name: next build on React ${{ matrix.react }}, installed like an app
+        if: steps.example.outputs.present == 'true'
+        env:
+          REACT: ${{ matrix.react }}
+        run: |
+          APP="$RUNNER_TEMP/next-react-$REACT"
+          cp -R examples/next "$APP"
+          rm -rf "$APP/node_modules" "$APP/.next"
+          TGZ="$(ls "$RUNNER_TEMP"/pack/idyeah-diya-*.tgz)"
+          node -e '
+            const fs = require("fs"); const [file, tgz, react] = process.argv.slice(1)
+            const pkg = JSON.parse(fs.readFileSync(file, "utf8"))
+            pkg.dependencies["@idyeah/diya"] = "file:" + tgz
+            for (const name of ["react", "react-dom"]) pkg.dependencies[name] = react
+            for (const name of ["@types/react", "@types/react-dom"]) pkg.devDependencies[name] = react
+            fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + "\n")
+          ' "$APP/package.json" "$TGZ" "$REACT"
+          cd "$APP"
+          npm install --no-audit --no-fund
+          npm run build

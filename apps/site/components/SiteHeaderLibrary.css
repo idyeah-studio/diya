@@ -1,0 +1,89 @@
+/* Composition only: SDK components own their surfaces, controls, and typography. */
+:where(html[data-catalog='true']) .site-header-preview {
+  container-name: diya-site-demo;
+  container-type: inline-size;
+}
+:where(html[data-catalog='true']) .site-header-preview .catalog-brand-mark {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-header-demo-content {
+  padding: 24px;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-heading h3 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-heading > div > p {
+  margin: 8px 0 0;
+  color: var(--diya-color-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-count {
+  flex-shrink: 0;
+  color: var(--diya-color-muted);
+  font-size: 13px;
+  line-height: 32px;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-projects {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 16px;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-project-meta {
+  display: grid;
+  gap: 16px;
+  color: var(--diya-color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-owner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-details {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-details > div {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 16px;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-details dt {
+  color: var(--diya-color-muted);
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+:where(html[data-catalog='true']) .site-header-preview .site-demo-help {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+@container diya-site-demo (max-width: 640px) {
+  :where(html[data-catalog='true']) .site-header-preview .site-header-demo-content {
+    padding: 24px 16px;
+  }
+  :where(html[data-catalog='true']) .site-header-preview .site-demo-heading {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

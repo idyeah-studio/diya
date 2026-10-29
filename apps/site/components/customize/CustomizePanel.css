@@ -1,0 +1,844 @@
+/*
+ * Customize inspector. Its material (surface or glass, edge, depth) comes
+ * from the catalog's shared card rules, the same as the left sidebar, so it
+ * reads as sidebar | stage | inspector in every appearance mode.
+ * Type scale: 19 title · 15 labels, values, controls · 13 eyebrow and hints.
+ */
+:where(html[data-catalog='true']) .customize-inspector {
+  position: fixed;
+  z-index: 80;
+  /* A third column: same top, inset and radius as the left sidebar card,
+     clear of the site header and its appearance control. */
+  top: 104px;
+  right: 24px;
+  bottom: 24px;
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid;
+  border-radius: 24px;
+  color: var(--diya-color-text);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+/* ---- header ---------------------------------------------------------- */
+:where(html[data-catalog='true']) .customize-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 24px 20px 8px 26px;
+}
+:where(html[data-catalog='true']) .customize-eyebrow {
+  display: block;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  color: var(--diya-color-muted);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+:where(html[data-catalog='true']) .customize-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+:where(html[data-catalog='true']) .customize-header h2:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* ---- body: one column, rhythm from spacing, no dividers -------------- */
+:where(html[data-catalog='true']) .customize-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 26px 24px;
+  scroll-padding-block: 20px 44px;
+  /* Content fades into the footer instead of showing through it. */
+  mask-image: linear-gradient(to bottom, transparent, #000 14px, #000 calc(100% - 28px), transparent);
+  display: grid;
+  align-content: start;
+  gap: 32px;
+}
+:where(html[data-catalog='true']) .customize-body > section {
+  display: grid;
+  gap: 16px;
+}
+:where(html[data-catalog='true']) .customize-body h3 {
+  margin: 0;
+  color: var(--diya-color-muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:where(html[data-catalog='true']) .customize-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+:where(html[data-catalog='true']) .customize-context,
+:where(html[data-catalog='true']) .customize-help {
+  margin: 0;
+  color: var(--diya-color-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+:where(html[data-catalog='true']) .customize-context {
+  margin-top: -16px;
+}
+:where(html[data-catalog='true']) .customize-help--lead {
+  margin-top: -6px;
+}
+:where(html[data-catalog='true']) .customize-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- segmented choices (native radios) ------------------------------- */
+:where(html[data-catalog='true']) .customize-segmented {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+:where(html[data-catalog='true']) .customize-segmented > div {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 22px;
+  background: var(--diya-color-hover);
+}
+:where(html[data-catalog='true']) .customize-segmented label {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+:where(html[data-catalog='true']) .customize-segmented input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+:where(html[data-catalog='true']) .customize-segmented span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 8px 14px;
+  min-height: 36px;
+  border-radius: 999px;
+  color: var(--diya-color-muted);
+  font-size: 15px;
+  line-height: 1.2;
+  text-align: center;
+  /* Long names ("Content State only") wrap rather than truncate. */
+  overflow-wrap: anywhere;
+}
+:where(html[data-catalog='true']) .customize-segmented > div:has(span) {
+  align-items: stretch;
+}
+:where(html[data-catalog='true']) .customize-segmented label:has(input:checked) span,
+:where(html[data-catalog='true']) .customize-segmented input:checked + span {
+  border-radius: 18px;
+}
+:where(html[data-catalog='true']) .customize-segmented input:checked + span {
+  color: var(--diya-color-accent-text);
+  background: var(--diya-color-accent);
+}
+:where(html[data-catalog='true']) .customize-segmented input:focus-visible + span {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+:where(html[data-catalog='true']) .customize-segmented legend {
+  margin: 0 0 8px;
+  padding: 0;
+  font-size: 15px;
+}
+/* In a heading row the choice sizes to its labels instead of truncating. */
+:where(html[data-catalog='true']) .customize-section-heading .customize-segmented > div {
+  display: inline-flex;
+}
+:where(html[data-catalog='true']) .customize-section-heading .customize-segmented label {
+  flex: none;
+}
+:where(html[data-catalog='true']) .customize-section-heading .customize-segmented span {
+  padding: 6px 14px;
+  min-height: 32px;
+  white-space: nowrap;
+}
+
+/* ---- label + hint block shared by rows ------------------------------- */
+:where(html[data-catalog='true']) .customize-color-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+:where(html[data-catalog='true']) .customize-color-text > :is(label, span:first-child) {
+  font-size: 15px;
+}
+:where(html[data-catalog='true']) .customize-color-text > span:not(:first-child):not(.customize-own) {
+  color: var(--diya-color-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+:where(html[data-catalog='true']) .customize-own {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  color: var(--diya-color-muted);
+  font-size: 13px;
+}
+:where(html[data-catalog='true']) .customize-own button {
+  min-height: 24px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--diya-color-text);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+:where(html[data-catalog='true']) .customize-own button:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ---- colour rows ----------------------------------------------------- */
+:where(html[data-catalog='true']) .customize-color {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 156px;
+  gap: 6px 14px;
+  align-items: center;
+}
+:where(html[data-catalog='true']) .customize-color-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 10px 0 6px;
+  border: 1px solid var(--diya-internal-control-line, var(--diya-color-line));
+  border-radius: 12px;
+  background: var(--diya-color-hover);
+}
+:where(html[data-catalog='true']) .customize-color-field:focus-within {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+:where(html[data-catalog='true']) .customize-color-field[data-invalid] {
+  border-color: var(--diya-color-destructive);
+}
+:where(html[data-catalog='true']) .customize-swatch {
+  position: relative;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  overflow: hidden;
+  /* A checkerboard under the real colour shows its opacity honestly. */
+  background: repeating-conic-gradient(#c9c9c9 0 25%, #ffffff 0 50%) 0 0 / 10px 10px;
+}
+:where(html[data-catalog='true']) .customize-swatch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--diya-color-text) 32%, transparent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+:where(html[data-catalog='true']) .customize-color-field input[type='color'] {
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+:where(html[data-catalog='true']) .customize-color-field:has(input[type='color']:focus-visible) {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+:where(html[data-catalog='true']) .customize-color-field input[type='color']:focus-visible {
+  outline: none;
+}
+:where(html[data-catalog='true']) .customize-color-field input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+:where(html[data-catalog='true']) .customize-color-field input[type='color']::-webkit-color-swatch {
+  border: 1px solid var(--diya-color-line);
+  border-radius: 8px;
+}
+:where(html[data-catalog='true']) .customize-color-field input[type='color']::-moz-color-swatch {
+  border: 1px solid var(--diya-color-line);
+  border-radius: 8px;
+}
+:where(html[data-catalog='true']) .customize-color-field input[type='text'] {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+  font-variant-numeric: proportional-nums;
+  text-transform: uppercase;
+  outline: none;
+}
+:where(html[data-catalog='true']) .customize-color-alpha {
+  color: var(--diya-color-muted);
+  font-size: 13px;
+  font-variant-numeric: proportional-nums;
+}
+:where(html[data-catalog='true']) .customize-error {
+  grid-column: 1 / -1;
+  color: var(--diya-color-destructive);
+  font-size: 13px;
+}
+
+:where(html[data-catalog='true']) .customize-status-sample {
+  grid-column: 1 / -1;
+}
+
+/* ---- the one brand colour --------------------------------------------- */
+:where(html[data-catalog='true']) .customize-brand {
+  display: grid;
+  gap: 12px;
+}
+:where(html[data-catalog='true']) .customize-brand-swatches {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+:where(html[data-catalog='true']) .customize-brand-legend {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 12px;
+  padding: 0;
+}
+:where(html[data-catalog='true']) .customize-brand-legend > span:first-child {
+  font-size: 17px;
+  font-weight: 560;
+  letter-spacing: -0.01em;
+}
+:where(html[data-catalog='true']) .customize-brand-hint {
+  color: var(--diya-color-muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+:where(html[data-catalog='true']) .customize-brand-swatches > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+/* A 44px target around a 32px chip; the ring marks the chosen one. */
+:where(html[data-catalog='true']) .customize-brand-swatch {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+:where(html[data-catalog='true']) .customize-brand-swatch::before {
+  content: '';
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--diya-color-text) 22%, transparent);
+  transition: transform 160ms ease;
+}
+:where(html[data-catalog='true']) .customize-brand-swatch:has(input:checked) {
+  box-shadow: 0 0 0 2px var(--diya-color-text);
+}
+:where(html[data-catalog='true']) .customize-brand-swatch:hover::before {
+  transform: scale(1.06);
+}
+:where(html[data-catalog='true']) .customize-brand-swatch input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+:where(html[data-catalog='true']) .customize-brand-swatch:has(input:focus-visible) {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 3px;
+}
+:where(html[data-catalog='true']) .customize-brand-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+:where(html[data-catalog='true']) .customize-brand-row .customize-color-field {
+  flex: 0 1 156px;
+  min-width: 132px;
+}
+:where(html[data-catalog='true']) .customize-brand-mark {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--diya-color-text) 22%, transparent);
+}
+:where(html[data-catalog='true']) .customize-brand-on {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--diya-color-muted);
+  font-size: 14px;
+  font-variant-numeric: proportional-nums;
+}
+:where(html[data-catalog='true']) .customize-brand-samples {
+  display: inline-flex;
+  gap: 4px;
+}
+:where(html[data-catalog='true']) .customize-brand-sample {
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--diya-color-text) 18%, transparent);
+}
+:where(html[data-catalog='true']) .customize-brand-dark {
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+:where(html[data-catalog='true']) .customize-brand-dark legend {
+  margin: 0 0 8px;
+  padding: 0;
+  font-size: 15px;
+}
+:where(html[data-catalog='true']) .customize-brand-dark > div {
+  display: grid;
+  gap: 4px;
+}
+:where(html[data-catalog='true']) .customize-brand-dark label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
+:where(html[data-catalog='true']) .customize-brand-dark label:hover {
+  background: var(--diya-color-hover);
+}
+:where(html[data-catalog='true']) .customize-brand-dark label:has(input:checked) {
+  background: var(--diya-color-selected);
+}
+:where(html[data-catalog='true']) .customize-brand-dark input {
+  margin: 0;
+  accent-color: var(--diya-color-text);
+}
+:where(html[data-catalog='true']) .customize-brand-dark input:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+:where(html[data-catalog='true']) .customize-brand-dark-swatch {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--diya-color-text) 22%, transparent);
+}
+:where(html[data-catalog='true']) .customize-brand-hex {
+  color: var(--diya-color-muted);
+  font-variant-numeric: proportional-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(html[data-catalog='true']) .customize-brand-swatch::before {
+    transition: none;
+  }
+}
+/* Samples sit on the previewed theme's raised surface, where tags ship,
+   so they read as they will (the panel's own surface may be the other theme). */
+:where(html[data-catalog='true']) .customize-status-sample-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--diya-color-raised);
+}
+
+/* ---- font picker ----------------------------------------------------- */
+:where(html[data-catalog='true']) .customize-font {
+  position: relative;
+  display: grid;
+  gap: 8px;
+}
+:where(html[data-catalog='true']) .customize-font-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--diya-internal-control-line, var(--diya-color-line));
+  border-radius: 12px;
+  background: var(--diya-color-hover);
+  color: inherit;
+  font-size: 17px;
+  cursor: pointer;
+}
+:where(html[data-catalog='true']) .customize-font-button:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+:where(html[data-catalog='true']) .customize-font-list {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--diya-color-line);
+  border-radius: 14px;
+  background: var(--diya-color-raised);
+  box-shadow: 0 16px 40px #0003;
+}
+:where(html[data-catalog='true']) .customize-font-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:where(html[data-catalog='true']) .customize-font-group {
+  display: block;
+  padding: 10px 10px 4px;
+  color: var(--diya-color-muted);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:where(html[data-catalog='true']) .customize-font-list [role='option'] {
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 17px;
+  cursor: pointer;
+}
+:where(html[data-catalog='true']) .customize-font-list [role='option'][data-active] {
+  background: var(--diya-color-hover);
+}
+:where(html[data-catalog='true']) .customize-font-list [role='option'][aria-selected='true'] {
+  background: var(--diya-color-selected);
+  font-weight: 600;
+}
+
+/* ---- corners range --------------------------------------------------- */
+:where(html[data-catalog='true']) .customize-range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: 12px;
+}
+:where(html[data-catalog='true']) .customize-range output {
+  color: var(--diya-color-muted);
+  font-size: 15px;
+  font-variant-numeric: proportional-nums;
+  text-align: right;
+}
+:where(html[data-catalog='true']) .customize-range input {
+  appearance: none;
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  cursor: pointer;
+}
+:where(html[data-catalog='true']) .customize-range input:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+:where(html[data-catalog='true']) .customize-range input::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--diya-color-accent) var(--range-fill), var(--diya-color-line) var(--range-fill));
+}
+:where(html[data-catalog='true']) .customize-range input::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border: 3px solid var(--diya-color-raised);
+  border-radius: 50%;
+  background: var(--diya-color-accent);
+  box-shadow: 0 0 0 1px var(--diya-color-line);
+}
+:where(html[data-catalog='true']) .customize-range input::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--diya-color-line);
+}
+:where(html[data-catalog='true']) .customize-range input::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--diya-color-accent);
+}
+:where(html[data-catalog='true']) .customize-range input::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--diya-color-raised);
+  border-radius: 50%;
+  background: var(--diya-color-accent);
+}
+
+/* ---- switch row ------------------------------------------------------ */
+:where(html[data-catalog='true']) .customize-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+:where(html[data-catalog='true']) .customize-switch .diya-switch-field {
+  gap: 0;
+}
+:where(html[data-catalog='true']) .customize-switch-hint code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: max(13px, 0.95em);
+}
+
+:where(html[data-catalog='true']) .customize-resets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -8px 0 0 -14px;
+}
+:where(html[data-catalog='true']) .customize-undo {
+  margin: -16px 0 0;
+  font-size: 15px;
+}
+:where(html[data-catalog='true']) :is(.customize-undo, .customize-issues) button {
+  min-height: 24px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--diya-color-text);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+:where(html[data-catalog='true']) :is(.customize-undo, .customize-issues) button:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ---- footer ---------------------------------------------------------- */
+:where(html[data-catalog='true']) .customize-footer {
+  display: grid;
+  gap: 10px;
+  padding: 12px 26px max(20px, env(safe-area-inset-bottom));
+}
+:where(html[data-catalog='true']) .customize-footer > .diya-button {
+  width: 100%;
+}
+:where(html[data-catalog='true']) .customize-footnote {
+  margin: 0;
+  color: var(--diya-color-muted);
+  font-size: 13px;
+  text-align: center;
+  text-wrap: balance;
+}
+:where(html[data-catalog='true']) .customize-footnote--blocked {
+  color: var(--diya-color-text);
+  font-size: 15px;
+}
+:where(html[data-catalog='true']) .customize-issues {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--diya-color-hover);
+}
+:where(html[data-catalog='true']) .customize-body .customize-issues h3 {
+  color: var(--diya-color-text);
+  font-size: 15px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+:where(html[data-catalog='true']) .customize-issues ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 1.45;
+}
+:where(html[data-catalog='true']) .customize-issues li {
+  display: grid;
+  gap: 2px;
+  color: var(--diya-color-muted);
+}
+:where(html[data-catalog='true']) .customize-issues li button {
+  justify-self: start;
+  font-size: 15px;
+}
+
+/* ---- page relationship ----------------------------------------------- */
+@media (min-width: 1360px) {
+  /* Make room beside the stage rather than covering it. */
+  :root[data-catalog='true'][data-customize-open='true'] .gallery-study {
+    padding-right: 408px;
+  }
+}
+@media (max-width: 1359px) {
+  /* A sheet over the lower part of the page; the stage stays visible above. */
+  :where(html[data-catalog='true']) .customize-inspector {
+    top: auto;
+    left: max(16px, env(safe-area-inset-left));
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    width: auto;
+    max-width: 560px;
+    margin-inline: auto;
+    max-height: min(56dvh, 600px);
+  }
+  :root[data-catalog='true'][data-customize-open='true'] body {
+    padding-bottom: calc(var(--customize-sheet-height, 0px) + 32px);
+  }
+  :root[data-catalog='true'][data-customize-open='true'] {
+    scroll-padding-bottom: calc(var(--customize-sheet-height, 0px) + 32px);
+  }
+}
+@media (max-width: 440px) {
+  :where(html[data-catalog='true']) .customize-header {
+    padding: 18px 12px 4px 20px;
+  }
+  :where(html[data-catalog='true']) .customize-body {
+    padding: 8px 20px 20px;
+    gap: 28px;
+  }
+  :where(html[data-catalog='true']) .customize-footer {
+    padding-inline: 20px;
+  }
+  :where(html[data-catalog='true']) .customize-color {
+    grid-template-columns: minmax(0, 1fr) 148px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :where(html[data-catalog='true']) .customize-inspector {
+    animation: customize-enter 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  @keyframes customize-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+}
+@media (forced-colors: active) {
+  :where(html[data-catalog='true']) .customize-segmented input:checked + span {
+    border: 2px solid Highlight;
+  }
+}
+
+/* ---- header actions on every catalog page ---------------------------- */
+:where(html[data-catalog='true']) .component-document-actions {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  /* Optical alignment with the h2 baseline, as Get code has on its own. */
+  transform: translateY(8px);
+}
+:where(html[data-catalog='true']) .customize-trigger-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--customize-dot);
+  /* A ring in the page's text colour keeps the dot visible whatever the accent. */
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--diya-color-text) 45%, transparent);
+}
+
+/* ---- catalog chrome around the panel ----------------------------------- */
+/* Header actions and panel actions meet the catalog's 15px label floor. */
+/* Specific enough to beat the SDK's .diya-root .diya-button[data-size] (0,3,0). */
+:where(html[data-catalog='true']) .diya-root :is(.component-document-actions, .customize-footer, .customize-resets) .diya-button.diya-button {
+  font-size: 15px;
+}
+:where(html[data-catalog='true']) .diya-root .diya-button.customize-trigger[aria-expanded='true'] {
+  background: var(--diya-color-selected);
+}
+/* The site's appearance menu opens from the header; keep it above the inspector. */
+:root[data-catalog='true'][data-customize-open='true'] body .site-header.site-header.site-header {
+  z-index: 90;
+}
+/* Dark glass over the bright part of the backdrop: a little more tint keeps
+   quiet text readable (measured ~3.1:1 before). */
+@supports (backdrop-filter: blur(20px)) {
+  :root[data-catalog='true'][data-glass='true'][data-theme='dark'] body:has(.gallery-study) .customize-inspector {
+    background: color-mix(in srgb, var(--diya-color-surface) 82%, transparent);
+  }
+}
+@media (max-width: 440px) {
+  :where(html[data-catalog='true']) .customize-header h2 {
+    font-size: 19px;
+  }
+  :where(html[data-catalog='true']) .customize-footer .customize-footnote:last-child {
+    display: none;
+  }
+}
+
+:where(html[data-catalog='true']) .customize-field-group {
+  display: grid;
+  gap: 16px;
+}
+
+@media (max-width: 440px) {
+  /* In the short sheet, the font list opens in place and the body scrolls to it. */
+  :where(html[data-catalog='true']) .customize-font-list {
+    position: static;
+    max-height: 260px;
+    margin-top: 8px;
+  }
+}

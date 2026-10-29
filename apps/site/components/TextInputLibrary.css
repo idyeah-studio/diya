@@ -1,0 +1,49 @@
+:where(html[data-catalog='true']) .input-specimens {
+  padding: 0 32px;
+}
+:where(html[data-catalog='true']) .input-preview-controls {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 32px 60px;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--diya-color-line);
+}
+:where(html[data-catalog='true']) .input-reset {
+  color: var(--diya-color-muted);
+  font-size: var(--diya-text-caption, 13px);
+  min-height: 34px;
+  margin-left: auto;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+:where(html[data-catalog='true']) .input-example {
+  min-height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 16px 60px;
+}
+:where(html[data-catalog='true']) .text-input-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 800px) {
+  :where(html[data-catalog='true']) .input-specimens {
+    padding-inline: 20px;
+  }
+  :where(html[data-catalog='true']) .input-example {
+    padding-inline: 0;
+  }
+}
+@media (forced-colors: active) {
+}
+:where(html[data-catalog='true']) .text-input-library .input-example {
+  flex: 1;
+  min-height: 240px;
+}

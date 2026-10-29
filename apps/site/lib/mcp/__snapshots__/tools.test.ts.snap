@@ -1,0 +1,284 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`what an agent reads, word for word > get_component: Side Navigation props 1`] = `
+"# Side Navigation (\`SideNavigation\`) · pattern · stable since 1.0.0
+\`import { SideNavigation } from '@idyeah/diya'\` · renders inside DiyaProvider
+A vertical app navigation with grouped items and an optional collapsed icon rail; items with \`href\` are links. The ref, \`className\`, \`style\` and other attributes go to the \`nav\`.
+
+When: For moving between the main sections of an app, grouped, with an optional collapsed rail. Five or fewer top-level sections? Site Header’s navigation may be enough.
+
+## Props
+- \`groups: readonly SideNavigationGroup[]\` Item groups, in order.
+- \`value: string\` The current item's \`value\`; it is marked as the current page.
+- \`brand?: ReactNode\` Logo or product name at the top.
+- \`collapsed?: boolean = false\` Narrow, icon-only rail; defaults to false.
+- \`collapsedBrand?: ReactNode\` Smaller brand shown when collapsed; defaults to \`brand\`.
+- \`label?: string\` Accessible name for the navigation landmark (not shown); defaults to "Application navigation".
+- \`onValueChange?: (value: string) => void\` Called with an item's \`value\` when it is chosen; leave it out when every item has an \`href\` and the links do the routing.
+- \`showGroups?: boolean = true\` Shows group headings; defaults to true.
+Also takes native \`<nav>\` attributes, a ref, \`className\` and \`style\`.
+
+## Content
+- \`children\`: not taken
+- \`brand\`: text or image, several
+- \`collapsedBrand\`: text or image
+- \`groups[].items[].icon\`: icon
+
+## State
+- Controlled: \`value\` with \`onValueChange\`.
+
+## Types
+\`\`\`ts
+type SideNavigationGroup = { id: string; label?: string; items: readonly SideNavigationItem[]; }
+type SideNavigationItem = { value: string; label: string; icon?: ReactNode; href?: string; disabled?: boolean; }
+\`\`\`
+
+Catalog: https://diya13.ai/explore?pattern=side-navigation"
+`;
+
+exports[`what an agent reads, word for word > get_component: Switch 1`] = `
+"# Switch (\`Switch\`) · component · stable since 1.0.0
+\`import { Switch } from '@idyeah/diya'\` · renders inside DiyaProvider
+An on/off toggle (a native checkbox with role="switch") with a label and optional helper text or error.
+
+When: For a setting that takes effect the moment it flips, like notifications. Part of a form that is saved with a button? A checkbox (Choice with multiple) reads more honestly.
+
+## Props
+- \`label: string\` Visible label beside the switch; also its accessible name. Hide it with hideLabel.
+- \`checked?: boolean\` Whether the switch is on, when controlled; pair it with \`onCheckedChange\`.
+- \`defaultChecked?: boolean\` Whether the switch starts on when uncontrolled; a form reset returns to it.
+- \`disabled?: boolean = false\` Prevents toggling and dims the switch.
+- \`error?: string\` Visible error message below the label; marks the switch invalid while set.
+- \`helperText?: string\` Visible hint below the label, announced with the switch; \`error\` replaces it while set.
+- \`hideLabel?: boolean = false\` Hides the label visually but keeps it as the switch's accessible name.
+- \`onCheckedChange?: (checked: boolean) => void\` Called with the new on/off state when the switch is toggled.
+- \`size?: "small" | "medium" | "large" = 'medium'\` Track and thumb size; defaults to 'medium'.
+- \`value?: string\` The value sent with the form under \`name\` while the switch is on; defaults to "on", like a checkbox.
+Also takes native \`<input>\` attributes, a ref, \`className\` and \`style\`.
+
+## Content
+- \`children\`: not taken
+
+## State
+- Controlled: \`checked\` with \`onCheckedChange\`; uncontrolled: \`defaultChecked\`.
+
+## Accessibility
+role="switch" with its state announced as on or off. Space toggles it.
+
+## Complete file (\`SwitchExample.tsx\`)
+\`\`\`tsx
+'use client'
+
+import { useState } from 'react'
+import { Switch } from '@idyeah/diya'
+
+export default function SwitchExample() {
+  const [notifications, setNotifications] = useState(false)
+
+  return (
+    <Switch
+      label="Email notifications"
+      checked={notifications}
+      onCheckedChange={setNotifications}
+    />
+  )
+}
+\`\`\`
+
+Catalog: https://diya13.ai/explore?area=components&component=switch"
+`;
+
+exports[`what an agent reads, word for word > get_setup: next + tailwind 1`] = `
+"# Set up @idyeah/diya 1.0.0 in Next.js (App Router)
+
+## 1. Install
+\`\`\`sh
+npm install @idyeah/diya
+\`\`\`
+
+## 2. app/globals.css (Tailwind v4: DIYA above Tailwind's base, below its utilities)
+\`\`\`css
+@layer theme, base, diya, components, utilities;
+@import "tailwindcss";
+@import "@idyeah/diya/styles.css";
+\`\`\`
+
+## 3. app/providers.tsx (a client file, so Link and functions can reach the provider)
+\`\`\`tsx
+'use client'
+import Link from 'next/link'
+import type { ReactNode } from 'react'
+import { DiyaProvider } from '@idyeah/diya'
+
+export function Providers({ children }: { children: ReactNode }) {
+  return <DiyaProvider linkComponent={Link}>{children}</DiyaProvider>
+}
+\`\`\`
+
+## 4. app/layout.tsx (the root layout)
+\`\`\`tsx
+import type { ReactNode } from 'react'
+import { Providers } from './providers'
+import './globals.css'
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  )
+}
+\`\`\`
+
+## Rules
+- Every component renders inside \`DiyaProvider\`; popups, tooltips and toasts need it. Its \`theme\` defaults to \`"system"\` (follows the OS light or dark setting, in CSS, with no flash); pass \`"light"\` or \`"dark"\` to fix it. It paints its own background and text color; \`surface={false}\` leaves that to your page.
+- Fields work controlled (\`value\` with \`onValueChange\`; Switch: \`checked\` with \`onCheckedChange\`) or uncontrolled (\`defaultValue\`; Switch: \`defaultChecked\`). Native \`name\`, \`onChange\` and \`onBlur\` reach the native control, so react-hook-form \`register()\` works on TextInput, TextArea, Select, Switch, Choice and Slider without a Controller. Labels are required, even when hidden with \`hideLabel\`.
+- Lay screens out with \`Stack\` (vertical) and \`Inline\` (horizontal, wrapping): \`gap\` takes a spacing step (1–8) or any CSS length, plus \`align\`, \`justify\`, \`wrap\` and \`as\`.
+- One brand color, set once: \`<DiyaProvider brandColor="#1F4E7A">\`, or \`{ light, dark }\`. Components take no color props; \`tone\` picks a status.
+- Every component takes \`className\`, \`style\` and its root element's attributes. Theme with public \`--diya-*\` tokens on \`.diya-root\`, never by overriding internal classes. DIYA's CSS sits in \`@layer diya\`, so your CSS and Tailwind utilities win.
+- Links: items with \`href\` render the provider's \`linkComponent\` (such as Next.js \`Link\`, passed from a \`'use client'\` providers file) or a plain anchor. Button takes \`href\` and \`asChild\`.
+- DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.
+- Charts import from \`@idyeah/diya/charts\` and need \`echarts@6\` installed.
+- Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
+
+These notes describe 1.0.0. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
+`;
+
+exports[`what an agent reads, word for word > get_setup: vite 1`] = `
+"# Set up @idyeah/diya 1.0.0 in Vite
+
+## 1. Install
+\`\`\`sh
+npm install @idyeah/diya
+\`\`\`
+
+## 2. src/main.tsx (the entry)
+\`\`\`tsx
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { DiyaProvider } from '@idyeah/diya'
+import '@idyeah/diya/styles.css'
+import './index.css'
+import App from './App'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <DiyaProvider>
+      <App />
+    </DiyaProvider>
+  </StrictMode>,
+)
+\`\`\`
+
+## Rules
+- Every component renders inside \`DiyaProvider\`; popups, tooltips and toasts need it. Its \`theme\` defaults to \`"system"\` (follows the OS light or dark setting, in CSS, with no flash); pass \`"light"\` or \`"dark"\` to fix it. It paints its own background and text color; \`surface={false}\` leaves that to your page.
+- Fields work controlled (\`value\` with \`onValueChange\`; Switch: \`checked\` with \`onCheckedChange\`) or uncontrolled (\`defaultValue\`; Switch: \`defaultChecked\`). Native \`name\`, \`onChange\` and \`onBlur\` reach the native control, so react-hook-form \`register()\` works on TextInput, TextArea, Select, Switch, Choice and Slider without a Controller. Labels are required, even when hidden with \`hideLabel\`.
+- Lay screens out with \`Stack\` (vertical) and \`Inline\` (horizontal, wrapping): \`gap\` takes a spacing step (1–8) or any CSS length, plus \`align\`, \`justify\`, \`wrap\` and \`as\`.
+- One brand color, set once: \`<DiyaProvider brandColor="#1F4E7A">\`, or \`{ light, dark }\`. Components take no color props; \`tone\` picks a status.
+- Every component takes \`className\`, \`style\` and its root element's attributes. Theme with public \`--diya-*\` tokens on \`.diya-root\`, never by overriding internal classes. DIYA's CSS sits in \`@layer diya\`, so your CSS and Tailwind utilities win.
+- Links: items with \`href\` render the provider's \`linkComponent\` (such as Next.js \`Link\`, passed from a \`'use client'\` providers file) or a plain anchor. Button takes \`href\` and \`asChild\`.
+- DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.
+- Charts import from \`@idyeah/diya/charts\` and need \`echarts@6\` installed.
+- Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
+
+These notes describe 1.0.0. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
+`;
+
+exports[`what an agent reads, word for word > get_theme: #1F4E7A + glass 1`] = `
+"# Theme for @idyeah/diya 1.0.0
+
+\`\`\`tsx
+<DiyaProvider brandColor="#1F4E7A" glass>
+\`\`\`
+
+That's the whole theme. DIYA works out the rest, so don't set these tokens yourself:
+
+| Token | Light | Dark |
+| --- | --- | --- |
+| \`--diya-color-accent\` | \`#1F4E7A\` (text on it 8.3:1) | \`#1F4E7A\` (text on it 8.3:1) |
+| \`--diya-color-accent-text\` | \`#FAFAFA\` | \`#FAFAFA\` |
+| \`--diya-color-accent-soft\` | \`#1F4E7A1F\` | \`#1F4E7A33\` |
+| \`--diya-color-accent-ink\` | \`#1F4E7A\` | \`#6E8CA7\` |
+
+## Notes
+- In Dark, #1F4E7A sits at 2.2:1 against the page (#111113), so solid buttons stand out less than DIYA's own; their labels still read. If you'd like them to stand out, dark could use #41698E: \`brandColor={{ light: '#1F4E7A', dark: '#41698E' }}\`.
+- In Dark, brand-colored text uses #6E8CA7 so it reads at 4.5:1.
+
+## Other settings
+- Corners: \`--diya-corner-scale\` (0 square, 1 default, 2 round) scales every control radius.
+- Font: \`fontFamily\` on the provider sets \`--diya-font\`.
+- Glass: \`glass\` gives headers, popups and tabs a translucent, blurred finish.
+- Anything else: public \`--diya-*\` tokens on \`.diya-root\` (list_tokens). Never override DIYA's internal \`.diya-*\` classes.
+- Try it live: https://diya13.ai/explore (Customize)."
+`;
+
+exports[`what an agent reads, word for word > get_theme: #F5C542 1`] = `
+"# Theme for @idyeah/diya 1.0.0
+
+\`\`\`tsx
+<DiyaProvider brandColor="#F5C542">
+\`\`\`
+
+That's the whole theme. DIYA works out the rest, so don't set these tokens yourself:
+
+| Token | Light | Dark |
+| --- | --- | --- |
+| \`--diya-color-accent\` | \`#F5C542\` (text on it 10.5:1) | \`#F5C542\` (text on it 10.5:1) |
+| \`--diya-color-accent-text\` | \`#1C1C1C\` | \`#1C1C1C\` |
+| \`--diya-color-accent-soft\` | \`#F5C5421F\` | \`#F5C54233\` |
+| \`--diya-color-accent-ink\` | \`#806E33\` | \`#F5C542\` |
+
+## Notes
+- In Light, #F5C542 sits at 1.6:1 against the page (#FFFFFF), so solid buttons stand out less than DIYA's own; their labels still read. If you'd like them to stand out, light could use #AC8A2E: \`brandColor={{ light: '#AC8A2E', dark: '#F5C542' }}\`.
+- In Light, brand-colored text uses #806E33 so it reads at 4.5:1.
+
+## Other settings
+- Corners: \`--diya-corner-scale\` (0 square, 1 default, 2 round) scales every control radius.
+- Font: \`fontFamily\` on the provider sets \`--diya-font\`.
+- Glass: \`glass\` gives headers, popups and tabs a translucent, blurred finish.
+- Anything else: public \`--diya-*\` tokens on \`.diya-root\` (list_tokens). Never override DIYA's internal \`.diya-*\` classes.
+- Try it live: https://diya13.ai/explore (Customize)."
+`;
+
+exports[`what an agent reads, word for word > list_tokens: space 1`] = `
+"# Public tokens · @idyeah/diya 1.0.0 · space
+Set them on \`.diya-root\`, or in \`style\` on DiyaProvider. Values are Light / Dark.
+
+## space
+- \`--diya-space-1\` \`4px\`
+- \`--diya-space-2\` \`8px\`
+- \`--diya-space-3\` \`12px\`
+- \`--diya-space-4\` \`16px\`
+- \`--diya-space-5\` \`24px\`
+- \`--diya-space-6\` \`32px\`
+- \`--diya-space-7\` \`48px\`
+- \`--diya-space-8\` \`64px\`"
+`;
+
+exports[`what an agent reads, word for word > search: carousel 1`] = `
+"@idyeah/diya 1.0.0 · nothing for "carousel of testimonials"
+
+No carousel in DIYA 1.0.0.
+
+Nothing in DIYA fits that yet. Build it from Stack and Inline, or ask for it: https://diya13.ai/ask"
+`;
+
+exports[`what an agent reads, word for word > search: toggle 1`] = `
+"@idyeah/diya 1.0.0 · 4 for "toggle for email notifications"
+
+1. Switch · \`import { Switch } from '@idyeah/diya'\`
+   For a setting that takes effect the moment it flips, like notifications.
+   Not quite? Part of a form that is saved with a button? A checkbox (Choice with multiple) reads more honestly.
+2. Text Input · \`import { TextInput } from '@idyeah/diya'\`
+   For one line of free text: a name, an email, a URL.
+   Not quite? Several lines? Text Area. A fixed set of answers? Select or Choice.
+3. Alert · \`import { Alert } from '@idyeah/diya'\`
+   For a message about the page or a task: saved, needs attention, failed. Toast is the same message, floated and temporary.
+   Not quite? Something that needs a decision before going on? Dialog.
+4. Toast · \`import { Toast } from '@idyeah/diya'\`
+   A temporary Alert floated above the page that dismisses itself after a while. \`className\`, \`style\` and the ref reach the Alert.
+
+Next: get_component with a name, for its props and a complete file."
+`;

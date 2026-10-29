@@ -1,0 +1,2 @@
+/** chatbot: English defaults, overridable through DiyaProvider `messages`. */
+export const chatbotMessages = { you: 'You', assistant: 'Assistant', message: 'Message', placeholder: 'Write a message', send: 'Send', stop: 'Stop', retry: 'Retry', copy: 'Copy', copied: 'Response copied.', copyUnavailable: 'Copy unavailable in this browser.', attach: 'Attach', attachFiles: 'files', remove: 'Remove', preparing: 'Preparing a response…', openChat: 'Open chat', closeChat: 'Close chat', messages: (title: string) => `${title} messages` }

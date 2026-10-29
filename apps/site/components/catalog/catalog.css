@@ -1,0 +1,365 @@
+/* The public catalog's own chrome: the site header over the library, the
+   sidebar foot, the Relight page and the footer. Colors are DIYA's public
+   tokens; selectors carry the catalog hook so they outrank the older
+   catalog sheets wherever both apply. */
+
+/* The dark colour is neutral near-black (and near-white in Dark); the greys
+   keep the site's own tokens. */
+:root[data-catalog='true'][data-catalog='true'] body {
+  --diya-color-accent: #e8e8e8;
+  --diya-color-accent-text: #1c1c1c;
+}
+:root[data-catalog='true'][data-catalog='true'][data-theme='light'] body {
+  --diya-color-accent: #262626;
+  --diya-color-accent-text: #fafafa;
+}
+@media (prefers-color-scheme: light) {
+  :root[data-catalog='true'][data-catalog='true'][data-theme='system'] body {
+    --diya-color-accent: #262626;
+    --diya-color-accent-text: #fafafa;
+  }
+}
+
+/* The site header is fixed and 72px tall (64px on phones); the library's
+   panels start 32px below it, as before. */
+@media (max-width: 760px) {
+  :root[data-catalog='true'] body:has(.gallery-study) .catalog-frame .component-library { padding-top: 88px; }
+}
+:root[data-catalog='true']:has(.catalog-frame) { scroll-padding-top: 104px; }
+
+/* The header's Appearance control at the site's sizes, not the old catalog
+   header's (34px key, 12px captions). */
+:root[data-catalog='true'] body .catalog-frame .site-top-appearance .appearance-popover > summary { width: 40px; height: 40px; }
+:root[data-catalog='true'] body .catalog-frame .site-menu-appearance .appearance-popover > summary { width: auto; height: 48px; }
+:root[data-catalog='true'] body .catalog-frame .site-top .appearance-panel > strong { font-size: 15px; font-weight: 500; }
+:root[data-catalog='true'] body .catalog-frame .site-top .appearance-panel .segmented label > span { font-size: 13px; }
+:root[data-catalog='true'] body .catalog-frame .site-top .appearance-panel .glass-row b { font-size: 15px; }
+:root[data-catalog='true'] body .catalog-frame .site-top .appearance-panel .glass-row small { font-size: 13px; }
+.catalog-frame .appearance-panel .glass-row code { font: inherit; font-family: var(--site-mono); }
+:root[data-catalog='true'] body .catalog-frame .site-top .glass-row input:checked + .switch-track { border-color: var(--diya-color-accent); }
+/* The panel's material lives with the header (site.css), the same on every page. */
+
+/* Sidebar foot: the install command and the Relight entry, pinned under the list. */
+.catalog-foot { display: grid; gap: 10px; min-width: 0; }
+:where(html[data-catalog='true']) .component-browser .catalog-foot {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--diya-color-line) 60%, transparent);
+}
+.catalog-foot .site-chip[data-variant='compact'] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: auto;
+  min-height: 48px;
+  padding: 7px 5px 7px 14px;
+  border-radius: 14px;
+}
+/* The sidebar is narrow: the command wraps before the package name rather than truncating. */
+.catalog-foot .site-chip[data-variant='compact'] .site-chip-cmd { white-space: normal; overflow: visible; line-height: 1.45; }
+.catalog-foot .site-chip[data-variant='compact'] .site-chip-cmd b { white-space: nowrap; }
+.catalog-foot .site-chip[data-variant='compact'] .site-chip-key { align-self: center; }
+
+/* Between 901 and 1000px the sidebar is 220px: the Copy key keeps only its
+   icon (its accessible name is unchanged). */
+@media (max-width: 1000px) {
+  .component-browser .catalog-foot .site-chip-key-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .component-browser .catalog-foot .site-chip[data-variant='compact'] .site-chip-key { width: 32px; padding: 0; justify-content: center; }
+}
+
+/* A long list fades at its scrolling edges instead of stopping at a hard one. */
+@media (min-width: 901px) {
+  :where(html[data-catalog='true']) .catalog-frame .atomic-browser .atomic-navigation {
+    padding-top: 10px;
+    padding-bottom: 20px;
+    mask-image: linear-gradient(transparent, #000 10px, #000 calc(100% - 20px), transparent);
+  }
+  /* The fade's 10px comes out of the space under Search, so the list starts where it did. */
+  :where(html[data-catalog='true']) .catalog-frame .component-browser.atomic-browser .component-browser-heading { padding-bottom: 14px; }
+}
+
+/* Under 900px the sidebar is a short panel above the page, so its foot
+   moves below the content, in the same material as the panels. */
+.catalog-below { display: none; }
+@media (max-width: 900px) {
+  :where(html[data-catalog='true']) .component-browser .catalog-foot { display: none; }
+  .catalog-below { display: block; position: relative; padding: 0 3vw 8px; }
+  .catalog-below .catalog-foot {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    align-items: center;
+    gap: 12px 24px;
+    padding: 20px;
+    border: 1px solid var(--diya-color-line);
+    border-radius: 24px;
+    background: var(--diya-color-surface);
+    box-shadow: var(--diya-shadow-raised);
+  }
+  :root[data-glass='true'] .catalog-below .catalog-foot {
+    background: var(--diya-color-glass);
+    border-color: var(--material-edge, var(--diya-color-line));
+    border-top-color: var(--material-highlight, var(--diya-color-line));
+    backdrop-filter: var(--material-blur, blur(14px));
+  }
+}
+/* On narrow screens the page ends where its content does; the foot and the
+   footer follow. Both sidebars become the short panel above the page at the
+   same width (Components used to wait until 700px). The Relight page needs
+   no component list above it there. */
+@media (max-width: 900px) {
+  :root[data-catalog='true'] body:has(.gallery-study) .catalog-frame .component-library { grid-template-columns: minmax(0, 1fr); }
+  :root[data-catalog='true'] body:has(.gallery-study) .catalog-frame .component-library .component-browser {
+    position: relative; top: 0; left: auto; width: 100%; height: 200px; max-height: 200px; z-index: auto;
+  }
+  :root[data-catalog='true'] body:has(.gallery-study) .catalog-frame .component-library .component-document { grid-column: 1; padding-top: 0; }
+  :root[data-catalog='true'] .catalog-frame .gallery-study.component-library { min-height: 0; }
+  :root[data-catalog='true'] body:has(.gallery-study) .catalog-pro-page :is(.component-browser, .catalog-browse) { display: none; }
+}
+@media (max-width: 760px) {
+  .catalog-below .catalog-foot { padding: 16px; }
+}
+
+/* Phones: a page's actions sit under its title rather than squeezing it. */
+@media (max-width: 560px) {
+  :root[data-catalog='true'] .catalog-frame .component-document-heading { grid-template-columns: minmax(0, 1fr); row-gap: 6px; }
+  :root[data-catalog='true'] .catalog-frame .component-document-heading > .component-document-actions {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    transform: none;
+  }
+  :root[data-catalog='true'] .catalog-frame .component-document-heading > p { grid-row: 3; }
+}
+
+
+/* The footer sits in the content column, beside the fixed sidebar, on the
+   catalog's own ground rather than the landing's solid band. */
+.catalog-frame .site-foot { position: relative; padding: 72px 4vw 48px; background: transparent; }
+@media (min-width: 901px) {
+  .catalog-frame .site-foot { margin-left: calc(4vw + 308px); padding-left: 0; }
+}
+@media (max-width: 900px) {
+  .catalog-frame .site-foot { padding-inline: 3vw; }
+}
+@media (max-width: 760px) {
+  .catalog-frame .site-foot { padding: 56px 3vw 40px; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-glass='true'] .catalog-below .catalog-foot {
+    background: var(--diya-color-surface);
+    backdrop-filter: none;
+  }
+}
+@media (forced-colors: active) {
+  .catalog-below .catalog-foot { border: 1px solid CanvasText; }
+}
+
+/* Light: catalog chrome that sits on the photo's pale wash (the pattern notes
+   and the footer) reads its muted text a step deeper, to keep 4.5:1. The
+   public token keeps its value everywhere else, specimens included. */
+:root[data-catalog='true'][data-theme='light'] .catalog-frame :is(.pattern-notes, .site-foot) {
+  --diya-color-muted: #4a4a4a;
+}
+
+/* Glass on the live preview stages. DIYA's own popups (Menu, Popover,
+   Tooltip, Toast) are position: fixed in viewport coordinates, and a
+   backdrop-filter on an ancestor makes that ancestor their containing block:
+   in Glass they landed far from their trigger and were cut off by the stage.
+   The stage's frosted fill sits on ::before instead, so the stage is never a
+   containing block and its popups float free, exactly as in Light and Dark.
+   (The doubled hook outranks the older `:is(.site-header nav, …)` glass rule.) */
+@supports (backdrop-filter: blur(20px)) {
+  :root[data-catalog='true'][data-catalog='true'][data-glass='true'] body:has(.gallery-study) :is(.component-preview-stage, .pattern-stage) {
+    position: relative;
+    background: transparent;
+    backdrop-filter: none;
+  }
+  :root[data-catalog='true'][data-catalog='true'][data-glass='true'] body:has(.gallery-study) :is(.component-preview-stage, .pattern-stage)::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--diya-color-glass);
+    backdrop-filter: var(--material-blur);
+    pointer-events: none;
+  }
+}
+
+/* The library (main) isolates its own layers; lift it over the sidebar foot's
+   phone copy and the footer that follow it, so a Toast or Menu opened near
+   the bottom of a preview is never painted under them. The header (60) stays on top. */
+:root[data-catalog='true'] .catalog-frame main.gallery-study { z-index: 1; }
+
+/* Playground selects sit beside the segmented groups as siblings: the same
+   13px muted caption, the same 40px control height. */
+:root[data-catalog='true'] body .catalog-select-setting .diya-text-field > label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: normal;
+  color: var(--diya-color-muted);
+}
+
+/* Hover, per the system in site.css: a tint on a value you could choose,
+   never on the one already chosen. */
+:root[data-catalog='true'] body .button-mini-switch label:hover > input:not(:checked):not(:disabled) + span {
+  background: var(--diya-color-hover);
+  color: var(--diya-color-text);
+}
+
+/* The catalog's own chrome keeps the look it launched with. DIYA 1.0's polish
+   (near-black Dark, white Light, Vivid status, quiet surfaces) changes the
+   SDK's defaults; the catalog provider pins the earlier values here, and only
+   the playground previews, each its own nested .diya-root (.customize-scope),
+   show the new defaults. */
+.diya-root.catalog-provider {
+  --diya-color-line: #ffffff30;
+  --diya-color-surface: #242424;
+  --diya-color-recessed: #1c1c1e;
+  --diya-color-raised: #303033;
+  --diya-color-hover: #ffffff0c;
+  --diya-color-selected: #ffffff18;
+  --diya-color-success-fill: #95c381;
+  --diya-color-warning-fill: #ffc220;
+  --diya-color-error-fill: #ef8e92;
+  --diya-color-info-fill: #80b8ee;
+  --diya-color-success: #97c583;
+  --diya-color-success-surface: color-mix(in srgb, #95c381 18%, transparent);
+  --diya-color-warning: #ffe190;
+  --diya-color-warning-surface: color-mix(in srgb, #ffe190 18%, transparent);
+  --diya-color-error: #fb999c;
+  --diya-color-error-surface: color-mix(in srgb, #ef8e92 18%, transparent);
+  --diya-color-info: #85bdf3;
+  --diya-color-info-surface: color-mix(in srgb, #80b8ee 18%, transparent);
+  --diya-internal-surface-border: var(--diya-internal-header-border);
+  --diya-internal-surface-shadow: none;
+}
+.diya-root.catalog-provider[data-theme='light'] {
+  --diya-color-line: #52606366;
+  --diya-color-surface: #eeeeee;
+  --diya-color-recessed: #e5e7e8;
+  --diya-color-raised: #fff;
+  --diya-color-hover: #2026270c;
+  --diya-color-selected: #20262714;
+  --diya-color-success-fill: #2a8703;
+  --diya-color-success-on-fill: #fff;
+  --diya-color-warning-fill: #ffc220;
+  --diya-color-warning-on-fill: #211500;
+  --diya-color-success: #1d5f02;
+  --diya-color-success-surface: #eaf3e6;
+  --diya-color-warning: #854b10;
+  --diya-color-warning-surface: #fff9e9;
+  --diya-color-error: #9b1419;
+  --diya-color-error-surface: #fce8e9;
+  --diya-color-info: #004f9a;
+  --diya-color-info-surface: #e6f1fc;
+}
+.diya-root.catalog-provider[data-theme='light']:not([data-glass='true']) {
+  --diya-internal-field-fill: var(--diya-color-hover);
+  --diya-internal-popup-control-fill: var(--diya-color-hover);
+}
+
+/* Glass, too: the chrome keeps the glass it launched with, and the previews show
+   DIYA 1.0's clearer glass material. */
+@supports (backdrop-filter: blur(14px)) {
+  .diya-root.catalog-provider[data-glass='true'] {
+    --diya-internal-blur: blur(14px);
+    --diya-internal-header-fill: color-mix(in srgb, var(--diya-color-raised) 78%, transparent);
+    --diya-internal-overlay-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-tabs-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-outline-fill: color-mix(in srgb, var(--diya-color-raised) 22%, transparent);
+    --diya-internal-field-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-collection-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-popup-control-fill: color-mix(in srgb, var(--diya-color-raised) 76%, transparent);
+    --diya-internal-popup-fill: color-mix(in srgb, var(--diya-color-raised) 76%, transparent);
+    --diya-internal-pattern-fill: color-mix(in srgb, var(--diya-color-raised) 78%, transparent);
+    --diya-internal-workflow-fill: color-mix(in srgb, var(--diya-color-raised) 75%, transparent);
+    --diya-internal-application-fill: color-mix(in srgb, var(--diya-color-raised) 76%, transparent);
+    --diya-internal-analytics-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-table-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-popup-backdrop: blur(16px);
+    --diya-internal-workflow-backdrop: blur(18px);
+    --diya-internal-application-backdrop: blur(18px);
+    --diya-internal-alert-fill: var(--diya-color-glass);
+    --diya-internal-alert-backdrop: blur(20px);
+    --diya-internal-surface-border: var(--diya-internal-header-border);
+    --diya-internal-surface-shadow: none;
+    --diya-color-scrim: initial;
+    /* DIYA 1.0's glass splits the floating layer from the content layer; the chrome
+       keeps one blur, its old rim and its old shadow. */
+    --diya-internal-content-blur: var(--diya-internal-blur);
+    --diya-internal-overlay-border: var(--diya-internal-edge);
+    --diya-internal-overlay-top-border: var(--diya-internal-highlight);
+    --diya-internal-toast-fill: var(--diya-color-glass);
+    --diya-internal-toast-backdrop: blur(20px);
+    --diya-internal-glass-sheen: none;
+    --diya-internal-tag-base: transparent;
+    --diya-internal-text-lift: transparent;
+    --diya-shadow-raised: inset 0 1px 0 #ffffff0a, 0 -6px 24px -6px #ffffff24, 0 0 44px -10px #ffffff18, 0 18px 40px -8px #000000a6;
+  }
+  .diya-root.catalog-provider[data-glass='true'][data-theme='light'] {
+    --diya-internal-blur: blur(24px) saturate(1.5) brightness(1.06);
+    --diya-internal-toast-backdrop: var(--diya-internal-blur);
+    --diya-shadow-raised: inset 0 1px 0 #ffffff, 0 10px 30px #0000001a;
+    --diya-color-muted: #495659;
+    --diya-internal-header-fill: color-mix(in srgb, var(--diya-color-raised) 84%, transparent);
+    --diya-internal-overlay-fill: color-mix(in srgb, var(--diya-color-raised) 82%, transparent);
+    --diya-internal-tabs-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-outline-fill: color-mix(in srgb, var(--diya-color-raised) 40%, transparent);
+    --diya-internal-field-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-collection-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-popup-control-fill: color-mix(in srgb, var(--diya-color-raised) 82%, transparent);
+    --diya-internal-popup-fill: color-mix(in srgb, var(--diya-color-raised) 84%, transparent);
+    --diya-internal-pattern-fill: color-mix(in srgb, var(--diya-color-raised) 84%, transparent);
+    --diya-internal-workflow-fill: color-mix(in srgb, var(--diya-color-raised) 82%, transparent);
+    --diya-internal-application-fill: color-mix(in srgb, var(--diya-color-raised) 82%, transparent);
+    --diya-internal-analytics-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-table-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-popup-backdrop: var(--diya-internal-blur);
+    --diya-internal-workflow-backdrop: var(--diya-internal-blur);
+    --diya-internal-application-backdrop: var(--diya-internal-blur);
+    --diya-internal-alert-backdrop: var(--diya-internal-blur);
+  }
+  .diya-root.catalog-provider[data-glass='true'] .diya-dialog:not(.customize-scope *) {
+    background: var(--diya-internal-pattern-fill);
+    border-color: var(--diya-internal-header-border);
+  }
+  .diya-root.catalog-provider[data-glass='true'] .diya-drawer-modal:not(.customize-scope *) {
+    background: var(--diya-internal-workflow-fill);
+    border-color: var(--diya-color-line);
+  }
+}
+.diya-root.catalog-provider[data-glass='true'] .diya-tabs[data-variant='pill'] .diya-tab-list:not(.customize-scope *) { border-radius: 0; }
+@media (prefers-reduced-transparency: reduce) {
+  .diya-root.catalog-provider[data-glass='true'],
+  .diya-root.catalog-provider[data-glass='true'][data-theme='light'] {
+    --diya-internal-header-border: color-mix(in srgb, var(--diya-color-text) 18%, transparent);
+    --diya-internal-header-fill: var(--diya-color-raised);
+    --diya-internal-overlay-fill: var(--diya-color-raised);
+    --diya-internal-tabs-fill: var(--diya-color-raised);
+    --diya-internal-outline-fill: var(--diya-color-raised);
+    --diya-internal-backdrop: none;
+    --diya-internal-field-fill: var(--diya-color-hover);
+    --diya-internal-collection-fill: transparent;
+    --diya-internal-popup-control-fill: var(--diya-color-hover);
+    --diya-internal-popup-fill: var(--diya-color-raised);
+    --diya-internal-pattern-fill: var(--diya-color-raised);
+    --diya-internal-workflow-fill: var(--diya-color-raised);
+    --diya-internal-application-fill: var(--diya-color-raised);
+    --diya-internal-analytics-fill: var(--diya-color-raised);
+    --diya-internal-table-fill: var(--diya-color-raised);
+    --diya-internal-field-backdrop: none;
+    --diya-internal-popup-backdrop: none;
+    --diya-internal-pattern-backdrop: none;
+    --diya-internal-workflow-backdrop: none;
+    --diya-internal-application-backdrop: none;
+    --diya-internal-analytics-backdrop: none;
+    --diya-internal-alert-alpha: 7%;
+    --diya-internal-alert-fill: var(--diya-color-surface);
+    --diya-internal-alert-backdrop: none;
+  }
+}

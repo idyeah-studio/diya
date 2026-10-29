@@ -1,0 +1,11 @@
+:where(html[data-catalog='true']) .choice-example {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  padding: 36px 16px;
+}
+@media (forced-colors: active) {
+}
+@media (forced-colors: active) { }

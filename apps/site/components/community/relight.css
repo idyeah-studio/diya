@@ -1,0 +1,179 @@
+/* Relight in three pictures (RelightSteps), for the catalog's Relight page.
+   The same pictures as the landing's Relight section, drawn from DIYA's
+   public tokens. The steps sit side by side when their column is wide, two
+   and one when it's middling, and stack on phones. */
+.rl-stage { container: relight / inline-size; }
+.rl-steps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rl-steps > li { display: grid; grid-template-rows: auto 1fr auto; gap: 14px; min-width: 0; }
+@container relight (min-width: 600px) {
+  .rl-steps { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px 24px; }
+  .rl-steps > li:last-child { grid-column: 1 / -1; }
+}
+@container relight (min-width: 1080px) {
+  .rl-steps { grid-template-columns: 1fr .8fr 1.2fr; }
+  .rl-steps > li:last-child { grid-column: auto; }
+}
+
+.rl-step-label { display: flex; gap: 12px; align-items: baseline; margin: 0; font-size: 15px; line-height: 1.4; color: var(--diya-color-text); }
+.rl-step-label > span[aria-hidden] {
+  padding: 2px 8px;
+  border: 1px solid var(--diya-color-line);
+  border-radius: 999px;
+  font-size: 13px;
+  font-variant-numeric: proportional-nums;
+}
+.rl-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* 1 · the screenshot: a grey plate of placeholder bars. */
+.rl-shot { position: relative; min-height: 220px; padding: 18px; border-radius: 14px; background: #d8d9d6; overflow: hidden; box-shadow: var(--site-plate-shadow); }
+.diya-root[data-theme='dark'] .rl-shot { background: #2b2c2d; }
+.rl-bar { height: 14px; margin-bottom: 10px; border-radius: 3px; background: #0000001a; }
+.rl-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; }
+.rl-grid3 div { height: 54px; border-radius: 4px; background: #00000012; }
+.rl-rows div { height: 10px; margin: 10px 0; border-radius: 2px; background: #00000012; }
+.diya-root[data-theme='dark'] .rl-bar { background: #ffffff14; }
+.diya-root[data-theme='dark'] :is(.rl-grid3 div, .rl-rows div) { background: #ffffff0d; }
+.rl-file { position: absolute; right: 14px; bottom: 14px; padding: 6px 10px; border-radius: 6px; font: 13px var(--site-mono); background: #000000a6; color: #fff; }
+/* Relight step 1 (N1): a pen sketch of Oriel's Invoices screen on a paper napkin. */
+.rl-shot[data-sketch='napkin'] {
+  --napkin: #fbf9f4;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  background: var(--napkin);
+  border: 1px solid #00000010;
+  rotate: -0.8deg;
+  box-shadow: 0 1px 0 #ffffffb0 inset, 0 18px 40px -18px #00000040, 0 2px 6px #00000014;
+}
+.diya-root[data-theme='dark'] .rl-shot[data-sketch='napkin'] {
+  --napkin: #e9e6df;
+  background: var(--napkin);
+  border-color: #ffffff14;
+  box-shadow: 0 22px 50px -18px #000000b0, 0 2px 8px #00000060;
+}
+.rl-shot[data-sketch='napkin'] svg { display: block; width: 100%; height: auto; max-height: 100%; }
+.rl-shot[data-sketch='napkin'] .napkin-paper { fill: var(--napkin); }
+@media (forced-colors: active) {
+  .rl-shot[data-sketch] { rotate: none; background: Canvas; color: CanvasText; }
+  .rl-shot[data-sketch] svg g[stroke] { stroke: CanvasText; }
+  .rl-shot[data-sketch] svg g[fill] { fill: CanvasText; }
+  .rl-shot[data-sketch] .napkin-paper { fill: Canvas; }
+}
+
+/* 2 · the questions: pills, the first answered. */
+.rl-ask { padding: 22px; border-radius: 14px; background: var(--diya-color-raised); border: 1px solid var(--diya-color-line); box-shadow: var(--site-plate-shadow); }
+.rl-ask .rl-ask-q { margin: 0 0 14px; font-size: 17px; font-weight: 500; line-height: 1.35; color: var(--diya-color-text); }
+.rl-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.rl-pills span { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--diya-color-line); font-size: 15px; color: var(--diya-color-text); }
+.rl-pills span[data-on] { background: var(--diya-color-accent); color: var(--diya-color-accent-text); border-color: transparent; }
+.rl-ask-next { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--diya-color-line); }
+.rl-ask .rl-ask-next .rl-ask-q, .rl-ask-next .rl-pills span { color: var(--diya-color-muted); }
+.rl-ask-next .rl-pills span { border-color: color-mix(in srgb, var(--diya-color-line) 60%, transparent); }
+
+/* 3 · the screen, built from DIYA parts (ProScreen's markup, shared with the landing). */
+.rl-steps .ld-built { display: grid; grid-template-columns: 150px minmax(0, 1fr); overflow: hidden; border-radius: 14px; background: var(--diya-color-surface); border: 1px solid var(--diya-color-line); box-shadow: var(--site-plate-shadow); color: var(--diya-color-text); }
+.rl-steps .ld-built-nav { display: grid; align-content: start; gap: 2px; padding: 18px 10px; border-right: 1px solid var(--diya-color-line); }
+.rl-steps .ld-built-nav strong { padding: 0 10px 12px; font-size: 15px; font-weight: 600; }
+.rl-steps .ld-built-nav span { padding: 8px 10px; border-radius: 8px; font-size: 13px; color: var(--diya-color-muted); }
+.rl-steps .ld-built-nav span[data-on] { background: var(--diya-color-selected); color: var(--diya-color-text); }
+.rl-steps .ld-built-main { display: grid; align-content: start; gap: 16px; min-width: 0; padding: 20px; }
+.rl-steps .ld-built-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rl-steps .ld-built-metrics > div { min-width: 0; padding: 14px; border-radius: 10px; background: var(--diya-color-raised); border: 1px solid var(--diya-color-line); }
+.rl-steps .ld-built-table { display: grid; grid-template-columns: 1fr auto auto; column-gap: 16px; align-items: center; font-size: 13px; }
+.rl-steps .ld-built-table > span { padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--diya-color-line) 50%, transparent); }
+.rl-steps .ld-built-table > span:nth-child(-n+3) { padding: 6px 0; font-weight: 500; color: var(--diya-color-muted); border-bottom-color: var(--diya-color-line); }
+.rl-steps .ld-built-table > span:nth-child(3n) { text-align: right; font-variant-numeric: proportional-nums; }
+@container relight (max-width: 459px) {
+  .rl-steps .ld-built { grid-template-columns: minmax(0, 1fr); }
+  .rl-steps .ld-built-nav { display: none; }
+}
+
+.rl-made-of { margin: 0; font-size: 13px; line-height: 1.5; color: var(--diya-color-muted); }
+.rl-made-of a { color: var(--diya-color-text); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 3px; border-radius: 4px; }
+.rl-made-of a:hover { text-decoration-color: currentColor; }
+.rl-made-of a:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 2px; }
+.rl-made-of code { font-family: var(--site-mono); font-size: 13px; }
+.rl-made-of.rl-real { font-size: 15px; }
+
+@media (forced-colors: active) {
+  .rl-shot, .rl-ask, .rl-steps .ld-built { border: 1px solid CanvasText; background: Canvas; }
+  .rl-pills span[data-on] { outline: 2px solid CanvasText; }
+}
+
+/* The catalog's Relight page (catalog/ProPage): pitch, pictures, list.
+   The page's column sets the layout, not the viewport. */
+.rl-page { container: relight-page / inline-size; display: grid; gap: 48px; margin: 15px 0 0; color: var(--diya-color-text); }
+.rl-head { display: grid; gap: 20px; }
+@container relight-page (min-width: 820px) {
+  .rl-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: end; }
+}
+.rl-eyebrow { margin: 0 0 14px; font-size: 15px; line-height: 1.4; color: var(--diya-color-muted); }
+.rl-eyebrow b { font-weight: 500; color: var(--diya-color-text); }
+:where(html[data-catalog='true']) .rl-head h2 {
+  margin: 0;
+  font-size: 38px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  color: var(--diya-color-text);
+}
+.rl-body p { margin: 0; max-width: 52ch; font-size: 15px; line-height: 1.55; color: var(--diya-color-text); }
+.rl-body p + p { margin-top: 12px; color: var(--diya-color-muted); }
+
+/* The list: a raised panel, the lead beside the form when there's room. */
+.rl-join {
+  display: grid;
+  gap: 28px;
+  padding: 32px;
+  border: 1px solid var(--diya-color-line);
+  border-radius: 24px;
+  background: var(--diya-color-surface);
+  box-shadow: var(--diya-shadow-raised);
+}
+.rl-join > * { min-width: 0; }
+@container relight-page (min-width: 760px) {
+  .rl-join { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 48px; padding: 40px; }
+}
+.rl-join-lead h3 { margin: 0; font-size: 20px; font-weight: 500; line-height: 1.2; letter-spacing: -.02em; color: var(--diya-color-text); }
+.rl-join-lead p { margin: 12px 0 0; max-width: 34ch; font-size: 15px; line-height: 1.5; color: var(--diya-color-muted); }
+.rl-promise { display: grid; gap: 8px; margin: 24px 0 0; padding: 20px 0 0; border-top: 1px solid var(--diya-color-line); list-style: none; }
+.rl-promise li { position: relative; padding-left: 22px; font-size: 15px; line-height: 1.45; color: var(--diya-color-text); }
+.rl-promise li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: .42em;
+  width: 5px;
+  height: 10px;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+  opacity: .7;
+}
+@supports (backdrop-filter: blur(14px)) {
+  :root[data-glass='true'] .rl-join {
+    background: var(--diya-color-glass);
+    border-color: var(--material-edge, var(--diya-color-line));
+    border-top-color: var(--material-highlight, var(--diya-color-line));
+    backdrop-filter: var(--material-blur, blur(14px));
+  }
+}
+@media (max-width: 700px) {
+  :where(html[data-catalog='true']) .rl-head h2 { font-size: 30px; }
+  .rl-page { gap: 40px; }
+  .rl-join { padding: 20px; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-glass='true'] .rl-join { background: var(--diya-color-surface); backdrop-filter: none; }
+}
+@media (forced-colors: active) {
+  .rl-join { border: 1px solid CanvasText; }
+}

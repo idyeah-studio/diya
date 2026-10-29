@@ -1,0 +1,2619 @@
+/* DIYA Sans: DIYA's typeface, a modified Mona Sans under the SIL Open Font
+   License (fonts/OFL.txt). Variable weight 200-900 and width 75%-125%. */
+@font-face {
+  font-family: 'DIYA Sans';
+  src: url('./fonts/DIYASans.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 200 900;
+  font-stretch: 75% 125%;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DIYA Sans';
+  src: url('./fonts/DIYASans-Italic.woff2') format('woff2');
+  font-style: italic;
+  font-weight: 200 900;
+  font-stretch: 75% 125%;
+  font-display: swap;
+}
+
+/* Arial resized to DIYA Sans's metrics, so the page does not shift when the
+   web font arrives. */
+@font-face {
+  font-family: 'DIYA Sans Fallback';
+  src: local('Arial');
+  size-adjust: 104.5%;
+  ascent-override: 104.3%;
+  descent-override: 30.6%;
+  line-gap-override: 0%;
+}
+
+/* DIYA foundations. Appearance is local to each provider, including its portals. */
+.diya-root {
+  /* Type scale. Reader-facing text never goes below caption. */
+  --diya-text-caption: 14px;
+  --diya-text-body: 15px;
+  --diya-text-large: 17px;
+  --diya-text-title: 20px;
+  --diya-text-heading: 26px;
+  --diya-text-display: 34px;
+  --diya-text-hero: 44px;
+  /* Leading. DIYA Sans's own line gap is tall, so titles set it explicitly. */
+  --diya-leading-tight: 1.2;
+  --diya-leading-body: 1.5;
+  /* Spacing scale, for Stack, Inline and your own layouts. */
+  --diya-space-1: 4px;
+  --diya-space-2: 8px;
+  --diya-space-3: 12px;
+  --diya-space-4: 16px;
+  --diya-space-5: 24px;
+  --diya-space-6: 32px;
+  --diya-space-7: 48px;
+  --diya-space-8: 64px;
+  /* One corner for every control: buttons, fields, selects and menu triggers. */
+  --diya-radius-control: calc(6px * var(--diya-corner-scale, 1));
+  /* One corner for every surface that sits in the page: Card, chart cards, Page Header, Form, Table. */
+  --diya-radius-surface: calc(16px * var(--diya-corner-scale, 1));
+  /* Neutral grays. Dark is the base; Light overrides below. Dark sits on a near-black
+     ground; raised surfaces lift only slightly and recessed wells sink below it. */
+  --diya-color-text: #f1f3f2;
+  --diya-color-muted: #bec8cb;
+  --diya-color-line: #ffffff26;
+  --diya-color-surface: #111113;
+  --diya-color-recessed: #0a0a0b;
+  --diya-color-raised: #18181b;
+  --diya-color-glass: #ffffff0d;
+  --diya-color-hover: #ffffff10;
+  --diya-color-selected: #ffffff1c;
+  /* The brand: DiyaProvider's brandColor sets the private pair per theme; the fallbacks
+     are DIYA's default (src/internal/brand.ts, DIYA_DEFAULT_BRAND). */
+  --diya-color-accent: var(--diya-internal-accent-dark, #e8e8e8);
+  --diya-color-accent-text: var(--diya-internal-accent-text-dark, #1c1c1c);
+  --diya-color-accent-soft: var(--diya-internal-accent-soft-dark, #e8e8e833);
+  --diya-color-accent-ink: var(--diya-internal-accent-ink-dark, #e8e8e8);
+  --diya-internal-edge: #ffffff30;
+  --diya-internal-highlight: #ffffff30;
+  --diya-shadow-raised: inset 0 1px 0 #ffffff0a, 0 -6px 24px -6px #ffffff24,
+    0 0 44px -10px #ffffff18, 0 18px 40px -8px #000000a6;
+  --diya-internal-blur: blur(14px);
+  --diya-internal-backdrop: none;
+  --diya-internal-header-fill: var(--diya-color-raised);
+  --diya-internal-header-border: color-mix(in srgb, var(--diya-color-text) 18%, transparent);
+  /* In-page surfaces (Card, chart cards, Form, Table, Page Header panel) lift with a soft
+     shadow and the faintest edge, never a bright outline. */
+  --diya-internal-surface-border: color-mix(in srgb, var(--diya-color-text) 8%, transparent);
+  --diya-internal-surface-shadow: inset 0 1px 0 #ffffff08, 0 1px 2px #00000066, 0 18px 40px -22px #000000cc;
+  --diya-internal-overlay-fill: var(--diya-color-raised);
+  --diya-internal-overlay-border: color-mix(in srgb, var(--diya-color-line) 50%, transparent);
+  --diya-internal-overlay-top-border: var(--diya-internal-overlay-border);
+  --diya-internal-tabs-fill: transparent;
+  --diya-internal-outline-fill: transparent;
+  --diya-color-destructive: #ffaaaa;
+  --diya-color-neutral-fill: #b9c3c8;
+  --diya-color-neutral-on-fill: #000;
+  /* Status tones come from the Vivid family: bright, warm and saturated, never dusty.
+     Each label reads at 4.5:1 or more on its own tint and on every surface. */
+  --diya-color-success-fill: #30d158;
+  --diya-color-success-on-fill: #000;
+  --diya-color-warning-fill: #ff9f0a;
+  --diya-color-warning-on-fill: #000;
+  --diya-color-error-fill: #ff453a;
+  --diya-color-error-on-fill: #000;
+  --diya-color-info-fill: #0a84ff;
+  --diya-color-info-on-fill: #000;
+  --diya-color-success: #30d158;
+  --diya-color-success-surface: color-mix(in srgb, #30d158 18%, transparent);
+  --diya-color-warning: #ffb340;
+  --diya-color-warning-surface: color-mix(in srgb, #ff9f0a 18%, transparent);
+  --diya-color-error: #ff7a72;
+  --diya-color-error-surface: color-mix(in srgb, #ff453a 20%, transparent);
+  --diya-color-info: #5eb0ff;
+  --diya-color-info-surface: color-mix(in srgb, #0a84ff 22%, transparent);
+  --diya-internal-warning-mark: var(--diya-color-warning-fill);
+  color-scheme: dark;
+  color: var(--diya-color-text);
+  font-family: var(--diya-font, 'DIYA Sans', 'DIYA Sans Fallback', Arial, Helvetica, sans-serif);
+  font-synthesis: none;
+}
+
+.diya-root[data-theme='light'] {
+  /* Light is white all the way down: hierarchy comes from hairlines, spacing and type. */
+  --diya-color-text: #202627;
+  --diya-color-muted: #495659;
+  --diya-color-line: #1c1e2024;
+  --diya-color-surface: #ffffff;
+  --diya-color-recessed: #fafafa;
+  --diya-color-raised: #ffffff;
+  --diya-color-glass: #ffffff90;
+  --diya-color-hover: #2026270a;
+  --diya-color-selected: #20262712;
+  --diya-color-accent: var(--diya-internal-accent-light, #262626);
+  --diya-color-accent-text: var(--diya-internal-accent-text-light, #fafafa);
+  --diya-color-accent-soft: var(--diya-internal-accent-soft-light, #2626261f);
+  --diya-color-accent-ink: var(--diya-internal-accent-ink-light, #262626);
+  --diya-internal-edge: #ffffffa0;
+  --diya-internal-highlight: #ffffffdc;
+  --diya-shadow-raised: inset 0 1px 0 #ffffff80, 0 10px 30px #0002;
+  --diya-internal-surface-border: color-mix(in srgb, var(--diya-color-text) 9%, transparent);
+  --diya-internal-surface-shadow: 0 1px 2px #1014180a, 0 10px 30px -14px #10141824;
+  --diya-color-destructive: #a72735;
+  --diya-color-neutral-fill: #52616b;
+  --diya-color-neutral-on-fill: #fff;
+  --diya-color-success-fill: #34c759;
+  --diya-color-success-on-fill: #000;
+  --diya-color-warning-fill: #ff9f0a;
+  --diya-color-warning-on-fill: #000;
+  --diya-color-error-fill: #de1c24;
+  --diya-color-error-on-fill: #fff;
+  --diya-color-info-fill: #0071dc;
+  --diya-color-info-on-fill: #fff;
+  --diya-color-success: #0d7a33;
+  --diya-color-success-surface: #dff6e4;
+  --diya-color-warning: #b34700;
+  --diya-color-warning-surface: #ffeed3;
+  --diya-color-error: #d70015;
+  --diya-color-error-surface: #ffe7e6;
+  --diya-color-info: #0062cc;
+  --diya-color-info-surface: #e0efff;
+  --diya-internal-warning-mark: var(--diya-color-warning);
+  color-scheme: light;
+}
+
+/* The provider paints its own ground unless surface={false}. */
+.diya-root[data-surface='true'] {
+  background-color: var(--diya-color-surface);
+}
+
+/* Resets reach only DIYA's own elements: anything with a diya- class and what DIYA
+   renders inside it. Your markup elsewhere in the provider keeps its own styles. */
+:where(.diya-root, .diya-root [class*='diya-'], .diya-root [class*='diya-'] *) {
+  box-sizing: border-box;
+}
+
+/* Button */
+.diya-root .diya-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: var(--diya-radius-control, calc(6px * var(--diya-corner-scale, 1)));
+  background: var(--diya-color-accent);
+  color: var(--diya-color-accent-text);
+  font: inherit;
+  font-size: var(--diya-text-caption);
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.diya-root .diya-button[data-size='small'] {
+  min-height: 32px;
+  padding-inline: 16px;
+  font-size: var(--diya-text-caption);
+}
+
+.diya-root .diya-button[data-size='large'] {
+  min-height: 48px;
+  padding-inline: 24px;
+  font-size: var(--diya-text-large);
+}
+
+.diya-root .diya-button[data-shape='pill'] {
+  border-radius: 999px;
+}
+
+.diya-root .diya-button[data-shape='rounded'] {
+  border-radius: var(--diya-radius-control, calc(6px * var(--diya-corner-scale, 1)));
+}
+
+.diya-root .diya-button[data-variant='outline'] {
+  background: var(--diya-internal-outline-fill);
+  border-color: var(--diya-color-line);
+  color: var(--diya-color-text);
+  backdrop-filter: var(--diya-internal-backdrop);
+}
+
+.diya-root .diya-button[data-variant='quiet'] {
+  background: transparent;
+  color: var(--diya-color-text);
+}
+
+/* Destructive: the theme's own red, with the page surface as its text. */
+.diya-root .diya-button[data-variant='destructive'] {
+  background: var(--diya-color-destructive);
+  color: var(--diya-color-raised);
+}
+
+.diya-root .diya-button:not(:disabled):hover {
+  filter: brightness(0.88);
+}
+
+.diya-root .diya-button[data-variant='outline']:not(:disabled):hover,
+.diya-root .diya-button[data-variant='quiet']:not(:disabled):hover {
+  background: var(--diya-color-selected);
+  filter: none;
+}
+
+.diya-root .diya-button:not(:disabled):active {
+  box-shadow: inset 0 0 0 2px var(--diya-color-line);
+}
+
+.diya-root .diya-button:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 4px;
+}
+
+.diya-root .diya-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* A disabled link or asChild element can't use :disabled. */
+.diya-root .diya-button[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.diya-root .diya-button[aria-busy='true'] {
+  opacity: 0.8;
+}
+
+.diya-root .diya-button-progress {
+  position: static;
+  font-size: var(--diya-text-caption);
+  line-height: 1;
+}
+
+.diya-root .diya-button svg {
+  flex-shrink: 0;
+}
+
+.diya-root .diya-button[data-icon-only='true'] {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+.diya-root .diya-button[data-icon-only='true'][data-size='small'] {
+  width: 32px;
+  height: 32px;
+}
+
+.diya-root .diya-button[data-icon-only='true'][data-size='large'] {
+  width: 48px;
+  height: 48px;
+}
+
+/* Page Header owns the material previously supplied by the preview frame. */
+.diya-root .diya-page-header {
+  container-type: inline-size;
+  width: 100%;
+  padding: 30px;
+  border: 1px solid var(--diya-internal-surface-border);
+  border-radius: var(--diya-radius-surface);
+  box-shadow: var(--diya-internal-surface-shadow);
+  background: var(--diya-internal-header-fill);
+  color: var(--diya-color-text);
+  backdrop-filter: var(--diya-internal-backdrop);
+}
+
+.diya-root .diya-page-header-breadcrumbs {
+  margin-bottom: 28px;
+}
+
+.diya-root .diya-page-header-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.diya-root .diya-page-header-copy {
+  min-width: 0;
+}
+
+.diya-root .diya-page-header-title,
+.diya-root .diya-page-header-copy > :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+  color: inherit;
+  font-size: var(--diya-text-heading);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  font-weight: 540;
+  overflow-wrap: anywhere;
+}
+
+.diya-root .diya-page-header-description {
+  max-width: 62ch;
+  margin: 8px 0 0;
+  color: var(--diya-color-muted);
+  font-size: var(--diya-text-body);
+  line-height: 1.65;
+}
+
+.diya-root .diya-page-header-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.diya-root .diya-page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.diya-root .diya-page-header-navigation {
+  margin-top: 30px;
+}
+
+.diya-root .diya-page-header-navigation .diya-tabs[data-variant='underline'] .diya-tab-list {
+  width: 100%;
+}
+
+@container (max-width: 620px) {
+  .diya-root .diya-page-header-main {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .diya-root .diya-page-header-title,
+  .diya-root .diya-page-header-copy > :is(h1, h2, h3, h4, h5, h6) {
+    font-size: var(--diya-text-heading);
+  }
+
+  .diya-root .diya-page-header-actions {
+    width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .diya-root .diya-page-header {
+    padding: 20px;
+  }
+}
+
+/* surface={false}: the header sits straight on the page, with no panel around it,
+   so a screen's first surface is its content. Placed after the padding rule so it wins. */
+.diya-root .diya-page-header[data-surface='false'] {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+/* Breadcrumbs, including the optional collapsed menu. */
+.diya-root .diya-breadcrumbs {
+  min-width: 0;
+  max-width: 100%;
+  color: var(--diya-color-muted);
+  font-size: var(--diya-text-body);
+}
+
+.diya-root .diya-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.diya-root .diya-breadcrumbs li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.diya-root .diya-breadcrumbs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  min-width: 0;
+  border-radius: calc(4px * var(--diya-corner-scale, 1));
+  color: inherit;
+  text-decoration: none;
+}
+
+.diya-root .diya-breadcrumbs a:hover {
+  color: var(--diya-color-text);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.diya-root .diya-breadcrumbs a:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 4px;
+}
+
+.diya-root .diya-breadcrumbs [aria-current='page'] {
+  min-width: 0;
+  color: var(--diya-color-text);
+  font-weight: 500;
+}
+
+.diya-root .diya-breadcrumb-separator {
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.diya-root .diya-breadcrumb-collapse .diya-button {
+  min-height: 28px;
+  padding: 0 10px;
+  border-color: transparent;
+  font-size: var(--diya-text-caption);
+}
+
+.diya-root .diya-floating-surface {
+  position: fixed;
+  z-index: 1100;
+  width: 288px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  margin: 0;
+  padding: 20px;
+  border: 1px solid var(--diya-internal-overlay-border);
+  border-top-color: var(--diya-internal-overlay-top-border);
+  border-radius: calc(16px * var(--diya-corner-scale, 1));
+  background: var(--diya-internal-overlay-fill);
+  color: var(--diya-color-text);
+  box-shadow: var(--diya-shadow-raised);
+  backdrop-filter: var(--diya-internal-backdrop);
+}
+
+.diya-root .diya-floating-menu {
+  width: 230px;
+  padding: 6px;
+}
+
+.diya-root .diya-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: calc(10px * var(--diya-corner-scale, 1));
+  background: transparent;
+  color: var(--diya-color-text);
+  text-align: left;
+  font: inherit;
+  font-size: var(--diya-text-body);
+  cursor: pointer;
+}
+
+.diya-root .diya-menu-item:hover:not(:disabled),
+.diya-root .diya-menu-item:focus-visible {
+  background: var(--diya-color-selected);
+}
+
+.diya-root .diya-menu-item:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: -2px;
+}
+
+.diya-root .diya-menu-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.diya-root .diya-menu-item[data-destructive='true'] {
+  color: var(--diya-color-destructive);
+}
+
+.diya-root a.diya-menu-item {
+  text-decoration: none;
+}
+
+.diya-root .diya-menu-item[aria-current='page'] {
+  font-weight: 500;
+}
+
+.diya-root .diya-menu-shortcut {
+  margin-left: auto;
+  color: var(--diya-color-muted);
+  font-size: var(--diya-text-caption);
+}
+
+.diya-root .diya-menu-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.diya-root .diya-menu-item > span:not([aria-hidden]) { flex:1; min-width:0; overflow-wrap:anywhere; }
+.diya-root .diya-menu-shortcut { flex-shrink:0; white-space:nowrap; }
+
+.diya-root .diya-menu-separator {
+  margin: 5px 8px;
+  border-top: 1px solid var(--diya-color-line);
+}
+
+/* Tabs */
+.diya-root .diya-tabs {
+  width: 100%;
+  color: var(--diya-color-text);
+}
+
+.diya-root .diya-tab-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 4px;
+  background: var(--diya-internal-tabs-fill);
+  backdrop-filter: var(--diya-internal-backdrop);
+}
+
+.diya-root .diya-tabs[data-variant='underline'] .diya-tab-list {
+  gap: 24px;
+  padding: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--diya-color-line) 55%, transparent);
+  border-radius: 0;
+}
+
+.diya-root .diya-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--diya-color-muted);
+  font: inherit;
+  font-size: var(--diya-text-body);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.diya-root .diya-tab:hover:not(:disabled) {
+  background: var(--diya-color-hover);
+  color: var(--diya-color-text);
+}
+
+.diya-root .diya-tab[aria-selected='true'] {
+  color: var(--diya-color-text);
+}
+
+/* In Glass a pill Tabs track shows; it is a capsule like its thumb. */
+.diya-root[data-glass='true'] .diya-tabs[data-variant='pill'] .diya-tab-list {
+  border-radius: 999px;
+}
+
+.diya-root .diya-tabs[data-variant='pill'] .diya-tab[aria-selected='true'] {
+  background: var(--diya-color-accent);
+  color: var(--diya-color-accent-text);
+}
+
+.diya-root .diya-tabs[data-variant='underline'] .diya-tab {
+  padding-inline: 4px;
+  border-radius: 4px 4px 0 0;
+  font-weight: 400;
+}
+
+.diya-root .diya-tabs[data-variant='underline'] .diya-tab[aria-selected='true'] {
+  font-weight: 600;
+}
+
+.diya-root .diya-tabs[data-variant='underline'] .diya-tab[aria-selected='true']::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  content: '';
+}
+
+.diya-root .diya-tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.diya-root .diya-tabs .diya-tab:focus-visible,
+.diya-root .diya-tab-panel:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+
+.diya-root .diya-tabs[data-variant='underline'] .diya-tab:focus-visible {
+  outline-offset: -2px;
+}
+
+.diya-root .diya-tab-icon {
+  display: inline-flex;
+}
+
+.diya-root .diya-tab-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.diya-root .diya-tabs[data-size='small'] .diya-tab {
+  gap: 6px;
+  min-height: 32px;
+  padding-inline: 14px;
+  font-size: var(--diya-text-caption);
+}
+
+.diya-root .diya-tabs[data-size='large'] .diya-tab {
+  gap: 10px;
+  min-height: 48px;
+  padding-inline: 22px;
+  font-size: var(--diya-text-large);
+}
+
+.diya-root .diya-tab-panel {
+  margin-top: 24px;
+  border-radius: calc(8px * var(--diya-corner-scale, 1));
+}
+
+.diya-root .diya-tab-panel[hidden] {
+  display: none;
+}
+
+.diya-root .diya-tabs[data-variant='pill'] .diya-tab[aria-selected='true'] .diya-badge[data-color='neutral'] {
+  --diya-internal-badge-fill: var(--diya-color-accent-text);
+  --diya-internal-badge-ink: var(--diya-color-accent);
+}
+
+/* Badge */
+.diya-root .diya-badge {
+  --diya-internal-badge-fill: var(--diya-color-neutral-fill);
+  --diya-internal-badge-ink: var(--diya-color-neutral-on-fill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--diya-internal-badge-fill);
+  color: var(--diya-internal-badge-ink);
+  vertical-align: middle;
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.diya-root .diya-badge[data-color='success'] {
+  --diya-internal-badge-fill: var(--diya-color-success-fill);
+  --diya-internal-badge-ink: var(--diya-color-success-on-fill);
+}
+.diya-root .diya-badge[data-color='warning'] {
+  --diya-internal-badge-fill: var(--diya-color-warning-fill);
+  --diya-internal-badge-ink: var(--diya-color-warning-on-fill);
+}
+.diya-root .diya-badge[data-color='error'] { --diya-internal-badge-fill: var(--diya-color-error-fill); --diya-internal-badge-ink: var(--diya-color-error-on-fill); }
+.diya-root .diya-badge[data-color='info'] { --diya-internal-badge-fill: var(--diya-color-info-fill); --diya-internal-badge-ink: var(--diya-color-info-on-fill); }
+.diya-root .diya-badge[data-color='brand'] { --diya-internal-badge-fill: var(--diya-color-accent); --diya-internal-badge-ink: var(--diya-color-accent-text); }
+
+.diya-root .diya-badge[data-variant='dot'] {
+  width: 9px;
+  height: 9px;
+}
+
+.diya-root .diya-badge[data-variant='dot'][data-size='small'] {
+  width: 6px;
+  height: 6px;
+}
+
+.diya-root .diya-badge[data-variant='dot'][data-size='large'] {
+  width: 12px;
+  height: 12px;
+}
+
+.diya-root .diya-badge[data-variant='count'] {
+  width: fit-content;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  font-size: var(--diya-text-caption);
+}
+
+.diya-root .diya-badge[data-variant='count'][data-size='small'] {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  font-size: var(--diya-text-caption);
+}
+
+.diya-root .diya-badge[data-variant='count'][data-size='large'] {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  font-size: var(--diya-text-caption);
+}
+
+.diya-root .diya-badge[data-variant='count'][data-multiple='true'] { padding-inline: 9px; }
+.diya-root .diya-badge[data-variant='count'][data-multiple='true'][data-size='small'] { padding-inline: 8px; }
+.diya-root .diya-badge[data-variant='count'][data-multiple='true'][data-size='large'] { padding-inline: 11px; }
+
+/* Keep pale/custom indicator fills visible without changing their dimensions. */
+@media (forced-colors: none) {
+  .diya-root[data-theme='light'] .diya-badge[data-variant='dot'][data-color='warning'] { box-shadow:inset 0 0 0 1px var(--diya-color-warning); }
+  .diya-root .diya-badge[data-variant='dot'][data-color='brand'] { box-shadow:inset 0 0 0 1px var(--diya-color-accent-ink, var(--diya-color-accent)); }
+}
+
+/* Tag */
+.diya-root .diya-tag {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 5px 9px;
+  border-radius: calc(7px * var(--diya-corner-scale, 1));
+  background: var(--diya-color-selected);
+  color: var(--diya-color-text);
+  font-size: var(--diya-text-caption);
+  line-height: 18px;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.diya-root .diya-tag > span:not([aria-hidden]) { min-width:0; overflow-wrap:anywhere; }
+
+.diya-root .diya-tag[data-size='small'] {
+  min-height: 24px;
+  padding: 3px 7px;
+  font-size: var(--diya-text-caption);
+}
+
+.diya-root .diya-tag[data-size='large'] {
+  min-height: 34px;
+  padding: 7px 12px;
+  font-size: var(--diya-text-body);
+}
+
+.diya-root .diya-tag-icon,
+.diya-root .diya-tag > span[aria-hidden] {
+  display: inline-flex;
+  align-items: center;
+}
+
+.diya-root .diya-tag button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  margin: -3px -4px -3px 0;
+  padding: 0;
+  border: 0;
+  border-radius: calc(5px * var(--diya-corner-scale, 1));
+  background: transparent;
+  color: var(--diya-color-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.diya-root .diya-tag button:hover {
+  background: var(--diya-color-hover);
+  color: var(--diya-color-text);
+}
+
+.diya-root .diya-tag button:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 3px;
+}
+
+.diya-root .diya-tag[data-color='success'] {
+  --diya-internal-tag-tone: var(--diya-color-success);
+  --diya-internal-tag-surface: var(--diya-color-success-surface);
+}
+.diya-root .diya-tag[data-color='warning'] {
+  --diya-internal-tag-tone: var(--diya-color-warning);
+  --diya-internal-tag-surface: var(--diya-color-warning-surface);
+}
+.diya-root .diya-tag[data-color='error'] {
+  --diya-internal-tag-tone: var(--diya-color-error);
+  --diya-internal-tag-surface: var(--diya-color-error-surface);
+}
+.diya-root .diya-tag[data-color='info'] {
+  --diya-internal-tag-tone: var(--diya-color-info);
+  --diya-internal-tag-surface: var(--diya-color-info-surface);
+}
+
+.diya-root .diya-tag:is([data-color='success'], [data-color='warning'], [data-color='error'], [data-color='info']) {
+  background: var(--diya-internal-tag-surface, color-mix(in srgb, var(--diya-internal-tag-tone) 18%, transparent));
+  color: var(--diya-internal-tag-tone);
+  font-weight: 500;
+}
+
+.diya-root .diya-tag[data-color='brand'] {
+  background: var(--diya-color-accent-soft, color-mix(in srgb, var(--diya-color-accent) 12%, transparent));
+  color: var(--diya-color-accent-ink, var(--diya-color-accent));
+  font-weight: 500;
+}
+
+.diya-root .diya-tag[data-color='brand'] .diya-badge {
+  background: var(--diya-color-accent);
+}
+
+.diya-root .diya-tag[data-color] button {
+  color: inherit;
+}
+
+/* Unsupported browsers retain the solid material above. */
+@supports (backdrop-filter: blur(14px)) {
+  .diya-root[data-glass='true'] {
+    --diya-internal-header-fill: color-mix(in srgb, var(--diya-color-raised) 78%, transparent);
+    --diya-internal-overlay-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-overlay-border: var(--diya-internal-edge);
+    --diya-internal-overlay-top-border: var(--diya-internal-highlight);
+    --diya-internal-tabs-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-outline-fill: color-mix(in srgb, var(--diya-color-raised) 22%, transparent);
+    --diya-internal-backdrop: var(--diya-internal-blur);
+  }
+
+  /* Light Glass reads as clear glass, not a gray wash: more white, a deeper blur that
+     lifts what's behind it, and bright edges that catch the light along the top. */
+  .diya-root[data-glass='true']:where([data-theme='light']) {
+    --diya-internal-blur: blur(24px) saturate(1.5) brightness(1.06);
+    --diya-internal-header-fill: color-mix(in srgb, var(--diya-color-raised) 84%, transparent);
+    --diya-internal-overlay-fill: color-mix(in srgb, var(--diya-color-raised) 82%, transparent);
+    --diya-internal-tabs-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-outline-fill: color-mix(in srgb, var(--diya-color-raised) 40%, transparent);
+    --diya-internal-header-border: color-mix(in srgb, var(--diya-color-text) 11%, transparent);
+    --diya-shadow-raised: inset 0 1px 0 #ffffff, 0 10px 30px #0000001a;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .diya-root[data-glass='true'] {
+    --diya-internal-header-border: color-mix(in srgb, var(--diya-color-text) 18%, transparent);
+    --diya-internal-header-fill: var(--diya-color-raised);
+    --diya-internal-overlay-fill: var(--diya-color-raised);
+    --diya-internal-tabs-fill: var(--diya-color-raised);
+    --diya-internal-outline-fill: var(--diya-color-raised);
+    --diya-internal-backdrop: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .diya-root,
+  .diya-root[data-theme='light'],
+  .diya-root[data-theme='dark'] {
+    --diya-color-text: CanvasText;
+    --diya-color-muted: CanvasText;
+    --diya-color-line: ButtonText;
+    --diya-color-surface: Canvas;
+    --diya-color-recessed: Canvas;
+    --diya-color-raised: Canvas;
+    --diya-color-glass: Canvas;
+    --diya-color-hover: Canvas;
+    --diya-color-selected: Canvas;
+    --diya-color-accent: Highlight;
+    --diya-color-accent-text: HighlightText;
+    --diya-internal-edge: CanvasText;
+    --diya-internal-highlight: CanvasText;
+    --diya-shadow-raised: none;
+  }
+
+  .diya-root .diya-page-header,
+  .diya-root[data-theme='dark'] .diya-page-header,
+  .diya-root[data-glass='true'] .diya-page-header,
+  .diya-root .diya-floating-surface,
+  .diya-root[data-glass='true'] .diya-floating-surface {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .diya-root .diya-tab-list,
+  .diya-root[data-glass='true'] .diya-tab-list {
+    border-color: CanvasText;
+    background: Canvas;
+    backdrop-filter: none;
+  }
+
+  .diya-root .diya-button,
+  .diya-root .diya-button[data-variant='outline'],
+  .diya-root .diya-button[data-variant='quiet'],
+  .diya-root[data-glass='true'] .diya-button[data-variant='outline'] {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    backdrop-filter: none;
+    filter: none;
+  }
+
+  .diya-root .diya-button:disabled,
+  .diya-root .diya-tab:disabled,
+  .diya-root .diya-menu-item:disabled {
+    opacity: 1;
+    color: GrayText;
+    border-color: GrayText;
+  }
+
+  .diya-root .diya-tab[aria-selected='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .diya-root .diya-badge,
+  .diya-root .diya-tag[data-color='brand'] .diya-badge {
+    forced-color-adjust: none;
+    background: CanvasText;
+    color: Canvas;
+    box-shadow: 0 0 0 1px Canvas;
+  }
+
+  .diya-root .diya-tag[data-color],
+  .diya-root .diya-tag[data-color='brand'] {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .diya-root .diya-menu-item[data-destructive='true'],
+  .diya-root[data-theme='light'] .diya-menu-item[data-destructive='true'] {
+    color: CanvasText;
+  }
+}
+
+
+/* Shared defaults required by the components. Zero specificity, and only on DIYA's own
+   elements and what it renders inside them, never on the rest of your page. */
+:where(.diya-root [class*='diya-']:not(.diya-root, .diya-portal-root)) :where(button, input, select, textarea),
+:where(.diya-root) :where(button, input, select, textarea)[class*='diya-'] {
+  font: inherit;
+  color: inherit;
+}
+
+:where(.diya-root [class*='diya-']:not(.diya-root, .diya-portal-root)) :where(button, a, input, select, textarea, summary),
+:where(.diya-root) :where(button, a, input, select, textarea, summary)[class*='diya-'] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(.diya-root [class*='diya-']:not(.diya-root, .diya-portal-root)) :where(button),
+:where(.diya-root) :where(button)[class*='diya-'] {
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+:where(.diya-root [class*='diya-']:not(.diya-root, .diya-portal-root)) :where(button):disabled,
+:where(.diya-root) :where(button)[class*='diya-']:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+:where(.diya-root [class*='diya-']:not(.diya-root, .diya-portal-root)) :where(a),
+:where(.diya-root) :where(a)[class*='diya-'] {
+  color: inherit;
+  text-decoration: none;
+}
+
+:where(.diya-root [class*='diya-']:not(.diya-root, .diya-portal-root)) :where(h1, h2, h3, h4, h5, h6),
+:where(.diya-root) :where(h1, h2, h3, h4, h5, h6)[class*='diya-'] {
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+:where(.diya-root [class*='diya-']:not(.diya-root, .diya-portal-root)) :where(p),
+:where(.diya-root) :where(p)[class*='diya-'] {
+  margin: 0;
+  color: var(--diya-color-muted);
+  line-height: 1.6;
+}
+
+:where(.diya-root [class*='diya-']:not(.diya-root, .diya-portal-root)) :where(svg),
+:where(.diya-root) :where(svg)[class*='diya-'] {
+  flex-shrink: 0;
+}
+
+:where(.diya-root [class*='diya-']:not(.diya-root, .diya-portal-root)) :where(small),
+:where(.diya-root) :where(small)[class*='diya-'] {
+  font-size: var(--diya-text-caption);
+}
+
+:where(.diya-root [class*='diya-']:not(.diya-root, .diya-portal-root)) :where(a, button, input, select, textarea, summary):focus-visible,
+:where(.diya-root) :where(a, button, input, select, textarea, summary)[class*='diya-']:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 4px;
+}
+
+/* Stack and Inline. Low specificity, so your className can change any of it. */
+:where(.diya-stack, .diya-inline) {
+  display: flex;
+  gap: var(--diya-internal-gap);
+  min-width: 0;
+}
+
+:where(.diya-stack) {
+  flex-direction: column;
+}
+
+:where(.diya-stack, .diya-inline)[data-wrap='true'] { flex-wrap: wrap; }
+:where(.diya-stack, .diya-inline)[data-gap='0'] { --diya-internal-gap: 0px; }
+:where(.diya-stack, .diya-inline)[data-gap='1'] { --diya-internal-gap: var(--diya-space-1, 4px); }
+:where(.diya-stack, .diya-inline)[data-gap='2'] { --diya-internal-gap: var(--diya-space-2, 8px); }
+:where(.diya-stack, .diya-inline)[data-gap='3'] { --diya-internal-gap: var(--diya-space-3, 12px); }
+:where(.diya-stack, .diya-inline)[data-gap='4'] { --diya-internal-gap: var(--diya-space-4, 16px); }
+:where(.diya-stack, .diya-inline)[data-gap='5'] { --diya-internal-gap: var(--diya-space-5, 24px); }
+:where(.diya-stack, .diya-inline)[data-gap='6'] { --diya-internal-gap: var(--diya-space-6, 32px); }
+:where(.diya-stack, .diya-inline)[data-gap='7'] { --diya-internal-gap: var(--diya-space-7, 48px); }
+:where(.diya-stack, .diya-inline)[data-gap='8'] { --diya-internal-gap: var(--diya-space-8, 64px); }
+:where(.diya-stack, .diya-inline)[data-align='start'] { align-items: flex-start; }
+:where(.diya-stack, .diya-inline)[data-align='center'] { align-items: center; }
+:where(.diya-stack, .diya-inline)[data-align='end'] { align-items: flex-end; }
+:where(.diya-stack, .diya-inline)[data-align='stretch'] { align-items: stretch; }
+:where(.diya-stack, .diya-inline)[data-align='baseline'] { align-items: baseline; }
+:where(.diya-stack, .diya-inline)[data-justify='start'] { justify-content: flex-start; }
+:where(.diya-stack, .diya-inline)[data-justify='center'] { justify-content: center; }
+:where(.diya-stack, .diya-inline)[data-justify='end'] { justify-content: flex-end; }
+:where(.diya-stack, .diya-inline)[data-justify='between'] { justify-content: space-between; }
+:where(.diya-stack, .diya-inline)[data-justify='around'] { justify-content: space-around; }
+:where(.diya-stack, .diya-inline)[data-justify='evenly'] { justify-content: space-evenly; }
+
+/* TextInputLibrary.css: portable component rules. */
+.diya-root .diya-text-field {
+  --diya-internal-field-height: 40px;
+  --diya-internal-field-font-size: var(--diya-text-body);
+  width: 100%;
+  min-width: 0;
+  max-width: min(100%, 400px);
+  color: var(--diya-color-text);
+}
+.diya-root .diya-text-field[data-size='small'] {
+  --diya-internal-field-height: 32px;
+  --diya-internal-field-font-size: var(--diya-text-caption);
+}
+.diya-root .diya-text-field[data-size='large'] {
+  --diya-internal-field-height: 48px;
+  --diya-internal-field-font-size: var(--diya-text-large);
+}
+.diya-root .diya-text-field > label {
+  display: block;
+  font-size: var(--diya-text-body);
+  font-weight: 500;
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+.diya-root .diya-text-field-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--diya-color-line);
+  border-radius: var(--diya-radius-control, calc(10px * var(--diya-corner-scale, 1)));
+  background: var(--diya-color-hover);
+  padding: 0 14px;
+  height: var(--diya-internal-field-height);
+  min-height: var(--diya-internal-field-height);
+}
+.diya-root .diya-text-field .diya-text-field-control input {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  color: var(--diya-color-text);
+  font: inherit;
+  font-size: var(--diya-internal-field-font-size);
+  width: 100%;
+  min-width: 0;
+  height: calc(var(--diya-internal-field-height) - 2px);
+  padding: 0;
+  outline: none;
+}
+.diya-root .diya-text-field-control:focus-within {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 3px;
+}
+.diya-root .diya-text-field input:focus-visible {
+  outline: none;
+}
+.diya-root .diya-text-field input::placeholder {
+  color: var(--diya-color-muted);
+  opacity: 1;
+}
+.diya-root .diya-text-field-leading {
+  display: flex;
+  color: var(--diya-color-muted);
+}
+.diya-root .diya-text-field-clear {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--diya-color-muted);
+  border-radius: calc(6px * var(--diya-corner-scale, 1));
+}
+.diya-root .diya-text-field-clear:not(:disabled):hover {
+  color: var(--diya-color-text);
+  background: var(--diya-color-selected);
+}
+.diya-root .diya-text-field-clear:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.diya-root .diya-text-field-description {
+  color: var(--diya-color-muted);
+  font-size: var(--diya-text-caption);
+  line-height: 1.6;
+  margin: 10px 0 0;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.diya-root .diya-text-field[data-invalid='true'] .diya-text-field-control {
+  border-color: var(--diya-color-text);
+  border-style: dashed;
+}
+.diya-root .diya-text-field-description > span {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: var(--diya-text-caption);
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.diya-root .diya-text-field[data-disabled='true'] {
+  opacity: 0.45;
+}
+.diya-root .diya-text-field input:disabled {
+  cursor: not-allowed;
+}
+.diya-root .diya-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (forced-colors: active) {
+  .diya-root .diya-text-field-control {
+    border-color: ButtonText;
+  }
+  .diya-root .diya-text-field[data-disabled='true'] {
+    opacity: 1;
+    color: GrayText;
+  }
+}
+
+
+/* SelectLibrary.css: portable component rules. */
+.diya-root .diya-select-control {
+  position: relative;
+  border: 1px solid var(--diya-color-line);
+  border-radius: var(--diya-radius-control, calc(10px * var(--diya-corner-scale, 1)));
+  background: var(--diya-color-hover);
+  height: var(--diya-internal-field-height);
+  min-height: var(--diya-internal-field-height);
+}
+.diya-root .diya-select-control select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: calc(var(--diya-internal-field-height) - 2px);
+  padding: 0 40px 0 14px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--diya-radius-control, calc(10px * var(--diya-corner-scale, 1)));
+  box-shadow: none;
+  color: var(--diya-color-text);
+  font: inherit;
+  font-size: var(--diya-internal-field-font-size);
+  cursor: pointer;
+}
+.diya-root .diya-select-control select option {
+  background: var(--diya-color-surface);
+  color: var(--diya-color-text);
+}
+.diya-root .diya-select-control select option:disabled {
+  color: var(--diya-color-muted);
+}
+.diya-root .diya-select-control:has(.diya-select-leading) select {
+  padding-left: 40px;
+}
+.diya-root .diya-select-leading {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  color: var(--diya-color-muted);
+  pointer-events: none;
+}
+.diya-root .diya-select-chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--diya-color-muted);
+  pointer-events: none;
+}
+.diya-root .diya-select-field[data-invalid='true'] .diya-select-control {
+  border-color: var(--diya-color-text);
+  border-style: dashed;
+}
+.diya-root .diya-select-control select:disabled {
+  cursor: not-allowed;
+}
+@media (forced-colors: active) {
+  .diya-root .diya-select-control {
+    border-color: ButtonText;
+  }
+}
+
+
+/* ChoiceLibrary.css: portable component rules. */
+.diya-root .diya-choice {
+  --diya-internal-choice-control: 18px;
+  --diya-internal-choice-font: var(--diya-text-body);
+  border: 0;
+  margin: 0;
+  padding: 0;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  color: var(--diya-color-text);
+}
+.diya-root .diya-choice > legend {
+  padding: 0;
+  margin-bottom: 18px;
+  font-size: var(--diya-text-body);
+  font-weight: 500;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.diya-root .diya-choice-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.diya-root .diya-choice-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px 0;
+  cursor: pointer;
+}
+.diya-root .diya-choice-option > span { min-width:0; overflow-wrap:anywhere; }
+.diya-root .diya-choice-option input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: var(--diya-internal-choice-control);
+  height: var(--diya-internal-choice-control);
+  flex-shrink: 0;
+  margin: 1px 0 0;
+  padding: 0;
+  border: 1px solid var(--diya-color-muted);
+  background: transparent;
+  border-radius: 4px;
+  box-shadow: none;
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+}
+.diya-root .diya-choice-option input[type='radio'] {
+  border-radius: 50%;
+}
+.diya-root .diya-choice-option input:checked {
+  background: var(--diya-color-accent);
+  border-color: var(--diya-color-accent);
+}
+.diya-root .diya-choice-option input[type='radio']:checked::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--diya-color-accent-text);
+}
+.diya-root .diya-choice-option input[type='checkbox']:checked::before {
+  content: '';
+  width: 4px;
+  height: 8px;
+  border: solid var(--diya-color-accent-text);
+  border-width: 0 1.5px 1.5px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+.diya-root .diya-choice-label {
+  display: block;
+  font-size: var(--diya-internal-choice-font);
+  line-height: 20px;
+}
+.diya-root .diya-choice-description {
+  display: block;
+  font-size: var(--diya-text-caption);
+  line-height: 1.6;
+  color: var(--diya-color-muted);
+  margin-top: 4px;
+}
+.diya-root .diya-choice[data-size='small'] {
+  --diya-internal-choice-control: 16px;
+  --diya-internal-choice-font: var(--diya-text-caption);
+}
+.diya-root .diya-choice[data-size='large'] {
+  --diya-internal-choice-control: 22px;
+  --diya-internal-choice-font: var(--diya-text-large);
+}
+.diya-root .diya-choice[data-size='large'] .diya-choice-label {
+  line-height: 24px;
+}
+.diya-root .diya-choice-option[data-disabled='true'] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.diya-root .diya-choice-option input:disabled {
+  cursor: not-allowed;
+}
+.diya-root .diya-choice-option:not([data-disabled='true']):hover input:not(:checked) {
+  border-color: var(--diya-color-text);
+}
+@media (forced-colors: active) {
+  .diya-root .diya-choice-option input {
+    appearance: auto;
+  }
+  .diya-root .diya-choice-option input::before {
+    display: none;
+  }
+  .diya-root .diya-choice-option[data-disabled='true'] {
+    opacity: 1;
+    color: GrayText;
+  }
+}
+.diya-root .diya-choice input[type='checkbox']:indeterminate { background: var(--diya-color-accent); border-color: var(--diya-color-accent); }
+.diya-root .diya-choice input[type='checkbox']:indeterminate::before { content: ''; width: 8px; height: 2px; border: 0; transform: none; background: var(--diya-color-accent-text); }
+@media (forced-colors: active) { .diya-root .diya-choice input[type='checkbox']:indeterminate::before { display: none; } }
+
+
+/* NewAtoms.css: portable component rules. */
+.diya-root .diya-switch-field { display: flex; align-items: center; gap: 14px; min-width:0; max-width:100%; color: var(--diya-color-text); }
+.diya-root .diya-switch-field > div { min-width:0; overflow-wrap:anywhere; }
+.diya-root .diya-switch-field[data-disabled='true'] { opacity: .4; }
+.diya-root .diya-switch { appearance: none; -webkit-appearance: none; display: inline-grid; align-content: center; justify-content: start; flex-shrink: 0; width: 42px; height: 24px; margin: 0; padding: 3px; border-radius: 999px; border: 1px solid var(--diya-color-line); background: var(--diya-color-selected); cursor: pointer; }
+.diya-root .diya-switch::before { content: ''; display: block; width: 16px; height: 16px; border-radius: 50%; background: var(--diya-color-muted); }
+.diya-root .diya-switch:checked { background: var(--diya-color-accent); border-color: transparent; justify-content: end; }
+.diya-root .diya-switch:checked::before { background: var(--diya-color-accent-text); }
+.diya-root .diya-switch:disabled { cursor: not-allowed; opacity: 0.5; }
+.diya-root .diya-switch-field label { cursor: pointer; }
+.diya-root .diya-switch-field[data-disabled='true'] label { cursor: not-allowed; }
+.diya-root .diya-switch:focus-visible,
+.diya-root  .diya-tooltip-trigger:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 4px; }
+.diya-root .diya-switch-field[data-size='small'] .diya-switch { width: 34px; height: 20px; }
+.diya-root .diya-switch-field[data-size='small'] .diya-switch::before { width: 12px; height: 12px; }
+.diya-root .diya-switch-field[data-size='large'] .diya-switch { width: 50px; height: 28px; }
+.diya-root .diya-switch-field[data-size='large'] .diya-switch::before { width: 20px; height: 20px; }
+.diya-root .diya-switch-label { font-size: var(--diya-text-body); }
+/* With helper text, the switch lines up with the label's line, not the middle of the block. */
+.diya-root .diya-switch-field:has(.diya-switch-description) { align-items: flex-start; }
+.diya-root .diya-switch-description { margin: 5px 0 0; color: var(--diya-color-muted); font-size: var(--diya-text-caption); line-height: 1.5; }
+.diya-root .diya-avatar { display: inline-flex; position: relative; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; background: var(--diya-color-selected); color: var(--diya-color-text); font-size: var(--diya-text-large); font-weight: 500; }
+.diya-root .diya-avatar[data-size='small'] { width: 32px; height: 32px; font-size: var(--diya-text-caption); }
+.diya-root .diya-avatar[data-size='large'] { width: 64px; height: 64px; font-size: var(--diya-text-title); }
+.diya-root .diya-avatar[data-shape='rounded'] { border-radius: 25%; }
+.diya-root .diya-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.diya-root .diya-avatar svg { width: 50%; height: 50%; }
+.diya-root .diya-avatar::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--diya-color-text) 10%, transparent); pointer-events: none; }
+.diya-root .diya-avatar-status { z-index: 1; }
+.diya-root .diya-avatar-status { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--diya-color-surface); background: var(--diya-color-success-fill); }
+.diya-root .diya-avatar-status[data-status='away'] { background: var(--diya-internal-warning-mark); }
+.diya-root .diya-avatar-status[data-status='busy'] { background: var(--diya-color-error-fill); }
+.diya-root .diya-tooltip-anchor { display: inline-flex; min-width:0; max-width:100%; }
+.diya-root .diya-tooltip-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; min-width:0; max-width:100%; overflow-wrap:anywhere; padding: 0 18px; border-radius: 999px; border: 1px solid var(--diya-color-line); background: var(--diya-color-hover); color: var(--diya-color-text); font: inherit; font-size: var(--diya-text-body); cursor: help; }
+.diya-root .diya-tooltip-bubble { position: fixed; z-index: 1000; max-width: min(240px, calc(100vw - 16px)); overflow-wrap:anywhere; padding: 10px 14px; border-radius: calc(10px * var(--diya-corner-scale, 1)); background: var(--diya-color-accent, #e5e9e6); color: var(--diya-color-accent-text, #212726); font-size: var(--diya-text-caption); line-height: 1.5; box-shadow: 0 calc(8px * var(--diya-elevation, 1)) calc(24px * var(--diya-elevation, 1)) #0003; }
+.diya-root .diya-textarea textarea { display: block; width: 100%; min-height: 112px; padding: 12px 14px; border: 1px solid var(--diya-color-line); border-radius: var(--diya-radius-control, calc(10px * var(--diya-corner-scale, 1))); background: var(--diya-color-hover); color: var(--diya-color-text); font: inherit; font-size: var(--diya-text-body); line-height: 1.6; box-sizing: border-box; }
+.diya-root .diya-textarea[data-size='small'] textarea { min-height: 88px; padding: 10px 12px; font-size: var(--diya-text-caption); }
+.diya-root .diya-textarea[data-size='large'] textarea { min-height: 136px; padding: 14px 16px; font-size: var(--diya-text-large); }
+.diya-root .diya-textarea textarea:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
+.diya-root .diya-textarea textarea::placeholder { color: var(--diya-color-muted); opacity:1; }
+.diya-root .diya-textarea[data-invalid='true'] textarea { border-style: dashed; border-color: var(--diya-color-text); }
+.diya-root .diya-textarea[data-disabled='true'] { opacity: .4; }
+.diya-root .diya-textarea-footer { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; }
+.diya-root .diya-textarea-count { margin-top: 10px; margin-left: auto; color: var(--diya-color-muted); font-size: var(--diya-text-caption); white-space: nowrap; }
+.diya-root .diya-text-field input[type='search']::-webkit-search-cancel-button { appearance: none; }
+@media (forced-colors: active) {
+ .diya-root .diya-switch { forced-color-adjust: none; border-color: ButtonText; background: Canvas; }
+ .diya-root .diya-switch::before { background: ButtonText; }
+ .diya-root .diya-switch:checked { background: Highlight; }
+ .diya-root .diya-switch:checked::before { background: HighlightText; }
+ .diya-root .diya-switch:disabled { border-color: GrayText; }
+ .diya-root .diya-switch:disabled::before { background: GrayText; }
+}
+
+.diya-root .diya-search-pill .diya-text-field-control { border-radius: 999px; }
+
+
+/* CollectionAtoms.css: portable component rules. */
+.diya-root .diya-list { list-style: none; padding: 0; margin: 0; width: 100%; max-width: 440px; color: var(--diya-color-text); }
+.diya-root .diya-list-row { width: 100%; display: flex; align-items: center; gap: 14px; padding: 16px 14px; border: 0; border-radius: calc(10px * var(--diya-corner-scale, 1)); color: inherit; background: transparent; text-align: left; font: inherit; box-sizing: border-box; }
+.diya-root button.diya-list-row { cursor: pointer; }
+.diya-root button.diya-list-row:hover:not(:disabled) { background: var(--diya-color-hover); }
+.diya-root .diya-list[data-divided='true'] > li + li { border-top: 1px solid var(--diya-color-line); }
+.diya-root .diya-list[data-size='small'] .diya-list-row { padding-block: 10px; }
+.diya-root .diya-list[data-size='large'] .diya-list-row { padding-block: 22px; }
+.diya-root .diya-list-copy { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; overflow-wrap:anywhere; }
+.diya-root .diya-list-label { font-size: var(--diya-text-body); font-weight: 500; }
+.diya-root .diya-list-description,
+.diya-root  .diya-list-trailing { font-size: var(--diya-text-caption); color: var(--diya-color-muted); line-height: 1.5; }
+.diya-root .diya-list-leading { display: inline-flex; align-items: center; flex-shrink: 0; }
+.diya-root .diya-list-row:disabled { opacity: .4; cursor: not-allowed; }
+.diya-root .diya-accordion { width: 100%; max-width: 480px; min-width:0; overflow-wrap:anywhere; color: var(--diya-color-text); }
+.diya-root .diya-accordion-heading { margin: 0; font-size: var(--diya-text-body); font-weight: 500; }
+.diya-root .diya-accordion-heading button { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 24px; padding: 18px 12px; border: 0; border-radius: calc(8px * var(--diya-corner-scale, 1)); color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.diya-root .diya-accordion-heading button:hover:not(:disabled) { background: var(--diya-color-hover); }
+.diya-root .diya-accordion-heading button:disabled { opacity: .4; cursor: not-allowed; }
+.diya-root .diya-accordion[data-divided='true'] .diya-accordion-item + .diya-accordion-item { border-top: 1px solid var(--diya-color-line); }
+.diya-root .diya-accordion-content { padding: 0 12px 20px; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: 1.7; }
+.diya-root .diya-accordion-content[hidden] { display: none; }
+.diya-root .diya-dialog { width: min(480px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); overflow: auto; margin: auto; padding: 28px; border: 1px solid var(--diya-color-line); border-radius: calc(22px * var(--diya-corner-scale, 1)); background: var(--diya-color-surface); color: var(--diya-color-text); box-shadow: var(--diya-shadow-raised); box-sizing: border-box; }
+.diya-root .diya-dialog[data-size='small'] { width: min(380px, calc(100vw - 48px)); }
+.diya-root .diya-dialog[data-size='large'] { width: min(640px, calc(100vw - 48px)); }
+.diya-root .diya-dialog::backdrop { background: var(--diya-color-scrim, #0008); backdrop-filter: blur(5px); }
+.diya-root .diya-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.diya-root .diya-dialog h3 { margin: 0; font-size: var(--diya-text-title); font-weight: 500; }
+.diya-root .diya-dialog-close { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--diya-color-muted); cursor: pointer; }
+.diya-root .diya-dialog-close:hover { background: var(--diya-color-hover); }
+.diya-root .diya-dialog-description { margin: 12px 0 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: 1.6; }
+.diya-root .diya-dialog-content { margin-top: 24px; }
+.diya-root .diya-dialog footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.diya-root .diya-list-row:focus-visible,
+.diya-root  .diya-accordion button:focus-visible,
+.diya-root  .diya-dialog button:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
+@media (forced-colors: active) { .diya-root  .diya-dialog { border: 1px solid CanvasText; background: Canvas; color: CanvasText; } }
+
+
+/* DataAtoms.css: portable component rules. */
+.diya-root .diya-metric { display: flex; flex-direction: column; gap: 10px; color: var(--diya-color-text); }
+.diya-root .diya-metric-label { font-size: var(--diya-text-caption); color: var(--diya-color-muted); }
+/* Figures are tabular: DIYA Sans's tabular 0 and 1 match its default figures (apps/diya/scripts/fonts/tabular_figures.py). */
+.diya-root .diya-metric-number { display: flex; align-items: baseline; gap: 8px; font-size: var(--diya-text-heading); font-weight: 500; line-height: 1.15; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.diya-root .diya-metric-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.diya-root .diya-metric-unit { font-size: max(var(--diya-text-caption), .5em); font-weight: 400; letter-spacing: 0; color: var(--diya-color-muted); }
+.diya-root .diya-metric[data-size='small'] .diya-metric-number { font-size: var(--diya-text-large); letter-spacing: -.02em; }
+.diya-root .diya-metric[data-size='large'] .diya-metric-number { font-size: var(--diya-text-display); }
+.diya-root .diya-metric-comparison { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: var(--diya-text-caption); color: var(--diya-color-muted); }
+.diya-root .diya-metric-change { display: inline-flex; align-items: center; gap: 4px; }
+.diya-root .diya-metric-change[data-meaning='positive'] { color: #95c381; }
+.diya-root .diya-metric-change[data-meaning='negative'] { color: #ef8e92; }
+.diya-root .diya-text-link { color: var(--diya-color-text); font-size: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; border-radius: 3px; }
+.diya-root .diya-text-link:not([data-inline='true']) { display: inline-flex; align-items: center; gap: 7px; font-size: var(--diya-text-body); }
+.diya-root .diya-text-link > span { display: inline-flex; vertical-align: middle; }
+.diya-root .diya-text-link[data-inline='true'] > span { margin-inline: 4px; }
+.diya-root .diya-text-link:hover { text-decoration-thickness: 2px; }
+.diya-root .diya-pagination { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 20px 24px; width: 100%; color: var(--diya-color-text); container: diya-pagination / inline-size; }
+.diya-root .diya-pagination nav { display: flex; align-items: center; justify-content:center; flex-wrap:wrap; gap:8px 4px; min-width:0; max-width:100%; }
+.diya-root .diya-pagination nav .diya-button[aria-label] { min-width: 32px; padding: 0 8px; }
+.diya-root .diya-pagination-count,
+.diya-root  .diya-pagination-size { margin: 0; font-size: var(--diya-text-caption); color: var(--diya-color-muted); }
+.diya-root .diya-pagination-size { display: flex; align-items: center; gap: 8px; }
+.diya-root .diya-pagination-size .diya-select-field { width: 76px; }
+.diya-root .diya-pagination-gap { padding: 0 5px; color: var(--diya-color-muted); font-size: var(--diya-text-body); }
+/* Narrow spaces: Previous and Next become arrows (their text stays the name), then the first, last and gaps drop out, so the row never wraps. */
+.diya-root .diya-pagination-chevron { display: none; }
+@container diya-pagination (max-width: 400px) {
+  .diya-root .diya-pagination nav { flex-wrap: nowrap; gap: 4px; }
+  .diya-root .diya-pagination nav > .diya-button:not([aria-label]) { width: 32px; min-width: 32px; padding: 0; }
+  .diya-root .diya-pagination-chevron { display: block; }
+  .diya-root .diya-pagination-step { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+@container diya-pagination (max-width: 310px) {
+  .diya-root .diya-pagination nav:is([data-cells='6'], [data-cells='7']) > :is([data-far], .diya-pagination-gap) { display: none; }
+}
+@container diya-pagination (max-width: 250px) {
+  .diya-root .diya-pagination nav > :is([data-far], .diya-pagination-gap) { display: none; }
+}
+.diya-root  .diya-text-link:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
+@media (forced-colors: active) { .diya-root .diya-metric-change[data-meaning] { color: CanvasText; } .diya-root .diya-text-link { color: LinkText; } }
+
+
+/* combobox/Combobox.css: portable component rules. */
+.diya-root .diya-combobox{position:relative;max-width:400px;width:100%;color:var(--diya-color-text)}.diya-root .diya-combobox>label{display:block;font-size:var(--diya-text-body);font-weight:500;margin-bottom:10px}.diya-root .diya-combobox-control{min-height:40px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 12px;border:1px solid var(--diya-color-line);border-radius:var(--diya-radius-control, calc(10px * var(--diya-corner-scale, 1)));background:var(--diya-color-hover)}.diya-root .diya-combobox-control input{flex:1;min-width:90px;width:100%;background:transparent;border:0;padding:0;font:inherit;font-size:var(--diya-text-body);color:inherit;outline:0}.diya-root .diya-combobox-control:focus-within{outline:none;border-color:var(--diya-color-text);box-shadow:0 0 0 2px color-mix(in srgb,var(--diya-color-text) 14%,transparent)}.diya-root .diya-combobox[data-size='small'] .diya-combobox-control{min-height:32px;padding-block:3px}.diya-root .diya-combobox[data-size='large'] .diya-combobox-control{min-height:48px}.diya-root .diya-combobox[data-invalid='true'] .diya-combobox-control{border-color:var(--diya-color-error)}.diya-root .diya-combobox-control:has(input:disabled){opacity:.45}.diya-root .diya-combobox-chip{display:inline-flex;gap:8px;align-items:center;background:var(--diya-color-hover);padding:3px 8px;border-radius:calc(6px * var(--diya-corner-scale, 1));font-size:var(--diya-text-caption)}.diya-root .diya-combobox-chip button{color:inherit;font-size:var(--diya-text-body)}.diya-root .diya-combobox-options{position:absolute;z-index:30;top:calc(100% + 8px);left:0;right:0;list-style:none;margin:0;padding:6px;border:1px solid var(--diya-color-line);border-radius:calc(12px * var(--diya-corner-scale, 1));background:var(--diya-color-raised);box-shadow:0 calc(12px * var(--diya-elevation, 1)) calc(36px * var(--diya-elevation, 1)) #0003;max-height:240px;overflow:auto}.diya-root .diya-combobox-options li{display:flex;justify-content:space-between;padding:10px 12px;font-size:var(--diya-text-body);border-radius:calc(6px * var(--diya-corner-scale, 1));cursor:pointer}.diya-root .diya-combobox-options li[data-active='true']{background:var(--diya-color-hover)}.diya-root .diya-combobox-options li[aria-disabled='true']{opacity:.4;cursor:not-allowed}.diya-root .diya-combobox input::placeholder{color:var(--diya-color-muted)}
+.diya-root .diya-combobox-options[popover]{position:fixed;inset:auto;margin:0;color:var(--diya-color-text)}
+.diya-root .diya-combobox { min-width:0; max-width:min(100%,400px); }
+.diya-root .diya-combobox > label { overflow-wrap:anywhere; }
+.diya-root .diya-combobox-chip { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+.diya-root .diya-combobox-chip button { flex-shrink:0; }
+.diya-root .diya-combobox-options li > span:not([aria-hidden]) { min-width:0; overflow-wrap:anywhere; }
+.diya-root .diya-combobox-options li > span[aria-hidden] { flex-shrink:0; }
+.diya-root .diya-combobox input::placeholder { opacity:1; }
+
+.diya-root .diya-combobox-toggle{display:grid;place-items:center;flex:0 0 20px;height:24px;border:0;background:transparent;color:var(--diya-color-muted);cursor:pointer;padding:0}.diya-root .diya-combobox-chip button{border:0;background:transparent;padding:0;cursor:pointer;line-height:1}.diya-root .diya-combobox-control input{width:auto}.diya-root .diya-combobox-options li[aria-selected='true']{font-weight:500}.diya-root .diya-combobox-options li[aria-disabled='true']{pointer-events:none}
+
+.diya-root .diya-combobox[data-invalid='true'] .diya-field-help{color:var(--diya-color-error)}.diya-root .diya-combobox-toggle:focus-visible,
+.diya-root .diya-combobox-chip button:focus-visible{outline:2px solid var(--diya-color-accent);outline-offset:2px}
+.diya-root .diya-combobox .diya-combobox-control input,
+.diya-root .diya-combobox .diya-combobox-control input:focus,
+.diya-root .diya-combobox .diya-combobox-control input:focus-visible { appearance:none; border:0; border-radius:0; outline:none; box-shadow:none; background:transparent; padding:0; height:24px; font-size:var(--diya-text-body); }
+.diya-root .diya-combobox[data-size='small'] .diya-combobox-control input { height:18px; font-size:var(--diya-text-caption); }
+.diya-root .diya-combobox[data-size='large'] .diya-combobox-control input { height:30px; font-size:var(--diya-text-large); }
+
+
+/* date-picker/DatePicker.css: portable component rules. */
+.diya-root .diya-date-field{position:relative;width:100%;min-width:0;max-width:min(100%,400px);color:var(--diya-color-text)}
+.diya-root .diya-date-field>label{display:block;font-size:var(--diya-text-body);font-weight:500;margin-bottom:10px;overflow-wrap:anywhere}
+.diya-root .diya-date-trigger{width:100%;min-height:40px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px;border:1px solid var(--diya-color-line);border-radius:var(--diya-radius-control, calc(10px * var(--diya-corner-scale, 1)));background:var(--diya-color-hover);color:inherit;font-size:var(--diya-text-body);text-align:left}
+.diya-root .diya-date-field[data-size='small'] .diya-date-trigger{min-height:32px}.diya-root .diya-date-field[data-size='large'] .diya-date-trigger{min-height:48px}
+.diya-root .diya-date-trigger:disabled{opacity:.45;cursor:not-allowed}.diya-root .diya-date-field[data-invalid='true'] .diya-date-trigger{border-color:var(--diya-color-error)}.diya-root .diya-field-help{font-size:var(--diya-text-caption);color:var(--diya-color-muted);margin:10px 0 0}.diya-root .diya-date-field[data-invalid='true'] .diya-field-help{color:var(--diya-color-error)}
+.diya-root .diya-calendar{position:absolute;top:calc(100% + 8px);left:0;width:300px;z-index:30;padding:16px;background:var(--diya-color-raised);border:1px solid var(--diya-color-line);border-radius:calc(16px * var(--diya-corner-scale, 1));box-shadow:0 calc(12px * var(--diya-elevation, 1)) calc(36px * var(--diya-elevation, 1)) #0003}
+.diya-root .diya-calendar-heading,
+.diya-root .diya-calendar-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}.diya-root .diya-calendar-heading strong{font-size:var(--diya-text-body)}.diya-root .diya-calendar-heading button{width:30px;height:30px;border-radius:calc(8px * var(--diya-corner-scale, 1));color:inherit;font-size:var(--diya-text-title)}.diya-root .diya-calendar-hint{font-size:var(--diya-text-caption);color:var(--diya-color-muted);margin:8px 0}
+.diya-root .diya-calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:12px}.diya-root .diya-calendar-weekday{font-size:var(--diya-text-caption);color:var(--diya-color-muted);text-align:center;padding:6px 0}.diya-root .diya-calendar-grid button{height:34px;border-radius:calc(8px * var(--diya-corner-scale, 1));font-size:var(--diya-text-body);color:inherit}.diya-root .diya-calendar-grid button:hover,
+.diya-root .diya-calendar-heading button:hover{background:var(--diya-color-hover)}.diya-root .diya-calendar-grid button[aria-pressed='true']{background:var(--diya-color-accent);color:var(--diya-color-accent-text)}.diya-root .diya-calendar-grid button[data-between='true']{background:var(--diya-color-accent-soft, var(--diya-color-hover))}.diya-root .diya-calendar-grid button[data-today='true']{text-decoration:underline;text-underline-offset:4px}.diya-root .diya-calendar-footer{border-top:1px solid var(--diya-color-line);margin-top:12px;padding-top:12px}.diya-root .diya-calendar-footer button{font-size:var(--diya-text-caption);color:inherit;padding:4px 6px}
+.diya-root .diya-date-field button:focus-visible{outline:2px solid var(--diya-color-accent);outline-offset:3px}
+.diya-root .diya-calendar[popover]{position:fixed;margin:0;inset:auto;color:var(--diya-color-text)}
+.diya-root .diya-calendar-grid button[aria-disabled='true']{color:var(--diya-color-muted);opacity:.45;cursor:not-allowed}
+.diya-root .diya-calendar-grid button[aria-disabled='true']:hover{background:transparent}
+
+
+/* alert/Alert.css: portable component rules. */
+.diya-root .diya-alert {
+  --diya-internal-alert-accent: var(--diya-internal-alert-info);
+  display: flex; align-items: flex-start; gap: 14px; width: 100%; min-width:0; max-width:min(100%,520px);
+  padding: 20px; box-sizing: border-box; border-radius: calc(16px * var(--diya-corner-scale, 1));
+  border: 1px solid color-mix(in srgb, var(--diya-internal-alert-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--diya-internal-alert-accent) 7%, var(--diya-color-surface));
+  color: var(--diya-color-text);
+}
+.diya-root .diya-alert[data-tone='success'] { --diya-internal-alert-accent: var(--diya-internal-alert-success); }
+.diya-root .diya-alert[data-tone='warning'] { --diya-internal-alert-accent: var(--diya-internal-alert-warning); }
+.diya-root .diya-alert[data-tone='error'] { --diya-internal-alert-accent: var(--diya-internal-alert-error); }
+.diya-root .diya-alert-icon { flex-shrink: 0; color: var(--diya-internal-alert-ink, var(--diya-internal-alert-accent)); margin-top: 1px; }
+.diya-root .diya-alert-copy { flex: 1; min-width: 0; overflow-wrap:anywhere; }
+.diya-root .diya-alert-title { margin: 0 0 6px; color:var(--diya-color-text); font-size: var(--diya-text-body); font-weight: 600; line-height: 1.5; }
+.diya-root .diya-alert-description { font-size: var(--diya-text-body); line-height: 1.65; color: var(--diya-color-muted); }
+.diya-root .diya-alert-action { display: block; border: 0; border-radius: calc(4px * var(--diya-corner-scale, 1)); background: transparent; color: var(--diya-internal-alert-ink, var(--diya-internal-alert-accent)); font: inherit; font-size: var(--diya-text-body); font-weight: 500; padding: 4px 0; margin-top: 12px; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.diya-root .diya-alert-dismiss { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 28px; padding: 0; margin: -3px -3px 0 0; border: 0; border-radius: 50%; background: transparent; color: var(--diya-color-muted); cursor: pointer; }
+.diya-root .diya-alert-dismiss:hover { background: var(--diya-color-hover); color: var(--diya-color-text); }
+.diya-root .diya-alert button:focus-visible { outline: 2px solid var(--diya-internal-alert-ink, var(--diya-internal-alert-accent)); outline-offset: 3px; }
+.diya-root .diya-alert-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.diya-root .diya-alert[data-layout='banner'] { max-width:none; min-height:64px; align-items:center; padding:14px 20px; }
+.diya-root .diya-alert[data-layout='banner'] .diya-alert-icon { margin:0; }
+.diya-root .diya-alert[data-layout='banner'] .diya-alert-copy { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 20px; }
+.diya-root .diya-alert[data-layout='banner'] .diya-alert-copy > [role] { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 12px; }
+.diya-root .diya-alert[data-layout='banner'] .diya-alert-title { margin:0; }
+.diya-root .diya-alert[data-layout='banner'] .diya-alert-action { margin:0; }
+.diya-root .diya-alert[data-layout='banner'] .diya-alert-dismiss { margin:0; width:32px; height:32px; }
+@media (forced-colors: active) { .diya-root .diya-alert { border-color: CanvasText; background: Canvas; color: CanvasText; } .diya-root .diya-alert-icon,
+.diya-root  .diya-alert-action { color: CanvasText; } }
+.diya-root .diya-alert[data-tone='brand'] { --diya-internal-alert-accent: var(--diya-color-accent); --diya-internal-alert-ink: var(--diya-color-accent-ink, var(--diya-color-text)); }
+.diya-root .diya-toast-region { position: fixed; z-index: 1200; bottom: 28px; right: 28px; width: min(420px, calc(100vw - 40px)); }
+.diya-root .diya-toast-region .diya-alert { box-shadow: var(--diya-shadow-raised); }
+@media (max-width: 600px) { .diya-root .diya-toast-region { bottom: 20px; right: 20px; } }
+
+
+/* slider/Slider.css: portable component rules. */
+.diya-root .diya-slider { width: min(100%, 400px); color: var(--diya-color-text); }
+.diya-root .diya-slider[data-disabled='true'] { opacity: .4; }
+.diya-root .diya-slider-values { display: flex; justify-content: space-between; font-size: var(--diya-text-body); font-variant-numeric: tabular-nums; margin-bottom: 12px; }
+.diya-root .diya-slider-inputs { position: relative; height: 28px; }
+.diya-root .diya-slider-rail { position: absolute; inset: 11px 9px; height: 6px; border-radius: 999px; background: var(--diya-color-selected); }
+.diya-root .diya-slider-rail > span { position: absolute; left: var(--diya-internal-slider-start); right: calc(100% - var(--diya-internal-slider-end)); height: 100%; border-radius: inherit; background: var(--diya-color-accent); }
+.diya-root .diya-slider input { position: absolute; inset: 0; margin: 0; width: 100%; height: 28px; appearance: none; background: transparent; pointer-events: none; }
+.diya-root .diya-slider input::-webkit-slider-runnable-track { height: 6px; background: transparent; }
+.diya-root .diya-slider input::-moz-range-track { height: 6px; background: transparent; }
+.diya-root .diya-slider input::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 50%; background: var(--diya-color-accent); border: 3px solid var(--diya-color-surface); box-shadow: 0 0 0 1px var(--diya-color-line); pointer-events: auto; cursor: grab; }
+.diya-root .diya-slider input::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--diya-color-accent); border: 3px solid var(--diya-color-surface); box-shadow: 0 0 0 1px var(--diya-color-line); pointer-events: auto; cursor: grab; }
+.diya-root .diya-slider input:focus-visible { outline: none; z-index: 1; }
+.diya-root .diya-slider input:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
+.diya-root .diya-slider input:focus-visible::-moz-range-thumb { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
+.diya-root .diya-slider input:disabled::-webkit-slider-thumb { cursor: not-allowed; }
+.diya-root .diya-slider input:disabled::-moz-range-thumb { cursor: not-allowed; }
+.diya-root .diya-slider-marks { display: flex; justify-content: space-between; margin: 10px 4px 0; font-size: var(--diya-text-caption); color: var(--diya-color-muted); }
+.diya-root .diya-slider-marks span::before { content: ''; display: block; width: 1px; height: 4px; background: var(--diya-color-line); margin: 0 auto 7px; }
+@media (forced-colors: active) { .diya-root .diya-slider-rail { background: GrayText; } .diya-root .diya-slider-rail > span { background: Highlight; } .diya-root .diya-slider input::-webkit-slider-thumb { background: Highlight; border-color: Canvas; } }
+.diya-root .diya-slider input { border: 0; border-radius: 0; padding: 0; }
+.diya-root .diya-slider input:focus-visible { outline: none; }
+
+
+/* progress/Progress.css: portable component rules. */
+.diya-root .diya-progress { position: relative; color: var(--diya-color-text); }
+.diya-root .diya-progress[data-variant='linear'] { width: min(100%, 400px); display: flex; align-items: center; gap: 20px; }
+.diya-root .diya-progress[data-variant='linear'] .diya-progress-meter { flex: 1; }
+.diya-root .diya-progress-track { height: 6px; background: var(--diya-color-selected); border-radius: 999px; overflow: hidden; }
+.diya-root .diya-progress-track > span { display: block; height: 100%; border-radius: inherit; background: var(--diya-color-accent); }
+.diya-root .diya-progress-value { font-size: var(--diya-text-caption); font-variant-numeric: tabular-nums; }
+.diya-root .diya-progress[data-variant='linear'] .diya-progress-value { width: 38px; text-align: right; }
+.diya-root .diya-progress[data-variant='circular'] { width: 100px; height: 100px; }
+.diya-root .diya-progress[data-variant='circular'] svg { width: 100%; height: 100%; fill: none; stroke-width: 5; transform: rotate(-90deg); }
+.diya-root .diya-progress-track-circle { stroke: var(--diya-color-selected); }
+.diya-root .diya-progress-fill-circle { stroke: var(--diya-color-accent); stroke-linecap: round; }
+.diya-root .diya-progress[data-variant='circular'] .diya-progress-value { position: absolute; inset: 0; display: grid; place-items: center; }
+.diya-root .diya-progress[data-indeterminate='true'][data-variant='linear'] .diya-progress-track > span { animation: diya-progress-travel 1.8s ease-in-out infinite alternate; }
+.diya-root .diya-progress[data-indeterminate='true'][data-variant='circular'] svg { animation: diya-progress-spin 1.4s linear infinite; }
+@keyframes diya-progress-travel { from { transform: translateX(-100%); } to { transform: translateX(285%); } }
+@keyframes diya-progress-spin { to { transform: rotate(270deg); } }
+@media (prefers-reduced-motion: reduce) { .diya-root .diya-progress[data-indeterminate='true'] svg,
+.diya-root  .diya-progress[data-indeterminate='true'] .diya-progress-track > span { animation: none !important; } }
+@media (forced-colors: active) { .diya-root .diya-progress-track { outline: 1px solid CanvasText; } .diya-root .diya-progress-track > span { background: Highlight; } .diya-root .diya-progress-fill-circle { stroke: Highlight; } }
+
+
+/* card/Card.css: portable component rules. */
+.diya-root .diya-card { width:100%; border:1px solid var(--diya-color-line); border-radius:var(--diya-radius-surface); background:var(--diya-color-surface); color:var(--diya-color-text);  overflow:hidden; }
+/* A Card fills the height it is given (a stretched grid or flex cell): the content
+   grows and the footer stays at the bottom. At its natural height nothing changes. */
+.diya-root .diya-card { display:flex; flex-direction:column; }
+.diya-root .diya-card-body { padding:24px; flex:1; display:flex; flex-direction:column; }
+.diya-root .diya-card-content { flex:1; }
+.diya-root .diya-card-media { flex-shrink:0; }
+.diya-root .diya-card-header { display:flex; align-items:flex-start; gap:16px; justify-content:space-between; }
+.diya-root .diya-card-header > div:first-child { min-width:0; }
+.diya-root .diya-card-title { font-size:var(--diya-text-title); line-height:var(--diya-leading-tight); letter-spacing:-.015em; font-weight:600; margin:0; overflow-wrap:anywhere; }
+.diya-root .diya-card-header p { color:var(--diya-color-muted); font-size:var(--diya-text-body); line-height:1.6; margin:10px 0 0; }
+.diya-root .diya-card-tag { margin-bottom:16px; }
+.diya-root .diya-card-menu { flex-shrink:0; }
+.diya-root .diya-card-menu .diya-button { width:32px; height:32px; min-height:32px; padding:6px; }
+.diya-root .diya-card-content { margin-top:24px; }
+/* A List inside a Card or Drawer lines up with its title, edge to edge, and shares
+   its material instead of laying a second pane of Glass on it. Rows that are buttons
+   keep their inset, since their hover fill needs it. */
+.diya-root :is(.diya-card-content, .diya-drawer-body) .diya-list { max-width:none; background:transparent; backdrop-filter:none; }
+.diya-root :is(.diya-card-content, .diya-drawer-body) .diya-list > li > div.diya-list-row { padding-inline:0; }
+.diya-root .diya-card-footer { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:24px; }
+.diya-root .diya-card-footer[data-divider='true'] { border-top:1px solid var(--diya-color-line); padding-top:20px; }
+.diya-root .diya-card-media { aspect-ratio:2/1; overflow:hidden; }
+.diya-root .diya-card-media img { width:100%; height:100%; object-fit:cover; display:block; }
+
+.diya-root .diya-card[data-shadow="true"] { box-shadow:var(--diya-shadow-raised); }
+
+
+/* dialog/Dialog.css: portable component rules. */
+.diya-root .diya-dialog { padding: 0; text-align: left; }
+.diya-root .diya-dialog-layout { margin: 0; padding: 28px; display: flex; flex-direction: column; gap: 28px; }
+.diya-root .diya-dialog-heading { display: flex; align-items: flex-start; gap: 20px; }
+.diya-root .diya-dialog-heading > div { flex: 1; min-width: 0; overflow-wrap:anywhere; }
+.diya-root .diya-dialog-heading h3 { font-size: var(--diya-text-title); line-height: 28px; letter-spacing: -.025em; }
+.diya-root .diya-dialog .diya-dialog-close { flex: 0 0 32px; margin: -2px -6px 0 0; }
+.diya-root .diya-dialog .diya-dialog-description { margin: 8px 0 0; line-height: 1.6; }
+.diya-root .diya-dialog .diya-dialog-content { margin: 0; display: grid; gap: 20px; }
+.diya-root .diya-dialog-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap:wrap; gap: 12px; }
+.diya-root :is(.diya-dialog-actions, .diya-drawer-modal > footer) .diya-button { min-width:0; max-width:100%; white-space:normal; overflow-wrap:anywhere; padding-block:4px; }
+.diya-root .diya-dialog-actions[data-divider] { padding-top: 20px; border-top: 1px solid var(--diya-color-line); }
+.diya-root .diya-dialog-close:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .diya-root .diya-dialog-layout { padding: 24px; gap: 24px; }
+}
+.diya-root .diya-dialog .diya-text-field { width: 100%; max-width: none; }
+
+
+/* table/Table.css: portable component rules. */
+.diya-root .diya-table { --diya-internal-table-surface:var(--diya-color-raised); }
+/* Row hover: Light shades the row with the hover token; Dark lifts it a little toward the text,
+   since on near-black there is no room left to sink. The Vivid status tags still read at 4.5:1. */
+.diya-root .diya-table { --diya-internal-table-hover:color-mix(in srgb,var(--diya-color-text) 4.5%,var(--diya-internal-table-surface)); }
+.diya-root[data-theme='light'] .diya-table { --diya-internal-table-hover:color-mix(in srgb,var(--diya-color-hover) 60%,var(--diya-internal-table-surface)); }
+/* Selected rows: a text-colored tint, calmer in Dark. The checkbox and the selection bar carry the state too.
+   Status tags keep the table surface under their own tint, so they read as on a resting row. */
+.diya-root .diya-table { --diya-internal-table-selected-weight:12%; }
+.diya-root[data-theme='light'] .diya-table { --diya-internal-table-selected-weight:10%; }
+.diya-root .diya-table tbody tr[data-selected] .diya-tag:is([data-color='success'], [data-color='warning'], [data-color='error'], [data-color='info']) {
+  background:linear-gradient(var(--diya-internal-tag-surface), var(--diya-internal-tag-surface)), var(--diya-internal-table-surface);
+}
+.diya-root .diya-table { width:100%; min-width:0; color:var(--diya-color-text); font-size:var(--diya-text-caption); container-type:inline-size; container-name:diya-table; }
+.diya-root .diya-table-toolbar { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+.diya-root .diya-table-toolbar .diya-search { margin-left:auto; width:240px; max-width:100%; }
+.diya-root .diya-table-scroll { position:relative; overflow:auto; border:1px solid var(--diya-color-line); border-radius:var(--diya-radius-surface); }
+.diya-root .diya-table-scroll:focus-visible { outline:2px solid var(--diya-color-text); outline-offset:4px; }
+.diya-root .diya-table table { width:100%; border-collapse:separate; border-spacing:0; text-align:left; }
+.diya-root .diya-table th { background:var(--diya-internal-table-surface); color:var(--diya-color-muted); font-size:var(--diya-text-caption); font-weight:500; height:48px; }
+.diya-root .diya-table th,
+.diya-root .diya-table td { padding:12px 16px; box-sizing:border-box; vertical-align:middle; }
+.diya-root .diya-table td { height:60px; border-top:1px solid color-mix(in srgb, var(--diya-color-line) 70%, transparent); background:var(--diya-internal-table-surface); }
+.diya-root .diya-table[data-density='compact'] td { height:48px; padding-top:6px; padding-bottom:6px; }
+.diya-root .diya-table tbody tr:hover td { background:var(--diya-internal-table-hover); }
+.diya-root .diya-table tbody tr[data-selected] td { background:var(--diya-color-selected); }
+/* Data figures are tabular, so a column of amounts lines up digit for digit. */
+.diya-root .diya-table .diya-table-numeric { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.diya-root .diya-table-sort { display:inline-flex; align-items:center; gap:8px; padding:4px 0; border:0; background:none; color:inherit; font:inherit; cursor:pointer; }
+.diya-root .diya-table-sort span { font-size:var(--diya-text-caption); }
+.diya-root .diya-table-sort:focus-visible { outline:2px solid var(--diya-color-text); outline-offset:4px; border-radius:3px; }
+.diya-root .diya-table-scroll :is(button, input, a) { scroll-margin:8px 24px; }
+.diya-root .diya-table .diya-table-check { width:48px; padding-right:8px; }
+.diya-root .diya-table input[type='checkbox'] { width:16px; height:16px; margin:0; accent-color:var(--diya-color-text); cursor:pointer; vertical-align:middle; }
+.diya-root .diya-table .diya-table-actions { width:56px; padding:8px; position:sticky; right:0; box-shadow:-1px 0 var(--diya-color-line); }
+.diya-root .diya-table .diya-pagination { margin-top:20px; }
+.diya-root .diya-table-bulk { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 16px; margin-bottom:8px; border:1px solid var(--diya-color-line); border-radius:calc(12px * var(--diya-corner-scale, 1)); background:var(--diya-color-selected); }
+.diya-root .diya-table-bulk > span { margin-right:auto; }
+.diya-root .diya-table .diya-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
+.diya-root .diya-table-empty { padding:40px 16px; text-align:center; }
+.diya-root .diya-table-empty p { color:var(--diya-color-muted); margin:8px 0 20px; }
+.diya-root .diya-table-project { display:block; font-weight:500; white-space:nowrap; }
+.diya-root .diya-table-owner { color:var(--diya-color-muted); white-space:nowrap; }
+@media(max-width:600px) { .diya-root .diya-table-toolbar { flex-wrap:wrap; } .diya-root .diya-table-toolbar .diya-search { width:100%; } }
+.diya-root .diya-table-toolbar { gap:16px; align-items:flex-start; margin-bottom:16px; }
+.diya-root .diya-table-filters { display:flex; align-items:center; flex-wrap:wrap; gap:8px; flex:1; min-width:0; }
+.diya-root .diya-table-filter > span > button,
+.diya-root
+.diya-table-filter button[aria-haspopup] { height:36px; min-height:36px; border-radius:999px; padding:0 12px; gap:10px; font-size:var(--diya-text-body); background:transparent; box-shadow:none; }
+.diya-root .diya-table-filter button[aria-haspopup]::after { content:''; width:6px; height:6px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:translateY(-2px) rotate(45deg); flex-shrink:0; opacity:.75; }
+.diya-root .diya-table-filter[data-active] button[aria-haspopup] { background:var(--diya-color-selected); border-color:var(--diya-color-muted); }
+.diya-root .diya-table-clear { height:36px; padding:0 8px; background:none; border:0; color:var(--diya-color-muted); font:inherit; font-size:var(--diya-text-caption); cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+.diya-root .diya-table-clear:hover { color:var(--diya-color-text); }
+.diya-root .diya-table-clear:focus-visible { outline:2px solid var(--diya-color-text); outline-offset:2px; }
+.diya-root .diya-table-toolbar .diya-search { flex-shrink:0; }
+.diya-root .diya-table-toolbar .diya-search .diya-text-field-control { height:var(--diya-internal-field-height); min-height:var(--diya-internal-field-height); box-sizing:border-box; }
+.diya-root .diya-table-toolbar .diya-search input { height:calc(var(--diya-internal-field-height) - 2px); }
+.diya-root .diya-table[data-sticky] .diya-table-check { min-width:48px; max-width:48px; }
+.diya-root .diya-table[data-sticky] .diya-table-actions { z-index:2; }
+.diya-root .diya-table-skeleton { display:block; height:14px; width:70%; min-width:16px; border-radius:calc(4px * var(--diya-corner-scale, 1)); background:var(--diya-color-selected); margin:8px 0; }
+.diya-root .diya-table-loading,
+.diya-root .diya-table-secondary { color:var(--diya-color-muted); font-size:var(--diya-text-caption); }
+.diya-root .diya-table-secondary { display:block; margin-top:4px; }
+.diya-root .diya-table-person,
+.diya-root .diya-table-progress { display:inline-flex; align-items:center; gap:10px; white-space:nowrap; }
+.diya-root .diya-table-progress progress { width:72px; height:6px; accent-color:var(--diya-color-text); }
+.diya-root .diya-table-resource { border:0; padding:0; background:none; color:var(--diya-color-text); font:inherit; text-decoration:underline; text-underline-offset:3px; white-space:nowrap; cursor:pointer; }
+
+
+.diya-root .diya-table[data-sticky] tbody tr[data-selected] td { background:color-mix(in srgb,var(--diya-color-text) calc(var(--diya-internal-table-selected-weight) + 2%),var(--diya-internal-table-surface)); }
+.diya-root .diya-table time { white-space:nowrap; }
+.diya-root .diya-table .diya-metric-number { font-size:var(--diya-text-body); }
+.diya-root .diya-table { --diya-internal-table-rule:color-mix(in srgb,var(--diya-color-line) 62%,transparent); }
+.diya-root .diya-table table { table-layout:fixed; }
+.diya-root .diya-table th { height:44px; background:color-mix(in srgb,var(--diya-color-text) 3%,var(--diya-internal-table-surface)); }
+.diya-root .diya-table th,
+.diya-root .diya-table td { padding-left:16px; padding-right:16px; }
+.diya-root .diya-table td { border-top-color:var(--diya-internal-table-rule); height:60px; }
+.diya-root .diya-table .diya-table-actions { position:static; box-shadow:none; padding:8px; text-align:center; }
+.diya-root .diya-table[data-sticky] .diya-table-actions { position:sticky; right:0; box-shadow:-1px 0 var(--diya-color-line); }
+.diya-root .diya-table tbody tr[data-selected] td { background:color-mix(in srgb,var(--diya-color-text) var(--diya-internal-table-selected-weight),var(--diya-internal-table-surface)); }
+.diya-root .diya-table-sort { gap:6px; line-height:20px; }
+.diya-root .diya-table-sort svg { opacity:.45; flex-shrink:0; }
+.diya-root .diya-table th[aria-sort='ascending'] .diya-table-sort,
+.diya-root .diya-table th[aria-sort='descending'] .diya-table-sort { color:var(--diya-color-text); }
+.diya-root .diya-table th[aria-sort='ascending'] svg,
+.diya-root .diya-table th[aria-sort='descending'] svg,
+.diya-root .diya-table-sort:hover svg { opacity:1; }
+.diya-root .diya-table-sort:disabled { cursor:default; }
+.diya-root .diya-table .diya-pagination { display:grid; grid-template-columns:1fr auto 1fr; gap:16px; margin-top:16px; }
+.diya-root .diya-table .diya-pagination-count { justify-self:start; }
+.diya-root .diya-table .diya-pagination-size { justify-self:end; }
+.diya-root .diya-table .diya-pagination-size .diya-select-field { width:84px; }
+.diya-root .diya-table .diya-metric { gap:4px; align-items:flex-end; }
+.diya-root .diya-table .diya-metric[data-size='small'] .diya-metric-number { font-size:var(--diya-text-body); letter-spacing:0; }
+.diya-root .diya-table .diya-metric-comparison { font-size:var(--diya-text-caption); }
+.diya-root .diya-table-progress { font-size:var(--diya-text-caption); font-variant-numeric:tabular-nums; }
+.diya-root .diya-table-progress progress { appearance:none; border:0; border-radius:10px; overflow:hidden; background:var(--diya-color-selected); }
+.diya-root .diya-table-progress progress::-webkit-progress-bar { background:var(--diya-color-selected); border-radius:10px; }
+.diya-root .diya-table-progress progress::-webkit-progress-value { background:var(--diya-color-text); border-radius:10px; }
+.diya-root .diya-table-progress progress::-moz-progress-bar { background:var(--diya-color-text); border-radius:10px; }
+.diya-root .diya-table-empty { min-height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.diya-root .diya-table-empty strong { font-size:var(--diya-text-large); font-weight:500; }
+.diya-root .diya-table-empty p { font-size:var(--diya-text-body); max-width:300px; line-height:1.6; }
+.diya-root .diya-table-scroll { scrollbar-width:thin; scrollbar-color:var(--diya-color-muted) var(--diya-internal-table-surface); }
+.diya-root .diya-table-resource:focus-visible { outline:2px solid var(--diya-color-text); outline-offset:4px; border-radius:2px; }
+@media(max-width:1100px) { .diya-root .diya-table .diya-pagination { display:flex; justify-content:space-between; } }
+@media(max-width:600px) { .diya-root .diya-table .diya-pagination nav { width:100%; order:3; justify-content:center; } }
+.diya-root .diya-table[aria-busy='true'] .diya-table-sort { opacity:.5; }
+.diya-root .diya-table-progress { display:inline-grid; grid-template-columns:72px 34px; gap:10px; width:116px; }
+.diya-root .diya-table-progress progress { width:72px; min-width:72px; max-width:72px; }
+.diya-root .diya-table-progress > span { text-align:right; }
+.diya-root
+.diya-table[data-sticky] .diya-table-actions {
+  background:color-mix(in srgb,var(--diya-internal-table-surface) 78%,transparent);
+  backdrop-filter:blur(16px);
+}
+.diya-root
+.diya-table[data-sticky] tbody tr:hover > .diya-table-actions {
+  background:color-mix(in srgb,var(--diya-internal-table-surface) 85%,transparent);
+}
+.diya-root
+.diya-table[data-sticky] tbody tr[data-selected] > .diya-table-actions {
+  background:color-mix(in srgb,var(--diya-color-text) var(--diya-internal-table-selected-weight),color-mix(in srgb,var(--diya-internal-table-surface) 80%,transparent));
+}
+@media(prefers-reduced-transparency:reduce) {
+ .diya-root
+ .diya-table[data-sticky] .diya-table-actions { background:var(--diya-internal-table-surface); backdrop-filter:none; }
+}
+.diya-root .diya-table .diya-table-expander { width:40px; padding:6px; }
+.diya-root .diya-table-expander button { display:grid; place-items:center; width:28px; height:32px; padding:0; border:0; border-radius:calc(6px * var(--diya-corner-scale, 1)); color:var(--diya-color-muted); background:transparent; cursor:pointer; }
+.diya-root .diya-table-expander button:hover { background:var(--diya-color-selected); color:var(--diya-color-text); }
+.diya-root .diya-table-expander button[aria-expanded='true'] svg { transform:rotate(90deg); }
+.diya-root .diya-table-expander button:focus-visible { outline:2px solid var(--diya-color-text); outline-offset:2px; }
+.diya-root .diya-table .diya-table-detail-row > td { padding:24px 24px 28px 56px; background:color-mix(in srgb,var(--diya-color-text) 3%,var(--diya-internal-table-surface)); }
+.diya-root .diya-table .diya-table-scroll { background:var(--diya-internal-table-surface); border-color:var(--diya-internal-table-rule); box-shadow:var(--diya-internal-table-elevation); }
+@media(forced-colors:active) { .diya-root .diya-table { --diya-internal-table-surface:Canvas; } }
+
+.diya-root .diya-table-toolbar { align-items:center; justify-content:space-between; flex-wrap:wrap; }
+.diya-root .diya-table-title { margin:0; font-size:var(--diya-text-title); line-height:1.4; font-weight:500; letter-spacing:-.02em; }
+.diya-root .diya-table-tools { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:12px; margin-left:auto; min-width:0; }
+.diya-root .diya-table-tools .diya-search { margin-left:0; }
+@media(max-width:600px) {
+ .diya-root .diya-table-tools { width:100%; }
+ .diya-root .diya-table-tools .diya-search { width:100%; }
+}
+.diya-root .diya-table .diya-table-toolbar > .diya-table-title { margin:0; line-height:36px; }
+
+
+/* site-header/SiteHeader.css: portable component rules. */
+.diya-root .diya-site-header-container {
+  --diya-internal-site-search-min-width:160px;
+  --diya-internal-site-brand-nav-gap:32px;
+  --diya-internal-site-header-spacer:24px;
+  --diya-internal-site-utilities-gap:16px;
+  --diya-internal-site-full-inset:24px;
+  --diya-internal-site-compact-inset:16px;
+  --diya-internal-site-compact-gap:8px;
+  container-type:inline-size;
+  width:100%;
+}
+.diya-root .diya-site-header { color:var(--diya-color-text); border-bottom:1px solid var(--diya-internal-header-border); }
+.diya-root .diya-site-header-row {
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  min-height:64px;
+  column-gap:var(--diya-internal-site-utilities-gap);
+  row-gap:8px;
+  padding:12px var(--diya-internal-site-full-inset);
+}
+.diya-root .diya-site-identity { display:flex; align-items:center; gap:var(--diya-internal-site-brand-nav-gap); min-width:0; flex:0 0 auto; margin-inline-end:calc(var(--diya-internal-site-header-spacer) - var(--diya-internal-site-utilities-gap)); }
+.diya-root .diya-site-brand { display:inline-flex; align-items:center; gap:8px; min-width:0; padding:0; border:0; background:transparent; font:inherit; font-size:var(--diya-text-large); line-height:24px; letter-spacing:-.01em; font-weight:600; color:inherit; flex-shrink:0; text-align:left; white-space:nowrap; }
+.diya-root button.diya-site-brand, .diya-root a.diya-site-brand { cursor:pointer; }
+.diya-root .diya-site-nav { display:flex; align-items:center; gap:4px; min-width:0; flex-shrink:0; }
+.diya-root .diya-site-nav[hidden], .diya-root .diya-site-menu-toggle[hidden] { display:none; }
+.diya-root .diya-site-nav :is(button, a),
+.diya-root .diya-site-mobile-nav :is(button, a) { display:inline-flex; align-items:center; min-height:40px; padding:0 12px; border:0; background:transparent; color:var(--diya-color-muted); font:inherit; font-size:var(--diya-text-body); line-height:20px; font-weight:400; border-radius:calc(8px * var(--diya-corner-scale, 1)); text-decoration:none; white-space:nowrap; cursor:pointer; }
+.diya-root .diya-site-nav :is(button, a):not(:disabled):hover,
+.diya-root .diya-site-mobile-nav :is(button, a):not(:disabled):hover { color:var(--diya-color-text); background:var(--diya-color-hover); }
+.diya-root .diya-site-nav :is(button, a)[aria-current],
+.diya-root .diya-site-mobile-nav :is(button, a)[aria-current] { color:var(--diya-color-text); background:var(--diya-color-selected); }
+.diya-root .diya-site-nav button:disabled, .diya-root .diya-site-mobile-nav button:disabled { opacity:.5; cursor:not-allowed; }
+.diya-root .diya-site-utilities { margin-inline-start:auto; display:flex; align-items:center; min-width:0; flex:0 0 auto; gap:var(--diya-internal-site-utilities-gap); }
+.diya-root .diya-site-search { width:240px; min-width:var(--diya-internal-site-search-min-width); margin-inline-start:auto; flex:0 1 auto; }
+.diya-root .diya-site-header-container:not([data-stacked='true']) .diya-site-header-row:has(> .diya-site-search) > .diya-site-utilities { margin-inline-start:0; }
+.diya-root .diya-site-tools { display:flex; align-items:center; flex-shrink:0; gap:4px; }
+.diya-root .diya-site-avatar { display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.diya-root .diya-site-account { display:flex; align-items:center; gap:8px; }
+.diya-root .diya-site-header .diya-button[data-icon-only='true'] { width:40px; height:40px; min-height:40px; flex-shrink:0; padding:0; }
+.diya-root .diya-site-tools .diya-button > svg { width:20px; height:20px; }
+.diya-root .diya-site-tools .diya-button[data-icon-only='true'][data-variant='quiet'] { color:var(--diya-color-muted); }
+.diya-root .diya-site-tools .diya-button[data-icon-only='true'][data-variant='quiet']:not(:disabled):hover { color:var(--diya-color-text); }
+.diya-root .diya-site-avatar .diya-button[data-icon-only='true'] { border-radius:50%; }
+.diya-root .diya-site-header .diya-site-search .diya-text-field-control { height:40px; min-height:40px; box-sizing:border-box; }
+.diya-root .diya-site-search input { font-size:var(--diya-text-body); line-height:20px; }
+.diya-root .diya-site-header .diya-site-menu-toggle { display:none; }
+.diya-root .diya-site-brand:focus-visible,
+.diya-root .diya-site-nav :is(button, a):focus-visible,
+.diya-root .diya-site-mobile-nav :is(button, a):focus-visible { outline:2px solid var(--diya-color-text); outline-offset:3px; }
+.diya-root .diya-site-header-container[data-compact='true'] .diya-site-header-row { flex-wrap:wrap; }
+.diya-root .diya-site-header-container[data-compact='true'] .diya-site-header .diya-site-menu-toggle { display:inline-flex; }
+.diya-root .diya-site-header-container[data-compact='true'] .diya-site-nav { flex:0 0 100%; width:100%; align-items:stretch; flex-direction:column; gap:4px; }
+.diya-root .diya-site-header-container[data-compact='true'] .diya-site-nav :is(button, a) { min-width:0; max-width:100%; text-align:left; white-space:normal; overflow-wrap:anywhere; padding-block:8px; }
+.diya-root .diya-site-header-container[data-compact='true']:not([data-stacked='true']) .diya-site-search { flex:1 1 var(--diya-internal-site-search-min-width); max-width:240px; }
+.diya-root .diya-site-header-container[data-stacked='true'] .diya-site-header-row { flex-wrap:wrap; column-gap:var(--diya-internal-site-compact-gap); padding-inline:var(--diya-internal-site-compact-inset); }
+.diya-root .diya-site-header-container[data-stacked='true'] .diya-site-identity { margin-inline-end:0; }
+.diya-root .diya-site-header-container[data-stacked='true'] .diya-site-utilities { gap:var(--diya-internal-site-compact-gap); }
+.diya-root .diya-site-header-container[data-stacked='true'] .diya-site-search { flex:0 0 100%; width:100%; min-width:0; }
+/* Only a caller's measured utility overflow creates another row. */
+.diya-root .diya-site-header-container[data-tools-wrap='true'] .diya-site-header-row { flex-wrap:wrap; }
+.diya-root .diya-site-header-container[data-tools-wrap='true'] .diya-site-utilities { display:contents; }
+.diya-root .diya-site-header-container[data-tools-wrap='true'] .diya-site-avatar { margin-inline-start:auto; }
+.diya-root .diya-site-header-container[data-tools-wrap='true'] .diya-site-tools { flex:0 0 100%; width:100%; flex-wrap:wrap; justify-content:flex-end; }
+
+/* workflow/WorkflowPatterns.css: portable component rules. */
+.diya-root .diya-workflow-surface { background:var(--diya-color-raised,var(--diya-color-surface)); color:var(--diya-color-text); border:1px solid var(--diya-color-line); border-radius:var(--diya-radius-surface); }
+.diya-root .diya-workflow-surface h3 { margin:0; font-size:var(--diya-text-title); font-weight:600; letter-spacing:-.025em; }
+.diya-root .diya-workflow-surface p:not(:where(.diya-text-field-description, .diya-field-help, .diya-switch-description)) { color:var(--diya-color-muted); font-size:var(--diya-text-body); line-height:1.6; margin:8px 0 0; }
+.diya-root .diya-workflow-symbol { display:grid; place-items:center; width:52px; height:52px; border-radius:50%; background:var(--diya-color-hover); margin:0 auto 18px; }
+.diya-root .diya-workflow-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.diya-root .diya-upload { max-width:600px; margin:auto; padding:20px; }
+.diya-root .diya-upload-drop { border:1px dashed var(--diya-color-line); border-radius:calc(12px * var(--diya-corner-scale, 1)); text-align:center; padding:32px 20px; }
+.diya-root .diya-upload-drop[data-dragging='true'] { background:var(--diya-color-hover); border-color:var(--diya-color-text); }
+.diya-root .diya-upload-drop .diya-button { margin-top:20px; }.diya-root .diya-upload-drop small { display:block; margin-top:16px; color:var(--diya-color-muted); font-size:var(--diya-text-caption); }
+.diya-root .diya-upload-files { margin:16px 0 0; padding:0; list-style:none; }.diya-root .diya-upload-files li { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--diya-color-line); }.diya-root .diya-upload-files li:last-child { border:0; }.diya-root .diya-upload-files li>span { flex:1; min-width:0; }.diya-root .diya-upload-files strong { display:block; font-size:var(--diya-text-body); overflow-wrap:anywhere; font-weight:500; }.diya-root .diya-upload-files small { display:block; color:var(--diya-color-muted); font-size:var(--diya-text-caption); margin-top:4px; }
+.diya-root .diya-workflow-surface .diya-workflow-error { color:var(--diya-color-error); }
+.diya-root :is(.diya-project-form-title, .diya-upload-title) { margin:0; font-size:var(--diya-text-title); font-weight:600; letter-spacing:-0.015em; line-height:var(--diya-leading-tight); }
+.diya-root .diya-project-form { max-width:520px; margin:auto; padding:24px; display:grid; gap:24px; }.diya-root .diya-project-form footer { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:12px; padding-top:8px; }
+.diya-root .diya-workflow-eyebrow { font-size:var(--diya-text-caption); letter-spacing:0; color:var(--diya-color-muted); display:block; margin-bottom:16px; }
+.diya-root .diya-drawer-modal>header { display:flex; gap:16px; align-items:flex-start; padding:24px; border-bottom:1px solid var(--diya-color-line); }.diya-root .diya-drawer-body { padding:24px; }.diya-root .diya-drawer-body h4 { font-size:var(--diya-text-title); margin:0; }.diya-root .diya-drawer-body dl { margin:24px 0 0; }.diya-root .diya-drawer-body dl div { display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid var(--diya-color-line); font-size:var(--diya-text-body); }.diya-root .diya-drawer-body dt { color:var(--diya-color-muted); }.diya-root .diya-drawer-body dd { margin:0; }.diya-root .diya-drawer-modal footer { display:flex; justify-content:flex-end; gap:12px; padding:20px 24px; border-top:1px solid var(--diya-color-line); }
+.diya-root .diya-drawer-modal { position:fixed; inset:0 0 0 auto; width:min(440px,100vw); height:100dvh; max-height:100dvh; max-width:100vw; padding:0; margin:0; border-radius:calc(16px * var(--diya-corner-scale, 1)) 0 0 calc(16px * var(--diya-corner-scale, 1)); overflow:hidden; }.diya-root .diya-drawer-modal[data-side='left'] { inset:0 auto 0 0; border-radius:0 calc(16px * var(--diya-corner-scale, 1)) calc(16px * var(--diya-corner-scale, 1)) 0; }.diya-root .diya-drawer-modal::backdrop { background:var(--diya-color-scrim, #0006); backdrop-filter:blur(4px); }.diya-root .diya-drawer-modal>header>div { flex:1; min-width:0; overflow-wrap:anywhere; }.diya-root .diya-drawer-modal>header>.diya-button { flex-shrink:0; }.diya-root .diya-drawer-modal[open] { display:flex; flex-direction:column; }.diya-root .diya-drawer-modal footer { margin-top:auto; flex-wrap:wrap; }
+.diya-root .diya-content-state { max-width:600px; margin:auto; padding:44px 32px; text-align:center; }.diya-root .diya-content-state p { max-width:360px; margin:10px auto 24px; }
+.diya-root .diya-workflow-surface :is(.diya-content-state-title, .diya-wizard-title) { margin:0; font-size:var(--diya-text-title); font-weight:600; letter-spacing:-.015em; line-height:var(--diya-leading-tight); }
+@media(max-width:700px) {.diya-root .diya-project-form { padding:20px; } }
+
+.diya-root .diya-project-form{max-width:640px;width:100%}.diya-root .diya-project-form .diya-text-field,
+.diya-root .diya-project-form .diya-combobox,
+.diya-root .diya-project-form .diya-date-field{max-width:none;width:100%}.diya-root .diya-form-columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:24px}
+.diya-root .diya-wizard{max-width:720px;margin:auto;width:100%;padding:28px;container-type:inline-size;container-name:diya-wizard}.diya-root .diya-wizard-steps{list-style:none;display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;padding:0 0 24px;margin:0 0 28px;border-bottom:1px solid var(--diya-color-line)}.diya-root .diya-wizard-steps li{display:flex;align-items:center;gap:10px;min-width:0;max-width:100%;color:var(--diya-color-muted);font-size:var(--diya-text-body)}.diya-root .diya-wizard-steps li>span{display:grid;place-items:center;flex-shrink:0;width:28px;height:28px;border:1px solid var(--diya-color-line);border-radius:50%;font-size:var(--diya-text-caption)}.diya-root .diya-wizard-steps strong{min-width:0;font-weight:500;overflow-wrap:anywhere}.diya-root .diya-wizard-steps li[aria-current],
+.diya-root .diya-wizard-steps li[data-complete='true']{color:var(--diya-color-text)}.diya-root .diya-wizard-steps li[aria-current]>span{background:var(--diya-color-accent);color:var(--diya-color-accent-text,var(--diya-color-raised))}.diya-root .diya-wizard-body form{display:grid;gap:24px}.diya-root .diya-wizard-body .diya-text-field,
+.diya-root .diya-wizard-body .diya-combobox{max-width:none}.diya-root .diya-wizard-body{flex:1;min-width:0}.diya-root .diya-wizard-body footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:8px}.diya-root .diya-wizard-summary{font-size:var(--diya-text-caption);color:var(--diya-color-muted)}.diya-root .diya-wizard-review{margin:0;display:grid;gap:16px}.diya-root .diya-wizard-review>div{display:grid;grid-template-columns:90px 1fr;gap:20px;font-size:var(--diya-text-body)}.diya-root .diya-wizard-review dt{color:var(--diya-color-muted)}.diya-root .diya-wizard-review dd{margin:0;overflow-wrap:anywhere}.diya-root .diya-wizard-complete{text-align:center;padding:32px 0}.diya-root .diya-wizard-complete .diya-button{margin-top:24px}.diya-root .diya-wizard[data-orientation='vertical']{display:flex;flex-wrap:wrap;gap:28px}.diya-root .diya-wizard[data-orientation='vertical'] .diya-wizard-steps{flex:0 0 140px;flex-direction:column;justify-content:flex-start;border-bottom:0;border-right:1px solid var(--diya-color-line);padding:0 24px 0 0;margin:0;gap:28px}
+@media(max-width:700px){.diya-root .diya-wizard{padding:20px}.diya-root .diya-wizard-steps{gap:12px}.diya-root .diya-wizard-steps li{gap:6px}}
+/* A 140px rail plus 28px gap leaves at least 232px for fields before stacking. */
+@container diya-wizard (max-width:400px) {
+ /* Step labels are compact labels in a narrow wizard, so the steps stay on one row. */
+ .diya-root .diya-wizard-steps li{font-size:var(--diya-text-caption)}
+ .diya-root .diya-wizard[data-orientation='vertical'] .diya-wizard-steps{flex-basis:100%;flex-direction:row;justify-content:space-between;border-right:0;border-bottom:1px solid var(--diya-color-line);padding:0 0 20px;gap:12px}
+ .diya-root .diya-wizard[data-orientation='vertical'] .diya-wizard-body{flex-basis:100%}
+}
+.diya-root .diya-workflow-surface .diya-text-field-control input,
+.diya-root
+.diya-workflow-surface .diya-select-control select { height:calc(var(--diya-internal-field-height) - 2px); font-size:var(--diya-internal-field-font-size); }
+.diya-root .diya-workflow-surface .diya-date-trigger,
+.diya-root
+.diya-workflow-surface .diya-combobox-control { min-height:40px; font-size:var(--diya-text-body); }
+.diya-root .diya-workflow-surface .diya-combobox-control input { height:24px; font-size:var(--diya-text-body); }
+.diya-root .diya-workflow-surface :is(.diya-date-trigger,.diya-combobox-control,.diya-text-field-control,.diya-select-control) { border-radius:var(--diya-radius-control, calc(10px * var(--diya-corner-scale, 1))); }
+.diya-root .diya-workflow-surface :is(.diya-combobox,.diya-date-field)>label { font-size:var(--diya-text-body); margin-bottom:10px; }
+
+.diya-root .diya-workflow-surface input[name='project-title']::-webkit-contacts-auto-fill-button { visibility:hidden; display:none; pointer-events:none; }
+
+
+/* application-patterns/ApplicationPatterns.css: portable component rules. */
+.diya-root .diya-app-pattern-surface{background:var(--diya-color-raised,var(--diya-color-surface));color:var(--diya-color-text);border:1px solid var(--diya-color-line);border-radius:var(--diya-radius-surface);overflow:hidden}
+.diya-root .diya-chat{width:100%;max-width:620px;display:flex;flex-direction:column}
+.diya-root .diya-chat-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.diya-root .diya-chat[data-presentation='floating']{max-width:380px;margin-left:auto;box-shadow:0 calc(12px * var(--diya-elevation, 1)) calc(32px * var(--diya-elevation, 1)) #0002}
+.diya-root .diya-chat[data-presentation='full-page']{max-width:none}
+.diya-root .diya-chat-header{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--diya-color-line)}
+.diya-root .diya-chat-header small{display:block;color:var(--diya-color-muted);font-size:var(--diya-text-caption);margin-top:5px}
+.diya-root .diya-chat-thread{padding:24px;height:280px;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.diya-root .diya-chat[data-presentation='full-page'] .diya-chat-thread{height:380px}
+.diya-root .diya-chat-welcome{text-align:center;margin:24px auto;max-width:430px;font-size:var(--diya-text-large)}
+.diya-root .diya-chat-welcome>span{font-size:var(--diya-text-display)}.diya-root .diya-chat-welcome h3{font-size:var(--diya-text-title);margin:16px 0 8px}.diya-root .diya-chat-welcome p{font-size:var(--diya-text-body);color:var(--diya-color-muted)}
+.diya-root .diya-chat-suggestions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:24px}
+.diya-root .diya-chat-message{margin-bottom:20px;max-width:90%;font-size:var(--diya-text-body);line-height:1.65}.diya-root .diya-chat-message small{color:var(--diya-color-muted);font-size:var(--diya-text-caption)}.diya-root .diya-chat-message p{white-space:pre-wrap;margin:6px 0}
+.diya-root .diya-chat-message[data-role='user']{margin-left:auto;background:var(--diya-color-selected);padding:12px 16px;border-radius:calc(14px * var(--diya-corner-scale, 1))}
+.diya-root .diya-chat-composer{margin:0 20px 12px;padding:12px 14px;border:1px solid var(--diya-color-line);border-radius:calc(16px * var(--diya-corner-scale, 1));background:var(--diya-color-glass)}
+.diya-root .diya-chat-composer textarea{display:block;resize:none;border:0;width:100%;background:transparent;color:inherit;font:inherit;font-size:var(--diya-text-body);line-height:1.6;outline:0;min-height:50px}.diya-root .diya-chat-composer:focus-within{outline:2px solid var(--diya-color-text);outline-offset:2px}
+.diya-root .diya-chat-composer textarea::placeholder{color:var(--diya-color-muted);opacity:1}
+.diya-root .diya-chat-composer>div{display:flex;align-items:center;justify-content:space-between;margin-top:8px}.diya-root .diya-chat-attach{position:relative;cursor:pointer;font-size:var(--diya-text-caption);color:var(--diya-color-muted);padding:8px;border-radius:calc(6px * var(--diya-corner-scale, 1))}.diya-root .diya-chat-attach input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}.diya-root .diya-chat-attach:focus-within{outline:2px solid currentColor}
+.diya-root .diya-chat-notice{font-size:var(--diya-text-caption);color:var(--diya-color-muted);padding:0 20px 12px}.diya-root .diya-chat-notice:empty{display:none}.diya-root .diya-side-navigation{width:220px;flex:none;padding:24px 16px;border-right:1px solid var(--diya-color-line)}.diya-root .diya-side-navigation[data-collapsed='true']{width:72px}.diya-root .diya-side-navigation>strong{display:block;padding:0 12px 20px;font-size:var(--diya-text-title)}.diya-root .diya-side-navigation>div{margin-bottom:20px}.diya-root .diya-side-navigation small{display:block;padding:0 12px;margin-bottom:8px;font-size:var(--diya-text-caption);letter-spacing:0;color:var(--diya-color-muted)}.diya-root .diya-side-navigation button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;color:var(--diya-color-muted);text-align:left;padding:10px 12px;border-radius:calc(8px * var(--diya-corner-scale, 1));font:inherit;font-size:var(--diya-text-caption);cursor:pointer}.diya-root .diya-side-navigation button[aria-current]{background:var(--diya-color-selected);color:var(--diya-color-text)}.diya-root .diya-side-navigation button:hover{background:var(--diya-color-hover)}.diya-root .diya-filter-bar{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}.diya-root .diya-filter-bar>div{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.diya-root .diya-filter-bar select{height:40px;background:var(--diya-color-glass);color:inherit;border:1px solid var(--diya-color-line);border-radius:calc(8px * var(--diya-corner-scale, 1));padding:0 12px;font:inherit;font-size:var(--diya-text-body)}.diya-root .diya-filter-bar .diya-search{width:220px}.diya-root .diya-active-filters{display:flex;align-items:center;gap:10px;margin-top:16px}.diya-root .diya-active-filters>button{font:inherit;font-size:var(--diya-text-caption);padding:6px 10px;background:var(--diya-color-selected);color:inherit;border:0;border-radius:calc(6px * var(--diya-corner-scale, 1));cursor:pointer}
+@media(max-width:600px){.diya-root .diya-side-navigation{width:150px;padding:20px 10px}.diya-root .diya-chat-thread{padding:18px}.diya-root .diya-filter-bar>div{width:100%}.diya-root .diya-filter-bar .diya-search{width:100%}.diya-root .diya-chat-composer{margin-inline:12px}}
+
+/* The caller owns the application frame; navigation owns its single divider. */
+.diya-root .diya-side-navigation { border:0; border-right:1px solid var(--diya-color-line); border-radius:0; }
+/* Link items match button items. */
+.diya-root .diya-side-navigation a { display:flex; align-items:center; gap:12px; width:100%; color:var(--diya-color-muted); text-decoration:none; padding:10px 12px; border-radius:calc(8px * var(--diya-corner-scale, 1)); font-size:var(--diya-text-caption); }
+.diya-root .diya-side-navigation a[aria-current] { background:var(--diya-color-selected); color:var(--diya-color-text); }
+.diya-root .diya-side-navigation a:hover { background:var(--diya-color-hover); }
+
+.diya-root .diya-chat-attach{display:inline-flex;align-items:center;gap:7px;line-height:20px}
+
+
+/* data-viz/DataViz.css: portable component rules. */
+.diya-root .diya-data-viz { width:100%; height:300px; min-width:0; }
+.diya-root .diya-analytics-card { width:100%; border:1px solid var(--diya-color-line); border-radius:var(--diya-radius-surface); padding:24px; background:var(--diya-color-raised); color:var(--diya-color-text); }
+.diya-root .diya-analytics-card[data-shadow='true'] { box-shadow:var(--diya-shadow-raised); }
+.diya-root .diya-analytics-header { display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:24px; }
+.diya-root .diya-analytics-title { margin:0 0 6px; font-size:var(--diya-text-title); font-weight:600; letter-spacing:-.015em; line-height:var(--diya-leading-tight); }
+.diya-root .diya-analytics-header p,
+.diya-root .diya-analytics-footer { font-size:var(--diya-text-caption); color:var(--diya-color-muted); margin:0; }
+.diya-root .diya-analytics-tools { display:flex; align-items:center; gap:12px; font-size:var(--diya-text-body); color:var(--diya-color-muted); }
+.diya-root .diya-analytics-tools select { background:var(--diya-color-hover); color:var(--diya-color-text); border:1px solid var(--diya-color-line); padding:8px 12px; border-radius:calc(8px * var(--diya-corner-scale, 1)); }
+.diya-root .diya-analytics-metric { font-size:var(--diya-text-display); font-weight:500; line-height:var(--diya-leading-tight); margin-bottom:12px; letter-spacing:-.04em; }
+.diya-root .diya-analytics-metric small { font-size:var(--diya-text-caption); letter-spacing:0; color:var(--diya-color-muted); margin-left:12px; }
+.diya-root .diya-analytics-footer { display:flex; justify-content:space-between; gap:16px; align-items:center; margin-top:20px; }
+.diya-root .diya-analytics-data { width:100%; font-size:var(--diya-text-caption); border-collapse:collapse; margin-top:20px; font-variant-numeric:tabular-nums; }
+.diya-root .diya-analytics-data-scroll { min-width:0; max-width:100%; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--diya-color-muted) transparent; }
+.diya-root .diya-analytics-data-scroll:focus-visible { outline:2px solid var(--diya-color-text); outline-offset:4px; }
+.diya-root .diya-analytics-data th,
+.diya-root .diya-analytics-data td { padding:10px; text-align:left; border-bottom:1px solid var(--diya-color-line); }
+@media(max-width:600px){.diya-root .diya-analytics-card{padding:20px}.diya-root .diya-card-body{padding:20px}.diya-root .diya-analytics-tools{flex-wrap:wrap}.diya-root .diya-data-viz{height:260px}}
+
+.diya-root .diya-chart-frame{position:relative;width:100%;min-width:0}.diya-root .diya-donut-total{position:absolute;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;color:var(--diya-color-text)}.diya-root .diya-donut-total strong{font-size:var(--diya-text-display);line-height:1;font-weight:500;letter-spacing:-.04em;font-variant-numeric:tabular-nums}.diya-root .diya-donut-total span{font-size:var(--diya-text-caption);color:var(--diya-color-muted)}
+
+
+
+/* Material values belong to each provider so nested appearances stay independent. */
+.diya-root {
+  --diya-internal-control-line: color-mix(in srgb, var(--diya-color-muted) 70%, transparent);
+  --diya-internal-alert-alpha: 7%;
+  --diya-internal-alert-fill: var(--diya-color-raised);
+  --diya-internal-alert-backdrop: none;
+  --diya-internal-table-shadow: 0 calc(6px * var(--diya-elevation, 1)) calc(20px * var(--diya-elevation, 1)) #0002;
+  --diya-internal-field-fill: var(--diya-color-hover);
+  --diya-internal-collection-fill: transparent;
+  --diya-internal-popup-control-fill: var(--diya-color-hover);
+  --diya-internal-popup-fill: var(--diya-color-raised);
+  --diya-internal-pattern-fill: var(--diya-color-raised);
+  --diya-internal-workflow-fill: var(--diya-color-raised);
+  --diya-internal-application-fill: var(--diya-color-raised);
+  --diya-internal-analytics-fill: var(--diya-color-raised);
+  --diya-internal-table-fill: var(--diya-color-raised);
+  --diya-internal-field-backdrop: none;
+  --diya-internal-popup-backdrop: none;
+  --diya-internal-pattern-backdrop: none;
+  --diya-internal-workflow-backdrop: none;
+  --diya-internal-application-backdrop: none;
+  --diya-internal-analytics-backdrop: none;
+}
+
+.diya-root[data-theme='light'] {
+  /* On white, fields are white too; their border carries the edge (no gray slab). */
+  --diya-internal-field-fill: var(--diya-color-raised);
+  --diya-internal-popup-control-fill: var(--diya-color-raised);
+  --diya-internal-table-shadow: 0 calc(6px * var(--diya-elevation, 1)) calc(20px * var(--diya-elevation, 1)) #25342e0c;
+}
+
+.diya-root .diya-text-field-control,
+.diya-root .diya-select-control,
+.diya-root .diya-textarea textarea {
+  border-color: var(--diya-internal-control-line);
+  background: var(--diya-internal-field-fill);
+  backdrop-filter: var(--diya-internal-field-backdrop);
+}
+
+.diya-root .diya-list,
+.diya-root .diya-accordion {
+  background: var(--diya-internal-collection-fill);
+  backdrop-filter: var(--diya-internal-field-backdrop);
+}
+
+.diya-root .diya-combobox-control,
+.diya-root .diya-date-trigger {
+  border-color: var(--diya-internal-control-line);
+  background: var(--diya-internal-popup-control-fill);
+  backdrop-filter: var(--diya-internal-popup-backdrop);
+}
+
+.diya-root .diya-combobox-options,
+.diya-root .diya-calendar {
+  background: var(--diya-internal-popup-fill);
+  color: var(--diya-color-text);
+  backdrop-filter: var(--diya-internal-popup-backdrop);
+}
+
+.diya-root .diya-card,
+.diya-root .diya-dialog,
+.diya-root .diya-site-header-container {
+  background: var(--diya-internal-pattern-fill);
+  border-color: var(--diya-internal-header-border);
+  backdrop-filter: var(--diya-internal-pattern-backdrop);
+}
+
+/* In-page surfaces: the faintest edge plus a soft shadow. */
+.diya-root :is(.diya-card, .diya-analytics-card, .diya-workflow-surface, .diya-app-pattern-surface, .diya-table .diya-table-scroll) {
+  border-color: var(--diya-internal-surface-border);
+}
+.diya-root :is(.diya-card:not([data-shadow='true']), .diya-analytics-card:not([data-shadow='true']), .diya-project-form, .diya-table .diya-table-scroll) {
+  box-shadow: var(--diya-internal-surface-shadow);
+}
+
+.diya-root .diya-site-header-container {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--diya-color-text);
+}
+
+.diya-root .diya-site-brand,
+.diya-root .diya-site-nav :is(button, a),
+.diya-root .diya-site-mobile-nav :is(button, a) {
+  font-family: inherit;
+  text-decoration: none;
+}
+
+.diya-root .diya-workflow-surface {
+  background: var(--diya-internal-workflow-fill);
+  backdrop-filter: var(--diya-internal-workflow-backdrop);
+}
+
+.diya-root .diya-app-pattern-surface {
+  background: var(--diya-internal-application-fill);
+  backdrop-filter: var(--diya-internal-application-backdrop);
+}
+
+.diya-root .diya-analytics-card {
+  background: var(--diya-internal-analytics-fill);
+  backdrop-filter: var(--diya-internal-analytics-backdrop);
+}
+
+.diya-root .diya-table {
+  --diya-internal-table-elevation: var(--diya-internal-table-shadow);
+  --diya-internal-table-selection-left: 0px;
+  --diya-internal-table-primary-left: 0px;
+}
+
+.diya-root .diya-table .diya-table-scroll {
+  background: var(--diya-internal-table-fill);
+  border-color: var(--diya-internal-surface-border);
+  backdrop-filter: var(--diya-internal-field-backdrop);
+}
+
+.diya-root .diya-alert {
+  --diya-internal-alert-info: var(--diya-color-info-fill);
+  --diya-internal-alert-success: var(--diya-color-success-fill);
+  --diya-internal-alert-warning: var(--diya-internal-warning-mark);
+  --diya-internal-alert-error: var(--diya-color-error-fill);
+  --diya-internal-alert-tint: var(--diya-internal-alert-accent);
+  background: color-mix(in srgb, var(--diya-internal-alert-tint) var(--diya-internal-alert-alpha), var(--diya-internal-alert-fill));
+  backdrop-filter: var(--diya-internal-alert-backdrop);
+}
+
+.diya-root[data-theme='light'] .diya-alert[data-tone='warning'] {
+  --diya-internal-alert-tint: var(--diya-color-warning-fill);
+}
+
+/* Icons and actions use the status tone, which is readable on a surface. */
+.diya-root .diya-alert {
+  --diya-internal-alert-ink: var(--diya-color-info);
+}
+
+.diya-root .diya-alert[data-tone='success'] {
+  --diya-internal-alert-ink: var(--diya-color-success);
+}
+
+.diya-root .diya-alert[data-tone='warning'] {
+  --diya-internal-alert-ink: var(--diya-color-warning);
+}
+
+.diya-root .diya-alert[data-tone='error'] {
+  --diya-internal-alert-ink: var(--diya-color-error);
+}
+
+@media (forced-colors: none) {
+  .diya-root[data-theme='dark'][data-glass='true'] .diya-alert-action {
+    color: var(--diya-color-text);
+  }
+}
+
+.diya-root .diya-metric-change[data-meaning='positive'] {
+  color: var(--diya-color-success);
+}
+
+.diya-root .diya-metric-change[data-meaning='negative'] {
+  color: var(--diya-color-error);
+}
+
+/* Composite editors keep a single focus treatment around the whole control. */
+.diya-root .diya-select-control:focus-within {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 3px;
+}
+
+.diya-root .diya-select-control select:focus-visible,
+.diya-root .diya-combobox-control input:focus-visible,
+.diya-root .diya-chat-composer textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.diya-root .diya-field-help {
+  line-height: 1.6;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.diya-root .diya-combobox[data-invalid='true'] .diya-field-help,
+.diya-root .diya-date-field[data-invalid='true'] .diya-field-help,
+.diya-root .diya-workflow-error {
+  color: var(--diya-color-error);
+}
+
+.diya-root .diya-combobox[data-invalid='true'] .diya-combobox-control,
+.diya-root .diya-date-field[data-invalid='true'] .diya-date-trigger {
+  border-color: var(--diya-color-error);
+}
+
+/* Calendar controls remain styled when the popup is in the provider portal. */
+.diya-root .diya-calendar button:focus-visible {
+  outline: 2px solid var(--diya-color-accent);
+  outline-offset: 3px;
+}
+
+.diya-root .diya-combobox-options,
+.diya-root .diya-calendar {
+  max-width: calc(100vw - 24px);
+}
+
+/* Sticky columns account for optional expansion and selection independently. */
+.diya-root .diya-table[data-expandable] {
+  --diya-internal-table-selection-left: 40px;
+  --diya-internal-table-primary-left: 40px;
+}
+
+.diya-root .diya-table[data-selection] {
+  --diya-internal-table-primary-left: 48px;
+}
+
+.diya-root .diya-table[data-expandable][data-selection] {
+  --diya-internal-table-primary-left: 88px;
+}
+
+.diya-root .diya-table[data-sticky] [data-pinned] {
+  position: sticky;
+  z-index: 2;
+  background: color-mix(in srgb, var(--diya-internal-table-surface) 78%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.diya-root .diya-table[data-sticky] [data-pinned='expander'] {
+  left: 0;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+}
+
+.diya-root .diya-table[data-sticky] [data-pinned='selection'] {
+  left: var(--diya-internal-table-selection-left);
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+}
+
+.diya-root .diya-table[data-sticky] [data-pinned='primary'] {
+  left: var(--diya-internal-table-primary-left);
+  box-shadow: 1px 0 var(--diya-color-line), 8px 0 14px -12px #0006;
+}
+
+.diya-root .diya-table[data-sticky] tbody tr:hover > [data-pinned] {
+  background: color-mix(in srgb, var(--diya-internal-table-surface) 85%, transparent);
+}
+
+.diya-root .diya-table[data-sticky] tbody tr[data-selected] > [data-pinned] {
+  background: color-mix(in srgb, var(--diya-color-text) var(--diya-internal-table-selected-weight), color-mix(in srgb, var(--diya-internal-table-surface) 80%, transparent));
+}
+
+/* A narrow table needs room to reveal data between its frozen columns. */
+@container diya-table (max-width: 600px) {
+  .diya-root .diya-table[data-sticky] [data-pinned] {
+    left: auto;
+    box-shadow: none;
+  }
+}
+
+@supports (backdrop-filter: blur(14px)) {
+  .diya-root[data-glass='true'] {
+    --diya-internal-field-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-collection-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-popup-control-fill: color-mix(in srgb, var(--diya-color-raised) 76%, transparent);
+    --diya-internal-popup-fill: color-mix(in srgb, var(--diya-color-raised) 76%, transparent);
+    --diya-internal-pattern-fill: color-mix(in srgb, var(--diya-color-raised) 78%, transparent);
+    --diya-internal-workflow-fill: color-mix(in srgb, var(--diya-color-raised) 75%, transparent);
+    --diya-internal-application-fill: color-mix(in srgb, var(--diya-color-raised) 76%, transparent);
+    --diya-internal-analytics-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-table-fill: color-mix(in srgb, var(--diya-color-raised) 72%, transparent);
+    --diya-internal-field-backdrop: var(--diya-internal-blur);
+    --diya-internal-popup-backdrop: blur(16px);
+    --diya-internal-pattern-backdrop: var(--diya-internal-blur);
+    --diya-internal-workflow-backdrop: blur(18px);
+    --diya-internal-application-backdrop: blur(18px);
+    --diya-internal-analytics-backdrop: var(--diya-internal-blur);
+    --diya-internal-alert-alpha: 8%;
+    --diya-internal-alert-fill: var(--diya-color-glass);
+    --diya-internal-alert-backdrop: blur(20px);
+  }
+
+  .diya-root[data-glass='true']:where([data-theme='light']) {
+    --diya-internal-field-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-collection-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-popup-control-fill: color-mix(in srgb, var(--diya-color-raised) 82%, transparent);
+    --diya-internal-popup-fill: color-mix(in srgb, var(--diya-color-raised) 84%, transparent);
+    --diya-internal-pattern-fill: color-mix(in srgb, var(--diya-color-raised) 84%, transparent);
+    --diya-internal-workflow-fill: color-mix(in srgb, var(--diya-color-raised) 82%, transparent);
+    --diya-internal-application-fill: color-mix(in srgb, var(--diya-color-raised) 82%, transparent);
+    --diya-internal-analytics-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-table-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-popup-backdrop: var(--diya-internal-blur);
+    --diya-internal-workflow-backdrop: var(--diya-internal-blur);
+    --diya-internal-application-backdrop: var(--diya-internal-blur);
+    --diya-internal-alert-backdrop: var(--diya-internal-blur);
+  }
+}
+
+/* Glass, the material. Every surface is see-through frosted glass: cards, chart cards,
+   tables (clear rows on the card's glass), inline alerts, side navigation, headers,
+   tab tracks, controls, menus, popovers, dialogs, drawers and toasts. Cards are the
+   clearest pane, so the backdrop's light and shade pass visibly behind them; the
+   floating layer is denser, so menus and dialogs always read. The material is
+   neutral: the blur lifts saturation by 1.15 at most, so the backdrop arrives as
+   soft light, never as a color wash, and text and controls keep their neutral color.
+   Every pane has a hairline rim, brighter along the top, and a soft shadow. */
+@supports (backdrop-filter: blur(14px)) {
+  .diya-root[data-glass='true'] {
+    --diya-internal-blur: blur(28px) saturate(1.15);
+    /* Cards dim what is behind them a little, so a bright patch never washes out
+       light text, while its shape still passes through. */
+    --diya-internal-content-blur: blur(18px) saturate(1.15) brightness(0.92);
+    --diya-internal-glass-edge: color-mix(in srgb, #ffffff 13%, transparent);
+    --diya-internal-glass-top-edge: color-mix(in srgb, #ffffff 22%, transparent);
+    /* The specular rim: a hairline edge, brighter along the top where the light falls,
+       over a soft shadow (and no glow). Menus, popovers, dialogs and toasts share it. */
+    --diya-internal-overlay-border: var(--diya-internal-glass-edge);
+    --diya-internal-overlay-top-border: var(--diya-internal-glass-top-edge);
+    --diya-shadow-raised: inset 0 1px 0 #ffffff1f, inset 0 -1px 0 #ffffff0a, 0 1px 1px #0000004d, 0 30px 64px -20px #000000c7;
+    /* A pane, not a printed card: a faint sheen across its top. */
+    --diya-internal-glass-sheen: linear-gradient(180deg, #ffffff0f, #ffffff00 38%);
+    /* The floating layer: denser where text is dense (menus, dialogs), lighter where
+       the pane is navigation or a single control. */
+    --diya-internal-header-fill: color-mix(in srgb, var(--diya-color-raised) 62%, transparent);
+    --diya-internal-overlay-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-popup-fill: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+    --diya-internal-tabs-fill: color-mix(in srgb, var(--diya-color-raised) 56%, transparent);
+    --diya-internal-outline-fill: color-mix(in srgb, var(--diya-color-raised) 50%, transparent);
+    --diya-internal-field-fill: color-mix(in srgb, var(--diya-color-raised) 56%, transparent);
+    --diya-internal-popup-control-fill: color-mix(in srgb, var(--diya-color-raised) 56%, transparent);
+    --diya-internal-field-backdrop: var(--diya-internal-blur);
+    --diya-internal-popup-backdrop: var(--diya-internal-blur);
+    --diya-internal-toast-fill: var(--diya-internal-overlay-fill);
+    /* Status tags keep a solid base under their tint, so a bright shape behind the
+       glass never thins their label. */
+    --diya-internal-tag-base: var(--diya-color-raised);
+    /* Small text that sits straight on the backdrop (pagination labels) gets a soft
+       frosted lift behind it, so it reads over any shape the backdrop has. */
+    --diya-internal-text-lift: color-mix(in srgb, var(--diya-color-raised) 74%, transparent);
+    --diya-internal-toast-backdrop: var(--diya-internal-blur);
+    /* Cards and every other content surface: the clearest pane. */
+    --diya-internal-content-fill: color-mix(in srgb, var(--diya-color-raised) 34%, transparent);
+    --diya-internal-surface-border: var(--diya-internal-glass-edge);
+    --diya-internal-surface-shadow: inset 0 1px 0 #ffffff1f, inset 0 -1px 0 #ffffff0a, 0 1px 1px #00000040, 0 24px 56px -22px #000000a6;
+    --diya-internal-collection-fill: transparent;
+    --diya-internal-pattern-fill: var(--diya-internal-content-fill);
+    --diya-internal-workflow-fill: var(--diya-internal-content-fill);
+    --diya-internal-application-fill: var(--diya-internal-content-fill);
+    --diya-internal-analytics-fill: var(--diya-internal-content-fill);
+    --diya-internal-table-fill: var(--diya-internal-content-fill);
+    --diya-internal-pattern-backdrop: var(--diya-internal-content-blur);
+    --diya-internal-workflow-backdrop: var(--diya-internal-content-blur);
+    --diya-internal-application-backdrop: var(--diya-internal-content-blur);
+    --diya-internal-analytics-backdrop: var(--diya-internal-content-blur);
+    --diya-internal-alert-fill: var(--diya-internal-content-fill);
+    --diya-internal-alert-backdrop: var(--diya-internal-content-blur);
+    /* A dimming layer behind dialogs and drawers, as Apple asks for over busy content. */
+    --diya-color-scrim: #00000059;
+  }
+  .diya-root[data-glass='true']:where([data-theme='light']) {
+    --diya-internal-blur: blur(28px) saturate(1.15) brightness(1.04);
+    --diya-internal-content-blur: blur(18px) saturate(1.15) brightness(1.02);
+    --diya-internal-glass-top-edge: #ffffff;
+    --diya-internal-glass-edge: color-mix(in srgb, #ffffff 55%, transparent);
+    --diya-shadow-raised: inset 0 1px 0 #ffffff, inset 0 -1px 0 #ffffff66, 0 0 0 0.5px #1014181f, 0 2px 6px -2px #10141814, 0 22px 50px -26px #10141824;
+    --diya-internal-glass-sheen: linear-gradient(180deg, #ffffff80, #ffffff00 42%);
+    --diya-internal-header-fill: color-mix(in srgb, var(--diya-color-raised) 62%, transparent);
+    --diya-internal-overlay-fill: color-mix(in srgb, var(--diya-color-raised) 84%, transparent);
+    --diya-internal-popup-fill: color-mix(in srgb, var(--diya-color-raised) 84%, transparent);
+    --diya-internal-tabs-fill: color-mix(in srgb, var(--diya-color-raised) 60%, transparent);
+    --diya-internal-outline-fill: color-mix(in srgb, var(--diya-color-raised) 58%, transparent);
+    --diya-internal-field-fill: color-mix(in srgb, var(--diya-color-raised) 66%, transparent);
+    --diya-internal-popup-control-fill: color-mix(in srgb, var(--diya-color-raised) 66%, transparent);
+    --diya-internal-content-fill: color-mix(in srgb, var(--diya-color-raised) 35%, transparent);
+    /* Muted text a step deeper, like a vibrant secondary label, so it holds 4.5:1
+       over the shade the clearer glass lets through. */
+    --diya-color-muted: #384346;
+    --diya-internal-surface-shadow: inset 0 1px 0 #ffffff, inset 0 -1px 0 #ffffff59, 0 0 0 0.5px #1014181a, 0 2px 4px -1px #1014180f, 0 24px 56px -24px #1014183d;
+    --diya-color-scrim: #10141824;
+  }
+  /* Dialogs and drawers float: denser glass with the specular rim. */
+  .diya-root[data-glass='true'] :is(.diya-dialog, .diya-drawer-modal) {
+    background: var(--diya-internal-overlay-fill);
+    border-color: var(--diya-internal-glass-edge);
+    border-top-color: var(--diya-internal-glass-top-edge);
+  }
+  .diya-root[data-glass='true'] :is(.diya-card, .diya-analytics-card, .diya-workflow-surface, .diya-app-pattern-surface, .diya-table .diya-table-scroll, .diya-floating-surface, .diya-dialog, .diya-drawer-modal) {
+    background-image: var(--diya-internal-glass-sheen);
+  }
+  .diya-root[data-glass='true'] .diya-tag:is([data-color='success'], [data-color='warning'], [data-color='error'], [data-color='info']) {
+    background: linear-gradient(var(--diya-internal-tag-surface), var(--diya-internal-tag-surface)), var(--diya-internal-tag-base);
+  }
+  .diya-root[data-glass='true'] .diya-metric-change[data-meaning='positive'] {
+    background: linear-gradient(var(--diya-color-success-surface), var(--diya-color-success-surface)), var(--diya-internal-tag-base);
+  }
+  .diya-root[data-glass='true'] .diya-metric-change[data-meaning='negative'] {
+    background: linear-gradient(var(--diya-color-error-surface), var(--diya-color-error-surface)), var(--diya-internal-tag-base);
+  }
+  .diya-root[data-glass='true'] :is(.diya-pagination-count, .diya-pagination-size > span) {
+    border-radius: 999px;
+    background: var(--diya-internal-text-lift);
+    box-shadow: 0 0 10px 6px var(--diya-internal-text-lift);
+  }
+  /* A toast floats; an inline alert is content. */
+  .diya-root[data-glass='true'] .diya-toast-region .diya-alert {
+    --diya-internal-alert-fill: var(--diya-internal-toast-fill);
+    --diya-internal-alert-backdrop: var(--diya-internal-toast-backdrop);
+  }
+  /* The Site Header is navigation, so it is glass even though it shares the Card's fill. */
+  .diya-root[data-glass='true'] .diya-site-header-container {
+    background: var(--diya-internal-header-fill);
+    backdrop-filter: var(--diya-internal-backdrop);
+  }
+  /* Table cells are clear, so the table's own surface shows through every row; frozen
+     columns keep a denser pane so what scrolls beneath them stays out of the way. */
+  .diya-root[data-glass='true'] .diya-table { --diya-internal-table-surface: transparent; }
+  .diya-root[data-glass='true'] .diya-table[data-sticky] [data-pinned] { background: var(--diya-internal-overlay-fill); }
+}
+
+/* Increase Contrast: solid surfaces and firmer edges, as Apple's glass does. Safari has
+   no prefers-reduced-transparency yet, so this is the setting it does pass through. */
+@media (prefers-contrast: more) {
+  .diya-root[data-glass='true'] {
+    --diya-internal-header-fill: var(--diya-color-raised);
+    --diya-internal-overlay-fill: var(--diya-color-raised);
+    --diya-internal-popup-fill: var(--diya-color-raised);
+    --diya-internal-tabs-fill: var(--diya-color-raised);
+    --diya-internal-outline-fill: var(--diya-color-raised);
+    --diya-internal-field-fill: var(--diya-color-raised);
+    --diya-internal-popup-control-fill: var(--diya-color-raised);
+    --diya-internal-content-fill: var(--diya-color-raised);
+    --diya-internal-glass-edge: color-mix(in srgb, var(--diya-color-text) 40%, transparent);
+    --diya-internal-glass-sheen: none;
+    --diya-internal-glass-top-edge: var(--diya-internal-glass-edge);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .diya-root[data-glass='true'] {
+    --diya-internal-header-fill: var(--diya-color-raised);
+    --diya-internal-overlay-fill: var(--diya-color-raised);
+    --diya-internal-tabs-fill: var(--diya-color-raised);
+    --diya-internal-outline-fill: var(--diya-color-raised);
+    --diya-internal-backdrop: none;
+    --diya-internal-glass-edge: var(--diya-internal-header-border);
+    --diya-internal-glass-sheen: none;
+    --diya-internal-surface-border: color-mix(in srgb, var(--diya-color-text) 9%, transparent);
+    --diya-internal-field-fill: var(--diya-color-hover);
+    --diya-internal-collection-fill: transparent;
+    --diya-internal-popup-control-fill: var(--diya-color-hover);
+    --diya-internal-popup-fill: var(--diya-color-raised);
+    --diya-internal-pattern-fill: var(--diya-color-raised);
+    --diya-internal-workflow-fill: var(--diya-color-raised);
+    --diya-internal-application-fill: var(--diya-color-raised);
+    --diya-internal-analytics-fill: var(--diya-color-raised);
+    --diya-internal-table-fill: var(--diya-color-raised);
+    --diya-internal-field-backdrop: none;
+    --diya-internal-popup-backdrop: none;
+    --diya-internal-pattern-backdrop: none;
+    --diya-internal-workflow-backdrop: none;
+    --diya-internal-application-backdrop: none;
+    --diya-internal-analytics-backdrop: none;
+    --diya-internal-alert-alpha: 7%;
+    --diya-internal-alert-fill: var(--diya-color-surface);
+    --diya-internal-alert-backdrop: none;
+  }
+
+  .diya-root .diya-table[data-sticky] [data-pinned] {
+    background: var(--diya-internal-table-surface);
+    backdrop-filter: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .diya-root,
+  .diya-root[data-theme='light'],
+  .diya-root[data-theme='dark'],
+  .diya-root[data-glass='true'] {
+    --diya-color-error: CanvasText;
+    --diya-internal-control-line: ButtonText;
+    --diya-internal-table-shadow: none;
+    --diya-internal-field-fill: Canvas;
+    --diya-internal-collection-fill: Canvas;
+    --diya-internal-popup-control-fill: Canvas;
+    --diya-internal-popup-fill: Canvas;
+    --diya-internal-pattern-fill: Canvas;
+    --diya-internal-workflow-fill: Canvas;
+    --diya-internal-application-fill: Canvas;
+    --diya-internal-analytics-fill: Canvas;
+    --diya-internal-table-fill: Canvas;
+    --diya-internal-field-backdrop: none;
+    --diya-internal-popup-backdrop: none;
+    --diya-internal-pattern-backdrop: none;
+    --diya-internal-workflow-backdrop: none;
+    --diya-internal-application-backdrop: none;
+    --diya-internal-analytics-backdrop: none;
+    --diya-internal-alert-backdrop: none;
+  }
+
+  .diya-root .diya-card,
+  .diya-root .diya-dialog,
+  .diya-root .diya-site-header-container,
+  .diya-root .diya-workflow-surface,
+  .diya-root .diya-app-pattern-surface,
+  .diya-root .diya-analytics-card,
+  .diya-root .diya-table .diya-table-scroll,
+  .diya-root .diya-combobox-control,
+  .diya-root .diya-combobox-options,
+  .diya-root .diya-date-trigger,
+  .diya-root .diya-calendar {
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+
+  .diya-root .diya-alert {
+    background: Canvas;
+    border-color: CanvasText;
+  }
+
+  .diya-root .diya-metric-change[data-meaning] {
+    color: CanvasText;
+  }
+
+  .diya-root .diya-table[data-sticky] [data-pinned],
+  .diya-root .diya-table[data-sticky] .diya-table-actions {
+    background: Canvas;
+    color: CanvasText;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  .diya-root .diya-table tbody tr[data-selected] td {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  .diya-root :where([class*='diya-']:not(.diya-root, .diya-portal-root)) :where(button, input, select, textarea):disabled,
+  .diya-root :where(button, input, select, textarea):where([class*='diya-']):disabled,
+  .diya-root .diya-side-navigation button:disabled {
+    color: GrayText;
+    opacity: 1;
+  }
+
+  .diya-root .diya-calendar-grid button[aria-pressed='true'],
+  .diya-root .diya-site-nav [aria-current],
+  .diya-root .diya-site-mobile-nav [aria-current],
+  .diya-root .diya-side-navigation [aria-current] {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+}
+
+/* Long drawers keep their actions visible while content scrolls. */
+.diya-root .diya-drawer-modal > :is(header,footer) { flex-shrink:0; }
+.diya-root .diya-drawer-modal > .diya-drawer-body { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; }
+
+/* Dialog and Drawer titles look the same at every heading level. */
+.diya-root .diya-dialog .diya-dialog-title,
+.diya-root .diya-drawer-modal .diya-drawer-title { margin: 0; font-size: var(--diya-text-title); font-weight: 600; letter-spacing: -0.015em; line-height: var(--diya-leading-tight); }
+
+/* Type roles. Every title-role heading shares one spec now that DIYA Sans
+   renders real medium and semibold weights. */
+.diya-root :is(.diya-card-header h3, .diya-dialog h3, .diya-dialog-heading h3, .diya-table-title, .diya-workflow-surface h3, .diya-drawer-body h4, .diya-chat-welcome h3, .diya-side-navigation > strong) {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: var(--diya-leading-tight);
+}
+.diya-root .diya-chat-header strong { font-size: var(--diya-text-large); font-weight: 600; }
+/* Underline tabs keep their tight inset at every size. */
+.diya-root .diya-tabs[data-variant='underline'][data-size] .diya-tab { padding-inline: 4px; }
+.diya-root .diya-switch-description[data-invalid] { color: var(--diya-color-error); }
+.diya-root .diya-slider-label { display: block; font-size: var(--diya-text-body); font-weight: 500; margin-bottom: 10px; overflow-wrap: anywhere; }
+
+/* In-page surface titles are quiet: 15px at 550, so the content leads, not the frame. */
+.diya-root :is(.diya-card-title, .diya-analytics-title, .diya-project-form-title, .diya-upload-title, .diya-table-title, .diya-card-header h3, .diya-workflow-surface h3) {
+  font-size: var(--diya-text-body);
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+.diya-root .diya-card-header p { font-size: var(--diya-text-caption); margin-top: 4px; line-height: 1.55; }
+.diya-root .diya-analytics-title { margin-bottom: 4px; }
+.diya-root .diya-card-content { margin-top: 20px; }
+
+/* A change that means something reads as a vivid chip: a bright tint behind a strong label. */
+.diya-root .diya-metric-change:is([data-meaning='positive'], [data-meaning='negative']) {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-weight: 560;
+}
+.diya-root .diya-metric-change[data-meaning='positive'] { background: var(--diya-color-success-surface); }
+.diya-root .diya-metric-change[data-meaning='negative'] { background: var(--diya-color-error-surface); }
+@media (forced-colors: active) { .diya-root .diya-metric-change[data-meaning] { background: none; border: 1px solid CanvasText; } }

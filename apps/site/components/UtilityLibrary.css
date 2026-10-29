@@ -1,0 +1,4 @@
+:where(html[data-catalog='true']) .utility-value-row { display: flex; align-items: center; gap: 12px; min-height: 34px; }
+:root[data-catalog='true'] .utility-value-row .diya-slider { width: 120px; margin: 0; }
+:where(html[data-catalog='true']) .utility-value-control output { font-size: var(--diya-text-caption, 13px); width: 40px; color: var(--diya-color-muted); text-align: right; }
+:where(html[data-catalog='true']) .utility-value-control:disabled { opacity: .4; }

@@ -1,0 +1,35 @@
+:where(html[data-catalog='true']) .pattern-library { color: var(--diya-color-text); }
+:where(html[data-catalog='true']) .pattern-current { display:flex; justify-content:space-between; padding:12px 16px; border-radius:10px; background:var(--diya-color-selected); color:var(--diya-color-text); font-size:14px; text-decoration:none; }
+:where(html[data-catalog='true']) .pattern-current span { color:var(--diya-color-muted); }
+:where(html[data-catalog='true']) .pattern-library .component-document-heading > p { color:var(--diya-color-muted); font-size:14px; margin:12px 0 26px; }
+:where(html[data-catalog='true']) .pattern-stage { border:1px solid var(--diya-color-line); border-radius:24px; background:var(--diya-color-glass); backdrop-filter:blur(24px); box-shadow:var(--diya-shadow-raised); overflow:hidden; }
+:where(html[data-catalog='true']) .pattern-controls { display:flex; flex-wrap:wrap; align-items:start; justify-content:space-between; gap:32px 40px; padding:28px 32px; border-bottom:1px solid var(--diya-color-line); }
+:where(html[data-catalog='true']) .pattern-canvas { padding:40px 32px; min-height:360px; }
+/* Card fills its column since 1.0; the playground keeps the specimen at a readable card width. */
+:where(html[data-catalog='true']) .card-pattern-canvas .diya-card { max-width: 420px; }
+:where(html[data-catalog='true']) .pattern-preview { width:100%; margin:auto; padding:30px; background:var(--diya-color-surface); border:1px solid var(--diya-color-line); border-radius:16px; }
+:where(html[data-catalog='true']) .pattern-preview[data-width='Mobile'] { max-width:390px; padding:24px; }
+:where(html[data-catalog='true']) .pattern-section-content { padding:0 0 4px; }
+:where(html[data-catalog='true']) .pattern-section-content > span { font-size:14px; font-weight:500; }
+:where(html[data-catalog='true']) .pattern-section-content p { font-size:13px; color:var(--diya-color-muted); margin:8px 0 0; }
+:where(html[data-catalog='true']) .pattern-feedback { font-size: var(--diya-text-caption, 13px); color:var(--diya-color-muted); padding:0 32px; margin:0 0 20px; }
+:where(html[data-catalog='true']) .pattern-feedback:empty { display:none; }
+:where(html[data-catalog='true']) .pattern-notes { margin-top:28px; font-size:13px; color:var(--diya-color-muted); }
+:where(html[data-catalog='true']) .pattern-notes > div { display:inline-flex; gap:16px; margin-left:20px; flex-wrap:wrap; }
+:where(html[data-catalog='true']) .pattern-notes a { color:var(--diya-color-text); text-underline-offset:4px; }
+:where(html[data-catalog='true']) .pattern-notes p { margin-top:16px; line-height:1.6; }
+@media(max-width:900px) { :where(html[data-catalog='true']) .pattern-library { grid-template-columns:1fr; gap:24px; } :where(html[data-catalog='true']) .pattern-library .component-browser { position:static; } :where(html[data-catalog='true']) .pattern-controls,
+:where(html[data-catalog='true'])  .pattern-canvas { padding:24px; } }
+@media(max-width:500px) { :where(html[data-catalog='true']) .pattern-preview { padding:20px; } :where(html[data-catalog='true']) .pattern-canvas { padding:16px; } }
+:where(html[data-catalog='true']) .pattern-current { background:transparent; margin-bottom:4px; }
+:where(html[data-catalog='true']) .pattern-current[aria-current='page'] { background:var(--diya-color-selected); }
+:where(html[data-catalog='true']) .pattern-current:hover { background:var(--diya-color-hover); }
+/* This application frame owns its edge; the portable header owns only its divider. */
+:where(html[data-catalog='true']) .pattern-preview.site-header-preview { padding:0; overflow:hidden; }
+/* PageHeader already draws the complete component edge and material. */
+:root[data-catalog='true'] body:has(.gallery-study) .pattern-preview.page-header-preview { padding:0; border:0; border-radius:0; background:transparent; }
+:where(html[data-catalog='true']) .card-preview-content { display:flex; align-items:center; gap:12px; }
+:where(html[data-catalog='true']) .card-preview-content > div { display:grid; gap:4px; min-width:0; }
+:where(html[data-catalog='true']) .card-preview-content strong { font-size:var(--diya-text-body); line-height:1.5; font-weight:500; overflow-wrap:anywhere; }
+:where(html[data-catalog='true']) .card-preview-content small { color:var(--diya-color-muted); font-size:var(--diya-text-caption); line-height:1.5; }
+:where(html[data-catalog='true']) .catalog-workflow-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:12px; margin-top:24px; }

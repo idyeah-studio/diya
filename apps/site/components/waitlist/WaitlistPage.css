@@ -1,0 +1,83 @@
+/* Confirmed, unsubscribe and privacy pages: one column, plain type, public tokens only. */
+/* With the site header and footer (from launch): the site's own ground, like every public page. */
+.waitlist-shell { min-height: 100vh; background: var(--site-ground); }
+html:has(.waitlist-shell) body { background: #141515; }
+html[data-theme='light']:has(.waitlist-shell) body { background: #f2f2ef; }
+.waitlist-shell .site-foot p { color: var(--diya-color-muted); }
+/* The site's focus ring, not the older globals' purple one. */
+:is(.waitlist-shell, .waitlist-page) :focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
+.waitlist-page .wp-main {
+  box-sizing: border-box;
+  inline-size: min(100%, 36rem);
+  margin-inline: auto;
+  padding: 120px 16px 96px;
+  font-size: var(--diya-text-body);
+  line-height: var(--diya-leading-body);
+}
+.waitlist-page .wp-main[data-wide] {
+  inline-size: min(100%, 44rem);
+}
+.waitlist-page .wp-main:focus {
+  outline: none;
+}
+.waitlist-page .wp-eyebrow {
+  margin: 0 0 16px;
+  color: var(--diya-color-muted);
+  font-size: var(--diya-text-body);
+}
+.waitlist-page h1 {
+  margin: 0 0 20px;
+  font-size: var(--diya-text-display);
+  font-weight: 560;
+  line-height: var(--diya-leading-tight);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.waitlist-page h2 {
+  margin: 48px 0 12px;
+  font-size: var(--diya-text-title);
+  font-weight: 600;
+  line-height: var(--diya-leading-tight);
+}
+.waitlist-page p,
+.waitlist-page ul {
+  margin: 0 0 16px;
+  color: var(--diya-color-text);
+  max-inline-size: 62ch;
+}
+.waitlist-page ul {
+  padding-inline-start: 20px;
+}
+.waitlist-page li + li {
+  margin-block-start: 8px;
+}
+.waitlist-page .wp-lede {
+  font-size: var(--diya-text-large);
+}
+.waitlist-page .wp-muted,
+.waitlist-page .wp-eyebrow {
+  color: var(--diya-color-muted);
+}
+.waitlist-page code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.93em;
+  overflow-wrap: anywhere;
+}
+.waitlist-page .wp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-block-start: 28px;
+}
+.waitlist-page .wp-actions form {
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .waitlist-page .wp-main {
+    padding-block-start: 96px;
+  }
+  .waitlist-page h1 {
+    font-size: var(--diya-text-heading);
+  }
+}

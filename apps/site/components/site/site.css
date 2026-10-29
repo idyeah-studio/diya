@@ -1,0 +1,437 @@
+/* Public site chrome: header, footer, install chip and the wordmark.
+   Colors come from DIYA's public tokens under a provider; the only site
+   values are the grounds and the wordmark's vermilion D dot, which are
+   never SDK tokens. */
+.diya-root {
+  --site-ground: #141515;
+  --site-ground-2: #1a1b1c;
+  --site-ink-soft: color-mix(in srgb, var(--diya-color-text) 64%, transparent);
+  --site-dot: #e8503a;
+  --site-plate-shadow: 0 30px 80px -20px #000c, 0 2px 0 #ffffff08 inset;
+  --site-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+}
+.diya-root[data-theme='light'] {
+  --site-ground: #f2f2ef;
+  --site-ground-2: #e9eae6;
+  --site-ink-soft: color-mix(in srgb, var(--diya-color-text) 70%, transparent);
+  --site-plate-shadow: 0 30px 70px -24px #3a3f3a40, 0 1px 0 #fff inset;
+}
+.site-root {
+  min-height: 100vh;
+  background: var(--site-ground);
+  color: var(--diya-color-text);
+  -webkit-font-smoothing: antialiased;
+}
+/* The app's older globals set 12px small text, muted paragraphs and a purple
+   focus ring; none of that belongs on the public site. */
+.site-root small { font-size: 13px; }
+.site-root p { color: var(--diya-color-muted); }
+.site-root :focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
+.site-root .glass-row input:focus-visible + .switch-track,
+.site-root .segmented input:focus-visible + span { outline-color: var(--diya-color-text); }
+.site-mono, .site-root code { font-family: var(--site-mono); }
+html:has(.site-root) { scroll-padding-top: 96px; }
+html:has(.site-root) body { background: #141515; }
+html[data-theme='light']:has(.site-root) body { background: #f2f2ef; }
+html:has(:is(.site-root, .waitlist-shell)) .skip-link { z-index: 70; background: var(--diya-color-accent, #e8e8e8); color: var(--diya-color-accent-text, #1c1c1c); border-radius: 999px; padding: 12px 18px; font-size: 15px; }
+/* The catalog's skip link ring, not the older globals' purple one. */
+html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2px solid #1c1c1c; outline-offset: 2px; }
+
+/* The wordmark: ink strokes and A dot, a vermilion D dot in both themes.
+   The glow layer exists only during the launch moment, which fades it in
+   and out once as the mark lands. */
+.site-mark { display: block; width: 100%; height: auto; overflow: visible; }
+.site-mark-dot { fill: var(--site-dot); }
+.site-mark-glow {
+  fill: var(--site-dot);
+  opacity: 0;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--site-dot) 75%, transparent))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--site-dot) 45%, transparent));
+}
+.diya-root[data-theme='light'] .site-mark-glow {
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--site-dot) 60%, transparent))
+    drop-shadow(0 0 8px color-mix(in srgb, var(--site-dot) 30%, transparent));
+}
+
+/* Header */
+/* One header on every page: the same 72px bar (64px on phones), the same
+   grid and the same controls. It is clear at the top of any page and turns
+   solid, with a hairline, once content scrolls under it (SiteHeader sets
+   data-solid). The solid material sits on ::before, so the header itself is
+   never a backdrop root: its popovers can blur the page, not just the bar. */
+.site-top {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 60;
+  color: var(--diya-color-text);
+}
+.site-top::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--site-ground) 86%, transparent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--diya-color-line) 60%, transparent);
+  backdrop-filter: blur(16px) saturate(1.1);
+  transition: opacity .25s ease;
+}
+.site-top[data-solid]::before { opacity: 1; }
+.site-top-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  max-width: 1440px;
+  height: 72px;
+  margin: 0 auto;
+  padding: 0 56px;
+}
+.site-top-home { justify-self: start; display: block; width: 92px; color: var(--diya-color-text); border-radius: 6px; }
+/* Current and selected, one system for the site and the catalog, in DIYA's
+   own tokens (the same split DIYA's components make):
+   - Where you are (header nav, catalog sidebar, the Relight entry, the phone
+     menu): a --diya-color-selected tint, text in --diya-color-text, regular
+     weight, as SideNavigation and SiteHeader do it.
+   - A value you chose (segmented controls in the playgrounds and Appearance,
+     pill tabs, swatches, switches, checkboxes): a solid --diya-color-accent
+     fill with --diya-color-accent-text, the same height as its siblings.
+   - Hover: a --diya-color-hover tint on anything not current or selected; a
+     current or selected item keeps its fill.
+   - Focus-visible: a 2px ring in --diya-color-text, outside the control, or
+     inset (-2px) inside a scrolling list so it is never cut off.
+   - Disabled: 45% opacity, no hover. Pressed keys move down 1px.
+   Header controls share one 40px height: nav track, GitHub, Appearance. */
+.site-top-nav {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--diya-internal-edge);
+  border-top-color: var(--diya-internal-highlight);
+  background: color-mix(in srgb, var(--diya-color-raised) 55%, transparent);
+  backdrop-filter: blur(16px);
+}
+.site-top-nav a {
+  padding: 5.5px 18px;
+  border-radius: 999px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--diya-color-muted);
+  white-space: nowrap;
+}
+.site-top-nav a:hover { color: var(--diya-color-text); background: var(--diya-color-hover); }
+.site-top-nav a[aria-current] { color: var(--diya-color-text); background: var(--diya-color-selected); }
+.site-top-end { justify-self: end; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.site-top-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--diya-color-line);
+  font-size: 15px;
+  color: var(--diya-color-text);
+  white-space: nowrap;
+}
+.site-top .appearance-popover > summary {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--diya-color-line);
+  color: var(--diya-color-text);
+}
+/* The header's keys wear the nav pill's material, so they stay legible
+   (4.5:1 or better) over a photograph while the header is clear. */
+.site-top-button,
+.site-top-appearance .appearance-popover > summary,
+.site-top-menu-button {
+  background: color-mix(in srgb, var(--diya-color-raised) 55%, transparent);
+  backdrop-filter: blur(16px);
+}
+.site-top-button:hover,
+.site-top-appearance .appearance-popover > summary:hover,
+.site-top-menu-button:hover { background: color-mix(in srgb, var(--diya-color-raised) 85%, transparent); }
+.site-top-appearance .appearance-panel { top: 50px; }
+:root body .site-top .appearance-panel .segmented label:hover > input:not(:checked) + span { background: var(--diya-color-hover); color: var(--diya-color-text); }
+/* Header popovers: one legible material in every mode, never page content
+   showing through. Solid raised; with Glass, mostly raised over a strong blur. */
+:root body .site-top .appearance-panel.material {
+  color: var(--diya-color-text);
+  background: var(--diya-color-raised);
+  border: 1px solid var(--diya-internal-overlay-border);
+  box-shadow: var(--site-plate-shadow);
+  backdrop-filter: none;
+}
+@supports (backdrop-filter: blur(1px)) {
+  :root body .diya-root[data-glass='true'] .site-top .appearance-panel.material {
+    background: color-mix(in srgb, var(--diya-color-raised) 86%, transparent);
+    border-color: var(--diya-internal-edge);
+    border-top-color: var(--diya-internal-highlight);
+    backdrop-filter: blur(24px) saturate(1.2);
+  }
+}
+/* In the phone menu the panel is an inset card on the sheet; the row above already names it. */
+:root body .site-top .site-menu .appearance-panel.material,
+:root body .diya-root[data-glass='true'] .site-top .site-menu .appearance-panel.material {
+  background: var(--diya-color-surface);
+  border: 1px solid var(--diya-color-line);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.site-menu-appearance .appearance-panel > strong { display: none; }
+.site-menu-appearance .appearance-panel .segmented { margin-top: 0; }
+.site-top-menu-button {
+  display: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--diya-color-line);
+  color: var(--diya-color-text);
+}
+.site-top-chip { display: none; }
+@media (min-width: 1240px) {
+  .site-top-chip {
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity .2s ease, transform .2s ease, visibility 0s linear .2s;
+  }
+  .site-top-chip[data-shown] { visibility: visible; opacity: 1; transform: none; transition-delay: 0s; }
+}
+
+/* Phone: the library links stay; everything else moves into the sheet. */
+.site-menu { display: none; }
+@media (max-width: 760px) {
+  .site-top-bar { grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; height: 64px; padding: 0 16px; }
+  .site-top-home { width: 64px; }
+  .site-top-nav { justify-self: center; padding: 3px; }
+  .site-top-nav a { padding: 7px 12px; font-size: 13px; }
+  .site-top-end > :not(.site-top-menu-button) { display: none; }
+  .site-top-menu-button { display: grid; }
+  .site-menu:not([hidden]) {
+    display: block;
+    position: absolute;
+    top: 64px;
+    left: 12px;
+    right: 12px;
+    max-height: calc(100svh - 76px);
+    overflow: auto;
+    padding: 8px;
+    border-radius: 18px;
+    background: var(--diya-color-raised);
+    border: 1px solid var(--diya-internal-edge);
+    box-shadow: var(--site-plate-shadow);
+  }
+}
+@media (max-width: 360px) {
+  .site-top-bar { gap: 6px; }
+  .site-top-home { width: 56px; }
+  .site-top-nav a { padding: 7px 9px; }
+}
+.site-menu-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  color: var(--diya-color-text);
+  text-align: left;
+}
+.site-menu-row small { color: var(--diya-color-muted); }
+.site-menu-row code { font-size: 13px; color: var(--diya-color-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+a.site-menu-row:hover, button.site-menu-row:hover { background: var(--diya-color-hover); }
+.site-menu-appearance { position: relative; }
+.site-menu-appearance > .site-menu-row { padding-right: 56px; }
+.site-menu-appearance .appearance-popover { position: static; }
+.site-menu-appearance .appearance-popover > summary {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 48px;
+  justify-content: end;
+  padding-right: 10px;
+  border: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+}
+.site-menu-appearance .appearance-popover > summary:hover { background: var(--diya-color-hover); }
+.site-menu-appearance .appearance-panel {
+  position: static;
+  width: auto;
+  margin: 4px 0 6px;
+  box-shadow: none;
+}
+
+/* Install chip: a machined object. A recessed well, a manager you can turn,
+   the command, and a raised key that presses. */
+.site-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
+  height: 60px;
+  padding: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--diya-color-recessed) 82%, transparent);
+  box-shadow: inset 0 1px 3px #0009, inset 0 0 0 1px var(--diya-color-line), 0 1px 0 #ffffff14;
+  backdrop-filter: blur(18px);
+}
+.diya-root[data-theme='light'] .site-chip {
+  background: #e3e4e0e6;
+  box-shadow: inset 0 1px 3px #3a403a2e, inset 0 0 0 1px #52606340, 0 1px 0 #ffffffcc;
+}
+.site-chip-pm {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+  padding: 0 14px 0 18px;
+  border-radius: 999px;
+  font: 500 15px/1 var(--site-mono);
+  color: var(--diya-color-muted);
+  cursor: pointer;
+}
+.site-chip-pm:hover { color: var(--diya-color-text); background: var(--diya-color-hover); }
+.site-chip-pm select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 15px;
+}
+.site-chip-pm:has(select:focus-visible) { outline: 2px solid var(--diya-color-text); outline-offset: 2px; }
+.site-chip-pm svg { opacity: .7; }
+.site-chip-sep { flex-shrink: 0; width: 1px; height: 24px; background: var(--diya-color-line); }
+.site-chip-cmd {
+  min-width: 0;
+  padding: 0 22px 0 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 17px/1.2 var(--site-mono);
+  letter-spacing: -.01em;
+  color: var(--diya-color-muted);
+}
+.site-chip-cmd b { font-weight: 500; color: var(--diya-color-text); }
+.site-chip-manager { display: none; }
+.site-chip[data-state='failed'] .site-chip-manager { display: inline; }
+.site-chip-key {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font: 500 15px/1 var(--diya-font, 'DIYA Sans'), sans-serif;
+  color: var(--diya-color-text);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--diya-color-raised) 100%, #fff 6%), var(--diya-color-raised));
+  box-shadow: inset 0 1px 0 #ffffff26, 0 1px 0 #0006, 0 4px 10px -2px #0008;
+  transition: transform .08s ease;
+}
+.diya-root[data-theme='light'] .site-chip-key {
+  background: linear-gradient(180deg, #fff, #f6f6f3);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 0 #52606340, 0 4px 10px -3px #3a403a40;
+}
+.site-chip-key:active,
+.site-chip[data-state='copied'] .site-chip-key {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 2px #0007, 0 0 0 1px var(--diya-color-line);
+}
+.site-chip-note {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 18px;
+  right: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--diya-color-text);
+}
+.site-chip[data-variant='compact'] {
+  height: 40px;
+  padding: 0 4px 0 14px;
+  gap: 10px;
+  box-shadow: inset 0 1px 2px #0006, inset 0 0 0 1px var(--diya-color-line);
+}
+.diya-root[data-theme='light'] .site-chip[data-variant='compact'] { background: #e3e4e0; box-shadow: inset 0 1px 2px #3a403a2e, inset 0 0 0 1px #52606340; }
+.site-chip[data-variant='compact'] .site-chip-cmd { padding: 0; font-size: 13px; }
+.site-chip[data-variant='compact'] .site-chip-manager { display: inline; }
+.site-chip[data-variant='compact'] .site-chip-key { height: 32px; padding: 0 12px; gap: 6px; font-size: 13px; }
+.site-chip[data-variant='compact'] .site-chip-key svg { width: 14px; height: 14px; }
+
+/* Footer: a colophon */
+.site-foot { padding: 96px 56px 56px; background: var(--site-ground); }
+.site-foot-wrap { max-width: 1328px; margin: 0 auto; }
+.site-foot-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 40px;
+  padding-bottom: 72px;
+  border-bottom: 1px solid var(--diya-color-line);
+}
+.site-foot-home { display: block; width: 132px; color: var(--diya-color-text); border-radius: 6px; }
+.site-foot-brand p { margin: 22px 0 0; font-size: 15px; line-height: 1.5; max-width: 30ch; }
+.site-foot h2 { margin: 0 0 16px; font-size: 13px; font-weight: 500; letter-spacing: .02em; color: var(--diya-color-muted); }
+.site-foot ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.site-foot a, .site-foot-coming { font-size: 15px; line-height: 1.4; color: var(--diya-color-text); }
+.site-foot a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.site-foot small { margin-left: 6px; color: var(--diya-color-muted); }
+.site-foot-coming { color: var(--diya-color-muted); }
+.site-foot-fine {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px 24px;
+  flex-wrap: wrap;
+  padding-top: 28px;
+}
+.site-foot-fine p { margin: 0; font-size: 13px; line-height: 1.5; }
+.site-foot-fine p:last-child { display: flex; gap: 24px; flex-wrap: wrap; }
+.site-foot-fine em { font-style: italic; color: var(--diya-color-text); }
+@media (max-width: 760px) {
+  .site-foot { padding: 72px 16px 40px; }
+  .site-foot-grid { grid-template-columns: 1fr 1fr; gap: 36px 24px; padding-bottom: 48px; }
+  .site-foot-brand { grid-column: 1 / -1; }
+  .site-foot small { display: block; margin: 2px 0 0; }
+  .site-foot-fine { flex-direction: column; }
+  .site-foot-fine p:last-child { flex-direction: column; gap: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-top::before, .site-top-chip, .site-chip-key { transition: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .site-top::before { background: var(--site-ground); backdrop-filter: none; }
+  :root body .diya-root[data-glass='true'] .site-top .appearance-panel.material { background: var(--diya-color-raised); backdrop-filter: none; }
+  .site-top-nav, .site-chip, .site-top-button, .site-top .appearance-popover > summary, .site-top-menu-button { backdrop-filter: none; }
+}
+@media (forced-colors: active) {
+  .site-top-nav, .site-top-button, .site-chip, .site-chip-key, .site-menu { border: 1px solid CanvasText; }
+  .site-top-nav a[aria-current] { outline: 2px solid CanvasText; }
+  /* The D dot keeps its place in forced colors, in the text color. */
+  .site-mark-dot { fill: CanvasText; }
+  .site-mark-glow { display: none; }
+}
+
+/* The shared Appearance panel, at the site's reading sizes. */
+.site-root .appearance-panel > strong { font-size: 15px; font-weight: 500; }
+.site-root .appearance-panel .segmented label > span { font-size: 13px; }
+.site-root .appearance-panel .glass-row b { font-size: 15px; }
+.site-root .appearance-panel .glass-row small { font-size: 13px; }
+
+/* A provider that only carries the header (the preview home). */
+.site-root.site-root-bare { min-height: 0; background: none; }

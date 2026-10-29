@@ -1,0 +1,71 @@
+{
+  "name": "@idyeah/diya",
+  "version": "1.0.0",
+  "license": "MIT",
+  "type": "module",
+  "description": "React components and patterns: Light, Dark and Glass. MIT.",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./charts": {
+      "types": "./dist/data-viz/index.d.ts",
+      "import": "./dist/data-viz/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./api.json": "./dist/api.json",
+    "./api.schema.json": "./dist/api.schema.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "NOTICE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.json && node scripts/build-styles.mjs && node scripts/build-api.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "pnpm build && vitest run --config tests/vitest.config.mjs"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1 || ^19.0.0",
+    "react-dom": "^18.3.1 || ^19.0.0",
+    "echarts": "^6.1.0"
+  },
+  "peerDependenciesMeta": {
+    "echarts": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "18.3.28",
+    "@types/react-dom": "18.3.7",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "typescript": "5.9.3",
+    "echarts": "6.1.0",
+    "vitest": "4.1.0",
+    "happy-dom": "20.9.0",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
+    "@vitejs/plugin-react": "6.0.1",
+    "vite": "8.0.1",
+    "ajv": "8.20.0",
+    "react-hook-form": "7.90.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/idyeah-studio/diya.git",
+    "directory": "packages/diya"
+  },
+  "homepage": "https://diya13.ai",
+  "bugs": "https://github.com/idyeah-studio/diya/issues",
+  "publishConfig": {
+    "access": "public"
+  }
+}

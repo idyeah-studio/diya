@@ -1,0 +1,33 @@
+{
+  "name": "diya-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm --filter @idyeah/diya build",
+    "typecheck": "pnpm --filter @idyeah/diya typecheck",
+    "test": "pnpm --filter @idyeah/diya test",
+    "test:create": "node --test packages/create-diya/test/*.test.mjs",
+    "check:templates": "node packages/create-diya/scripts/check-templates.mjs && node packages/create-diya/scripts/sync-oriel.mjs --check",
+    "sync:oriel": "node packages/create-diya/scripts/sync-oriel.mjs",
+    "lint:package": "publint packages/diya --strict && publint packages/create-diya --strict && attw --pack packages/diya --profile esm-only --exclude-entrypoints ./styles.css",
+    "check:tarball": "node scripts/tarball.mjs --check",
+    "snapshot:tarball": "node scripts/tarball.mjs --write",
+    "scan:leaks": "node scripts/leak-scan.mjs . && node scripts/leak-scan.mjs --pack packages/diya && node scripts/leak-scan.mjs --pack packages/create-diya",
+    "bench": "node packages/diya/bench/measure.mjs",
+    "example:vite": "pnpm --filter ./examples/vite build",
+    "example:next": "pnpm --filter ./examples/next build",
+    "example:oriel": "pnpm --filter ./examples/oriel build",
+    "build:site": "pnpm --filter @idyeah/diya build && pnpm --filter diya-site build",
+    "test:site": "pnpm --filter diya-site test:scripts && pnpm --filter diya-site test:catalog && pnpm --filter diya-site test:lib",
+    "typecheck:site": "pnpm --filter diya-site typecheck",
+    "verify:site": "pnpm --filter diya-site verify:production"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
+    "publint": "0.3.25"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "packageManager": "pnpm@10.32.1"
+}

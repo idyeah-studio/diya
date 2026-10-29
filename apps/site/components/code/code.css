@@ -1,0 +1,306 @@
+/* Code wells and numbered steps, shared by Get code and Get theme. */
+.diya-root .code-steps {
+  --code-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --code-well: #f3f3f0;
+  --code-well-edge: inset 0 1px 2px #2a302a1a, inset 0 0 0 1px #52606333, 0 1px 0 #fff;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+  color: var(--diya-color-text);
+}
+.diya-root[data-theme='dark'] .code-steps {
+  --code-well: #161718;
+  --code-well-edge: inset 0 1px 2px #000a, inset 0 0 0 1px #ffffff14, 0 1px 0 #ffffff0a;
+}
+.diya-root[data-glass='true'] .code-steps {
+  --code-well: color-mix(in srgb, #f3f3f0 82%, transparent);
+}
+.diya-root[data-glass='true'][data-theme='dark'] .code-steps {
+  --code-well: color-mix(in srgb, #111213 78%, transparent);
+}
+
+.diya-root .code-step {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  column-gap: 8px;
+}
+.diya-root .code-step-n {
+  font-size: 26px;
+  font-weight: 400;
+  font-stretch: 120%;
+  line-height: 1;
+  color: var(--diya-color-muted);
+  font-variant-numeric: tabular-nums;
+  padding-top: 1px;
+}
+.diya-root .code-step-body {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+.diya-root .code-step-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+  min-height: 28px;
+}
+.diya-root .code-steps h4.code-step-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.diya-root .code-steps h4.code-step-title:focus {
+  outline: none;
+}
+.diya-root .code-steps h4.code-step-title:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.diya-root .code-steps.code-steps p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--diya-color-muted);
+  overflow-wrap: anywhere;
+}
+.diya-root .code-steps :is(p, li) code {
+  font: 14px var(--code-mono);
+  color: var(--diya-color-text);
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--diya-color-hover);
+  border: 1px solid var(--diya-color-line);
+  overflow-wrap: anywhere;
+}
+.diya-root .code-steps a {
+  color: var(--diya-color-text);
+  text-underline-offset: 3px;
+}
+
+/* Package-manager tabs sit in the step's heading row; their panel spans below. */
+.diya-root .code-step-body[data-tabs] {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.diya-root .code-step-body[data-tabs] > * {
+  grid-column: 1 / -1;
+}
+.diya-root .code-step-body[data-tabs] > .code-step-head {
+  grid-column: 1;
+  grid-row: 1;
+}
+.diya-root .code-step-body[data-tabs] :is(.code-step-pm, .code-step-pm > .diya-tabs) {
+  display: contents;
+}
+.diya-root .code-step-body[data-tabs] .diya-tab-list {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  border: 1px solid var(--diya-color-line);
+  border-radius: 999px;
+  padding: 3px;
+  overflow: visible;
+}
+.diya-root .code-step-body[data-tabs] .diya-tab-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 12px;
+  margin-top: 0;
+}
+.diya-root .code-step-body[data-tabs] .diya-tab-panel[hidden] {
+  display: none;
+}
+.diya-root .code-step-body[data-tabs] .diya-tab-panel:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 3px;
+  border-radius: 14px;
+}
+@media (max-width: 440px) {
+  .diya-root .code-step-body[data-tabs] .diya-tab-list {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+  }
+}
+
+/* The well: cut into the drawer, designed per theme. */
+.diya-root .code-well {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--code-well);
+  box-shadow: var(--code-well-edge);
+}
+.diya-root .code-well-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-height: 44px;
+  padding: 6px 8px 6px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--diya-color-line) 60%, transparent);
+}
+/* On a narrow screen the keys drop below the label rather than squeezing it. */
+.diya-root .code-well-label {
+  flex: 1 1 auto;
+  min-width: min(100%, 22ch);
+  font: 13px/1.3 var(--code-mono);
+  color: var(--diya-color-muted);
+  overflow-wrap: break-word;
+}
+.diya-root .code-well-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+  margin-left: auto;
+}
+/* Copy and Download read as small physical keys. */
+.diya-root .code-well .code-key {
+  gap: 7px;
+  min-height: 32px;
+  padding-inline: 12px;
+  border: 0;
+  font-size: 13px;
+  font-weight: 500;
+  background: #fff;
+  color: var(--diya-color-text);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 0 #52606340, 0 3px 8px -3px #2a302a40;
+}
+.diya-root[data-theme='dark'] .code-well .code-key {
+  background: var(--diya-color-raised);
+  box-shadow: inset 0 1px 0 #ffffff1f, 0 1px 0 #0006, 0 3px 8px -2px #0007;
+}
+.diya-root .code-well .code-key[data-state='copied'] {
+  background: transparent;
+  box-shadow: inset 0 1px 2px #0000002e, 0 0 0 1px var(--diya-color-line);
+}
+.diya-root .code-well .code-key:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+.diya-root .code-well pre {
+  margin: 0;
+  padding: 16px 18px 18px;
+  overflow-x: auto;
+  font: 14px/1.7 var(--code-mono);
+  color: var(--diya-color-text);
+  white-space: pre;
+  tab-size: 2;
+}
+.diya-root .code-well pre:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: -4px;
+  border-radius: 12px;
+}
+.diya-root .code-well[data-folded] pre {
+  max-height: 248px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(#000 68%, transparent);
+  mask-image: linear-gradient(#000 68%, transparent);
+}
+.diya-root .code-well-expand {
+  display: block;
+  margin: 0 18px 14px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--diya-color-text);
+  font: inherit;
+  font-size: 15px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.diya-root .code-well-expand:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.diya-root .code-steps.code-steps .code-well-help {
+  padding: 0 18px 14px;
+  color: var(--diya-color-text);
+}
+
+/* Monochrome syntax: hierarchy by weight and tone, never by colour. */
+.diya-root .code-well .tok-k {
+  color: var(--diya-color-muted);
+}
+.diya-root .code-well .tok-p {
+  color: color-mix(in srgb, var(--diya-color-muted) 75%, transparent);
+}
+.diya-root .code-well .tok-s {
+  color: var(--diya-color-text);
+}
+.diya-root .code-well .tok-t {
+  color: var(--diya-color-text);
+  font-weight: 600;
+}
+.diya-root .code-well .tok-c {
+  color: var(--diya-color-muted);
+  font-style: italic;
+}
+
+/* A short note with an icon, shown only where it applies. */
+.diya-root .code-note {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--diya-color-hover);
+  border: 1px solid color-mix(in srgb, var(--diya-color-line) 70%, transparent);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--diya-color-muted);
+}
+.diya-root .code-note > svg {
+  margin-top: 2px;
+  color: var(--diya-color-text);
+}
+.diya-root .code-note b {
+  font-weight: 500;
+  color: var(--diya-color-text);
+}
+
+.diya-root .code-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 520px) {
+  .diya-root .code-step {
+    grid-template-columns: 22px minmax(0, 1fr);
+    column-gap: 8px;
+  }
+  .diya-root .code-step-n {
+    font-size: 20px;
+    padding-top: 3px;
+  }
+  .diya-root .code-well pre {
+    padding: 14px;
+  }
+}
+
+@media (forced-colors: active) {
+  .diya-root .code-well {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* A command in running text stays on one line, so it reads (and copies) whole. */
+.diya-root .code-note code.code-command {
+  white-space: nowrap;
+}

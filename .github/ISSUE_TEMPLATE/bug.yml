@@ -1,0 +1,57 @@
+name: Bug report
+description: Something in @idyeah/diya does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Security problems go through private reporting instead; see SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The @idyeah/diya version from your lockfile.
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: component
+    attributes:
+      label: Component or pattern
+      placeholder: Select, Table, PageHeader…
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The smallest code or steps that show the problem. A link to a sandbox is ideal.
+      render: tsx
+    validations:
+      required: true
+  - type: dropdown
+    id: appearance
+    attributes:
+      label: Appearance
+      multiple: true
+      options: [Light, Dark, Glass, Not sure]
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: React version, framework (Next, Vite, …), browser and OS.
+      placeholder: React 19.1, Next 16, Safari 26, macOS
+    validations:
+      required: true
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Assistive technology
+      description: If this is about keyboard or screen reader behaviour, which tool and version.

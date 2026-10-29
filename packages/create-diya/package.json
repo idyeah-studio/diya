@@ -1,0 +1,41 @@
+{
+  "name": "create-diya",
+  "version": "1.0.0",
+  "description": "Start a React app with DIYA: Next.js or Vite, a page that already looks finished, and notes for your coding agent.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "create-diya": "index.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "templates"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "node scripts/check-templates.mjs",
+    "sync:oriel": "node scripts/sync-oriel.mjs"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "keywords": [
+    "diya",
+    "react",
+    "create",
+    "starter",
+    "template",
+    "nextjs",
+    "vite"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/idyeah-studio/diya.git",
+    "directory": "packages/create-diya"
+  },
+  "homepage": "https://diya13.ai",
+  "bugs": "https://github.com/idyeah-studio/diya/issues",
+  "publishConfig": {
+    "access": "public"
+  }
+}

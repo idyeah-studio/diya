@@ -1,0 +1,367 @@
+:where(html[data-catalog='true']) .component-library {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 48px;
+  padding: 112px 4vw 60px;
+  align-items: start;
+}
+:where(html[data-catalog='true']) .component-library .gallery-study-backdrop {
+  position: fixed;
+  background-image:
+    linear-gradient(110deg, #10121488, #101214ba), url('/images/concept-architecture.png');
+}
+:where(html[data-catalog='true']) .component-browser {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100svh - 48px);
+  overflow: auto;
+  padding: 24px 26px;
+  border: 1px solid #ffffff30;
+  border-radius: 24px;
+  background: linear-gradient(140deg, #ffffff0e, #ffffff03), #171a1d60;
+  backdrop-filter: blur(24px);
+  box-shadow:
+    0 20px 50px #0003,
+    inset 0 1px #fff1;
+}
+:where(html[data-catalog='true']) .component-browser-heading {
+  padding: 0;
+}
+:where(html[data-catalog='true']) .component-browser-heading > span {
+  color: #b9bfc1;
+  font-size: var(--diya-text-caption, 13px);
+  letter-spacing: 0.15em;
+}
+:where(html[data-catalog='true']) .component-browser h1 {
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  margin: 0 0 24px;
+}
+:where(html[data-catalog='true']) .component-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid #ffffff28;
+  border-radius: 10px;
+  background: #0002;
+}
+:where(html[data-catalog='true']) .component-search input {
+  color: #f1f3f2;
+  font-size: 13px;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+}
+:where(html[data-catalog='true']) .component-search input::placeholder {
+  color: #b5bdc0;
+}
+:where(html[data-catalog='true']) .component-search button {
+  display: flex;
+  color: #ccc;
+  padding: 2px;
+}
+:where(html[data-catalog='true']) .component-group {
+  margin-top: 25px;
+}
+:where(html[data-catalog='true']) .component-group h2 {
+  font-size: var(--diya-text-caption, 13px);
+  font-weight: 400;
+  color: #b0b8bc;
+  margin: 0 10px 9px;
+}
+:where(html[data-catalog='true']) .component-group button {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  color: #d0d6d8;
+  border-radius: 10px;
+  font-size: 13px;
+  min-height: 39px;
+}
+:where(html[data-catalog='true']) .component-group button:hover {
+  background: #ffffff0c;
+}
+:where(html[data-catalog='true']) .component-group button[aria-current='true'] {
+  background: #ffffff18;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px #ffffff20;
+}
+:where(html[data-catalog='true']) .component-group button span {
+  font-size: 20px;
+}
+:where(html[data-catalog='true']) .component-browser-note {
+  border-top: 1px solid #fff2;
+  margin: 25px 8px 0;
+  padding-top: 17px;
+  color: #d8dddc;
+  font-size: var(--diya-text-caption, 13px);
+}
+:where(html[data-catalog='true']) .component-browser-note span {
+  display: block;
+  margin-top: 7px;
+  font-size: var(--diya-text-caption, 13px);
+  color: #acb4b7;
+}
+:where(html[data-catalog='true']) .component-no-results {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #c7cecf;
+  padding: 12px;
+}
+:where(html[data-catalog='true']) .component-document {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  padding-top: 8px;
+}
+:where(html[data-catalog='true']) .component-document-heading > span {
+  color: #b6bfc1;
+  font-size: var(--diya-text-caption, 13px);
+}
+:where(html[data-catalog='true']) .component-document-heading i {
+  font-style: normal;
+  margin: 0 10px;
+  color: #737e82;
+}
+:where(html[data-catalog='true']) .component-document-heading > h2 {
+  font-size: 38px;
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  margin: 15px 0;
+}
+:where(html[data-catalog='true']) .component-document-heading > p {
+  font-size: 16px;
+  line-height: 1.65;
+  color: #ccd1d2;
+  max-width: 65ch;
+  margin-bottom: 27px;
+}
+:where(html[data-catalog='true']) .component-preview-stage {
+  padding: 22px 26px;
+  border: 1px solid #ffffff2b;
+  border-radius: 22px;
+  background: linear-gradient(130deg, #ffffff0a, transparent), #151a1b60;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 50px #0002;
+}
+:where(html[data-catalog='true']) .component-preview-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 25px;
+}
+:where(html[data-catalog='true']) .component-preview-top > span {
+  font-size: var(--diya-text-caption, 13px);
+  color: #b4bdc0;
+  letter-spacing: 0.13em;
+}
+:where(html[data-catalog='true']) .component-preview-top a {
+  color: #edf0ec;
+  font-size: var(--diya-text-caption, 13px);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+:where(html[data-catalog='true']) .component-preview-stage .resource-scene {
+  max-width: 620px;
+  margin: 0 auto;
+}
+:where(html[data-catalog='true']) .component-preview-caption {
+  text-align: center;
+  color: #b4bdc0;
+  font-size: var(--diya-text-caption, 13px);
+  line-height: 1.6;
+  margin: 22px 0 0;
+}
+:where(html[data-catalog='true']) .component-reference {
+  padding: 28px 0 24px;
+  border-bottom: 1px solid #fff2;
+}
+@layer site-reset {
+:where(html[data-catalog='true']) .component-document h3 {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+}
+}
+:where(html[data-catalog='true']) .component-state-list {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+:where(html[data-catalog='true']) .component-state-list > * {
+  border: 1px solid #ffffff30;
+  border-radius: 8px;
+  padding: 8px 13px;
+  font-size: var(--diya-text-caption, 13px);
+  color: #d2dadb;
+}
+:where(html[data-catalog='true']) .component-state-list button[aria-pressed='true'] {
+  background: #e8e8e8;
+  color: #1c1c1c;
+}
+:where(html[data-catalog='true']) .component-reference p,
+:where(html[data-catalog='true']) 
+.component-doc-columns p {
+  color: #bec8cb;
+  font-size: 14px;
+  line-height: 1.75;
+}
+:where(html[data-catalog='true']) .component-doc-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  padding-top: 26px;
+}
+:where(html[data-catalog='true']) .component-switch-example {
+  max-width: 560px;
+  margin: 52px auto;
+  padding: 28px;
+  border: 1px solid #fff3;
+  background: #22292bee;
+  border-radius: 15px;
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  justify-content: space-between;
+}
+:where(html[data-catalog='true']) .component-switch-example > span {
+  font-size: 16px;
+}
+:where(html[data-catalog='true']) .component-switch-example small {
+  display: block;
+  color: #b9c3c5;
+  font-size: var(--diya-text-caption, 13px);
+  margin-top: 9px;
+}
+:where(html[data-catalog='true']) .component-switch-example button {
+  flex-shrink: 0;
+  width: 48px;
+  height: 28px;
+  background: #5e6a6e;
+  border-radius: 30px;
+  padding: 4px;
+}
+:where(html[data-catalog='true']) .component-switch-example button > span {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #eef1ef;
+}
+:where(html[data-catalog='true']) .component-switch-example button[aria-checked='true'] {
+  background: #e6ebe7;
+}
+:where(html[data-catalog='true']) .component-switch-example button[aria-checked='true'] > span {
+  background: #262e2e;
+  margin-left: auto;
+}
+@media (max-width: 1000px) {
+  :where(html[data-catalog='true']) .component-library {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 24px;
+    padding-left: 3vw;
+    padding-right: 3vw;
+  }
+  :where(html[data-catalog='true']) .component-doc-columns {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  :where(html[data-catalog='true']) .component-preview-stage {
+    padding: 18px;
+  }
+}
+@media (max-width: 700px) {
+  :where(html[data-catalog='true']) .component-library {
+    grid-template-columns: 1fr;
+  }
+  :where(html[data-catalog='true']) .component-browser {
+    position: relative;
+    top: 0;
+    max-height: 310px;
+  }
+  :where(html[data-catalog='true']) .component-document-heading > h2 {
+    font-size: 30px;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :where(html[data-catalog='true']) .component-browser,
+:where(html[data-catalog='true']) 
+  .component-preview-stage {
+    backdrop-filter: none;
+    background: #242a2c;
+  }
+}
+@supports not (backdrop-filter: blur(20px)) {
+  :where(html[data-catalog='true']) .component-browser,
+:where(html[data-catalog='true']) 
+  .component-preview-stage {
+    background: #242a2c;
+  }
+}
+:where(html[data-catalog='true']) .component-live-workspace .demo-toolbar {
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+:where(html[data-catalog='true']) .component-live-workspace .workspace-app {
+  grid-template-columns: 145px minmax(0, 1fr);
+}
+:where(html[data-catalog='true']) .component-live-workspace .workspace-content {
+  padding: 20px;
+  min-width: 0;
+}
+:where(html[data-catalog='true']) .component-live-workspace .workspace-heading {
+  flex-wrap: wrap;
+  gap: 16px;
+}
+:where(html[data-catalog='true']) .component-live-workspace .workspace-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+:where(html[data-catalog='true']) .component-live-workspace .workspace-metrics > :last-child {
+  grid-column: 1 / -1;
+}
+:where(html[data-catalog='true']) .component-switch-example button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  border: 1px dashed currentColor;
+}
+@media (max-width: 1000px) {
+  :where(html[data-catalog='true']) .component-live-workspace .workspace-app {
+    grid-template-columns: 1fr;
+  }
+  :where(html[data-catalog='true']) .component-live-workspace .workspace-sidebar {
+    display: none;
+  }
+}
+@media (max-width: 1000px) {
+  :where(html[data-catalog='true']) .component-live-workspace .workspace-sidebar {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    padding: 10px;
+    flex-wrap: wrap;
+    border-right: 0;
+    border-bottom: 1px solid var(--d-line);
+  }
+  :where(html[data-catalog='true']) .component-live-workspace .workspace-sidebar > button {
+    width: auto;
+    flex: 1;
+    min-width: 90px;
+    margin: 0;
+    justify-content: center;
+  }
+  :where(html[data-catalog='true']) .component-live-workspace .workspace-sidebar > .workspace-brand,
+:where(html[data-catalog='true']) 
+  .component-live-workspace .workspace-sidebar > small,
+:where(html[data-catalog='true']) 
+  .component-live-workspace .workspace-sidebar > .workspace-person {
+    display: none;
+  }
+}

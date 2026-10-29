@@ -1,0 +1,159 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  guards:
+    name: Guards
+    uses: ./.github/workflows/ci.yml
+
+  # Installs, builds and packs. Holds no OIDC permission, so nothing that runs
+  # here (including dev dependencies) can mint a publish token.
+  package:
+    name: Build and pack
+    needs: guards
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      tarball: ${{ steps.pack.outputs.tarball }}
+      sha256: ${{ steps.pack.outputs.sha256 }}
+      create-tarball: ${{ steps.pack.outputs.create-tarball }}
+      create-sha256: ${{ steps.pack.outputs.create-sha256 }}
+      dist-tag: ${{ steps.version.outputs.dist-tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Tag matches both package.json files (lockstep)
+        id: version
+        run: node scripts/release-tag.mjs "$GITHUB_REF_NAME"
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Build
+        run: pnpm build
+      - name: Test
+        run: pnpm test
+      - name: publint
+        run: pnpm exec publint packages/diya --strict
+      - name: Are the types wrong (ESM only)
+        run: pnpm exec attw --pack packages/diya --profile esm-only --exclude-entrypoints ./styles.css
+      - name: Tarball snapshot and size budget
+        run: node scripts/tarball.mjs --check
+      - name: Leak scan (repository)
+        run: node scripts/leak-scan.mjs .
+      - name: create-diya tests and templates
+        run: |
+          node --test packages/create-diya/test/*.test.mjs
+          node packages/create-diya/scripts/check-templates.mjs
+      - name: Pack both packages
+        id: pack
+        run: |
+          mkdir -p "$RUNNER_TEMP/release"
+          pack() {
+            (cd "$1" && npm pack --ignore-scripts --json --pack-destination "$RUNNER_TEMP/release") > "$RUNNER_TEMP/pack.json"
+            node -e "const [p]=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')); process.stdout.write(require('path').basename(p.filename))" "$RUNNER_TEMP/pack.json"
+          }
+          tarball=$(pack packages/diya)
+          create=$(pack packages/create-diya)
+          sha256=$(sha256sum "$RUNNER_TEMP/release/$tarball" | cut -d' ' -f1)
+          create_sha256=$(sha256sum "$RUNNER_TEMP/release/$create" | cut -d' ' -f1)
+          {
+            echo "tarball=$tarball"
+            echo "sha256=$sha256"
+            echo "create-tarball=$create"
+            echo "create-sha256=$create_sha256"
+          } >> "$GITHUB_OUTPUT"
+          echo "Packed \`$tarball\` (sha256 \`$sha256\`) and \`$create\` (sha256 \`$create_sha256\`)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Leak scan (the tarballs being released)
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          CREATE_TARBALL: ${{ steps.pack.outputs.create-tarball }}
+        run: |
+          node scripts/leak-scan.mjs --tarball "$RUNNER_TEMP/release/$TARBALL"
+          node scripts/leak-scan.mjs --tarball "$RUNNER_TEMP/release/$CREATE_TARBALL"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: npm-tarballs
+          path: |
+            ${{ runner.temp }}/release/${{ steps.pack.outputs.tarball }}
+            ${{ runner.temp }}/release/${{ steps.pack.outputs.create-tarball }}
+          if-no-files-found: error
+          retention-days: 7
+
+  # Installs no project dependencies and runs no project code: it only checks
+  # the packed tarballs and stages them on npm with trusted publishing. Each
+  # package has its own trusted publisher on npmjs.com pointing at this
+  # workflow (release.yml) and the release environment.
+  publish:
+    name: Stage on npm
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Use npm 11.21.1 (hash-pinned)
+        working-directory: ${{ runner.temp }}
+        run: |
+          npm pack npm@11.21.1 --ignore-scripts
+          echo "613ccbe90044257c87713bb426251ced128ca7e9b3949b65eeb18b98445a5d441e14720c73d6ad76be86f4cf42f2f0d66efe347a9a13400ccd2f6fcfb5954385  npm-11.21.1.tgz" | sha512sum -c -
+          npm install --global --ignore-scripts ./npm-11.21.1.tgz
+          node -e "const [a,b]=process.argv[1].split('.').map(Number); if (a<11||(a===11&&b<21)) { console.error('npm '+process.argv[1]+' is older than 11.21'); process.exit(1) }" "$(npm --version)"
+          npm --version
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: npm-tarballs
+          path: ${{ runner.temp }}/release
+      - name: Verify the tarballs
+        env:
+          TARBALL: ${{ needs.package.outputs.tarball }}
+          SHA256: ${{ needs.package.outputs.sha256 }}
+          CREATE_TARBALL: ${{ needs.package.outputs.create-tarball }}
+          CREATE_SHA256: ${{ needs.package.outputs.create-sha256 }}
+        run: |
+          verify() {
+            local file=$1 sum=$2 pattern=$3 expected=$4
+            [[ "$file" =~ $pattern ]] || { echo "Unexpected tarball name: $file"; exit 1; }
+            [[ "$sum" =~ ^[0-9a-f]{64}$ ]] || { echo "Missing sha256 for $file"; exit 1; }
+            echo "$sum  $RUNNER_TEMP/release/$file" | sha256sum -c -
+            local meta
+            meta=$(tar -xzOf "$RUNNER_TEMP/release/$file" package/package.json | node -e "const p=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(p.name+' '+p.version)")
+            [ "${meta% *}" = "$expected" ] || { echo "$file is ${meta% *}, expected $expected"; exit 1; }
+            [ "v${meta#* }" = "$GITHUB_REF_NAME" ] || { echo "$expected ${meta#* } does not match tag $GITHUB_REF_NAME"; exit 1; }
+          }
+          verify "$TARBALL" "$SHA256" '^idyeah-diya-[0-9A-Za-z.+-]+\.tgz$' '@idyeah/diya'
+          verify "$CREATE_TARBALL" "$CREATE_SHA256" '^create-diya-[0-9A-Za-z.+-]+\.tgz$' 'create-diya'
+      # Two staged publishes, one per package. Approve both on npmjs.com.
+      - name: Stage the release (both packages)
+        env:
+          TARBALL: ${{ needs.package.outputs.tarball }}
+          CREATE_TARBALL: ${{ needs.package.outputs.create-tarball }}
+          DIST_TAG: ${{ needs.package.outputs.dist-tag }}
+        run: |
+          npm stage publish "$RUNNER_TEMP/release/$TARBALL" --tag "$DIST_TAG"
+          npm stage publish "$RUNNER_TEMP/release/$CREATE_TARBALL" --tag "$DIST_TAG"

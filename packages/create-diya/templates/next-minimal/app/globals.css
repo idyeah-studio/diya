@@ -1,0 +1,23 @@
+/* Name the layer order once, before anything loads. DIYA sits above resets and
+   base styles and below utilities, so your own CSS (and Tailwind, if you add it)
+   wins over DIYA's without !important. */
+@layer reset, theme, base, diya, components, utilities;
+@import "@idyeah/diya/styles.css";
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; }
+}
+
+/* Your styles. Unlayered rules beat every layer above. */
+.page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: var(--diya-space-7) var(--diya-space-5) var(--diya-space-8);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--diya-space-4);
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 510 150" fill="none" role="img" aria-labelledby="title"><title id="title">DIYA</title><g color="#F4F2EE" fill="none"><g stroke="currentColor" stroke-width="12" stroke-linecap="butt" stroke-linejoin="miter">
+    <path d="M8 10H67C151 10 151 138 67 138H8Z"/>
+    <path d="M180 10V138"/>
+    <path d="M224 10L284 80L342 10M284 80V138"/>
+    <path d="M356 138L429 10L502 138"/>
+  </g>
+  <g fill="currentColor">
+    <circle cx="88" cy="48" r="19" fill="rgb(90.98053%, 31.37207%, 22.744751%)"/>
+    <circle cx="413" cy="110" r="19" fill="#F4F2EE"/>
+  </g></g></svg>

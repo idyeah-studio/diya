@@ -1,0 +1,113 @@
+/* Get code and Get theme share one drawer shape: a raised sheet inset from
+   the window edge, full-bleed on phones. */
+.diya-root .diya-drawer-modal:has(.code-steps) {
+  inset: 12px 12px 12px auto;
+  width: min(580px, calc(100vw - 24px));
+  height: calc(100dvh - 24px);
+  max-height: calc(100dvh - 24px);
+  border-radius: 22px;
+  border: 1px solid var(--diya-color-line);
+  background: var(--diya-color-raised);
+  box-shadow: 0 40px 100px -30px #2a302a55, 0 0 0 1px #52606322;
+}
+.diya-root[data-theme='dark'] .diya-drawer-modal:has(.code-steps) {
+  box-shadow: 0 40px 100px -20px #000c;
+}
+.diya-root .diya-drawer-modal:has(.code-steps)::backdrop {
+  background: color-mix(in srgb, var(--diya-color-surface) 62%, transparent);
+  backdrop-filter: blur(3px);
+}
+.diya-root .diya-drawer-modal:has(.code-steps) > header {
+  padding: 28px 32px 22px;
+  border-bottom: 0;
+}
+.diya-root .diya-drawer-modal:has(.code-steps) > header :is(.diya-drawer-title, h3) {
+  font-size: 26px;
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  font-stretch: 108%;
+  line-height: 1.2;
+}
+.diya-root .diya-drawer-modal:has(.code-steps) > header :is(.diya-drawer-title, h3):focus {
+  outline: none;
+}
+.diya-root .diya-drawer-modal:has(.code-steps) > header :is(.diya-drawer-title, h3):focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.diya-root .diya-drawer-modal:has(.code-steps) > header p {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--diya-color-muted);
+}
+.diya-root .diya-drawer-modal:has(.code-steps) > .diya-drawer-body {
+  padding: 4px 32px 28px;
+}
+.diya-root .diya-drawer-modal:has(.code-steps) > footer {
+  padding: 16px 32px 20px;
+}
+
+.diya-root .get-code-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  font-size: 13px;
+  color: var(--diya-color-muted);
+}
+.diya-root .get-code-footer b {
+  font: 500 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--diya-color-text);
+}
+.diya-root .get-code-footer nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.diya-root .get-code-footer a {
+  text-decoration: none;
+}
+.diya-root .get-code-footer :is(a, button):focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+
+.diya-root .get-code-folded {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px dashed var(--diya-color-line);
+}
+.diya-root .get-code-folded .diya-button:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .diya-root .diya-drawer-modal:has(.code-steps) {
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: 0;
+  }
+  .diya-root .diya-drawer-modal:has(.code-steps) > header {
+    padding: 20px 16px 16px;
+  }
+  .diya-root .diya-drawer-modal:has(.code-steps) > header :is(.diya-drawer-title, h3) {
+    font-size: 22px;
+  }
+  .diya-root .diya-drawer-modal:has(.code-steps) > .diya-drawer-body {
+    padding: 4px 16px 24px;
+  }
+  .diya-root .diya-drawer-modal:has(.code-steps) > footer {
+    padding: 14px 16px;
+  }
+}

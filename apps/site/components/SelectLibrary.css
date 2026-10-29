@@ -1,0 +1,6 @@
+:where(html[data-catalog='true']) .select-library .input-example {
+  flex: 1;
+  min-height: 240px;
+}
+@media (forced-colors: active) {
+}

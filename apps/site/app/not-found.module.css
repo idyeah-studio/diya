@@ -1,0 +1,106 @@
+.page {
+  display: grid;
+  place-items: center;
+  min-block-size: calc(100svh - 80px);
+  padding: 64px 24px;
+  color: var(--text);
+}
+
+.content {
+  display: grid;
+  gap: 16px;
+  inline-size: min(100%, 32rem);
+}
+
+.code {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.heading {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.description {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  justify-self: start;
+  padding-block: 12px;
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* From launch: the site's 404 (components/site/LostPage.tsx). */
+.root { min-height: 100svh; display: flex; flex-direction: column; }
+.lost {
+  position: relative;
+  isolation: isolate;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-block-size: 100svh;
+  padding: 120px 24px 72px;
+  outline: none;
+  overflow: hidden;
+}
+.photo { position: absolute; inset: 0; z-index: -2; }
+.photo img { object-fit: cover; filter: grayscale(1) brightness(.62) contrast(1.05); }
+.wash {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, #1414148c 0%, #141414d9 70%, #141414 100%);
+}
+:global(.diya-root[data-theme='light']) .photo img { filter: grayscale(1) brightness(1.5) contrast(.8); }
+:global(.diya-root[data-theme='light']) .wash { background: linear-gradient(180deg, #f2f2f299 0%, #f2f2f2e0 70%, #f2f2f2 100%); }
+.panel { display: grid; gap: 16px; inline-size: min(100%, 34rem); }
+.lostCode { margin: 0; color: var(--diya-color-muted); font-size: 15px; font-weight: 500; letter-spacing: .08em; }
+.lostHeading {
+  margin: 0;
+  color: var(--diya-color-text);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -.04em;
+  text-wrap: balance;
+}
+.lostText { margin: 0; color: var(--diya-color-muted); font-size: 17px; line-height: 1.55; }
+.search { margin-top: 12px; }
+:global(.diya-root) .search :global(.diya-search) { inline-size: 100%; max-inline-size: none; }
+.results ul { display: grid; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; }
+.results a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  min-block-size: 44px;
+  padding: 11px 16px;
+  border-radius: 12px;
+  color: var(--diya-color-text);
+  font-size: 15px;
+  text-decoration: none;
+}
+.results a:hover { background: var(--diya-color-hover); }
+.results a:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 2px; }
+.results small { color: var(--diya-color-muted); font-size: 13px; }
+.status { margin: 0; color: var(--diya-color-muted); font-size: 15px; }
+.status:empty { display: none; }
+.status[data-quiet] { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.actions :global(.diya-button) { text-decoration: none; }
+@media (max-width: 560px) {
+  .lost { padding: 104px 16px 56px; place-items: start center; }
+  .lostText { font-size: 15px; }
+}

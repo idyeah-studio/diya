@@ -1,0 +1,33 @@
+/* One material palette for the landing demos and the catalog. */
+:root[data-catalog='true'],
+:where(html[data-catalog='true'])  .concept-cards {
+  --material-solid: #242424;
+  --material-recessed: #1c1c1e;
+  --material-raised: #303033;
+  --material-glass: #ffffff0d;
+  --material-edge: #ffffff65;
+  --material-highlight: #ffffffa0;
+  --material-depth: inset 0 1px 0 #ffffff20, 0 10px 30px #0002;
+  --material-blur: blur(14px);
+}
+:root[data-catalog='true'][data-theme='light'],
+:where(html[data-catalog='true'])  .concept-cards[data-light='true'] {
+  --material-solid: #eee;
+  --material-recessed: #e5e7e8;
+  --material-raised: #fff;
+  --material-glass: #ffffff90;
+  --material-edge: #ffffffa0;
+  --material-highlight: #ffffffdc;
+  --material-depth: inset 0 1px 0 #ffffff80, 0 10px 30px #0002;
+}
+@media(prefers-color-scheme:light) {
+  :root[data-catalog='true'][data-theme='system'] {
+    --material-solid: #eee;
+  --material-recessed: #e5e7e8;
+  --material-raised: #fff;
+    --material-glass: #ffffff90;
+    --material-edge: #ffffffa0;
+    --material-highlight: #ffffffdc;
+    --material-depth: inset 0 1px 0 #ffffff80, 0 10px 30px #0002;
+  }
+}

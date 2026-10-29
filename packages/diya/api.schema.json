@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DIYA API map",
+  "description": "The shape of api.json, schema version 1. Version 1 only gains fields: readers ignore fields they do not know, and enumerations are open, so an unknown kind or content value is valid.",
+  "type": "object",
+  "required": ["schemaVersion", "package", "version", "entries", "items", "components", "types", "tokens", "messages"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "package": { "type": "string", "description": "The npm package name." },
+    "version": { "type": "string", "description": "The package version this map describes." },
+    "entries": {
+      "description": "Export names of each package entry point, such as \".\" and \"./charts\".",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["values", "types"],
+        "properties": {
+          "values": { "$ref": "#/$defs/names", "description": "Runtime exports: components and plain values." },
+          "types": { "$ref": "#/$defs/names", "description": "Type-only exports." }
+        }
+      }
+    },
+    "items": {
+      "description": "Catalog items keyed by their permanent kebab-case id.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/itemId" },
+      "additionalProperties": { "$ref": "#/$defs/item" }
+    },
+    "components": {
+      "description": "Props of every exported component, keyed by export name.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/component" }
+    },
+    "types": {
+      "description": "Every exported type as TypeScript source text, keyed by name.",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "tokens": {
+      "description": "Public CSS custom properties, keyed by name.",
+      "type": "object",
+      "propertyNames": { "pattern": "^--diya-" },
+      "additionalProperties": { "$ref": "#/$defs/token" }
+    },
+    "messages": {
+      "description": "Built-in English strings: namespace, then key. Override them through DiyaProvider `messages`.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "$ref": "#/$defs/message" }
+      }
+    }
+  },
+  "$defs": {
+    "names": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "itemId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" },
+    "path": {
+      "description": "A prop name, or a path into it: `items[].content` is the content of each element of `items`; `search.value` is a field of the `search` object.",
+      "type": "string",
+      "pattern": "^[A-Za-z_$][\\w$]*(\\[\\])?(\\.[A-Za-z_$][\\w$]*(\\[\\])?)*$"
+    },
+    "content": {
+      "description": "Plain content, not a DIYA item, that fits: text, icon or image. Open enumeration.",
+      "type": "array",
+      "items": { "type": "string", "examples": ["text", "icon", "image"] },
+      "uniqueItems": true
+    },
+    "accepts": {
+      "description": "DIYA item ids that fit, or \"any\" for any React content.",
+      "oneOf": [
+        { "const": "any" },
+        { "type": "array", "items": { "$ref": "#/$defs/itemId" }, "uniqueItems": true }
+      ]
+    },
+    "item": {
+      "type": "object",
+      "required": ["kind", "title", "stability", "since", "exports", "requires", "slots", "children", "state", "tokens", "messages"],
+      "properties": {
+        "kind": { "type": "string", "examples": ["component", "pattern", "provider"] },
+        "title": { "type": "string" },
+        "stability": { "type": "string", "examples": ["stable", "experimental"], "description": "Anything marked experimental is outside semver." },
+        "since": { "type": "string", "description": "The version that added the item." },
+        "exports": {
+          "description": "The item's exports. slots, children and state describe the first; any other is a variant of it.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["name", "entry"],
+            "properties": { "name": { "type": "string" }, "entry": { "type": "string" } }
+          }
+        },
+        "requires": {
+          "type": "object",
+          "required": ["provider", "peers"],
+          "properties": {
+            "provider": { "type": "boolean", "description": "Renders inside DiyaProvider." },
+            "peers": { "$ref": "#/$defs/names", "description": "Optional peer dependencies it needs, such as echarts." }
+          }
+        },
+        "slots": {
+          "description": "Every ReactNode prop other than children, keyed by prop name or path.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/path" },
+          "additionalProperties": { "$ref": "#/$defs/slot" }
+        },
+        "children": { "$ref": "#/$defs/children" },
+        "state": {
+          "description": "Controlled value and change-callback pairs.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/state" }
+        },
+        "tokens": { "type": "array", "items": { "type": "string", "pattern": "^--diya-" }, "uniqueItems": true },
+        "messages": { "type": ["string", "null"], "description": "The messages namespace the item reads, or null." }
+      }
+    },
+    "slot": {
+      "type": "object",
+      "required": ["accepts"],
+      "properties": {
+        "accepts": { "$ref": "#/$defs/accepts" },
+        "content": { "$ref": "#/$defs/content" },
+        "multiple": { "type": "boolean", "description": "Takes several elements, such as two buttons." },
+        "as": { "type": "string", "examples": ["render"], "description": "\"render\": the prop is a function that returns the content." }
+      }
+    },
+    "children": {
+      "type": "object",
+      "required": ["allowed"],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "accepts": { "$ref": "#/$defs/accepts" },
+        "content": { "$ref": "#/$defs/content" },
+        "multiple": { "type": "boolean" },
+        "as": { "type": "string", "examples": ["render"] }
+      },
+      "if": { "properties": { "allowed": { "const": true } } },
+      "then": { "required": ["accepts"] }
+    },
+    "state": {
+      "type": "object",
+      "required": ["value", "onChange"],
+      "properties": {
+        "value": { "$ref": "#/$defs/path" },
+        "onChange": { "$ref": "#/$defs/path" },
+        "default": { "$ref": "#/$defs/path", "description": "The uncontrolled starting value, when there is one." }
+      }
+    },
+    "prop": {
+      "type": "object",
+      "required": ["type", "required"],
+      "properties": {
+        "type": { "type": "string" },
+        "required": { "type": "boolean" },
+        "description": { "type": "string" },
+        "values": { "type": "array", "items": { "type": ["string", "number"] } },
+        "default": true
+      }
+    },
+    "props": { "type": "object", "additionalProperties": { "$ref": "#/$defs/prop" } },
+    "component": {
+      "type": "object",
+      "required": ["entry", "props"],
+      "properties": {
+        "entry": { "type": "string" },
+        "description": { "type": "string" },
+        "propsType": { "type": "string" },
+        "typeParameters": { "type": "array", "items": { "type": "string" } },
+        "props": { "$ref": "#/$defs/props" },
+        "modes": {
+          "description": "Props that depend on a discriminant, such as `multiple` or `range`.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["when", "props"],
+            "properties": {
+              "when": { "type": "object" },
+              "default": { "const": true },
+              "props": { "$ref": "#/$defs/props" }
+            }
+          }
+        },
+        "extendsDom": { "type": "string", "description": "The element whose native attributes it also takes." }
+      }
+    },
+    "token": {
+      "type": "object",
+      "required": ["group", "kind", "pairsWith", "defaults"],
+      "properties": {
+        "group": { "type": "string" },
+        "kind": { "type": "string", "examples": ["color", "length", "number", "shadow", "font-family"] },
+        "pairsWith": { "type": "array", "items": { "type": "string", "pattern": "^--diya-" }, "uniqueItems": true, "description": "Tokens to change together with this one." },
+        "defaults": {
+          "description": "The value in each theme; null when it is unset.",
+          "type": "object",
+          "required": ["light", "dark"],
+          "properties": { "light": { "type": ["string", "null"] }, "dark": { "type": ["string", "null"] } }
+        },
+        "setBy": { "type": "string", "description": "The DiyaProvider prop that sets it; set the prop rather than the token." }
+      }
+    },
+    "message": {
+      "type": "object",
+      "required": ["kind", "default"],
+      "properties": {
+        "kind": { "type": "string", "examples": ["string", "function"] },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "default": { "type": "string", "description": "The English text, or a function's source." }
+      },
+      "if": { "properties": { "kind": { "const": "function" } } },
+      "then": { "required": ["args"] }
+    }
+  }
+}

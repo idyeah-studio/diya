@@ -1,0 +1,219 @@
+/* Oriel's own CSS: the page frame, a few grids and Glass's backdrop.
+   Everything else is DIYA. Colors, spacing and corners come from DIYA's
+   public tokens, so Light, Dark, Glass and the brand color all follow. */
+
+body { margin: 0; }
+.oriel { min-height: 100dvh; --hairline: color-mix(in srgb, var(--diya-color-line) 55%, transparent); }
+
+/* Glass's backdrop: soft light and shade in three tints (Studio, Ember, Lagoon).
+   A fixed layer, as iPhone ignores background-attachment: fixed.
+*/
+.oriel[data-glass='true'] {
+  isolation: isolate;
+  --c1: #fffaf2; --c2: #b3aca4; --c3: #98a1ad; --c4: #ffffffd9; --c5: #e3dfd9; --c6: #c8c3bc;
+  --shafts: linear-gradient(116deg, transparent 12%, var(--c4) 22%, transparent 33%, transparent 50%, var(--c4) 59%, transparent 69%);
+  --scene: var(--shafts),
+    radial-gradient(64% 58% at 84% 0%, var(--c1), transparent 70%),
+    radial-gradient(78% 40% at 34% 60%, var(--c2) 0 30%, transparent 72%),
+    radial-gradient(56% 66% at -4% 104%, var(--c3), transparent 72%),
+    radial-gradient(34% 44% at 104% 64%, var(--c3), transparent 70%),
+    linear-gradient(160deg, var(--c5), var(--c6));
+  --backdrop-blend: normal;
+  --wash: var(--wash-light, #f5f3f0d1); --sat: var(--saturate-light, 0.4);
+}
+.oriel[data-glass='true'][data-theme='dark'] {
+  --c1: #4f3d27; --c2: #36363d; --c3: #1d2532; --c4: #ffffff24; --c5: #1d1d20; --c6: #08080a;
+  --wash: var(--wash-dark, #0e0d0dd6); --sat: var(--saturate-dark, 0.4);
+}
+@media (prefers-color-scheme: dark) {
+  .oriel[data-glass='true'][data-theme='system'] {
+    --c1: #4f3d27; --c2: #36363d; --c3: #1d2532; --c4: #ffffff24; --c5: #1d1d20; --c6: #08080a;
+    --wash: var(--wash-dark, #0e0d0dd6); --sat: var(--saturate-dark, 0.4);
+  }
+}
+.oriel[data-glass='true']::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--scene);
+  background-blend-mode: var(--backdrop-blend);
+}
+.oriel[data-glass='true'].backdrop-ember { --c1: #fff1e4; --c2: #c6ada1; --c3: #b4969c; --c5: #ebdfd7; --c6: #d2c1b7; }
+.oriel[data-glass='true'][data-theme='dark'].backdrop-ember { --c1: #53301f; --c2: #2f2526; --c3: #2c1b22; --c5: #1e1819; --c6: #0b0909; }
+.oriel[data-glass='true'].backdrop-lagoon { --c1: #f3f9fd; --c2: #a9b8c1; --c3: #91a4b3; --c5: #dfe6ea; --c6: #c4ced4; }
+.oriel[data-glass='true'][data-theme='dark'].backdrop-lagoon { --c1: #1c3449; --c2: #232b31; --c3: #14262e; --c5: #16191c; --c6: #08090a; }
+@media (prefers-color-scheme: dark) {
+  .oriel[data-glass='true'][data-theme='system'].backdrop-ember { --c1: #53301f; --c2: #2f2526; --c3: #2c1b22; --c5: #1e1819; --c6: #0b0909; }
+  .oriel[data-glass='true'][data-theme='system'].backdrop-lagoon { --c1: #1c3449; --c2: #232b31; --c3: #14262e; --c5: #16191c; --c6: #08090a; }
+}
+/* An image (BRAND.backdrop), washed toward the mode, desaturated and softened. */
+.oriel[data-glass='true'].backdrop-image[style*='--backdrop-image'] {
+  --scene: linear-gradient(var(--wash) 96px, transparent 210px), linear-gradient(var(--wash), var(--wash)), var(--backdrop-image) center / cover;
+}
+.oriel[data-glass='true'].backdrop-image[style*='--backdrop-image']::before { inset: -40px; filter: saturate(var(--sat)) blur(var(--image-blur, 4px)); }
+
+.skip-link {
+  position: absolute; left: 16px; top: 12px; z-index: 50;
+  padding: 10px 16px; border-radius: var(--diya-radius-control);
+  background: var(--diya-color-raised); color: var(--diya-color-text); font-size: 15px;
+}
+.skip-link:not(:focus) { clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap; padding: 0; }
+.skip-link:focus { box-shadow: var(--diya-shadow-raised); }
+
+/* The frame. The sidebar shares the page's ground and is set apart by one
+   hairline, so the screen's own surfaces are the only raised things. */
+.shell { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100dvh; }
+.shell-side { border-right: 1px solid var(--hairline); }
+/* In Glass the sidebar is one floating pane: navigation above, account below. */
+.oriel[data-glass='true'] .shell-side { border-right: 0; padding: 12px 0 12px 12px; }
+.oriel[data-glass='true'] .side-inner {
+  top: 12px; height: calc(100dvh - 24px); box-sizing: border-box; overflow: hidden;
+  border-radius: var(--diya-radius-surface);
+  background: var(--diya-color-raised);
+  border: 1px solid var(--hairline);
+}
+@supports (backdrop-filter: blur(1px)) {
+  .oriel[data-glass='true'] .side-inner {
+    background: color-mix(in srgb, var(--diya-color-raised) 60%, transparent);
+    border-color: color-mix(in srgb, #ffffff 13%, transparent);
+    border-top-color: color-mix(in srgb, #ffffff 22%, transparent);
+    box-shadow: inset 0 1px 0 #ffffff1f, inset 0 -1px 0 #ffffff0a, 0 1px 1px #0000004d, 0 26px 60px -20px #000000b3;
+    background-image: linear-gradient(180deg, #ffffff0f, #ffffff00 30%);
+    backdrop-filter: blur(28px) saturate(1.15);
+  }
+  .oriel[data-glass='true'][data-theme='light'] .side-inner {
+    background: color-mix(in srgb, var(--diya-color-raised) 62%, transparent);
+    border-color: color-mix(in srgb, #ffffff 55%, transparent);
+    border-top-color: #ffffff;
+    box-shadow: inset 0 1px 0 #ffffff, inset 0 -1px 0 #ffffff59, 0 0 0 0.5px #1014181f, 0 2px 4px -1px #10141814, 0 26px 60px -24px #10141847;
+    background-image: linear-gradient(180deg, #ffffff80, #ffffff00 30%);
+    backdrop-filter: blur(28px) saturate(1.15) brightness(1.04);
+  }
+  @media (prefers-color-scheme: light) {
+    .oriel[data-glass='true'][data-theme='system'] .side-inner {
+      background: color-mix(in srgb, var(--diya-color-raised) 62%, transparent);
+      border-color: color-mix(in srgb, #ffffff 55%, transparent);
+      border-top-color: #ffffff;
+      box-shadow: inset 0 1px 0 #ffffff, inset 0 -1px 0 #ffffff59, 0 0 0 0.5px #1014181f, 0 2px 4px -1px #10141814, 0 26px 60px -24px #10141847;
+      background-image: linear-gradient(180deg, #ffffff80, #ffffff00 30%);
+      backdrop-filter: blur(28px) saturate(1.15) brightness(1.04);
+    }
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .oriel[data-glass='true'] .side-inner { background: var(--diya-color-raised); backdrop-filter: none; }
+}
+.oriel[data-glass='true'] .workspace { margin: 0; padding: 14px 28px 18px; border-top: 1px solid color-mix(in srgb, var(--diya-color-text) 12%, transparent); }
+.side-inner { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; justify-content: space-between; }
+.shell-top { display: none; }
+.shell-main { padding: 40px 48px 28px; max-width: 1200px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; min-height: 100dvh; }
+.shell-main:focus { outline: none; }
+.screen { flex: 1; }
+
+.brand { display: inline-flex; color: var(--diya-color-text); }
+
+/* Wordmarks (lib/brand.tsx). Sized by font size; DIYA Sans, widened and tightened. */
+.wm { display: inline-flex; align-items: baseline; line-height: 1; white-space: nowrap; color: inherit; }
+.wm svg { flex: none; display: block; }
+/* Oriel is outlines, 2.045em by 0.743em of the font size. The letters take the
+   text color, so they follow Light, Dark and Glass; the dot of the i is warm
+   light: #FF9500 in Light, #FF9F0A in Dark and in both Glass modes. */
+.wm-oriel { font-weight: 470; font-stretch: 112%; letter-spacing: -0.005em; }
+.wm-oriel .wm-word { width: 2.045em; height: .7428em; }
+.wm-dot { fill: #ff9f0a; }
+.oriel[data-theme='light']:not([data-glass='true']) .wm-dot { fill: #ff9500; }
+@media (prefers-color-scheme: light) {
+  .oriel[data-theme='system']:not([data-glass='true']) .wm-dot { fill: #ff9500; }
+}
+@media (forced-colors: active) { .wm-dot { fill: CanvasText; } }
+.wm-lumora { font-weight: 480; font-stretch: 120%; letter-spacing: -0.015em; }
+.wm-lumora .wm-halo { width: .78em; height: .78em; margin-right: .22em; transform: translateY(.02em); }
+.wm-solvi { font-weight: 620; font-stretch: 104%; letter-spacing: -0.045em; }
+.wm-i { position: relative; display: inline-block; }
+.wm-i .wm-sun { position: absolute; left: 50%; bottom: .66em; width: .2em; height: .2em; transform: translateX(-46%); }
+.mark { display: inline-grid; place-items: center; }
+.mark svg { width: 100%; height: 100%; display: block; }
+
+/* The page ground: a clean white in Light with the faintest warm light at the top;
+   a soft, warm glow over near-black in Dark. Only while Glass is off. */
+.oriel:not([data-glass='true'])[data-theme='light'] {
+  background-image: radial-gradient(70rem 26rem at 60% -12rem, #fff3e4, transparent 70%);
+  background-attachment: scroll;
+}
+.oriel:not([data-glass='true'])[data-theme='dark'] {
+  background-image:
+    radial-gradient(60rem 30rem at 72% -12rem, #ff9f0a1c, transparent 70%),
+    radial-gradient(46rem 30rem at 0% -6rem, #ff375f14, transparent 70%),
+    linear-gradient(180deg, #111113, #09090a 70%);
+  background-attachment: scroll;
+}
+
+.workspace { margin: 0 16px 20px; padding: 0 12px; font-size: 14px; line-height: 1.35; }
+.workspace span { color: var(--diya-color-muted); }
+.workspace strong { font-weight: 500; }
+
+
+/* Overview: one panel of figures. Each Metric spans three rows (label, figure,
+   change), so the labels share a line and the figures share a baseline,
+   whatever their size. */
+.glance { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto auto; }
+.glance-metric { display: grid; grid-row: span 3; grid-template-rows: subgrid; row-gap: 8px; padding-inline: 28px; align-items: last baseline; }
+.glance-metric:first-child { padding-left: 0; }
+.glance-metric + .glance-metric { border-left: 1px solid var(--hairline); }
+
+.split { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: var(--diya-space-4); align-items: stretch; }
+
+/* Lists and tables: names lead; references follow in the muted voice. */
+.customer-name { font-weight: 500; }
+.invoice-no { color: var(--diya-color-muted); font-variant-numeric: tabular-nums; }
+.figure { font-variant-numeric: tabular-nums; }
+.nowrap { white-space: nowrap; }
+
+/* Customers */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--diya-space-4); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--diya-space-4); }
+.pays { font-size: 14px; color: var(--diya-color-muted); line-height: 24px; }
+
+/* Settings */
+.settings { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: var(--diya-space-4); align-items: start; }
+/* The Form centers itself with auto margins; here it starts at the top. */
+.settings > .diya-project-form { margin-block: 0; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--diya-space-4); }
+
+.swatches { display: flex; flex-wrap: wrap; gap: 12px; }
+.swatch {
+  width: 32px; height: 32px; border-radius: 999px; border: 0; cursor: pointer; padding: 0;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--diya-color-text) 14%, transparent);
+}
+.swatch[aria-pressed='true'], .swatch:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
+/* Wells: the recessed tone (barely there on white) plus one hairline. */
+.preview { display: flex; flex-direction: column; gap: 16px; padding: 16px; border-radius: var(--diya-radius-control); background: var(--diya-color-recessed); border: 1px solid var(--hairline); }
+.oriel[data-glass='true'] .preview { background: color-mix(in srgb, var(--diya-color-recessed) 55%, transparent); }
+.code {
+  margin: 0; padding: 12px 14px; border-radius: var(--diya-radius-control); overflow-x: auto;
+  background: var(--diya-color-recessed); border: 1px solid var(--hairline);
+  font: 15px/1.6 ui-monospace, 'SF Mono', Menlo, monospace;
+}
+.oriel[data-glass='true'] .code { background: color-mix(in srgb, var(--diya-color-recessed) 55%, transparent); }
+.label-strong { font-size: 14px; font-weight: 500; margin: 0; }
+.muted { color: var(--diya-color-muted); margin: 0; font-size: 14px; }
+
+@media (max-width: 1100px) {
+  .split, .settings { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 860px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .shell-side { display: none; }
+  .shell-top { display: block; position: sticky; top: 0; z-index: 20; }
+  .shell-main { padding: 24px 16px; }
+}
+@media (max-width: 640px) {
+  .glance { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: repeat(6, auto); }
+  .glance-metric { padding-inline: 0; }
+  .glance-metric:first-child { grid-column: 1 / -1; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--hairline); }
+  .glance-metric:nth-child(2) { padding-right: 16px; border-left: 0; }
+  .glance-metric:nth-child(3) { padding-left: 16px; }
+  .two { grid-template-columns: minmax(0, 1fr); }
+}

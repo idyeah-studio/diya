@@ -1,0 +1,40 @@
+/* The Oriel door: one quiet line in the reference sheet's column, under it. */
+:where(html[data-catalog='true']) .oriel-door {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 48px;
+  margin-top: -40px;
+  padding: 0 4vw 64px;
+}
+:where(html[data-catalog='true']) .oriel-door p {
+  grid-column: 2;
+  margin: 0;
+  padding-left: 40px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+:where(html[data-catalog='true']) .oriel-door a {
+  color: var(--diya-color-text);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 4px;
+  border-radius: 4px;
+}
+:where(html[data-catalog='true']) .oriel-door a:hover { text-decoration-color: currentColor; }
+:where(html[data-catalog='true']) .oriel-door a:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
+
+@media (max-width: 1000px) {
+  :where(html[data-catalog='true']) .oriel-door { grid-template-columns: 220px minmax(0, 1fr); gap: 24px; padding-inline: 3vw; }
+}
+@media (max-width: 900px) {
+  :where(html[data-catalog='true']) .oriel-door { grid-template-columns: minmax(0, 1fr); margin-top: -16px; padding-bottom: 40px; }
+  :where(html[data-catalog='true']) .oriel-door p { grid-column: 1; }
+}
+@media (max-width: 720px) {
+  :where(html[data-catalog='true']) .oriel-door p { padding-left: 20px; }
+}
+@media (max-width: 420px) {
+  :where(html[data-catalog='true']) .oriel-door { padding-inline: 16px; }
+}

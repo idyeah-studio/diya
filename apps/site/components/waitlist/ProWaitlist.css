@@ -1,0 +1,279 @@
+/* Relight waitlist (DIYA Pro). Lives inside its own DIYA provider, so every colour is a public token. */
+.pro-waitlist {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.pro-waitlist .rw-frame {
+  position: relative;
+}
+
+/* A list that isn't taking signups hides the whole block around the form,
+   heading and all, rather than leaving a stub (see ProWaitlist). */
+:is([data-waitlist-block], .ld-join):has([data-waitlist-closed]) {
+  display: none;
+}
+
+.pro-waitlist .rw-form {
+  display: grid;
+  gap: 24px;
+  margin: 0;
+}
+
+.pro-waitlist p {
+  margin: 0;
+  color: var(--diya-color-text);
+}
+
+/* The question */
+.pro-waitlist .rw-question {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.pro-waitlist .rw-legend {
+  padding: 0;
+  font-size: var(--diya-text-body);
+  font-weight: 500;
+  line-height: var(--diya-leading-body);
+}
+.pro-waitlist .rw-hint {
+  margin-block: 2px 12px;
+  color: var(--diya-color-muted);
+  font-size: var(--diya-text-body);
+  line-height: var(--diya-leading-body);
+}
+.pro-waitlist .rw-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Native radios, drawn as pills. The input covers its pill, so the whole pill is the target. */
+.pro-waitlist .rw-pill {
+  position: relative;
+  display: inline-flex;
+}
+.pro-waitlist .rw-pill input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.pro-waitlist .rw-pill span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-block-size: 40px;
+  padding-inline: 12px 16px;
+  border: 1px solid var(--diya-color-line);
+  border-radius: 999px;
+  color: var(--diya-color-text);
+  font-size: var(--diya-text-body);
+  font-weight: 500;
+  line-height: 1.2;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+/* Every pill keeps a slot for the tick, so picking one never reflows the row. */
+.pro-waitlist .rw-pill span::before {
+  content: '';
+  flex: none;
+  inline-size: 5px;
+  block-size: 10px;
+  margin-block-start: -3px;
+  margin-inline: 1px 2px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  visibility: hidden;
+}
+.pro-waitlist .rw-pill:hover span {
+  background: var(--diya-color-hover);
+}
+/* Checked is told by the tick as well as the fill, never by colour alone. */
+.pro-waitlist .rw-pill input:checked + span {
+  border-color: var(--diya-color-accent);
+  background: var(--diya-color-accent);
+  color: var(--diya-color-accent-text);
+}
+.pro-waitlist .rw-pill input:checked + span::before {
+  visibility: visible;
+}
+.pro-waitlist .rw-pill input:focus-visible + span {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 3px;
+}
+
+/* Fields */
+.pro-waitlist .rw-email {
+  display: grid;
+  gap: 10px;
+}
+.pro-waitlist .diya-text-field.rw-field {
+  max-inline-size: min(100%, 400px);
+}
+.pro-waitlist .rw-typo {
+  font-size: var(--diya-text-body);
+  line-height: var(--diya-leading-body);
+}
+.pro-waitlist .rw-typo strong {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.pro-waitlist .rw-link-button {
+  min-block-size: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--diya-color-text);
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.pro-waitlist .rw-link-button:hover {
+  text-decoration-thickness: 2px;
+}
+.pro-waitlist .rw-link-button:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* Off-screen, out of the tab order and hidden from assistive tech: only bots fill it. */
+.pro-waitlist .rw-honeypot {
+  position: absolute;
+  inset-inline-start: -10000px;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+}
+
+.pro-waitlist .rw-submit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.pro-waitlist .rw-submit .diya-button {
+  min-inline-size: 190px;
+}
+
+.pro-waitlist .rw-error:empty {
+  display: none;
+}
+.pro-waitlist .rw-error {
+  margin-block-start: -8px;
+  color: var(--diya-color-error);
+  font-size: var(--diya-text-body);
+  line-height: var(--diya-leading-body);
+  max-inline-size: 52ch;
+}
+
+.pro-waitlist .rw-founding {
+  margin-block-start: 4px;
+  font-size: var(--diya-text-body);
+  line-height: var(--diya-leading-body);
+  max-inline-size: 52ch;
+}
+.pro-waitlist .rw-privacy {
+  margin-block-start: -12px;
+  color: var(--diya-color-muted);
+  font-size: var(--diya-text-caption);
+  line-height: 1.5;
+  max-inline-size: 52ch;
+}
+.pro-waitlist .rw-privacy .diya-text-link {
+  color: var(--diya-color-text);
+}
+
+/* After joining */
+.pro-waitlist .rw-done {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  font-size: var(--diya-text-body);
+  line-height: var(--diya-leading-body);
+}
+.pro-waitlist .rw-done :is(h2, h3, h4) {
+  margin: 0 0 4px;
+  font-size: var(--diya-text-title);
+  font-weight: 600;
+  line-height: var(--diya-leading-tight);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.pro-waitlist .rw-done :is(h2, h3, h4):focus {
+  outline: none;
+}
+.pro-waitlist .rw-done :is(h2, h3, h4):focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.pro-waitlist .rw-done p {
+  max-inline-size: 52ch;
+}
+.pro-waitlist .rw-address {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.pro-waitlist .rw-muted {
+  color: var(--diya-color-muted);
+}
+.pro-waitlist .diya-button.rw-again {
+  margin-block-start: 4px;
+  margin-inline-start: -12px;
+  padding-inline: 12px;
+  white-space: normal;
+  text-align: start;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.pro-waitlist .rw-status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Larger targets for fingers. */
+@media (pointer: coarse) {
+  .pro-waitlist .rw-pill span {
+    min-block-size: 44px;
+  }
+  .pro-waitlist .diya-text-field.rw-field {
+    --diya-internal-field-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pro-waitlist .rw-submit .diya-button {
+    inline-size: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pro-waitlist .rw-pill span {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .pro-waitlist .rw-pill input:checked + span {
+    border-color: Highlight;
+    outline: 1px solid Highlight;
+  }
+  .pro-waitlist .rw-pill input:checked + span::before {
+    border-color: CanvasText;
+  }
+}

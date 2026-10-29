@@ -1,0 +1,570 @@
+@layer site-reset { /* Library chrome follows the saved appearance. Demo artwork keeps its own theme. */
+:where(html[data-catalog='true']) body {
+  --diya-color-text: #f1f3f2;
+  --diya-color-muted: #bec8cb;
+  --diya-color-line: #ffffff30;
+  --diya-color-surface: var(--material-solid);
+  --catalog-wash: linear-gradient(180deg, #0006, #111315ad 48%, #101214e6);
+  --diya-color-glass: var(--material-glass);
+  --diya-color-hover: #ffffff0c;
+  --diya-color-selected: #ffffff18;
+  --diya-color-accent: #e8e8e8;
+  --diya-color-accent-text: #1c1c1c;
+  --diya-shadow-raised: var(--material-depth);
+} }
+:root[data-catalog='true'][data-theme='light'] body {
+  --diya-color-text: #202627;
+  --diya-color-muted: #495659;
+  --diya-color-line: #52606366;
+  --diya-color-surface: var(--material-solid);
+  --catalog-wash: linear-gradient(180deg, #f3f4f0d9, #e9edebcf 48%, #e7ebe9ed);
+  --diya-color-glass: var(--material-glass);
+  --diya-color-hover: #2026270c;
+  --diya-color-selected: #20262714;
+  --diya-color-accent: #262626;
+  --diya-color-accent-text: #fafafa;
+  --diya-shadow-raised: var(--material-depth);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-catalog='true'][data-theme='system'] body {
+    --diya-color-text: #202627;
+    --diya-color-muted: #495659;
+    --diya-color-line: #52606366;
+    --diya-color-surface: var(--material-solid);
+    --catalog-wash: linear-gradient(180deg, #f3f4f0d9, #e9edebcf 48%, #e7ebe9ed);
+    --diya-color-glass: var(--material-glass);
+    --diya-color-hover: #2026270c;
+    --diya-color-selected: #20262714;
+    --diya-color-accent: #262626;
+    --diya-color-accent-text: #fafafa;
+    --diya-shadow-raised: var(--material-depth);
+  }
+}
+:root[data-catalog='true'] body:has(.gallery-study) .header-end {
+  display: flex;
+  color: var(--diya-color-text);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .header-end .preview-label {
+  display: none;
+}
+:root[data-catalog='true'] body:has(.gallery-study) .brand img {
+  filter: var(--logo);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .appearance-popover > summary {
+  width: 40px;
+  height: 40px;
+  border-color: var(--diya-color-line);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .appearance-panel {
+  color: var(--text);
+  background: var(--panel);
+  backdrop-filter: none;
+  max-width: calc(100vw - 32px);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .gallery-study {
+  color: var(--diya-color-text);
+  background: var(--bg);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .gallery-study-backdrop {
+  background-image: var(--catalog-wash), url('/images/concept-architecture.png');
+}
+/* Dark Glass: the photo's bright light shaft shows through the translucent
+   stage, so a soft shade over that area keeps text on the stage at 4.5:1. */
+:root[data-catalog='true'][data-theme='dark'][data-glass='true'] body:has(.gallery-study) .gallery-study-backdrop {
+  background-image:
+    radial-gradient(ellipse 40% 55% at 72% 52%, #00000099, #0000 75%),
+    var(--catalog-wash),
+    url('/images/concept-architecture.png');
+  background-size: auto, auto, cover;
+  background-position: 0 0, 0 0, 50% 48%;
+}
+:root[data-catalog='true']
+  body:has(.gallery-study)
+  :is(.site-header nav, .gallery-discovery, .component-browser, .customize-inspector, .component-preview-stage, .pattern-stage) {
+  color: var(--diya-color-text);
+  background: var(--diya-color-surface);
+  border-color: var(--diya-color-line);
+  backdrop-filter: none;
+  box-shadow: var(--diya-shadow-raised);
+}
+@supports (backdrop-filter: blur(20px)) {
+  :root[data-catalog='true'][data-glass='true']
+    body:has(.gallery-study)
+    :is(.site-header nav, .gallery-discovery, .component-browser, .customize-inspector, .component-preview-stage, .pattern-stage) {
+    background: var(--diya-color-glass);
+    border-color: var(--material-edge);
+    border-top-color: var(--material-highlight);
+    backdrop-filter: var(--material-blur);
+  }
+}
+/* Navigation reflects routing, never the position of a link. */
+:root[data-catalog='true'] body:has(.gallery-study) .site-header nav a {
+  color: var(--diya-color-muted);
+  background: transparent;
+}
+:root[data-catalog='true'] body:has(.gallery-study) .site-header nav a[aria-current='page'] {
+  color: var(--diya-color-accent-text);
+  background: var(--diya-color-accent);
+}
+:root[data-catalog='true']
+  body:has(.gallery-study)
+  :is(
+    .gallery-study-intro p,
+    .gallery-tile-caption p,
+    .gallery-tile-caption button,
+    .gallery-study-note,
+    .gallery-results,
+    .gallery-search,
+    .component-browser-heading > span,
+    .component-group h2,
+    .component-browser-note,
+    .component-browser-note span,
+    .component-no-results,
+    .component-document-heading > span,
+    .component-document-heading > p,
+    .component-preview-top > span,
+    .component-preview-caption,
+    .component-reference p,
+    .component-doc-columns p
+  ) {
+  color: var(--diya-color-muted);
+}
+:root[data-catalog='true']
+  body:has(.gallery-study)
+  :is(
+    .gallery-search input,
+    .component-search input,
+    .component-search button,
+    .component-group button,
+    .component-preview-top a,
+    .component-state-list > *,
+    .gallery-discovery button,
+    .gallery-filters summary
+  ) {
+  color: var(--diya-color-text);
+}
+:root[data-catalog='true'] body:has(.gallery-study) :is(.gallery-search input, .component-search input)::placeholder {
+  color: var(--diya-color-muted);
+}
+:root[data-catalog='true']
+  body:has(.gallery-study)
+  :is(
+    .component-search,
+    .component-browser-note,
+    .component-reference,
+    .component-state-list > *,
+    .gallery-tools
+  ) {
+  border-color: var(--diya-color-line);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .component-search {
+  background: var(--diya-color-hover);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .component-group button:hover {
+  background: var(--diya-color-hover);
+}
+:root[data-catalog='true']
+  body:has(.gallery-study)
+  :is(
+    .component-group button[aria-current='true'],
+    .gallery-categories button[aria-pressed='true'],
+    .gallery-tools > button[aria-pressed='true']
+  ) {
+  color: var(--diya-color-text);
+  background: var(--diya-color-selected);
+  box-shadow: inset 0 0 0 1px var(--diya-color-line);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .component-state-list button[aria-pressed='true'] {
+  color: var(--diya-color-accent-text);
+  background: var(--diya-color-accent);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .gallery-filters label {
+  background: var(--diya-color-surface);
+  color: var(--diya-color-text);
+  border-color: var(--diya-color-line);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .gallery-filters input {
+  accent-color: var(--diya-color-text);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .gallery-tile-image {
+  border-color: var(--diya-color-line);
+}
+/* Preview illustrations stay demo-themed, but their containing material is optional. */
+:root[data-catalog='true']:not([data-glass='true']) body:has(.gallery-study) .gallery-tile-image {
+  backdrop-filter: none;
+}
+:root[data-catalog='true']:not([data-glass='true']) body:has(.gallery-study) .gallery-tile-workspace {
+  background: #242a2c;
+}
+/* The switch example is independently dark; its focus ring must contrast there. */
+:root[data-catalog='true'] body:has(.gallery-study) .component-switch-example {
+  color: #f1f3f2;
+}
+/* Embedded workspace appearance is independent of the surrounding library. */
+:root[data-catalog='true'] body:has(.gallery-study) .component-switch-example button:disabled {
+  opacity: 0.45;
+  outline: 1px dashed #d2dada;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-catalog='true']:root[data-catalog='true']
+    body:has(.gallery-study)
+    :is(.site-header nav, .gallery-discovery, .component-browser, .customize-inspector, .component-preview-stage, .pattern-stage) {
+    background: var(--diya-color-surface);
+    backdrop-filter: none;
+  }
+  :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .gallery-tile-image {
+    backdrop-filter: none;
+  }
+  :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .gallery-tile-workspace {
+    background: #242a2c;
+  }
+}
+@media (forced-colors: active) {
+  :root[data-catalog='true']:root[data-catalog='true'] body {
+    --diya-color-text: CanvasText;
+    --diya-color-muted: CanvasText;
+    --diya-color-line: ButtonText;
+    --diya-color-surface: Canvas;
+    --diya-color-glass: Canvas;
+    --diya-color-hover: Canvas;
+    --diya-color-selected: Canvas;
+    --diya-color-accent: Highlight;
+    --diya-color-accent-text: HighlightText;
+    --diya-shadow-raised: none;
+  }
+  :root[data-catalog='true'] body:has(.gallery-study) .gallery-study-backdrop {
+    display: none;
+  }
+  :root[data-catalog='true']:root[data-catalog='true']
+    body:has(.gallery-study)
+    :is(
+      .site-header nav,
+      .gallery-discovery,
+      .component-browser,
+      .customize-inspector,
+      .component-preview-stage,
+      .gallery-tile-image,
+      .component-switch-example
+    ) {
+    background: Canvas;
+    backdrop-filter: none;
+    box-shadow: none;
+    border: 1px solid ButtonText;
+  }
+  :root[data-catalog='true']
+    body:has(.gallery-study)
+    :is(.component-group button[aria-current='true'], button[aria-pressed='true']) {
+    outline: 1px solid Highlight;
+    outline-offset: -2px;
+  }
+  :root[data-catalog='true'] body:has(.gallery-study) .component-switch-example button {
+    border: 1px solid ButtonText;
+    background: Canvas;
+  }
+  :root[data-catalog='true'] body:has(.gallery-study) .component-switch-example button > span {
+    background: ButtonText;
+  }
+  :root[data-catalog='true'] body:has(.gallery-study) .component-switch-example button:disabled {
+    opacity: 1;
+    border-color: GrayText;
+    outline-color: GrayText;
+  }
+}
+/* Shared interaction language for library chrome, including all patterns. */
+:root[data-catalog='true'] body :is(.pattern-current, .atomic-browser .atomic-navigation-item) {
+  position: relative;
+  padding: 10px 14px 10px 16px;
+  border-radius: 8px;
+  color: var(--diya-color-muted);
+  background: transparent;
+  box-shadow: none;
+  text-decoration: none;
+}
+:root[data-catalog='true'] body :is(.pattern-current, .atomic-browser .atomic-navigation-item):hover {
+  background: var(--diya-color-hover);
+  color: var(--diya-color-text);
+}
+:root[data-catalog='true'] body :is(.pattern-current, .atomic-browser .atomic-navigation-item)[aria-current='page'] {
+  background: var(--diya-color-selected);
+  color: var(--diya-color-text);
+  font-weight: 400;
+}
+/* Inside the scrolling list the ring sits inset, so the list never cuts it off. */
+:root[data-catalog='true'] body :is(.pattern-current, .atomic-browser .atomic-navigation-item):focus-visible { outline-offset: -2px; }
+:root[data-catalog='true'] body :is(.pattern-current, .atomic-browser .atomic-navigation-item)[aria-current='page']::before { content:none; }
+:root[data-catalog='true'] body .appearance-panel {
+  color: var(--diya-color-text);
+  background: var(--diya-color-surface);
+  border-color: var(--diya-color-line);
+}
+:root[data-catalog='true'] body .appearance-panel .segmented {
+  background: var(--diya-color-hover);
+  border: 1px solid var(--diya-color-line);
+}
+:root[data-catalog='true'] body .appearance-panel .segmented label > span { color: var(--diya-color-muted); }
+:root[data-catalog='true'] body .appearance-panel .segmented input:checked + span {
+  background: var(--diya-color-accent);
+  color: var(--diya-color-accent-text);
+}
+:root[data-catalog='true'] body .appearance-panel .segmented input:focus-visible + span { outline-color: var(--diya-color-text); }
+:root[data-catalog='true'] body .appearance-panel .glass-row { border-color: var(--diya-color-line); }
+:root[data-catalog='true'] body .appearance-panel .glass-row small { color: var(--diya-color-muted); }
+:root[data-catalog='true'] body .appearance-panel .glass-row input:checked + .switch-track { background: var(--diya-color-accent); }
+:root[data-catalog='true'] body .appearance-panel .glass-row input:checked + .switch-track::before { background: var(--diya-color-accent-text); }
+:root[data-catalog='true'] body .badge-color-options :is(input:checked, input[data-selected='true']) + .badge-color-swatch {
+  background: var(--diya-color-accent);
+  color: var(--diya-color-accent-text);
+  border-color: transparent;
+}
+:root[data-catalog='true'] body:has(.gallery-study) .pattern-stage { border-color:var(--diya-color-line); }
+:root[data-catalog='true'] body:has(.gallery-study) .pattern-controls { border-color:var(--diya-color-line); }
+:root[data-catalog='true'] body:has(.gallery-study) .pattern-preview { background:var(--diya-color-surface); border-color:var(--diya-color-line); }
+@supports (backdrop-filter:blur(20px)) {
+}
+/* Landing retains its imagery; chrome uses the same material and state tokens. */
+:root[data-catalog='true'] body:has(.concept-landing) { color:var(--diya-color-text); background:var(--bg); }
+:root[data-catalog='true'] body:has(.concept-landing) .concept-backdrop {
+  background:var(--catalog-wash), url('/images/concept-architecture.png') center / cover;
+}
+:root[data-catalog='true'] body:has(.concept-landing) .brand img { filter:var(--logo); }
+:root[data-catalog='true'] body:has(.concept-landing) .site-header nav {
+  display:flex; gap:4px; padding:3px;
+  border:1px solid var(--diya-color-line); border-radius:999px;
+  background:var(--diya-color-surface); color:var(--diya-color-muted);
+}
+:root[data-catalog='true'] body:has(.concept-landing) .site-header nav a { padding:7px 16px; font-size:13px; border-radius:999px; color:var(--diya-color-muted); }
+:root[data-catalog='true'] body:has(.concept-landing) .site-header nav a:hover { color:var(--diya-color-text); background:var(--diya-color-hover); }
+:root[data-catalog='true'] body:has(.concept-landing) .concept-hero h1 { color:var(--diya-color-text); }
+:root[data-catalog='true'] body:has(.concept-landing) .concept-hero p { color:var(--diya-color-muted); }
+:root[data-catalog='true'] body:has(.concept-landing) .concept-cta { color:var(--diya-color-accent-text); background:var(--diya-color-accent); border-color:transparent; box-shadow:none; }
+:root[data-catalog='true'] body:has(.concept-landing) .appearance-popover > summary { color:var(--diya-color-text); border-color:var(--diya-color-line); }
+@supports(backdrop-filter:blur(20px)) {
+ :root[data-catalog='true'][data-glass='true'] body:has(.concept-landing) .site-header nav { background:var(--diya-color-glass); backdrop-filter:var(--material-blur); border-color:var(--material-edge); border-top-color:var(--material-highlight); }
+}
+@media(prefers-reduced-transparency:reduce) {
+}
+@media(forced-colors:active) {
+ :root[data-catalog='true']:root[data-catalog='true'] body :is(.pattern-current,.atomic-navigation-item)[aria-current='page'] { outline:1px solid Highlight; }
+}
+/* Persistent library navigation, with room for independent sidebar scrolling. */
+:root[data-catalog='true'] body:has(.gallery-study) .site-header {
+  position:fixed;
+  z-index:60;
+  height:64px;
+  background:transparent !important;
+  backdrop-filter:none !important;
+  border:0;
+}
+:root[data-catalog='true'] body:has(.gallery-study) .component-browser {
+  position:sticky;
+  top:88px;
+  max-height:calc(100dvh - 136px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+:root[data-catalog='true'] body:has(.gallery-study) .component-browser.atomic-browser { overflow:hidden; }
+:root[data-catalog='true'] body:has(.concept-landing) .site-header { position:fixed; }
+@media(max-width:900px) {
+ :root[data-catalog='true'] body:has(.gallery-study) .component-browser { top:88px; max-height:240px; z-index:20; }
+}
+@media(prefers-reduced-transparency:reduce) {
+ :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .site-header { background:transparent !important; backdrop-filter:none !important; }
+}
+:root[data-catalog='true'] body:has(.concept-landing) .header-end { display:flex; color:var(--diya-color-text); }
+:root[data-catalog='true'] body:has(.concept-landing) .appearance-popover { display:block; }
+:root[data-catalog='true'] body:has(.gallery-study) .component-browser { max-height:calc(100dvh - 172px); }
+@media(max-width:900px) { :root[data-catalog='true'] body:has(.gallery-study) .component-browser { max-height:200px; } }
+
+:root[data-catalog='true'] body:has(.gallery-study) .site-header nav { padding:3px; box-shadow:none; }
+:root[data-catalog='true'] body:has(.gallery-study) .site-header nav a { padding:7px 16px; font-size:13px; }
+:root[data-catalog='true'] body:has(.gallery-study) .appearance-popover > summary { width:34px; height:34px; }
+:root[data-catalog='true'] body:has(.gallery-study) .component-library { padding-top:88px; }
+
+:root[data-catalog='true'] body:has(:is(.gallery-study,.concept-landing)) .site-header .brand img { width:80px; height:auto; }
+:root[data-catalog='true'] body:has(.concept-landing) .site-header { height:64px; }
+/* No resting veil: dissolve passing content only after scrolling begins. */
+:root[data-catalog='true'] body:has(.gallery-study) .site-header { isolation:isolate; }
+:root[data-catalog='true'] body:has(.gallery-study) .site-header::before {
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  bottom:-32px;
+  z-index:0;
+  pointer-events:none;
+  opacity:var(--scroll-glass, 0);
+  backdrop-filter:blur(12px);
+  background:transparent;
+  mask-image:linear-gradient(180deg, #000 0%, #000 48%, transparent 100%), linear-gradient(90deg, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%);
+  mask-composite:intersect;
+  mask-repeat:no-repeat;
+}
+:root[data-catalog='true'] body:has(.gallery-study) .site-header > * { position:relative; z-index:1; }
+:root[data-catalog='true'] body:has(.gallery-study) .site-header > nav { position:absolute; }
+/* Anchor navigation to the viewport, not the bottom of each preview page. */
+:root[data-catalog='true'] body:has(.gallery-study) { overscroll-behavior-y:none; }
+:root[data-catalog='true']:has(.gallery-study) { overscroll-behavior-y:none; scrollbar-gutter:stable; }
+:root[data-catalog='true'] body:has(.gallery-study) .component-browser {
+  position:fixed;
+  top:88px;
+  left:4vw;
+  width:260px;
+  max-height:calc(100dvh - 112px);
+  z-index:30;
+}
+:root[data-catalog='true'] body:has(.gallery-study) .component-document { grid-column:2; }
+@media(max-width:1000px) {
+  :root[data-catalog='true'] body:has(.gallery-study) .component-browser { left:3vw; width:220px; }
+}
+
+/* A shared elevated surface keeps specimens distinct from their controls. */
+:root[data-catalog='true'] body:has(.gallery-study) :is(.component-preview-stage, .pattern-stage) {
+  border-color:color-mix(in srgb,var(--diya-color-line) 45%,transparent);
+}
+:root[data-catalog='true']:not([data-glass='true']) body:has(.gallery-study) :is(.component-preview-stage, .pattern-stage) {
+  background:var(--material-recessed);
+}
+@supports(backdrop-filter:blur(14px)) {
+}
+@media(prefers-reduced-transparency:reduce) {
+}
+@media(forced-colors:active) {
+}
+
+@supports(backdrop-filter:blur(14px)) {
+ :root[data-catalog='true'][data-glass='true'] body:has(.gallery-study) :is(.component-preview-stage,.pattern-stage) {
+   background:color-mix(in srgb,var(--material-recessed) 72%,transparent);
+ }
+}
+@media(prefers-reduced-transparency:reduce) {
+ :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) :is(.component-preview-stage,.pattern-stage) { background:var(--material-recessed); }
+}
+@media(forced-colors:active) {
+ :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) :is(.component-preview-stage,.pattern-stage) { background:Canvas; }
+}
+
+/* Component controls use the same edge-to-edge divider as pattern controls. */
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) {
+  --preview-inset:32px;
+  padding:0 var(--preview-inset);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage > :is(.button-preview-controls,.input-preview-controls) {
+  margin-inline:calc(-1 * var(--preview-inset,32px));
+  padding-inline:var(--preview-inset,32px);
+}
+
+/* Specimens sit on the same raised material as the pattern examples. */
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section {
+  position:relative;
+  isolation:isolate;
+  flex:1;
+}
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before {
+  content:'';
+  position:absolute;
+  inset:0 calc(-1 * var(--preview-inset,32px));
+  z-index:-1;
+  pointer-events:none;
+  border-radius:0 0 21px 21px;
+  background:var(--material-raised);
+}
+@supports(backdrop-filter:blur(14px)) {
+ :root[data-catalog='true'][data-glass='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before {
+   background:color-mix(in srgb,var(--material-raised) 78%,transparent);
+ }
+}
+@media(prefers-reduced-transparency:reduce) {
+ :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before { background:var(--material-raised); }
+}
+@media(forced-colors:active) {
+ :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before { background:Canvas; }
+}
+
+/* Patterns mirror component panels: recessed controls, a raised canvas below. */
+:root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .pattern-stage {
+  background:var(--material-raised);
+}
+:root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .pattern-controls {
+  background:var(--material-recessed);
+}
+@supports(backdrop-filter:blur(14px)) {
+ :root[data-catalog='true']:root[data-catalog='true'][data-glass='true'] body:has(.gallery-study) .pattern-stage {
+   background:color-mix(in srgb,var(--material-raised) 78%,transparent);
+ }
+ :root[data-catalog='true']:root[data-catalog='true'][data-glass='true'] body:has(.gallery-study) .pattern-controls {
+   background:color-mix(in srgb,var(--material-recessed) 72%,transparent);
+ }
+}
+@media(prefers-reduced-transparency:reduce) {
+ :root[data-catalog='true']:root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .pattern-stage { background:var(--material-raised); }
+ :root[data-catalog='true']:root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .pattern-controls { background:var(--material-recessed); }
+}
+@media(forced-colors:active) {
+ :root[data-catalog='true']:root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) :is(.pattern-stage,.pattern-controls) { background:Canvas; }
+}
+
+/* Keep pattern boundaries visible independently of elevation or glass. */
+@media (forced-colors: active) {
+}
+
+/* Dark surfaces catch soft ambient light instead of a sharp white rim. */
+@media (forced-colors: none) {
+  :root[data-catalog='true'][data-theme='dark'] body {
+    --material-edge: #ffffff30;
+    --material-highlight: #ffffff30;
+    --diya-shadow-raised: inset 0 1px 0 #ffffff0a, 0 -6px 24px -6px #ffffff24, 0 0 44px -10px #ffffff18, 0 18px 40px -8px #000000a6;
+  }
+  :root[data-catalog='true'][data-theme='dark'] body:has(.gallery-study) :is(.component-browser, .customize-inspector, .component-preview-stage, .pattern-stage, .gallery-discovery),
+
+  :root[data-catalog='true'][data-theme='dark'] body .appearance-panel {
+    border-color: #ffffff30;
+    box-shadow: var(--diya-shadow-raised);
+  }
+  :root[data-catalog='true'][data-theme='dark'] body .site-header nav,
+
+  :root[data-catalog='true'][data-theme='dark'] body :is(.button-mini-switch, .appearance-panel .segmented, .concept-segments) {
+    border-color: #ffffff30;
+    box-shadow: inset 0 1px 0 #ffffff0a, 0 -3px 12px -3px #ffffff20, 0 6px 16px -4px #00000080;
+  }
+}
+:where(html[data-catalog='true']) .component-document-heading { position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:24px; padding-right:0; }
+:where(html[data-catalog='true']) .component-document-heading > h2 { grid-column:1; grid-row:1; }
+:where(html[data-catalog='true']) .component-document-heading > p { grid-column:1 / -1; grid-row:2; }
+:where(html[data-catalog='true']) .component-document-heading > .library-download { position:static; grid-column:2; grid-row:1; align-self:center; display:inline-flex; align-items:center; gap:8px; }
+:where(html[data-catalog='true']) .library-download-dialog { max-width:420px; padding:28px; border:1px solid var(--diya-color-line); border-radius:20px; background:var(--material-raised); color:var(--diya-color-text); }
+:where(html[data-catalog='true']) .library-download-dialog::backdrop { background:#0008; backdrop-filter:blur(5px); }
+:where(html[data-catalog='true']) .library-download-dialog p { font-size:14px; line-height:1.6; margin:16px 0; color:var(--diya-color-muted); }
+@supports(backdrop-filter:blur(14px)) {
+}
+:where(html[data-catalog='true']) .pattern-library .component-browser { max-height:calc(100dvh - 108px); overflow-y:auto; scrollbar-width:thin; }
+
+/* Composite inputs own their focus treatment; never outline the inner editor. */
+
+:where(html[data-catalog='true']) .component-library .component-document-heading{margin-bottom:24px}
+:where(html[data-catalog='true']) .component-library .component-document-heading > h2{margin-bottom:0}
+:where(html[data-catalog='true']) .component-library .component-document-heading > .library-download{transform:translateY(8px)}
+
+/* Give the shared header room above it while retaining its slim height. */
+:root[data-catalog='true'] body:has(:is(.gallery-study,.concept-landing)) .site-header { top:16px; }
+:root[data-catalog='true'] body:has(.gallery-study) .component-library { padding-top:104px; }
+:root[data-catalog='true'] body:has(.gallery-study) .component-browser { top:104px; }
+@media(min-width:901px) {
+ :root[data-catalog='true'] body:has(.gallery-study) .component-browser { max-height:calc(100dvh - 128px); }
+}
+/* The narrow navigation panel occupies document space and leaves the specimen
+   when scrolling. A fixed panel here obscures focused controls and page titles. */
+@media(max-width:900px) {
+ :root[data-catalog='true'] body:has(.gallery-study) .pattern-library .component-browser {
+  position:relative; top:0; left:auto; width:100%; height:200px; max-height:200px; z-index:auto;
+ }
+ :root[data-catalog='true'] body:has(.gallery-study) .pattern-library .component-document { grid-column:1; padding-top:0; }
+}
+@media(max-width:700px) {
+ :root[data-catalog='true'] body:has(.gallery-study) .component-browser {
+  position:relative; top:0; left:auto; width:100%; height:200px; max-height:200px; z-index:auto;
+ }
+ :root[data-catalog='true'] body:has(.gallery-study) .component-document { grid-column:1; padding-top:0; }
+}
+:root[data-catalog='true']:has(.gallery-study) { scroll-padding-top:104px; scroll-padding-bottom:24px; }

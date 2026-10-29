@@ -1,0 +1,8 @@
+@media (prefers-color-scheme: light) { }
+:where(html[data-catalog='true']) .collection-example { flex: 1; min-height: 240px; display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
+:where(html[data-catalog='true']) .collection-example-stack { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 16px; }
+:where(html[data-catalog='true']) .collection-preview-status { min-height: 18px; margin: 0; font-size: var(--diya-text-caption, 13px); line-height: 1.5; color: var(--diya-color-muted); text-align: center; }
+:where(html[data-catalog='true']) .collection-popover-content { display: flex; flex-direction: column; gap: 20px; }
+/* Was in the SDK's styles.css (two rules; this is what they resolved to). */
+.diya-root .collection-popover-title { margin: 0; font-size: var(--diya-text-large); font-weight: 600; }
+@media (forced-colors: active) { }

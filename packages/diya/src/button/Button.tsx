@@ -1,0 +1,62 @@
+'use client'
+import { Children, cloneElement, forwardRef, isValidElement, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type MouseEvent, type ReactElement, type ReactNode, type Ref } from 'react'
+import { cx } from '../internal/cx.js'
+import { useDiyaLinkComponent } from '../internal/link.js'
+import { renderSlot } from '../internal/slot.js'
+
+export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  /** 'solid' for the main action, 'outline' for secondary ones, 'quiet' for low-emphasis ones, 'destructive' for an action that deletes or can't be undone. Defaults to 'solid'. */
+  variant?: 'solid' | 'outline' | 'quiet' | 'destructive'
+  /** Button height and text size. Defaults to 'medium'. */
+  size?: 'small' | 'medium' | 'large'
+  /** 'pill' is fully round; 'rounded' uses the shared control corner, like fields. Defaults to 'pill'. */
+  shape?: 'pill' | 'rounded'
+  /** Square button for a single icon child; give it an `aria-label`, since the icon is its only content. */
+  iconOnly?: boolean
+  /** Shows a working indicator, disables the button and sets `aria-busy`; the label stays unless `iconOnly`. */
+  loading?: boolean
+  /** Renders a link to this URL that looks like a Button, through the provider's `linkComponent` (a plain anchor by default). */
+  href?: string
+  /** With `href`, where the link opens, such as '_blank'. */
+  target?: AnchorHTMLAttributes<HTMLAnchorElement>['target']
+  /** With `href`, the link's relationship to this page, such as 'noopener'. */
+  rel?: string
+  /** With `href`, downloads the target instead of opening it; a string names the saved file. */
+  download?: AnchorHTMLAttributes<HTMLAnchorElement>['download']
+  /** Styles your single child element as the Button instead of rendering one, such as a router `Link`; DIYA's classes, attributes and handlers merge into it. */
+  asChild?: boolean
+}
+
+// A link can't be disabled natively, so its clicks stop here, before the link or a router sees them.
+function stopClick(event: MouseEvent) {
+  event.preventDefault()
+  event.stopPropagation()
+}
+
+/** A native button in DIYA's styles, or a link that looks like one with `href` or `asChild`; other button attributes pass through, and `type` defaults to 'button'. */
+export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(function Button({ variant = 'solid', size = 'medium', shape = 'pill', iconOnly = false, loading = false, disabled, children, className, type = 'button', href, target, rel, download, asChild = false, ...props }, ref) {
+  const Link = useDiyaLinkComponent()
+  const inactive = !!disabled || loading
+  const shared = { className: cx('diya-button', className), 'data-variant': variant, 'data-size': size, 'data-shape': shape, 'data-icon-only': iconOnly || undefined, 'aria-busy': loading || undefined }
+  const content = (inner: ReactNode) => <>
+    {loading && <span className="diya-button-progress" aria-hidden="true">···</span>}
+    {!(iconOnly && loading) && inner}
+  </>
+  if (asChild) {
+    const child = Children.only(children)
+    if (!isValidElement(child)) return null
+    const own = child as ReactElement<{ children?: ReactNode }>
+    const filled = loading ? cloneElement(own, undefined, content(own.props.children)) : own
+    return renderSlot(filled, { ...props, ...shared, 'aria-disabled': inactive || undefined, onClickCapture: inactive ? stopClick : undefined }, ref)
+  }
+  if (href !== undefined) {
+    const anchor = props as AnchorHTMLAttributes<HTMLAnchorElement>
+    const anchorRef = ref as Ref<HTMLAnchorElement>
+    // Without its href the anchor leaves the tab order and can't be followed, like a disabled button.
+    if (inactive) return <a {...anchor} {...shared} ref={anchorRef} role="link" aria-disabled="true" onClickCapture={stopClick}>{content(children)}</a>
+    return <Link {...anchor} {...shared} ref={anchorRef} href={href} target={target} rel={rel} download={download}>{content(children)}</Link>
+  }
+  return <button {...props} {...shared} ref={ref as Ref<HTMLButtonElement>} type={type} disabled={inactive}>
+    {content(children)}
+  </button>
+})

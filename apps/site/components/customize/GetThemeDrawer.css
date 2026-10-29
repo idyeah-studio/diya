@@ -1,0 +1,136 @@
+/* What's in your theme: a spec card, read before copying. */
+.diya-root .diya-drawer-body .get-theme-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  border-radius: 14px;
+  overflow: clip;
+  background: color-mix(in srgb, var(--diya-color-line) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--diya-color-line) 60%, transparent);
+}
+.diya-root .diya-drawer-body .get-theme-summary > div {
+  display: block;
+  background: var(--diya-color-raised);
+  padding: 12px 14px;
+  border: 0;
+  min-width: 0;
+}
+.diya-root .diya-drawer-body .get-theme-summary dt {
+  font-size: 13px;
+  color: var(--diya-color-muted);
+}
+.diya-root .diya-drawer-body .get-theme-summary dd {
+  margin: 4px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 15px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+/* The brand leads the card, across both columns. */
+.diya-root .diya-drawer-body .get-theme-summary > div:has(.get-theme-brand) {
+  grid-column: 1 / -1;
+}
+.diya-root .get-theme-brand-pairs {
+  display: inline-flex;
+  gap: 6px;
+}
+.diya-root .get-theme-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px #0003;
+  flex-shrink: 0;
+  vertical-align: -3px;
+}
+.diya-root .get-theme-pair {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #0002;
+  flex-shrink: 0;
+}
+
+/* Blocked: shown instead of the steps, with fixes in place. */
+.diya-root .get-theme-blocked {
+  display: grid;
+  gap: 16px;
+}
+.diya-root .code-steps .get-theme-blocked h4 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.diya-root .code-steps .get-theme-blocked h4:focus {
+  outline: none;
+}
+.diya-root .code-steps .get-theme-blocked h4:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.diya-root .get-theme-blocked ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.diya-root .get-theme-issue {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px 14px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--diya-color-surface);
+  border: 1px solid color-mix(in srgb, var(--diya-color-line) 60%, transparent);
+}
+.diya-root .get-theme-issue-what {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+}
+.diya-root .get-theme-issue-ratio {
+  display: block;
+  font-size: 13px;
+  color: var(--diya-color-muted);
+  font-variant-numeric: proportional-nums;
+}
+.diya-root .get-theme-issue-fixes {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.diya-root .get-theme-issue-fixes .diya-button {
+  gap: 6px;
+  font-variant-numeric: proportional-nums;
+}
+.diya-root .get-theme-issue-fixes .diya-button:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+.diya-root .code-steps.code-steps .get-theme-waiting {
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px dashed var(--diya-color-line);
+}
+
+@media (max-width: 520px) {
+  .diya-root .diya-drawer-body .get-theme-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

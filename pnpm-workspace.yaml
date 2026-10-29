@@ -1,0 +1,11 @@
+packages:
+  - packages/*
+  - examples/*
+  - apps/*
+
+# Examples and the site get their own copy of the package, with their own React,
+# the way an npm install would. The copy refreshes whenever the package's build
+# script runs.
+injectWorkspacePackages: true
+syncInjectedDepsAfterScripts:
+  - build

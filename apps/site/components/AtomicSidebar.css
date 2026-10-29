@@ -1,0 +1,90 @@
+:where(html[data-catalog='true']) .component-browser.atomic-browser { display: flex; flex-direction: column; overflow: hidden; }
+:where(html[data-catalog='true']) .atomic-browser .component-browser-heading { flex-shrink: 0; padding-bottom: 22px; }
+:where(html[data-catalog='true']) .atomic-browser .component-browser-heading h1 { margin-bottom: 18px; }
+:where(html[data-catalog='true']) .atomic-browser .atomic-navigation { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--diya-color-line) transparent; gap: 24px; padding: 2px 0 8px; }
+:where(html[data-catalog='true']) .atomic-group h2 { margin: 0 0 8px; padding-left: 0; color: var(--diya-color-muted); font-size: 13px; font-weight: 500; letter-spacing: .04em; }
+:where(html[data-catalog='true']) .atomic-browser .atomic-navigation-item { font-size: 13px; padding-block: 9px; border-radius: 6px; }
+:where(html[data-catalog='true']) .atomic-browser .atomic-navigation-item:hover { background: var(--diya-color-hover); }
+:where(html[data-catalog='true']) .atomic-empty { margin: 8px 6px 16px; color: var(--diya-color-muted); font-size: 13px; line-height: 1.6; }
+:where(html[data-catalog='true']) .atomic-search-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+:where(html[data-catalog='true']) .component-browser.atomic-browser .component-browser-heading { padding: 0 0 22px; }
+
+/* The list's title row; its Close key belongs to the phone sheet only. */
+:where(html[data-catalog='true']) .catalog-browser-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+:where(html[data-catalog='true']) .catalog-sheet-close { display: none; }
+/* Matches from the other area, after a quiet rule. */
+:where(html[data-catalog='true']) .atomic-browser .catalog-elsewhere { padding-top: 16px; border-top: 1px solid color-mix(in srgb, var(--diya-color-line) 60%, transparent); }
+
+/* Phones and narrow windows: one "All components" key in place of the list,
+   so the specimen comes first; the key opens the list as a full-height sheet. */
+.catalog-browse { display: none; }
+@media (max-width: 900px) {
+  :where(html[data-catalog='true']) .catalog-browse { display: block; min-width: 0; }
+  :where(html[data-catalog='true']) .catalog-browse-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 20px 0 16px;
+    border: 1px solid var(--diya-color-line);
+    border-radius: 999px;
+    background: var(--diya-color-surface);
+    color: var(--diya-color-text);
+    font-size: 15px;
+    line-height: 1.2;
+  }
+  :where(html[data-catalog='true']) .catalog-browse-button:hover { background: color-mix(in srgb, var(--diya-color-surface) 92%, var(--diya-color-text)); }
+  :where(html[data-catalog='true']) .catalog-browse-button:focus-visible,
+  :where(html[data-catalog='true']) .catalog-sheet-close:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 2px; }
+  :root[data-glass='true'] .catalog-browse-button {
+    background: var(--diya-color-glass);
+    border-color: var(--material-edge, var(--diya-color-line));
+    border-top-color: var(--material-highlight, var(--diya-color-line));
+    backdrop-filter: var(--material-blur, blur(14px));
+  }
+  html[data-catalog='true'] body .component-browser.atomic-browser:not([data-sheet='open']) { display: none !important; }
+  html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 90 !important;
+    width: auto !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 20px 16px max(16px, env(safe-area-inset-bottom)) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: var(--diya-color-surface) !important;
+    box-shadow: none !important;
+  }
+  :root[data-glass='true'] body .component-browser.atomic-browser[data-sheet='open'] {
+    background: color-mix(in srgb, var(--diya-color-surface) 86%, transparent) !important;
+    backdrop-filter: blur(28px) saturate(1.1) !important;
+  }
+  html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] .component-browser-heading h1 { margin: 0; font-size: 20px; }
+  html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] .component-browser-heading { padding-bottom: 16px; }
+  html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] .catalog-browser-title { margin-bottom: 14px; }
+  html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] .atomic-navigation-item { font-size: 15px; padding-block: 12px; }
+  :where(html[data-catalog='true']) .catalog-sheet-close {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-right: -8px;
+    border-radius: 999px;
+    color: var(--diya-color-text);
+  }
+  :where(html[data-catalog='true']) .catalog-sheet-close:hover { background: var(--diya-color-hover); }
+  html[data-catalog-sheet='open'] { overflow: hidden; }
+  /* The page isolates its layers; lift it over the fixed site header while the sheet is open. */
+  html[data-catalog-sheet='open'][data-catalog='true'] body .catalog-frame main.gallery-study { z-index: 100; }
+}
+@media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
+  html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] { animation: catalog-sheet-in 0.22s cubic-bezier(0.2, 0.7, 0.2, 1); }
+}
+@keyframes catalog-sheet-in {
+  from { opacity: 0; transform: translateY(12px); }
+}
+@media (forced-colors: active) {
+  :where(html[data-catalog='true']) .catalog-browse-button { border: 1px solid ButtonText; }
+}

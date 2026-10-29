@@ -1,0 +1,4 @@
+:where(html[data-catalog='true']) .tabs-library .button-kind-control { flex-shrink: 0; }
+:where(html[data-catalog='true']) .tabs-library .button-control-group { flex-shrink: 0; }
+:where(html[data-catalog='true']) .tabs-example { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 240px; padding: 40px 16px; }
+:where(html[data-catalog='true']) .tabs-example-copy { margin: 0; text-align: left; font-size: 13px; line-height: 1.6; color: var(--diya-color-muted); }

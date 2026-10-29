@@ -1,0 +1,41 @@
+/* Catalog layout only. Native .diya-* geometry and appearance come from @idyeah/diya. */
+:where(html[data-catalog='true']) .catalog-provider { min-width:0; }
+:where(html[data-catalog='true']) .catalog-brand-mark { display:inline-grid; place-items:center; width:26px; height:26px; flex:0 0 26px; border-radius:8px; background:var(--diya-color-accent); color:var(--diya-color-accent-text); font-size:18px; font-weight:600; }
+:where(html[data-catalog='true']) .catalog-workflow-stack { display:grid; gap:20px; width:100%; max-width:640px; margin:auto; }
+:where(html[data-catalog='true']) .catalog-workflow-stack > p { min-height:20px; margin:0; font-size:13px; color:var(--diya-color-muted); }
+:where(html[data-catalog='true']) .catalog-workflow-stack > button { justify-self:start; }
+:where(html[data-catalog='true']) .catalog-form-columns { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:20px; }
+:where(html[data-catalog='true']) .catalog-review-list { display:grid; gap:16px; margin:0; }
+:where(html[data-catalog='true']) .catalog-review-list div { display:grid; grid-template-columns:100px 1fr; gap:16px; }
+:where(html[data-catalog='true']) .catalog-review-list dt { color:var(--diya-color-muted); }
+:where(html[data-catalog='true']) .catalog-review-list dd { margin:0; overflow-wrap:anywhere; }
+:where(html[data-catalog='true']) .catalog-navigation-demo { display:grid; grid-template-columns:auto minmax(0,1fr); width:100%; max-width:800px; border:1px solid var(--diya-color-line); border-radius:16px; overflow:hidden; background:var(--diya-color-raised); }
+:where(html[data-catalog='true']) .catalog-navigation-content { padding:28px; }
+:where(html[data-catalog='true']) .catalog-navigation-content h3 { margin:0 0 12px; }
+:where(html[data-catalog='true']) .catalog-navigation-content p { color:var(--diya-color-muted); font-size:14px; line-height:1.6; }
+@media(max-width:620px){
+ :where(html[data-catalog='true']) .catalog-navigation-content { padding:20px 16px; }
+}
+:where(html[data-catalog='true']) .catalog-select-setting { width:156px; flex:0 0 156px; }
+:where(html[data-catalog='true']) .pattern-controls.table-pattern-controls { justify-content:flex-start; gap:28px; }
+:where(html[data-catalog='true']) .pattern-controls.data-viz-controls { justify-content:flex-start; gap:28px; }
+:where(html[data-catalog='true']) :is(.site-header,.component-browser,.pattern-notes,.concept-cards) :is(a,summary,button):focus-visible {
+ outline:2px solid var(--diya-color-text,var(--text)); outline-offset:4px;
+}
+
+:where(html[data-catalog='true']) .catalog-brand-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Playground options: DIYA's own checkboxes, in a row, with the playground's caption. */
+:root[data-catalog='true'] .preview-options .diya-choice { width: auto; }
+:root[data-catalog='true'] .preview-options .diya-choice > legend {
+  margin-bottom: 8px;
+  color: var(--diya-color-muted);
+  font-size: var(--diya-text-caption, 13px);
+  font-weight: 400;
+}
+:root[data-catalog='true'] .preview-options .diya-choice-items { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 0 22px; min-height: 40px; }
+:root[data-catalog='true'] .preview-options .diya-choice-option { align-items: center; gap: 8px; padding: 7px 0; }
+:root[data-catalog='true'] .preview-options .diya-choice-option input { margin: 0; }
+:root[data-catalog='true'] .preview-options .diya-choice-label { color: var(--diya-color-muted); line-height: 20px; }
+:root[data-catalog='true'] .preview-options .diya-choice-option:has(input:checked) .diya-choice-label { color: var(--diya-color-text); }
+:root[data-catalog='true'] .preview-options .diya-choice-option input:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }

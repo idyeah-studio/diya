@@ -1,0 +1,33 @@
+{
+  "name": "diya-v1-clean-consumer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 3022",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 3022",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@idyeah/diya": "workspace:*",
+    "echarts": "6.1.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.28",
+    "@types/react-dom": "18.3.7",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
+    "happy-dom": "20.9.0",
+    "typescript": "5.9.3",
+    "vite": "8.0.1",
+    "vitest": "4.1.0",
+    "@vitejs/plugin-react": "6.0.1"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "packageManager": "pnpm@10.32.1"
+}

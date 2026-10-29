@@ -1,0 +1,52 @@
+/* @demo-only file: the "Your image" backdrop tile, its strength control and notes. */
+.byo-wrap { display: flex; flex-direction: column; gap: 12px; }
+.byo {
+  position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 8px;
+  border-radius: var(--diya-radius-control);
+  border: 1px dashed color-mix(in srgb, var(--diya-color-text) 28%, transparent);
+  background: color-mix(in srgb, var(--diya-color-raised) 40%, transparent);
+  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+}
+.byo[data-active] { border-style: solid; border-color: var(--diya-color-text); }
+.byo[data-dragging] {
+  border-style: solid; border-color: var(--diya-color-text);
+  background: color-mix(in srgb, var(--diya-color-raised) 80%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--diya-color-text) 12%, transparent);
+}
+.byo-main {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; padding: 4px; margin: 0;
+  border: 0; border-radius: calc(var(--diya-radius-control) - 2px); background: none; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.byo-main:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 2px; }
+.byo-thumb {
+  flex: none; display: grid; place-items: center; width: 64px; height: 44px; overflow: hidden;
+  border-radius: calc(var(--diya-radius-control) - 1px);
+  background: color-mix(in srgb, var(--diya-color-text) 7%, transparent);
+  color: var(--diya-color-text);
+}
+.byo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.byo-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.byo-title { font-size: 15px; font-weight: 500; }
+.byo-sub { font-size: 14px; color: var(--diya-color-muted); }
+.byo-actions { display: flex; gap: 2px; flex: none; }
+.byo-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.byo-note { margin: 0; font-size: 14px; color: var(--diya-color-muted); }
+.byo-error { margin: 0; font-size: 14px; font-weight: 500; color: color-mix(in oklab, var(--diya-color-error) 55%, var(--diya-color-text)); }
+
+/* Subtle · Balanced · Strong: one track, the chosen step solid. */
+.byo-strength {
+  display: inline-flex; align-self: flex-start; gap: 2px; padding: 3px; border-radius: 999px;
+  background: color-mix(in srgb, var(--diya-color-text) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--diya-color-text) 10%, transparent);
+}
+.byo-strength button {
+  min-height: 32px; padding: 0 14px; border: 0; border-radius: 999px; background: none;
+  color: var(--diya-color-text); font: inherit; font-size: 14px; cursor: pointer;
+}
+.byo-strength button[aria-checked='true'] { background: var(--diya-color-accent); color: var(--diya-color-accent-text); }
+.byo-strength button:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 2px; }
+@media (max-width: 520px) {
+  .byo { flex-wrap: wrap; }
+  .byo-actions { width: 100%; justify-content: flex-end; }
+}
