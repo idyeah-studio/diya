@@ -165,8 +165,7 @@ function FormView({ mode, account, titleRef, go, setAccount, switchMode }: ViewP
       <p className="sign-up-or">or</p>
       <Stack gap={4}>
         {taken && (
-          <Alert tone="error" urgent>
-            <strong className="sign-up-strong">{taken} already has a {PRODUCT} account.</strong>{' '}
+          <Alert tone="error" urgent title={`${taken} already has a ${PRODUCT} account.`}>
             <TextLink href="/sign-in" inline>Sign in instead</TextLink>, or use a different email.
           </Alert>
         )}
