@@ -45,11 +45,11 @@ const metadata: Metadata = {
 // with a new image file name (so LinkedIn and X don't reuse the cached
 // "Coming soon" card). The favicon stays the same.
 const launchedImage = {
-  url: '/social-preview-v4.jpg',
+  url: '/social-preview-v5.jpg',
   type: 'image/jpeg',
   width: 1200,
   height: 630,
-  alt: 'DIYA: a library for your next app. 25 components and 13 patterns for React. Free, MIT, yours to own. npm install @idyeah/diya.',
+  alt: 'DIYA: a library for your next app. 29 components and 13 patterns for React. Free, MIT, yours to own. npm install @idyeah/diya.',
 }
 const launchedSocial = {
   title: 'DIYA — a library for your next app',

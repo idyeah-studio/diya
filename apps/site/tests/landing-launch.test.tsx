@@ -103,11 +103,11 @@ describe('the time switch on the server', () => {
     )
     expect((after.openGraph as { title?: string }).title).toBe('DIYA — a library for your next app')
     const card = {
-      url: '/social-preview-v4.jpg',
+      url: '/social-preview-v5.jpg',
       type: 'image/jpeg',
       width: 1200,
       height: 630,
-      alt: 'DIYA: a library for your next app. 25 components and 13 patterns for React. Free, MIT, yours to own. npm install @idyeah/diya.',
+      alt: 'DIYA: a library for your next app. 29 components and 13 patterns for React. Free, MIT, yours to own. npm install @idyeah/diya.',
     }
     expect((after.openGraph as { images?: unknown }).images).toEqual([card])
     expect((after.twitter as { images?: unknown }).images).toEqual([card])
