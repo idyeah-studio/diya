@@ -95,7 +95,7 @@ ${providerOpen.length <= 80 ? providerOpen : `<DiyaProvider\n${providerProps.map
       open={open}
       onOpenChange={onOpenChange}
       title="Get code"
-      description={`${screen.name} is one file. Steps 1 and 2 happen once per app.`}
+      description="One file, ready to paste. Steps 1 and 2 happen once per app."
       footer={
         <div className="get-code-footer">
           <span>

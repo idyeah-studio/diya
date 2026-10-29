@@ -290,6 +290,8 @@
   display: flex;
   justify-content: center;
   padding: 28px;
+  /* A step below the panel, so a white (or near-black) page reads as a page. */
+  background: color-mix(in srgb, var(--material-recessed, var(--diya-color-hover)) 55%, transparent);
 }
 :where(html[data-catalog='true']) .screens-viewport {
   position: relative;
