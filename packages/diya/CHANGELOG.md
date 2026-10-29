@@ -121,6 +121,8 @@ First public release, under the MIT License.
   composer stay put and the thread scrolls between them, following the latest
   message. A height set on any Chatbot is filled the same way; without one,
   the thread keeps its 280px (380px full-page).
+- Chatbot `showHeader={false}` hides its header for a screen that has its own
+  heading; `title` still names the chat region and its message log.
 - `npm create diya@latest` (the `create-diya` package, released with this one
   on the same version) starts a Next.js or Vite app with the provider, styles
   and agent notes in place, from Minimal or from Oriel, a four-screen

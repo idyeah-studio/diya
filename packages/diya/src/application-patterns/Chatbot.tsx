@@ -47,6 +47,8 @@ export type ChatbotProps = Omit<HTMLAttributes<HTMLElement>, 'title' | 'children
   accept?: string
   /** Small text under the header title. */
   description?: ReactNode
+  /** Shows the header with `title` and `description`; defaults to true. Turn it off when your page already has a heading for the chat: `title` still names the chat region and its message log, and a floating chat keeps its close button. */
+  showHeader?: boolean
   /** Shown in the thread before the first message. */
   welcome?: ReactNode
   /** Starter prompts shown as pills before the first message; choosing one sends it. */
@@ -70,7 +72,7 @@ export type ChatbotProps = Omit<HTMLAttributes<HTMLElement>, 'title' | 'children
 }
 
 /** A controlled conversation surface with a message log and composer. It makes no AI, network or simulated-response requests. */
-export const Chatbot = forwardRef<HTMLElement, ChatbotProps>(function Chatbot({ title, messages, value, onValueChange, onSend, loading = false, onStop, onRetry, attachments = [], onAttachmentsChange, accept, description, welcome, suggestions = [], notice, layout = 'embedded', showTimestamps = false, open = true, onOpenChange, onCopy, userLabel, assistantLabel, className, ...props }, ref) {
+export const Chatbot = forwardRef<HTMLElement, ChatbotProps>(function Chatbot({ title, messages, value, onValueChange, onSend, loading = false, onStop, onRetry, attachments = [], onAttachmentsChange, accept, description, showHeader = true, welcome, suggestions = [], notice, layout = 'embedded', showTimestamps = false, open = true, onOpenChange, onCopy, userLabel, assistantLabel, className, ...props }, ref) {
   const t = useDiyaMessages('chatbot', chatbotMessages)
   const id = useId()
   const composer = useRef<HTMLTextAreaElement>(null)
@@ -132,8 +134,9 @@ export const Chatbot = forwardRef<HTMLElement, ChatbotProps>(function Chatbot({ 
   // A reply being written into the log is held back from screen readers until it is complete. Before it
   // starts, the log stays live, so "Preparing a response…" is still announced.
   const writing = loading && messages[messages.length - 1]?.role === 'assistant'
+  const closable = layout === 'floating' && onOpenChange
   return <section aria-label={title} {...props} ref={ref} className={cx('diya-chat diya-app-pattern-surface', className)} data-presentation={layout}>
-    <header className="diya-chat-header"><div><strong>{title}</strong>{description && <small>{description}</small>}</div>{layout === 'floating' && onOpenChange && <Button variant="quiet" iconOnly aria-label={t.closeChat} onClick={() => onOpenChange(false)}><Icon name="close" /></Button>}</header>
+    {(showHeader || closable) && <header className="diya-chat-header"><div>{showHeader && <><strong>{title}</strong>{description && <small>{description}</small>}</>}</div>{closable && <Button variant="quiet" iconOnly aria-label={t.closeChat} onClick={() => onOpenChange(false)}><Icon name="close" /></Button>}</header>}
     <div className="diya-chat-thread" ref={thread} role="log" aria-label={t.messages(title)} aria-live="polite" aria-relevant="additions text" aria-busy={writing || undefined} onScroll={() => { const node = thread.current; if (node) follows.current = node.scrollHeight - node.scrollTop - node.clientHeight < 50 }}>
       {!messages.length && (welcome || suggestions.length > 0) && <div className="diya-chat-welcome">{welcome}{suggestions.length > 0 && <div className="diya-chat-suggestions">{suggestions.map(suggestion => <Button key={suggestion} variant="outline" shape="pill" disabled={loading} onClick={() => send(suggestion)}>{suggestion}</Button>)}</div>}</div>}
       {messages.map(message => <article key={message.id} className="diya-chat-message" data-role={message.role}><small>{message.role === 'user' ? userLabel ?? t.you : assistantLabel ?? t.assistant}{showTimestamps && message.timestamp && ` · ${message.timestamp}`}</small><p>{message.text}</p>{message.role === 'assistant' && <Button size="small" variant="quiet" onClick={() => void copy(message)}>{t.copy}</Button>}</article>)}

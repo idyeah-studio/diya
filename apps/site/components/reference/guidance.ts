@@ -196,8 +196,8 @@ export const guidance: Record<ItemId, Guidance> = {
     access: 'The drop zone is also a real file input with a label, so it works without dragging. Rejected files come back to you with the reason, so you can say why.',
   },
   chatbot: {
-    use: 'For a conversation surface you connect to your own assistant or support. Full-page fills the height you give it, such as a whole screen, and the conversation scrolls between the header and the composer.',
-    access: 'Messages live in a log that announces new replies politely. The composer is labelled and sends with Enter.',
+    use: 'For a conversation surface you connect to your own assistant or support. Full-page fills the height you give it, such as a whole screen, and the conversation scrolls between the header and the composer. A screen with its own heading turns the header off with showHeader={false}.',
+    access: 'Messages live in a log that announces new replies politely. The title names the chat and its log, even with the header hidden. The composer is labelled and sends with Enter.',
   },
   dialog: {
     use: 'For a short task or decision that has to happen before going on: confirm, rename, a quick form.',

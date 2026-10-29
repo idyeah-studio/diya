@@ -32,7 +32,7 @@ your page's outline; the heading looks the same at every level.
 | Drawer | Controlled `open`, `onOpenChange`, title/children; optional description/footer and `side` (`'left'`/`'right'`). Native modal dialog. |
 | ContentState | `title`, optional description/icon/action. Announced as a status; set `urgent` to announce it as an alert. Useful for empty/error states. |
 | SideNavigation | Groups (keyed by `id`) of items (keyed by `value`), controlled `value`. Items with `href` are real links through the provider's `linkComponent`, with `aria-current="page"` on the current one; without `href`, `onValueChange` tells your app which was chosen. Optional brand/collapsed state. An item's `count` is a quiet number after its label (`99+` above 99, a dot on the icon when collapsed); its accessible name keeps the real count, "Inbox, 12". |
-| Chatbot | Your messages and controlled draft, `onSend`; `layout` (`'embedded'`/`'floating'`/`'full-page'`), `showTimestamps`; optional attachments, `loading`, stop/retry/copy/open callbacks. Full-page fills its container's height, with the thread scrolling between the header and the composer. No AI service or simulated reply. Experimental in 1.0: props may change in a minor release. |
+| Chatbot | Your messages and controlled draft, `onSend`; `layout` (`'embedded'`/`'floating'`/`'full-page'`), `showTimestamps`, `showHeader`; optional attachments, `loading`, stop/retry/copy/open callbacks. Full-page fills its container's height, with the thread scrolling between the header and the composer. No AI service or simulated reply. Experimental in 1.0: props may change in a minor release. |
 | DataViz | `title`, chart type/data; optional actions/summary/footer, shadow and exact-value data table. `formatValue` formats tooltips, value-axis labels and the data table alike; grid lines run along the value axis only. Separate chart renderer dependency. Experimental in 1.0, with `Chart`. |
 
 ## Tables
@@ -139,6 +139,11 @@ filled the same way; without one, the thread is 280px tall (380px full-page).
 ```tsx
 <Chatbot layout="full-page" style={{ height: '100dvh' }} title="Assistant" … />
 ```
+
+A screen with its own heading, such as an `h1` beside a model picker, sets
+`showHeader={false}`. The title and description leave the screen, and `title`
+still names the chat region and its message log; a floating chat keeps its
+close button.
 
 Attachment selection hands File objects to your callback. `onRetry`, `onCopy`
 and suggestion controls likewise call your handlers. The library sends no
