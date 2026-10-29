@@ -18,7 +18,7 @@ const noop = () => {}
 // The containers whose slots take your content (any part of the first group; the named parts of the
 // second), and the start of the guard Prose uses: not a DIYA element, nor inside one. Table's version
 // lets its own diya-table parts through.
-const CONTAINER = /\.diya-(card|dialog|drawer|workflow-surface|project-form|wizard-body)\b[\w-]*|\.diya-(accordion|accordion-content|table|chat|chat-welcome|chat-notice|chat-header)(?![\w-])/
+const CONTAINER = /\.diya-(card|dialog|drawer|workflow-surface|project-form|wizard-body)\b[\w-]*|\.diya-(accordion|accordion-content|table|chat|chat-welcome|chat-notice|chat-header|side-navigation)(?![\w-])/
 const GUARD = ":not(:where([class*='diya-']"
 // Reaches into a nested field on purpose: it hides Safari's contacts button on one named input.
 const DELIBERATE = ["input[name='project-title']::-webkit-contacts-auto-fill-button"]

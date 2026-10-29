@@ -2,9 +2,12 @@
 import { useRef, useState } from 'react'
 import {
   Accordion,
+  Avatar,
   Chatbot,
   Dialog,
+  Inline,
   List,
+  Menu,
   SideNavigation,
   Switch,
   type ChatMessage,
@@ -90,11 +93,23 @@ export function ApplicationPreview(p: Props) {
     return p.layout === 'Full-page' ? <div className="catalog-chat-page">{chat}</div> : chat
   }
   const count = (value: number) => (p.counts ? value : undefined)
+  const account = (
+    <Menu
+      label="Account for Alex Morgan"
+      triggerIcon={<Avatar name="Alex Morgan" size="small" />}
+      items={[
+        { id: 'profile', label: 'View profile', onSelect: () => setSection('people') },
+        { id: 'settings', label: 'Account settings', onSelect: () => setSection('settings') },
+      ]}
+    />
+  )
   return (
     <div className="catalog-navigation-demo">
       <SideNavigation
         brand="Veylo"
         collapsedBrand="v."
+        footer={<Inline gap={2}>{account}<span>Alex Morgan</span></Inline>}
+        collapsedFooter={account}
         collapsed={p.collapsed}
         showGroups={p.groups}
         value={section}

@@ -126,6 +126,10 @@ First public release, under the MIT License.
   it shows `99+`; collapsed, a dot on the icon stands in for it. The item's
   accessible name keeps the real count, "Inbox, 12"
   (`messages.sideNavigation.count`).
+- Side Navigation takes `footer`, for an account or workspace Menu pinned to
+  the bottom of a full-height navigation, and `collapsedFooter` for the rail
+  (it defaults to `footer`), following `brand` and `collapsedBrand`. A Menu,
+  Avatar or Button in either slot keeps its own look.
 - A `layout="full-page"` Chatbot fills its container's height: the header and
   composer stay put and the thread scrolls between them, following the latest
   message. A height set on any Chatbot is filled the same way; without one,

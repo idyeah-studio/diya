@@ -6,7 +6,7 @@ import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Chatbot, DiyaProvider, List, SideNavigation, defaultMessages, type ChatMessage, type SideNavigationGroup } from '../dist/index.js'
+import { Avatar, Chatbot, DiyaProvider, List, Menu, SideNavigation, defaultMessages, type ChatMessage, type SideNavigationGroup } from '../dist/index.js'
 
 afterEach(() => { vi.unstubAllGlobals() })
 
@@ -119,6 +119,42 @@ describe('Side Navigation counts', () => {
     expect(defaultMessages.sideNavigation.count('Inbox', 3)).toBe('Inbox, 3')
     render(<DiyaProvider messages={{ sideNavigation: { count: (label, count) => `${label} (${count} non lus)` } }}><SideNavigation value="inbox" groups={groups} /></DiyaProvider>)
     expect(screen.getByRole('link', { name: 'Inbox (12 non lus)' })).toBeDefined()
+  })
+})
+
+describe('Side Navigation footer', () => {
+  const groups: SideNavigationGroup[] = [{ id: 'main', items: [{ value: 'home', label: 'Home' }, { value: 'reports', label: 'Reports' }] }]
+  const account = <Menu label="Account" triggerIcon={<Avatar name="Alex Morgan" />} items={[{ id: 'out', label: 'Sign out', onSelect: () => {} }]} />
+
+  it('renders the footer last, after the groups, outside the item rows', () => {
+    const { container } = render(<DiyaProvider><SideNavigation value="home" groups={groups} brand="Oriel" footer={<>{account}<span>Alex Morgan</span></>} /></DiyaProvider>)
+    const nav = container.querySelector('nav')!
+    const footer = nav.lastElementChild!
+    expect(footer.className).toBe('diya-side-navigation-footer')
+    expect(footer.textContent).toContain('Alex Morgan')
+    // The account menu is its own button, not a navigation item.
+    const trigger = screen.getByRole('button', { name: 'Account' })
+    expect(footer.contains(trigger)).toBe(true)
+    expect(trigger.hasAttribute('aria-current')).toBe(false)
+    expect(screen.getAllByRole('button').filter((button) => !footer.contains(button)).map((button) => button.textContent)).toEqual(['Home', 'Reports'])
+  })
+
+  it('shows collapsedFooter when collapsed, falling back to footer, and nothing without a footer', () => {
+    const view = render(<DiyaProvider><SideNavigation collapsed value="home" groups={groups} footer={<span>Alex Morgan</span>} collapsedFooter={<span>AM</span>} /></DiyaProvider>)
+    expect(view.container.querySelector('.diya-side-navigation-footer')!.textContent).toBe('AM')
+    view.rerender(<DiyaProvider><SideNavigation collapsed value="home" groups={groups} footer={<span>Alex Morgan</span>} /></DiyaProvider>)
+    expect(view.container.querySelector('.diya-side-navigation-footer')!.textContent).toBe('Alex Morgan')
+    view.rerender(<DiyaProvider><SideNavigation value="home" groups={groups} collapsedFooter={<span>AM</span>} /></DiyaProvider>)
+    expect(view.container.querySelector('.diya-side-navigation-footer')).toBe(null)
+  })
+
+  it('pins the footer to the bottom, and keeps item rules on the group rows so the footer is left alone', () => {
+    const css = readFileSync(resolve(process.cwd(), 'dist/styles.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+    const body = (selector: string) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, selectors]) => selectors.trim() === selector).map(([, , text]) => text).join(';')
+    expect(body('.diya-root .diya-side-navigation:has(> .diya-side-navigation-footer)')).toMatch(/display:\s*flex;\s*flex-direction:\s*column/)
+    expect(body('.diya-root .diya-side-navigation > .diya-side-navigation-footer')).toMatch(/margin:\s*auto 0 0/)
+    const reaching = [...css.matchAll(/([^{}]+)\{/g)].map(([, selectors]) => selectors.trim()).filter((selectors) => /\.diya-side-navigation\s+(button|a|small|\[aria-current\])/.test(selectors))
+    expect(reaching).toEqual([])
   })
 })
 

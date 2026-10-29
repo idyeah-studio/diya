@@ -45,6 +45,10 @@ export type SideNavigationProps = HTMLAttributes<HTMLElement> & {
   brand?: ReactNode
   /** Smaller brand shown when collapsed; defaults to `brand`. */
   collapsedBrand?: ReactNode
+  /** Pinned under the groups, such as an account or workspace Menu; it sits at the bottom when the navigation is given its full height. */
+  footer?: ReactNode
+  /** Smaller footer shown when collapsed, such as the account Menu with just an Avatar; defaults to `footer`. */
+  collapsedFooter?: ReactNode
   /** Narrow, icon-only rail; defaults to false. */
   collapsed?: boolean
   /** Shows group headings; defaults to true. */
@@ -54,7 +58,7 @@ export type SideNavigationProps = HTMLAttributes<HTMLElement> & {
 }
 
 /** A vertical app navigation with grouped items and an optional collapsed icon rail; items with `href` are links. The ref, `className`, `style` and other attributes go to the `nav`. */
-export const SideNavigation = forwardRef<HTMLElement, SideNavigationProps>(function SideNavigation({ groups, value, onValueChange, brand, collapsedBrand, collapsed = false, showGroups = true, label, className, ...props }, ref) {
+export const SideNavigation = forwardRef<HTMLElement, SideNavigationProps>(function SideNavigation({ groups, value, onValueChange, brand, collapsedBrand, footer, collapsedFooter, collapsed = false, showGroups = true, label, className, ...props }, ref) {
   const t = useDiyaMessages('sideNavigation', sideNavigationMessages)
   const Link = useDiyaLinkComponent()
   return <nav aria-label={label ?? t.label} {...props} ref={ref} className={cx('diya-side-navigation diya-app-pattern-surface', className)} data-collapsed={collapsed}>
@@ -79,5 +83,6 @@ export const SideNavigation = forwardRef<HTMLElement, SideNavigationProps>(funct
           : <button type="button" key={item.value} disabled={item.disabled} {...shared} onClick={() => onValueChange?.(item.value)}>{inner}</button>
       })}
     </div>)}
+    {footer && <div className="diya-side-navigation-footer">{collapsed ? collapsedFooter ?? footer : footer}</div>}
   </nav>
 })

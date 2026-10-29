@@ -13,6 +13,8 @@ When: For moving between the main sections of an app, grouped, with an optional 
 - \`brand?: ReactNode\` Logo or product name at the top.
 - \`collapsed?: boolean = false\` Narrow, icon-only rail; defaults to false.
 - \`collapsedBrand?: ReactNode\` Smaller brand shown when collapsed; defaults to \`brand\`.
+- \`collapsedFooter?: ReactNode\` Smaller footer shown when collapsed, such as the account Menu with just an Avatar; defaults to \`footer\`.
+- \`footer?: ReactNode\` Pinned under the groups, such as an account or workspace Menu; it sits at the bottom when the navigation is given its full height.
 - \`label?: string\` Accessible name for the navigation landmark (not shown); defaults to "Application navigation".
 - \`onValueChange?: (value: string) => void\` Called with an item's \`value\` when it is chosen; leave it out when every item has an \`href\` and the links do the routing.
 - \`showGroups?: boolean = true\` Shows group headings; defaults to true.
@@ -22,6 +24,8 @@ Also takes native \`<nav>\` attributes, a ref, \`className\` and \`style\`.
 - \`children\`: not taken
 - \`brand\`: text or image, several
 - \`collapsedBrand\`: text or image
+- \`collapsedFooter\`: menu, avatar, button
+- \`footer\`: menu, avatar, button, text-link, several
 - \`groups[].items[].icon\`: icon
 
 ## State

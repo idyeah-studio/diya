@@ -466,6 +466,8 @@ export const items = {
     slots: {
       brand: { accepts: [], content: ['text', 'image'], multiple: true },
       collapsedBrand: { accepts: [], content: ['text', 'image'] },
+      footer: { accepts: ['menu', 'avatar', 'button', 'text-link'], content: ['text', 'image'], multiple: true },
+      collapsedFooter: { accepts: ['menu', 'avatar', 'button'], content: ['image'] },
       'groups[].items[].icon': iconSlot,
     },
     children: none,
