@@ -1035,6 +1035,8 @@ function list(p: Playground): Snippet {
   const leading = one(p, 'Leading', 'Icon')
   const description = on(p, 'Options', 'Description', true)
   const metadata = on(p, 'Options', 'Metadata', true)
+  const current = on(p, 'Options', 'Current', false)
+  const unread = on(p, 'Options', 'Unread', false)
   const disabled = one(p, 'State', 'Default') === 'Disabled'
   const open = v('openFile', STRING_SETTER)
   const files = [
@@ -1056,6 +1058,8 @@ function list(p: Playground): Snippet {
             ? comp('FileIcon')
             : leading === 'Avatar' && h('Avatar', { name: file.owner, size: 'small' }),
         trailing: metadata && file.meta,
+        current: current && file.id === 'brief',
+        unread: unread && file.id !== 'brief',
         disabled,
         onSelect: fn('', raw(`openFile('${file.id}')`, open)),
       })),
@@ -1383,7 +1387,8 @@ function siteHeader(p: Playground): Snippet {
 }
 
 function sideNavigation(p: Playground): Snippet {
-  const item = (value: string, label: string, icon: string) => ({ value, label, icon: comp(icon) })
+  const counts = on(p, 'Options', 'Counts', false)
+  const item = (value: string, label: string, icon: string, count?: number) => ({ value, label, icon: comp(icon), count: counts && count })
   return build('side-navigation', {
     consts: [
       {
@@ -1393,8 +1398,8 @@ function sideNavigation(p: Playground): Snippet {
             id: 'work',
             label: 'Work',
             items: [
-              item('projects', 'Projects', 'LayersIcon'),
-              item('activity', 'Activity', 'ActivityIcon'),
+              item('projects', 'Projects', 'LayersIcon', 4),
+              item('activity', 'Activity', 'ActivityIcon', 128),
               item('people', 'People', 'UsersIcon'),
             ],
           },
@@ -1801,11 +1806,14 @@ function fileUpload(p: Playground): Snippet {
 function chatbot(p: Playground): Snippet {
   const layout = one(p, 'Type', 'Embedded').toLowerCase()
   const floating = layout === 'floating'
+  const fullPage = layout === 'full-page'
   return build('chatbot', {
     jsx: h('Chatbot', {
       title: 'Project assistant',
       description: 'Ask about your projects, files, and next steps.',
-      layout: layout !== 'embedded' && (layout === 'full-page' ? 'full-page' : 'floating'),
+      layout: layout !== 'embedded' && (fullPage ? 'full-page' : 'floating'),
+      // Full-page fills the height it is given; here, the whole screen.
+      style: fullPage && { height: '100dvh' },
       open: floating && v('open', 'boolean'),
       onOpenChange: floating && v('setOpen', '(open: boolean) => void'),
       welcome: 'What would you like to work on?',

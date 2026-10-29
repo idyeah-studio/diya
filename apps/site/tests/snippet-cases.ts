@@ -65,6 +65,7 @@ export const variants: Record<ItemId, { playground: Playground; options?: Record
   list: [
     { playground: { Size: 'Large', Leading: 'Avatar', Options: [], State: 'Disabled' } },
     { playground: { Leading: 'None', Options: ['Divider'] } },
+    { playground: { Options: ['Description', 'Metadata', 'Current', 'Unread'] } },
   ],
   accordion: [{ playground: { Style: 'Plain', Expand: 'Multiple', State: 'Disabled' } }],
   badge: [
@@ -92,7 +93,10 @@ export const variants: Record<ItemId, { playground: Playground; options?: Record
     { playground: { Options: ['Notifications', 'Support', 'Avatar'] } },
     { playground: { Options: [] } },
   ],
-  'side-navigation': [{ playground: { Options: ['Collapsed'] } }],
+  'side-navigation': [
+    { playground: { Options: ['Collapsed'] } },
+    { playground: { Options: ['Groups', 'Counts'] } },
+  ],
   card: [
     { playground: { Options: ['Image', 'Shadow', 'Primary action'] } },
     { playground: { Options: ['Tag'] } },

@@ -98,9 +98,9 @@ export const guidance: Record<ItemId, Guidance> = {
     access: 'Named by the person’s name. A presence dot is announced as part of that name, not by color alone.',
   },
   list: {
-    use: 'For a vertical list of items people scan or open: files, people, recent activity.',
+    use: 'For a vertical list of items people scan or open: files, people, recent activity, an inbox with its open and unread items.',
     instead: 'Rows with several columns to sort and filter? Table.',
-    access: 'A real list. Selectable rows are native buttons, so they are reachable by Tab and work with Enter and Space.',
+    access: 'A real list. Selectable rows are native buttons, so they are reachable by Tab and work with Enter and Space. The open row carries aria-current, and an unread row says "unread" after its label.',
   },
   accordion: {
     use: 'For long content people only need parts of, such as FAQs or settings groups.',
@@ -144,7 +144,7 @@ export const guidance: Record<ItemId, Guidance> = {
   'side-navigation': {
     use: 'For moving between the main sections of an app, grouped, with an optional collapsed rail.',
     instead: 'Five or fewer top-level sections? Site Header’s navigation may be enough.',
-    access: 'A labelled navigation; the current item carries aria-current="page". Collapsed, each icon keeps its name.',
+    access: 'A labelled navigation; the current item carries aria-current="page". Collapsed, each icon keeps its name. A count is part of its item’s name, such as "Inbox, 12".',
   },
   card: {
     use: 'For one self-contained item in a grid or list: a project, a plan, an article.',
@@ -176,7 +176,7 @@ export const guidance: Record<ItemId, Guidance> = {
     access: 'The drop zone is also a real file input with a label, so it works without dragging. Rejected files come back to you with the reason, so you can say why.',
   },
   chatbot: {
-    use: 'For a conversation surface you connect to your own assistant or support.',
+    use: 'For a conversation surface you connect to your own assistant or support. Full-page fills the height you give it, such as a whole screen, and the conversation scrolls between the header and the composer.',
     access: 'Messages live in a log that announces new replies politely. The composer is labelled and sends with Enter.',
   },
   dialog: {
