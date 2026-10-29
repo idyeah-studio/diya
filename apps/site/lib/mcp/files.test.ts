@@ -98,9 +98,9 @@ function typeCheck(files: Record<string, string>) {
 }
 
 describe('every file the MCP hands out', () => {
-  it('compiles with tsc --noEmit against the SDK types: 38 complete files, the setup files and the themed providers', () => {
+  it('compiles with tsc --noEmit against the SDK types: 39 complete files, the setup files and the themed providers', () => {
     const files = filesFromAnswers()
-    expect(Object.keys(files).filter((name) => name.startsWith('components/'))).toHaveLength(38)
+    expect(Object.keys(files).filter((name) => name.startsWith('components/'))).toHaveLength(39)
     expect(Object.keys(files)).toEqual(
       expect.arrayContaining(['next/app/providers.tsx', 'next/app/layout.tsx', 'next-tailwind/app/layout.tsx', 'vite/src/main.tsx', 'vite-tailwind/src/main.tsx'])
     )

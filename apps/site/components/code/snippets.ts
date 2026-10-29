@@ -276,7 +276,7 @@ function walk(value: unknown, found: Found, key?: string): void {
 }
 
 const MAIN_EXPORTS = new Set([
-  'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Card', 'Chatbot', 'Choice',
+  'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Calendar', 'Card', 'Chatbot', 'Choice',
   'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'FileUpload', 'Form', 'List', 'Menu',
   'Metric', 'PageHeader', 'Pagination', 'Popover', 'Progress', 'Search', 'Select', 'SideNavigation',
   'SiteHeader', 'Slider', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput', 'TextLink', 'Toast',
@@ -287,7 +287,7 @@ const CHART_EXPORTS = new Set(['Chart', 'DataViz'])
 /** Catalog component ids and the export each one documents. */
 const COMPONENT_NAMES: Partial<Record<ItemId, string>> = {
   button: 'Button', 'text-input': 'TextInput', 'text-area': 'TextArea', select: 'Select',
-  'date-picker': 'DatePicker', combobox: 'Combobox', choice: 'Choice', switch: 'Switch', slider: 'Slider',
+  'date-picker': 'DatePicker', calendar: 'Calendar', combobox: 'Combobox', choice: 'Choice', switch: 'Switch', slider: 'Slider',
   search: 'Search', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
   menu: 'Menu', tag: 'Tag', metric: 'Metric', avatar: 'Avatar', list: 'List', accordion: 'Accordion',
   badge: 'Badge', alert: 'Alert', progress: 'Progress', tooltip: 'Tooltip', popover: 'Popover',
@@ -711,6 +711,37 @@ function datePicker(p: Playground): Snippet {
             label: 'Due date',
             value: v('dueDate', 'string'),
             onValueChange: v('setDueDate', STRING_SETTER),
+            ...shared,
+          }
+    ),
+  })
+}
+
+function calendar(p: Playground): Snippet {
+  const range = one(p, 'Type', 'Single') === 'Range'
+  const shared = {
+    size: sized(sizeOf(p)),
+    hideLabel: !on(p, 'Options', 'Label', true),
+    isDateUnavailable:
+      on(p, 'Options', 'Unavailable days', false) &&
+      v('isWeekend', '(date: string) => boolean', '(date: string) => [0, 6].includes(new Date(`${date}T12:00`).getDay())'),
+    disabled: one(p, 'State', 'Default') === 'Disabled',
+  }
+  return build('calendar', {
+    jsx: h(
+      'Calendar',
+      range
+        ? {
+            label: 'Time off',
+            range: true,
+            value: v('timeOff', '{ start: string; end: string }', "{ start: '', end: '' }"),
+            onValueChange: v('setTimeOff', '(value: { start: string; end: string }) => void'),
+            ...shared,
+          }
+        : {
+            label: 'Pick a day',
+            value: v('day', 'string'),
+            onValueChange: v('setDay', STRING_SETTER),
             ...shared,
           }
     ),
@@ -1929,6 +1960,7 @@ const SNIPPETS: Record<ItemId, (p: Playground, o: Options) => Snippet> = {
   'text-area': textArea,
   select,
   'date-picker': datePicker,
+  calendar,
   combobox,
   choice,
   switch: switchSnippet,
