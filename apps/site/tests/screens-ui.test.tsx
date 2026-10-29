@@ -102,7 +102,23 @@ describe('the Screens gallery', () => {
       ['/screens/thumbs/board-dark.jpg', ''],
     ])
     expect(document.getElementById('request')?.textContent).toContain('Don’t see your screen?')
+    // Closed unless the page says the form is open: the heading stays, with when it opens.
+    expect(document.getElementById('request')?.textContent).toContain('Requests open with the launch.')
     expect(document.querySelectorAll('[title]')).toHaveLength(0)
+  })
+
+  it('ends with the open request form, started from the poster a “Want this one?” link named', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ open: true, formToken: '1.a' }))
+    render(
+      <Shell>
+        <ScreensLibrary screen={null} requestsOpen want="board" />
+      </Shell>
+    )
+    await act(async () => {})
+    const request = document.getElementById('request')!
+    expect((within(request).getByRole('textbox', { name: 'What screen do you need?' }) as HTMLTextAreaElement).value).toBe('I’d like the Board screen.')
+    expect(within(request).getByRole('button', { name: 'Send request' })).toBeTruthy()
+    expect(within(page()).getAllByRole('heading', { level: 3 }).at(-1)!.textContent).toBe('Don’t see your screen?')
   })
 
   it('leaves out screens still being built when the build doesn’t list them', () => {
@@ -196,7 +212,7 @@ describe('one screen', () => {
     expect(within(main).getByRole('heading', { level: 2 }).textContent).toBe('Board')
     expect(main.textContent).toContain('Coming soon')
     expect(within(main).getByRole('heading', { name: 'Waiting on drag and drop', level: 3 })).toBeTruthy()
-    expect(within(main).getByRole('link', { name: 'Want this one? Tell us' }).getAttribute('href')).toBe('/explore?area=screens&want=board#request')
+    expect(within(main).getByRole('link', { name: 'Want this one? Tell me' }).getAttribute('href')).toBe('/explore?area=screens&want=board#request')
     expect(within(main).queryByRole('button', { name: 'Get code' })).toBeNull()
     expect(within(main).queryByRole('link', { name: /Open full page/ })).toBeNull()
     expect(main.querySelector('iframe')!.getAttribute('src')).toBe('/screens-frame?screen=board&theme=light&glass=0&poster=1')

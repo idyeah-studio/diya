@@ -20,12 +20,13 @@ export const EMAIL_MAX = 254
 export const FOUNDING_LIMIT = 200
 
 /**
- * Bumped whenever the privacy page or the form's promise changes. Stored with
- * each signup. Keep it equal to the privacy page's "Last updated" date.
+ * Bumped whenever the privacy page or a form's promise changes. Stored with
+ * each signup and each screen request. Keep it equal to the privacy page's
+ * "Last updated" date.
  */
-export const CONSENT_VERSION = '2026-10-22'
+export const CONSENT_VERSION = '2026-10-29'
 /** The privacy page's "Last updated" line; the date CONSENT_VERSION names. */
-export const PRIVACY_UPDATED = 'October 22, 2026'
+export const PRIVACY_UPDATED = 'October 29, 2026'
 
 /** The sender's legal name. Printed in every email footer and on the privacy page. */
 export const SENDER_ORG = 'IDYeah Studio LLC'

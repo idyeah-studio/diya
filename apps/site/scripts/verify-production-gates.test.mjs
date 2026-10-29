@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import test from 'node:test'
-import { LAUNCHED_CARD, SITE, launchContract, launchedCardContract, mcpContract, retiredRoutesBuilt, serverEnv, siteConstant, verifyProductionGates } from './verify-production-gates.mjs'
+import { LAUNCHED_CARD, SITE, launchContract, launchedCardContract, mcpContract, retiredRoutesBuilt, screenRequestsClosedContract, serverEnv, siteConstant, verifyProductionGates } from './verify-production-gates.mjs'
 
 // A real child HTTP process exercises the runner's failure/cleanup behavior
 // without requiring a production build or duplicating Next's route logic.
@@ -30,6 +30,12 @@ if (${JSON.stringify(mode)} === 'exit') process.exit(2)
 const port = Number(process.argv[process.argv.indexOf('--port') + 1])
 createServer((req, res) => {
   if (${JSON.stringify(mode)} === 'hang') return
+  // The screen request API closes itself before launch: a status with no token, and 503 for a request.
+  if (req.url === '/api/screen-requests') {
+    res.setHeader('cache-control', 'no-store')
+    res.statusCode = req.method === 'POST' ? 503 : 200
+    return res.end(req.method === 'POST' ? '{"error":"closed"}' : '{"open":false}')
+  }
   // The Screens preview frame is a static file: public in every mode.
   res.statusCode = ['/', '/robots.txt', '/api/launch'].includes(req.url) || req.url.startsWith('/screens-frame?') ? 200 : (${JSON.stringify(mode)} === 'exposed' ? 200 : 404)
   const mode = ${JSON.stringify(mode)}
@@ -142,6 +148,16 @@ test('an open /mcp must answer initialize as DIYA, uncached', () => {
   assert.throws(() => mcpContract({ body, cacheControl: 'public, max-age=300' }), /must not be cached/)
   assert.throws(() => mcpContract({ body: '<html>404</html>', cacheControl: 'no-store' }), /did not answer initialize/)
   assert.throws(() => mcpContract({ body: body.replace('"diya"', '"other"'), cacheControl: 'no-store' }), /did not answer initialize/)
+})
+
+test('a closed /api/screen-requests says only { open: false }, uncached', () => {
+  const closed = body => ({ cacheControl: 'no-store', body })
+  assert.deepEqual(screenRequestsClosedContract(closed('{"open":false}')), { open: false, cacheControl: 'no-store' })
+  assert.throws(() => screenRequestsClosedContract(closed('{"open":true,"formToken":"1.a"}')), /closed before launch/)
+  assert.throws(() => screenRequestsClosedContract(closed('{"open":false,"formToken":"1.a"}')), /closed before launch/)
+  assert.throws(() => screenRequestsClosedContract(closed('<html>404</html>')), /closed before launch/)
+  assert.throws(() => screenRequestsClosedContract({ cacheControl: 'public, max-age=60', body: '{"open":false}' }), /must not be cached/)
+  assert.throws(() => screenRequestsClosedContract(undefined), /must not be cached/)
 })
 
 test('the site address comes from lib/site.ts', () => {
