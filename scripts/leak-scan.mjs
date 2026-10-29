@@ -5,7 +5,7 @@
 //   node scripts/leak-scan.mjs --pack packages/diya
 //   node scripts/leak-scan.mjs --tarball idyeah-diya-1.0.0.tgz
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -81,16 +81,30 @@ function walk(root, relative = '') {
   return files
 }
 
+// gitleaks' default rules, skipping the same folders as walk(): build caches
+// hold random signing keys that read as leaked API keys.
+function gitleaksConfig() {
+  const names = [...skipDirs].map((name) => name.replaceAll('.', '\\.')).join('|')
+  return `[extend]\nuseDefault = true\n\n[allowlist]\npaths = ['''(^|/)(${names})/''']\n`
+}
+
 function gitleaks(dir) {
   const bin = process.env.GITLEAKS_BIN || 'gitleaks'
   const probe = spawnSync(bin, ['version'], { encoding: 'utf8' })
   if (probe.error || probe.status !== 0) return { used: false }
-  const run = spawnSync(bin, ['dir', dir, '--no-banner', '--redact', '--exit-code', '3'], {
-    encoding: 'utf8',
-  })
-  if (run.status === 0) return { used: true, findings: [] }
-  if (run.status === 3) return { used: true, findings: [{ file: dir, rule: 'gitleaks', line: null, detail: run.stdout }] }
-  throw new Error(`gitleaks failed: ${run.stderr || run.stdout}`)
+  const work = mkdtempSync(path.join(tmpdir(), 'diya-gitleaks-'))
+  try {
+    const config = path.join(work, 'gitleaks.toml')
+    writeFileSync(config, gitleaksConfig())
+    const run = spawnSync(bin, ['dir', dir, '--config', config, '--no-banner', '--redact', '--exit-code', '3'], {
+      encoding: 'utf8',
+    })
+    if (run.status === 0) return { used: true, findings: [] }
+    if (run.status === 3) return { used: true, findings: [{ file: dir, rule: 'gitleaks', line: null, detail: run.stdout }] }
+    throw new Error(`gitleaks failed: ${run.stderr || run.stdout}`)
+  } finally {
+    rmSync(work, { recursive: true, force: true })
+  }
 }
 
 /** Scans every file under dir (skipping dependency and build caches). */

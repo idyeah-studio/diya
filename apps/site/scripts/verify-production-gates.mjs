@@ -92,10 +92,21 @@ export function launchContract(response, landingHtml) {
   return { seconds, renderedSeconds: rendered, cacheControl: response.cacheControl }
 }
 
+/* Every pass pins the server's clock (DIYA_NOW), so the gates hold whatever
+   day they run: the countdown and preview passes before LAUNCH_AT, the
+   launched pass after it. */
+export const PRELAUNCH_NOW = '2026-11-01T12:00:00Z'
+export const LAUNCHED_NOW = '2026-11-07T08:00:30Z'
+
+/** The environment one pass's production server runs with. */
+export function serverEnv(flag, env = process.env) {
+  const launched = flag === 'launched'
+  return { ...env, NODE_ENV: 'production', NEXT_TELEMETRY_DISABLED: '1', DIYA_CATALOG_PREVIEW: launched ? '0' : flag, DIYA_NOW: launched ? LAUNCHED_NOW : PRELAUNCH_NOW }
+}
+
 /* The launched page (served with DIYA_NOW past LAUNCH_AT) must name the
    launch card in both og:image and twitter:image, and the card must load. */
 export const LAUNCHED_CARD = '/social-preview-v4.jpg'
-const LAUNCHED_NOW = '2026-11-07T08:00:30Z'
 
 /** og:image and twitter:image of a launched page; both must be the launch card. */
 export function launchedCardContract(metas) {
@@ -182,7 +193,7 @@ export async function verifyProductionGates({ root = appRoot, signal } = {}) {
     const origin = `http://127.0.0.1:${port}`
     const child = spawn(process.execPath, [next, 'start', '--hostname', '127.0.0.1', '--port', String(port)], {
       cwd: root,
-      env: { ...process.env, NODE_ENV: 'production', NEXT_TELEMETRY_DISABLED: '1', DIYA_CATALOG_PREVIEW: flag === 'launched' ? '0' : flag, ...(flag === 'launched' ? { DIYA_NOW: LAUNCHED_NOW } : {}) },
+      env: serverEnv(flag),
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     let logs = ''

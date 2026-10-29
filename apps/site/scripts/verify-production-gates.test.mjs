@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import test from 'node:test'
-import { LAUNCHED_CARD, SITE, launchContract, launchedCardContract, mcpContract, retiredRoutesBuilt, siteConstant, verifyProductionGates } from './verify-production-gates.mjs'
+import { LAUNCHED_CARD, SITE, launchContract, launchedCardContract, mcpContract, retiredRoutesBuilt, serverEnv, siteConstant, verifyProductionGates } from './verify-production-gates.mjs'
 
 // A real child HTTP process exercises the runner's failure/cleanup behavior
 // without requiring a production build or duplicating Next's route logic.
@@ -120,6 +120,19 @@ test('the launch route must be uncached whole seconds that agree with the page',
   assert.throws(() => launchContract(fresh('not json'), null), /whole seconds/)
   assert.throws(() => launchContract(fresh('{"seconds":100}'), timer(5000)), /disagrees/)
   assert.throws(() => launchContract(fresh('{"seconds":100}'), '<main id="content"></main>'), /timer missing/)
+})
+
+test('every pass pins the server clock on its side of the launch, whatever day it runs', async () => {
+  const source = await readFile(new URL('../lib/launch.ts', import.meta.url), 'utf8')
+  const launchAt = Date.parse(/LAUNCH_AT = Date\.parse\('([^']+)'\)/.exec(source)[1])
+  const inherited = { DIYA_NOW: '2027-01-01T00:00:00Z', PATH: '/usr/bin' }
+  for (const flag of ['0', '1']) {
+    assert.ok(Date.parse(serverEnv(flag, inherited).DIYA_NOW) < launchAt, `pass ${flag} must run before the launch`)
+    assert.equal(serverEnv(flag, inherited).DIYA_CATALOG_PREVIEW, flag)
+  }
+  assert.ok(Date.parse(serverEnv('launched', inherited).DIYA_NOW) >= launchAt)
+  assert.equal(serverEnv('launched', inherited).DIYA_CATALOG_PREVIEW, '0')
+  assert.equal(serverEnv('0', inherited).PATH, '/usr/bin')
 })
 
 test('an open /mcp must answer initialize as DIYA, uncached', () => {

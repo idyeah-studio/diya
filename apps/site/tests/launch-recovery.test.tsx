@@ -1,6 +1,17 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import NotFound from '../app/not-found'
+
+// The countdown's 404, so before launch whatever day the tests run; the
+// library's own way back takes over with the catalog.
+beforeEach(() => {
+  vi.stubEnv('DIYA_CATALOG_PREVIEW', '')
+  vi.stubEnv('DIYA_NOW', '2026-11-01T12:00:00Z')
+})
+
+afterEach(() => {
+  vi.unstubAllEnvs()
+})
 
 describe('unavailable-page recovery', () => {
   it('provides one named main landmark and a focusable skip-link target', () => {
