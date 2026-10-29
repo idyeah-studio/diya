@@ -1498,7 +1498,9 @@
 .diya-root .diya-accordion-heading button { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 24px; padding: 18px 12px; border: 0; border-radius: calc(8px * var(--diya-corner-scale, 1)); color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; }
 .diya-root .diya-accordion-heading button:hover:not(:disabled) { background: var(--diya-color-hover); }
 .diya-root .diya-accordion-heading button:disabled { opacity: .4; cursor: not-allowed; }
-.diya-root .diya-accordion[data-divided='true'] .diya-accordion-item + .diya-accordion-item { border-top: 1px solid var(--diya-color-line); }
+/* Accordion panels, Table cells and Chatbot's welcome take your content, so their rules for plain
+   elements end in the same guard as Dialog's below. Table's guard passes its own diya-table parts. */
+.diya-root .diya-accordion[data-divided='true'] > .diya-accordion-item + .diya-accordion-item { border-top: 1px solid var(--diya-color-line); }
 .diya-root .diya-accordion-content { padding: 0 12px 20px; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: 1.7; }
 .diya-root .diya-accordion-content[hidden] { display: none; }
 .diya-root .diya-dialog { width: min(480px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); overflow: auto; margin: auto; padding: 28px; border: 1px solid var(--diya-color-line); border-radius: calc(22px * var(--diya-corner-scale, 1)); background: var(--diya-color-surface); color: var(--diya-color-text); box-shadow: var(--diya-shadow-raised); box-sizing: border-box; }
@@ -1517,7 +1519,7 @@
 .diya-root .diya-dialog-content { margin-top: 24px; }
 .diya-root .diya-dialog footer:not(:where([class*='diya-'], .diya-dialog [class*='diya-']:not(.diya-dialog, .diya-dialog-layout, .diya-dialog-content) *)) { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .diya-root .diya-list-row:focus-visible,
-.diya-root  .diya-accordion button:focus-visible,
+.diya-root  .diya-accordion button:not(:where([class*='diya-'], .diya-accordion [class*='diya-']:not([class*='diya-accordion']) *)):focus-visible,
 .diya-root  .diya-dialog button:not(:where([class*='diya-'], .diya-dialog [class*='diya-']:not(.diya-dialog, .diya-dialog-layout, .diya-dialog-content) *)):focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
 @media (forced-colors: active) { .diya-root  .diya-dialog { border: 1px solid CanvasText; background: Canvas; color: CanvasText; } }
 
@@ -1767,14 +1769,14 @@
 .diya-root .diya-table-toolbar .diya-search { margin-left:auto; width:240px; max-width:100%; }
 .diya-root .diya-table-scroll { position:relative; overflow:auto; border:1px solid var(--diya-color-line); border-radius:var(--diya-radius-surface); }
 .diya-root .diya-table-scroll:focus-visible { outline:2px solid var(--diya-color-text); outline-offset:4px; }
-.diya-root .diya-table table { width:100%; border-collapse:separate; border-spacing:0; text-align:left; }
-.diya-root .diya-table th { background:var(--diya-internal-table-surface); color:var(--diya-color-muted); font-size:var(--diya-text-caption); font-weight:500; height:48px; }
-.diya-root .diya-table th,
-.diya-root .diya-table td { padding:12px 16px; box-sizing:border-box; vertical-align:middle; }
-.diya-root .diya-table td { height:60px; border-top:1px solid color-mix(in srgb, var(--diya-color-line) 70%, transparent); background:var(--diya-internal-table-surface); }
-.diya-root .diya-table[data-density='compact'] td { height:48px; padding-top:6px; padding-bottom:6px; }
-.diya-root .diya-table tbody tr:hover td { background:var(--diya-internal-table-hover); }
-.diya-root .diya-table tbody tr[data-selected] td { background:var(--diya-color-selected); }
+.diya-root .diya-table table:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { width:100%; border-collapse:separate; border-spacing:0; text-align:left; }
+.diya-root .diya-table th:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { background:var(--diya-internal-table-surface); color:var(--diya-color-muted); font-size:var(--diya-text-caption); font-weight:500; height:48px; }
+.diya-root .diya-table th:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)),
+.diya-root .diya-table td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { padding:12px 16px; box-sizing:border-box; vertical-align:middle; }
+.diya-root .diya-table td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { height:60px; border-top:1px solid color-mix(in srgb, var(--diya-color-line) 70%, transparent); background:var(--diya-internal-table-surface); }
+.diya-root .diya-table[data-density='compact'] td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { height:48px; padding-top:6px; padding-bottom:6px; }
+.diya-root .diya-table tbody tr:hover td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { background:var(--diya-internal-table-hover); }
+.diya-root .diya-table tbody tr[data-selected] td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { background:var(--diya-color-selected); }
 /* Data figures are tabular, so a column of amounts lines up digit for digit. */
 .diya-root .diya-table .diya-table-numeric { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .diya-root .diya-table-sort { display:inline-flex; align-items:center; gap:8px; padding:4px 0; border:0; background:none; color:inherit; font:inherit; cursor:pointer; }
@@ -1782,7 +1784,7 @@
 .diya-root .diya-table-sort:focus-visible { outline:2px solid var(--diya-color-text); outline-offset:4px; border-radius:3px; }
 .diya-root .diya-table-scroll :is(button, input, a) { scroll-margin:8px 24px; }
 .diya-root .diya-table .diya-table-check { width:48px; padding-right:8px; }
-.diya-root .diya-table input[type='checkbox'] { width:16px; height:16px; margin:0; accent-color:var(--diya-color-text); cursor:pointer; vertical-align:middle; }
+.diya-root .diya-table input[type='checkbox']:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { width:16px; height:16px; margin:0; accent-color:var(--diya-color-text); cursor:pointer; vertical-align:middle; }
 .diya-root .diya-table .diya-table-actions { width:56px; padding:8px; position:sticky; right:0; box-shadow:-1px 0 var(--diya-color-line); }
 .diya-root .diya-table .diya-pagination { margin-top:20px; }
 .diya-root .diya-table-bulk { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 16px; margin-bottom:8px; border:1px solid var(--diya-color-line); border-radius:calc(12px * var(--diya-corner-scale, 1)); background:var(--diya-color-selected); }
@@ -1818,24 +1820,24 @@
 .diya-root .diya-table-resource { border:0; padding:0; background:none; color:var(--diya-color-text); font:inherit; text-decoration:underline; text-underline-offset:3px; white-space:nowrap; cursor:pointer; }
 
 
-.diya-root .diya-table[data-sticky] tbody tr[data-selected] td { background:color-mix(in srgb,var(--diya-color-text) calc(var(--diya-internal-table-selected-weight) + 2%),var(--diya-internal-table-surface)); }
-.diya-root .diya-table time { white-space:nowrap; }
+.diya-root .diya-table[data-sticky] tbody tr[data-selected] td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { background:color-mix(in srgb,var(--diya-color-text) calc(var(--diya-internal-table-selected-weight) + 2%),var(--diya-internal-table-surface)); }
+.diya-root .diya-table time:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { white-space:nowrap; }
 .diya-root .diya-table .diya-metric-number { font-size:var(--diya-text-body); }
 .diya-root .diya-table { --diya-internal-table-rule:color-mix(in srgb,var(--diya-color-line) 62%,transparent); }
-.diya-root .diya-table table { table-layout:fixed; }
-.diya-root .diya-table th { height:44px; background:color-mix(in srgb,var(--diya-color-text) 3%,var(--diya-internal-table-surface)); }
-.diya-root .diya-table th,
-.diya-root .diya-table td { padding-left:16px; padding-right:16px; }
-.diya-root .diya-table td { border-top-color:var(--diya-internal-table-rule); height:60px; }
+.diya-root .diya-table table:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { table-layout:fixed; }
+.diya-root .diya-table th:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { height:44px; background:color-mix(in srgb,var(--diya-color-text) 3%,var(--diya-internal-table-surface)); }
+.diya-root .diya-table th:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)),
+.diya-root .diya-table td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { padding-left:16px; padding-right:16px; }
+.diya-root .diya-table td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { border-top-color:var(--diya-internal-table-rule); height:60px; }
 .diya-root .diya-table .diya-table-actions { position:static; box-shadow:none; padding:8px; text-align:center; }
 .diya-root .diya-table[data-sticky] .diya-table-actions { position:sticky; right:0; box-shadow:-1px 0 var(--diya-color-line); }
-.diya-root .diya-table tbody tr[data-selected] td { background:color-mix(in srgb,var(--diya-color-text) var(--diya-internal-table-selected-weight),var(--diya-internal-table-surface)); }
+.diya-root .diya-table tbody tr[data-selected] td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) { background:color-mix(in srgb,var(--diya-color-text) var(--diya-internal-table-selected-weight),var(--diya-internal-table-surface)); }
 .diya-root .diya-table-sort { gap:6px; line-height:20px; }
 .diya-root .diya-table-sort svg { opacity:.45; flex-shrink:0; }
 .diya-root .diya-table th[aria-sort='ascending'] .diya-table-sort,
 .diya-root .diya-table th[aria-sort='descending'] .diya-table-sort { color:var(--diya-color-text); }
-.diya-root .diya-table th[aria-sort='ascending'] svg,
-.diya-root .diya-table th[aria-sort='descending'] svg,
+.diya-root .diya-table th[aria-sort='ascending'] svg:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)),
+.diya-root .diya-table th[aria-sort='descending'] svg:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)),
 .diya-root .diya-table-sort:hover svg { opacity:1; }
 .diya-root .diya-table-sort:disabled { cursor:default; }
 .diya-root .diya-table .diya-pagination { display:grid; grid-template-columns:1fr auto 1fr; gap:16px; margin-top:16px; }
@@ -2022,13 +2024,13 @@
 .diya-root .diya-chat[data-presentation='floating']{max-width:380px;margin-left:auto;box-shadow:0 calc(12px * var(--diya-elevation, 1)) calc(32px * var(--diya-elevation, 1)) #0002}
 .diya-root .diya-chat[data-presentation='full-page']{max-width:none;height:100%;min-height:0}
 .diya-root .diya-chat-header{flex:none;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--diya-color-line)}
-.diya-root .diya-chat-header small{display:block;color:var(--diya-color-muted);font-size:var(--diya-text-caption);margin-top:5px}
+.diya-root .diya-chat-header > :where(div) > small{display:block;color:var(--diya-color-muted);font-size:var(--diya-text-caption);margin-top:5px}
 /* The thread takes what the header and composer leave: 280px (380px full-page) when the chat sizes
    itself, and the rest of any height the chat is given, scrolling inside. */
 .diya-root .diya-chat-thread{padding:24px;flex:1 1 280px;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .diya-root .diya-chat[data-presentation='full-page'] .diya-chat-thread{flex-basis:380px}
 .diya-root .diya-chat-welcome{text-align:center;margin:24px auto;max-width:430px;font-size:var(--diya-text-large)}
-.diya-root .diya-chat-welcome>span{font-size:var(--diya-text-display)}.diya-root .diya-chat-welcome h3{font-size:var(--diya-text-title);margin:16px 0 8px}.diya-root .diya-chat-welcome p{font-size:var(--diya-text-body);color:var(--diya-color-muted)}
+.diya-root .diya-chat-welcome>span{font-size:var(--diya-text-display)}.diya-root .diya-chat-welcome h3:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)){font-size:var(--diya-text-title);margin:16px 0 8px}.diya-root .diya-chat-welcome p:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)){font-size:var(--diya-text-body);color:var(--diya-color-muted)}
 .diya-root .diya-chat-suggestions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:24px}
 .diya-root .diya-chat-message{margin-bottom:20px;max-width:90%;font-size:var(--diya-text-body);line-height:1.65}.diya-root .diya-chat-message small{color:var(--diya-color-muted);font-size:var(--diya-text-caption)}.diya-root .diya-chat-message p{white-space:pre-wrap;margin:6px 0}
 .diya-root .diya-chat-message[data-role='user']{margin-left:auto;background:var(--diya-color-selected);padding:12px 16px;border-radius:calc(14px * var(--diya-corner-scale, 1))}
@@ -2612,7 +2614,7 @@
     box-shadow: none;
   }
 
-  .diya-root .diya-table tbody tr[data-selected] td {
+  .diya-root .diya-table tbody tr[data-selected] td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) {
     outline: 1px solid Highlight;
     outline-offset: -1px;
   }
@@ -2650,12 +2652,12 @@
 
 /* Type roles. Every title-role heading shares one spec now that DIYA Sans
    renders real medium and semibold weights. */
-.diya-root :is(.diya-card-header h3:not(:where([class*='diya-'], .diya-card-header [class*='diya-'] *)), .diya-dialog h3:not(:where([class*='diya-'], .diya-dialog [class*='diya-']:not(.diya-dialog, .diya-dialog-layout, .diya-dialog-content) *)), .diya-dialog-heading h3, .diya-table-title, .diya-workflow-surface h3:not(:where([class*='diya-'], .diya-workflow-surface [class*='diya-']:not(.diya-workflow-surface, .diya-drawer-body, .diya-wizard-body) *)), .diya-drawer-body h4:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)), .diya-chat-welcome h3, .diya-side-navigation > strong) {
+.diya-root :is(.diya-card-header h3:not(:where([class*='diya-'], .diya-card-header [class*='diya-'] *)), .diya-dialog h3:not(:where([class*='diya-'], .diya-dialog [class*='diya-']:not(.diya-dialog, .diya-dialog-layout, .diya-dialog-content) *)), .diya-dialog-heading h3, .diya-table-title, .diya-workflow-surface h3:not(:where([class*='diya-'], .diya-workflow-surface [class*='diya-']:not(.diya-workflow-surface, .diya-drawer-body, .diya-wizard-body) *)), .diya-drawer-body h4:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)), .diya-chat-welcome h3:not(:where([class*='diya-'], .diya-chat-welcome [class*='diya-'] *)), .diya-side-navigation > strong) {
   font-weight: 600;
   letter-spacing: -0.015em;
   line-height: var(--diya-leading-tight);
 }
-.diya-root .diya-chat-header strong { font-size: var(--diya-text-large); font-weight: 600; }
+.diya-root .diya-chat-header > :where(div) > strong { font-size: var(--diya-text-large); font-weight: 600; }
 /* Underline tabs keep their tight inset at every size. */
 .diya-root .diya-tabs[data-variant='underline'][data-size] .diya-tab { padding-inline: 4px; }
 .diya-root .diya-switch-description[data-invalid] { color: var(--diya-color-error); }

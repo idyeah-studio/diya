@@ -105,10 +105,11 @@ First public release, under the MIT License.
 - `DataViz`'s `formatValue` labels the value axis too, and grid lines run
   along the value axis only.
 - A `List` inside a `Card` or `Drawer` lines up with its title.
-- `Form`, `Card`, `Drawer`, `Dialog` and `Wizard` style their own parts and
-  your plain elements, never a DIYA component placed inside them: an `Alert`
-  in a sign-in `Form` keeps its title color and spacing, and a `Card` or
-  `Form` in a `Drawer` or `Dialog` keeps its own header and footer.
+- `Form`, `Card`, `Drawer`, `Dialog`, `Wizard`, `Accordion`, `Table` and
+  `Chatbot` style their own parts and your plain elements, never a DIYA
+  component placed inside them: an `Alert` in a sign-in `Form` keeps its title
+  color and spacing, a `Card` or `Form` in a `Drawer` or `Dialog` keeps its own
+  header and footer, and a `Switch` in a `Table` cell stays a switch.
 - `List` items take `current`, for the open item (`aria-current="true"` and a
   selected background), and `unread`: a heavier label, a dot at the row's end,
   and "unread" after the label for screen readers (`messages.list.unread`).

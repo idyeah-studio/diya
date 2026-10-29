@@ -1,12 +1,13 @@
-// Containers leave nested DIYA components alone. A Form, Card, Drawer, Dialog or Wizard styles its own
-// parts and your plain elements, never an Alert, List, Metric or any other DIYA component placed inside.
+// Containers leave nested DIYA components alone. A Form, Card, Drawer, Dialog, Wizard, Accordion, Table or
+// Chatbot styles its own parts and your plain elements, never an Alert, List, Switch or any other DIYA
+// component placed inside.
 // HappyDOM can't match complex selectors inside :not() or :where(), so, as with Prose, the rules are read
 // here and the computed styles of nested components were compared with standalone ones in Chromium.
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { fireEvent, render } from '@testing-library/react'
-import { Button, ContentState, DiyaProvider, Drawer, FileUpload, Form, Wizard } from '../dist/index.js'
+import { Accordion, Button, Chatbot, ContentState, DiyaProvider, Drawer, FileUpload, Form, Table, Wizard } from '../dist/index.js'
 import { splitSelectors } from '../scripts/styles-transform.mjs'
 import { parseRules } from './style-tokens'
 
@@ -14,10 +15,11 @@ const css = readFileSync(resolve(process.cwd(), 'dist/styles.css'), 'utf8')
 const rules = parseRules(css)
 const noop = () => {}
 
-// The containers whose slots take your content, and the start of the guard Prose uses: not a DIYA
-// element, nor inside one.
-const CONTAINER = /\.diya-(card|dialog|drawer|workflow-surface|project-form|wizard-body)\b[\w-]*/
-const GUARD = ":not(:where([class*='diya-'], "
+// The containers whose slots take your content (any part of the first group; the named parts of the
+// second), and the start of the guard Prose uses: not a DIYA element, nor inside one. Table's version
+// lets its own diya-table parts through.
+const CONTAINER = /\.diya-(card|dialog|drawer|workflow-surface|project-form|wizard-body)\b[\w-]*|\.diya-(accordion|accordion-content|table|chat|chat-welcome|chat-notice|chat-header)(?![\w-])/
+const GUARD = ":not(:where([class*='diya-']"
 // Reaches into a nested field on purpose: it hides Safari's contacts button on one named input.
 const DELIBERATE = ["input[name='project-title']::-webkit-contacts-auto-fill-button"]
 
@@ -92,7 +94,7 @@ describe('container rules', () => {
         if (!fixed && !guarded && !pinned) reaching.push(selector)
       }
     }
-    expect(checked).toBeGreaterThan(20)
+    expect(checked).toBeGreaterThan(40)
     expect(reaching).toEqual([])
   })
 
@@ -118,5 +120,19 @@ describe('container rules', () => {
     expect(container.querySelector('.diya-project-form > footer')).toBeTruthy()
     expect(container.querySelector('.diya-drawer-modal > footer')).toBeTruthy()
     expect(container.querySelector('.diya-wizard-body > form > footer')).toBeTruthy()
+  })
+
+  it('find Accordion items, Table checkboxes and Chatbot header text where their rules expect them', () => {
+    const { container } = render(
+      <DiyaProvider>
+        <Accordion items={[{ id: 'one', label: 'Shipping', content: 'Two days.' }, { id: 'two', label: 'Returns', content: 'Thirty days.' }]} />
+        <Table rows={[{ id: '1', name: 'Nuvio' }]} rowLabel={(row) => row.name} columns={[{ key: 'name', label: 'Name', render: (row) => row.name }]} onSelectionChange={noop} />
+        <Chatbot title="Assistant" description="Online" messages={[]} value="" onValueChange={noop} onSend={noop} />
+      </DiyaProvider>
+    )
+    expect(container.querySelectorAll('.diya-accordion > .diya-accordion-item + .diya-accordion-item')).toHaveLength(1)
+    expect(container.querySelectorAll('.diya-table .diya-table-check > input[type="checkbox"]').length).toBeGreaterThan(1)
+    expect(container.querySelector('.diya-chat-header > div > strong')!.textContent).toBe('Assistant')
+    expect(container.querySelector('.diya-chat-header > div > small')!.textContent).toBe('Online')
   })
 })
