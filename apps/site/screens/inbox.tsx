@@ -186,12 +186,14 @@ export default function InboxScreen() {
       <div className="inbox" data-view={view} data-empty={shown.length === 0 || undefined} data-glass={glass || undefined}>
         <style>{css}</style>
         <aside className="inbox-side" aria-label={PRODUCT}>
-          <SideNavigation className="inbox-nav inbox-nav-full" label="Folders" brand={<Brand />} showGroups={false} groups={groups} value={folder} onValueChange={goTo} />
-          <SideNavigation className="inbox-nav inbox-nav-rail" label="Folders" brand={<Brand />} collapsedBrand={<Mark />} collapsed showGroups={false} groups={groups} value={folder} onValueChange={goTo} />
-          <p className="inbox-me">
-            <Avatar name={ME} size="small" status="online" />
-            <span className="inbox-me-name">{ME}</span>
-          </p>
+          <div className="inbox-side-full">
+            <SideNavigation className="inbox-nav inbox-nav-full" label="Folders" brand={<Brand />} showGroups={false} groups={groups} value={folder} onValueChange={goTo}
+              footer={<p className="inbox-me"><Avatar name={ME} size="small" status="online" />{ME}</p>} />
+          </div>
+          <div className="inbox-side-rail">
+            <SideNavigation className="inbox-nav" label="Folders" brand={<Brand />} collapsedBrand={<Mark />} collapsed showGroups={false} groups={groups} value={folder} onValueChange={goTo}
+              footer={<Avatar name={ME} size="small" status="online" />} />
+          </div>
         </aside>
 
         <main className="inbox-main" aria-labelledby={`${hint}-title`}>
@@ -371,10 +373,12 @@ const css = `
   color: var(--diya-color-text);
 }
 .inbox-side { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; padding: var(--diya-space-5) var(--diya-space-3); border-right: 1px solid var(--diya-color-line); }
-.inbox-nav { width: auto; border: 0; border-radius: 0; background: transparent; backdrop-filter: none; box-shadow: none; overflow: visible; }
+.inbox-nav { flex: 1; width: auto; border: 0; border-radius: 0; background: transparent; backdrop-filter: none; box-shadow: none; overflow: visible; }
 .inbox-nav-full,
 .inbox-nav-sheet { padding: 0; }
-.inbox-nav-rail { display: none; }
+.inbox-side-full,
+.inbox-side-rail { display: flex; flex: 1 0 auto; flex-direction: column; }
+.inbox-side-rail { display: none; }
 .inbox-brand { display: inline-flex; align-items: center; gap: var(--diya-space-3); font-size: var(--diya-text-large); font-weight: 600; letter-spacing: -0.01em; }
 .inbox-mark {
   display: inline-grid;
@@ -387,7 +391,7 @@ const css = `
   font-size: var(--diya-text-body);
   font-weight: 650;
 }
-.inbox-me { display: flex; align-items: center; gap: var(--diya-space-3); margin: auto 0 0; padding: var(--diya-space-4) var(--diya-space-3) 0; border-top: 1px solid var(--diya-color-line); font-size: var(--diya-text-caption); }
+.inbox-me { display: flex; align-items: center; gap: var(--diya-space-3); margin: 0; padding: var(--diya-space-4) var(--diya-space-3) 0; border-top: 1px solid var(--diya-color-line); font-size: var(--diya-text-caption); }
 .inbox-main { display: grid; grid-template-columns: 360px minmax(0, 1fr); min-width: 0; min-height: 0; }
 .inbox-list { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-right: 1px solid var(--diya-color-line); }
 .inbox-list-head { display: flex; align-items: center; gap: var(--diya-space-2); padding: var(--diya-space-5) var(--diya-space-5) var(--diya-space-3); }
@@ -427,10 +431,8 @@ const css = `
   .inbox { grid-template-columns: auto minmax(0, 1fr); }
   .inbox-main { grid-template-columns: 320px minmax(0, 1fr); }
   .inbox-side { padding: 0; }
-  .inbox-nav-full { display: none; }
-  .inbox-nav-rail { display: block; }
-  .inbox-me { justify-content: center; padding: var(--diya-space-4) 0; }
-  .inbox-me-name { display: none; }
+  .inbox-side-full { display: none; }
+  .inbox-side-rail { display: flex; }
   .inbox-reader { padding-inline: var(--diya-space-5); }
 }
 @media (max-width: 760px) {
