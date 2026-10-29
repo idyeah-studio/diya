@@ -133,11 +133,12 @@ describe('supplementary installed library recipes', () => {
     await user.click(screen.getByRole('button', { name: 'Add assistant note' }))
     expect(log.querySelectorAll('[data-role=assistant]').length).toBe(1)
     expect(log.textContent).toContain('A manually written note')
-    await user.click(screen.getByRole('switch', { name: 'Loading state' }))
+    // Switch is a native checkbox with role="switch", so its state is `checked`, not aria-checked.
+    const loading = () => screen.getByRole('switch', { name: 'Loading state' }) as HTMLInputElement
+    await user.click(loading())
+    expect(loading().checked).toBe(true)
     await user.click(screen.getByRole('button', { name: 'Stop' }))
-    expect(screen.getByRole('switch', { name: 'Loading state' }).getAttribute('aria-checked')).toBe(
-      'false'
-    )
+    expect(loading().checked).toBe(false)
     expect(document.activeElement === screen.getByLabelText('Message', { exact: true })).toBe(true)
   })
   it('opens the Page Header Projects destination and restores project context', async () => {
