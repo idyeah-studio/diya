@@ -507,8 +507,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'book',
     component: 'Booking',
     charts: false,
-    status: 'building',
-    tryThis: 'Pick a day with no times left, take a slot that’s just been taken, or book one to see the confirmation.',
+    status: 'ready',
+    tryThis: 'Choose 45 minutes and pick Friday, November 13 for a day with no times, take the first time on Thursday, November 12 (someone just got it), or book any other to see the confirmation.',
     keywords: 'booking appointment calendar schedule demo meeting',
   },
   {
@@ -520,8 +520,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'bookings',
     component: 'Agenda',
     charts: false,
-    status: 'building',
-    tryThis: 'Step to a day with nothing booked, open a booking for its details, or add a new one.',
+    status: 'ready',
+    tryThis: 'Step to Tuesday, November 17 for an empty day, open Hannah Becker to check her in or move her to 5:00 PM (Rafael is busy), or add a new booking.',
     keywords: 'agenda bookings appointments schedule calendar staff',
   },
 
@@ -535,8 +535,8 @@ export const screens: readonly ScreenEntry[] = [
     route: 'apply',
     component: 'Application',
     charts: false,
-    status: 'building',
-    tryThis: 'Submit with empty fields to see the error summary, then fix them and submit for what happens next.',
+    status: 'ready',
+    tryThis: 'Review with empty fields for the error summary, use offline@example.com to see a failed send, or fill it in and send.',
     keywords: 'application form apply job registration survey grant',
   },
   {
