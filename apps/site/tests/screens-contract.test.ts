@@ -43,8 +43,8 @@ function commonRules(id: string, source: string, label: string) {
 describe('the Screens registry and its files', () => {
   it('has 36 entries, unique ids in kebab case, and a file for each', () => {
     expect(screens).toHaveLength(36)
-    expect(live).toHaveLength(33)
-    expect(posters.map((screen) => screen.id).sort()).toEqual(['board', 'create-edit', 'landing'])
+    expect(live).toHaveLength(34)
+    expect(posters.map((screen) => screen.id).sort()).toEqual(['board', 'create-edit'])
     expect(new Set(screens.map((screen) => screen.id)).size).toBe(36)
     expect(new Set(screens.map((screen) => screen.component)).size).toBe(36)
     for (const screen of screens) {

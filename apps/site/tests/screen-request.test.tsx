@@ -181,12 +181,12 @@ describe('From a poster', () => {
       )
     rerender('create-edit')
     expect(textField().value).toBe(posterPrefill('Create & edit'))
-    type(textField(), 'My own words: a SaaS landing page for a bakery.')
-    rerender('landing')
-    expect(textField().value).toBe('My own words: a SaaS landing page for a bakery.')
+    type(textField(), 'My own words: a board for a bakery and its orders.')
+    rerender('board')
+    expect(textField().value).toBe('My own words: a board for a bakery and its orders.')
     type(emailField(), 'maya@studio.co')
     await send()
-    expect(posts[0].get('poster')).toBe('landing')
+    expect(posts[0].get('poster')).toBe('board')
   })
 
   it('leaves the poster off once the words no longer name it', async () => {
