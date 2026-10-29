@@ -2,6 +2,7 @@ import { customizeItems, type ItemId } from '../../lib/customize/registry'
 import { acquisitionTotal, allocationData, channels, chartData } from '../catalog-data'
 import type { Playground } from './playground'
 import { CONTENT_TEXT, ICON_PATHS, isIcon } from './stand-ins'
+import { FORMAT_FILE, FORMAT_SOURCE, INSTALL_COMMAND } from './content-examples'
 
 export type Snippet = {
   /** Full step-3 code: import line(s), a blank line, then optional consts, then JSX. No DiyaProvider (that is step 2), no component function wrapper, no 'use client'. */
@@ -276,20 +277,21 @@ function walk(value: unknown, found: Found, key?: string): void {
 }
 
 const MAIN_EXPORTS = new Set([
-  'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Card', 'Chatbot', 'Choice',
-  'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'FileUpload', 'Form', 'List', 'Menu',
-  'Metric', 'PageHeader', 'Pagination', 'Popover', 'Progress', 'Search', 'Select', 'SideNavigation',
-  'SiteHeader', 'Slider', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput', 'TextLink', 'Toast',
-  'Tooltip', 'Wizard',
+  'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Calendar', 'Card', 'Chatbot', 'Choice',
+  'CodeBlock', 'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'FileUpload', 'Form', 'Inline', 'List', 'Menu',
+  'Metric', 'PageHeader', 'Pagination', 'Popover', 'Progress', 'Prose', 'Rating', 'Search', 'Select',
+  'SideNavigation', 'SiteHeader', 'Slider', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput',
+  'TextLink', 'Toast', 'Tooltip', 'Wizard',
 ])
 const CHART_EXPORTS = new Set(['Chart', 'DataViz'])
 
 /** Catalog component ids and the export each one documents. */
 const COMPONENT_NAMES: Partial<Record<ItemId, string>> = {
   button: 'Button', 'text-input': 'TextInput', 'text-area': 'TextArea', select: 'Select',
-  'date-picker': 'DatePicker', combobox: 'Combobox', choice: 'Choice', switch: 'Switch', slider: 'Slider',
+  'date-picker': 'DatePicker', calendar: 'Calendar', combobox: 'Combobox', choice: 'Choice', switch: 'Switch', slider: 'Slider',
   search: 'Search', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
-  menu: 'Menu', tag: 'Tag', metric: 'Metric', avatar: 'Avatar', list: 'List', accordion: 'Accordion',
+  menu: 'Menu', tag: 'Tag', metric: 'Metric', rating: 'Rating', avatar: 'Avatar', list: 'List',
+  accordion: 'Accordion', prose: 'Prose', 'code-block': 'CodeBlock',
   badge: 'Badge', alert: 'Alert', progress: 'Progress', tooltip: 'Tooltip', popover: 'Popover',
 }
 
@@ -717,6 +719,37 @@ function datePicker(p: Playground): Snippet {
   })
 }
 
+function calendar(p: Playground): Snippet {
+  const range = one(p, 'Type', 'Single') === 'Range'
+  const shared = {
+    size: sized(sizeOf(p)),
+    hideLabel: !on(p, 'Options', 'Label', true),
+    isDateUnavailable:
+      on(p, 'Options', 'Unavailable days', false) &&
+      v('isWeekend', '(date: string) => boolean', '(date: string) => [0, 6].includes(new Date(`${date}T12:00`).getDay())'),
+    disabled: one(p, 'State', 'Default') === 'Disabled',
+  }
+  return build('calendar', {
+    jsx: h(
+      'Calendar',
+      range
+        ? {
+            label: 'Time off',
+            range: true,
+            value: v('timeOff', '{ start: string; end: string }', "{ start: '', end: '' }"),
+            onValueChange: v('setTimeOff', '(value: { start: string; end: string }) => void'),
+            ...shared,
+          }
+        : {
+            label: 'Pick a day',
+            value: v('day', 'string'),
+            onValueChange: v('setDay', STRING_SETTER),
+            ...shared,
+          }
+    ),
+  })
+}
+
 function combobox(p: Playground): Snippet {
   const state = one(p, 'State', 'Default')
   const multiple = one(p, 'Type', 'Single') === 'Multiple'
@@ -1019,6 +1052,17 @@ function metric(p: Playground): Snippet {
   })
 }
 
+function rating(p: Playground): Snippet {
+  return build('rating', {
+    jsx: h('Rating', {
+      value: 4.3,
+      count: on(p, 'Options', 'Review count', true) && 128,
+      showValue: on(p, 'Options', 'Number', false),
+      size: sized(sizeOf(p)),
+    }),
+  })
+}
+
 function avatar(p: Playground): Snippet {
   const status = one(p, 'Status', 'None').toLowerCase()
   return build('avatar', {
@@ -1035,6 +1079,8 @@ function list(p: Playground): Snippet {
   const leading = one(p, 'Leading', 'Icon')
   const description = on(p, 'Options', 'Description', true)
   const metadata = on(p, 'Options', 'Metadata', true)
+  const current = on(p, 'Options', 'Current', false)
+  const unread = on(p, 'Options', 'Unread', false)
   const disabled = one(p, 'State', 'Default') === 'Disabled'
   const open = v('openFile', STRING_SETTER)
   const files = [
@@ -1056,6 +1102,8 @@ function list(p: Playground): Snippet {
             ? comp('FileIcon')
             : leading === 'Avatar' && h('Avatar', { name: file.owner, size: 'small' }),
         trailing: metadata && file.meta,
+        current: current && file.id === 'brief',
+        unread: unread && file.id !== 'brief',
         disabled,
         onSelect: fn('', raw(`openFile('${file.id}')`, open)),
       })),
@@ -1087,6 +1135,90 @@ function accordion(p: Playground): Snippet {
         },
       ],
     }),
+  })
+}
+
+const formatSource = { name: 'formatSource', value: raw(`\`${FORMAT_SOURCE}\``) }
+
+/** The article Prose shows, as JSX. The catalog page renders the same article. */
+const PROSE_ARTICLE = `  <h2>Send your first invoice</h2>
+  <p>
+    Invoices go out from <strong>Billing</strong>. Each one gets a number, a due
+    date and a link your client can pay from. Drafts save as you type.
+  </p>
+  <ol>
+    <li>Choose a client, or add one with their billing email.</li>
+    <li>
+      Add line items. Amounts are in cents, so <code>12500</code> is $125.00.
+    </li>
+    <li>
+      Press <kbd>⌘</kbd> <kbd>Enter</kbd> to send it, or save it as a draft.
+    </li>
+  </ol>
+  <h3>Payment terms</h3>
+  <p>
+    Terms set the due date from the day you send. Most teams start with
+    Net&nbsp;30 and change it for a client when they need to.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Term</th>
+        <th>Due</th>
+        <th>First reminder</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Due on receipt</td>
+        <td>The same day</td>
+        <td>After 3 days</td>
+      </tr>
+      <tr>
+        <td>Net 15</td>
+        <td>15 days after sending</td>
+        <td>3 days before</td>
+      </tr>
+      <tr>
+        <td>Net 30</td>
+        <td>30 days after sending</td>
+        <td>5 days before</td>
+      </tr>
+    </tbody>
+  </table>
+  <blockquote>
+    <p>
+      Send reminders from the invoice, not your inbox. Each one is logged, so
+      nobody is chased twice.
+    </p>
+  </blockquote>
+  <h3>Format amounts</h3>
+  <p>
+    Use one helper wherever amounts appear, so totals round the same way on
+    every screen. <a href="/docs/currencies">Currencies</a> lists the rest.
+  </p>
+  <CodeBlock label="${FORMAT_FILE}" code={formatSource} />`
+
+function prose(p: Playground): Snippet {
+  const size = sized(sizeOf(p))
+  const snippet = build('prose', {
+    jsx: h('Prose', { size }, h('CodeBlock', { label: FORMAT_FILE, code: raw('formatSource') })),
+    consts: [formatSource],
+    code: `<Prose${size ? ` size="${size}"` : ''}>\n${PROSE_ARTICLE}\n</Prose>`,
+  })
+  /* Prose's links are your own anchors, so the provider's linkComponent doesn't take them over. */
+  return { ...snippet, links: false }
+}
+
+function codeBlock(p: Playground): Snippet {
+  const command = one(p, 'Content', 'File') === 'Command'
+  const label = on(p, 'Options', 'Label', true)
+  return build('code-block', {
+    jsx: h('CodeBlock', {
+      label: label && (command ? 'Shell' : FORMAT_FILE),
+      code: command ? INSTALL_COMMAND : raw('formatSource'),
+    }),
+    consts: command ? [] : [formatSource],
   })
 }
 
@@ -1383,7 +1515,16 @@ function siteHeader(p: Playground): Snippet {
 }
 
 function sideNavigation(p: Playground): Snippet {
-  const item = (value: string, label: string, icon: string) => ({ value, label, icon: comp(icon) })
+  const counts = on(p, 'Options', 'Counts', false)
+  const account = h('Menu', {
+    label: 'Account for Alex Morgan',
+    triggerIcon: h('Avatar', { name: 'Alex Morgan', size: 'small' }),
+    items: [
+      { id: 'profile', label: 'View profile', onSelect: v('openProfile', VOID) },
+      { id: 'settings', label: 'Account settings', onSelect: v('openAccountSettings', VOID) },
+    ],
+  })
+  const item = (value: string, label: string, icon: string, count?: number) => ({ value, label, icon: comp(icon), count: counts && count })
   return build('side-navigation', {
     consts: [
       {
@@ -1393,8 +1534,8 @@ function sideNavigation(p: Playground): Snippet {
             id: 'work',
             label: 'Work',
             items: [
-              item('projects', 'Projects', 'LayersIcon'),
-              item('activity', 'Activity', 'ActivityIcon'),
+              item('projects', 'Projects', 'LayersIcon', 4),
+              item('activity', 'Activity', 'ActivityIcon', 128),
               item('people', 'People', 'UsersIcon'),
             ],
           },
@@ -1409,6 +1550,8 @@ function sideNavigation(p: Playground): Snippet {
     jsx: h('SideNavigation', {
       brand: 'Veylo',
       collapsedBrand: 'v.',
+      footer: h('Inline', { gap: 2 }, account, h('span', {}, 'Alex Morgan')),
+      collapsedFooter: account,
       groups: raw('groups'),
       value: v('section', 'string', "'projects'"),
       onValueChange: v('setSection', STRING_SETTER),
@@ -1801,11 +1944,14 @@ function fileUpload(p: Playground): Snippet {
 function chatbot(p: Playground): Snippet {
   const layout = one(p, 'Type', 'Embedded').toLowerCase()
   const floating = layout === 'floating'
+  const fullPage = layout === 'full-page'
   return build('chatbot', {
     jsx: h('Chatbot', {
       title: 'Project assistant',
       description: 'Ask about your projects, files, and next steps.',
-      layout: layout !== 'embedded' && (layout === 'full-page' ? 'full-page' : 'floating'),
+      layout: layout !== 'embedded' && (fullPage ? 'full-page' : 'floating'),
+      // Full-page fills the height it is given; here, the whole screen.
+      style: fullPage && { height: '100dvh' },
       open: floating && v('open', 'boolean'),
       onOpenChange: floating && v('setOpen', '(open: boolean) => void'),
       welcome: 'What would you like to work on?',
@@ -1929,6 +2075,7 @@ const SNIPPETS: Record<ItemId, (p: Playground, o: Options) => Snippet> = {
   'text-area': textArea,
   select,
   'date-picker': datePicker,
+  calendar,
   combobox,
   choice,
   switch: switchSnippet,
@@ -1941,9 +2088,12 @@ const SNIPPETS: Record<ItemId, (p: Playground, o: Options) => Snippet> = {
   menu,
   tag,
   metric,
+  rating,
   avatar,
   list,
   accordion,
+  prose,
+  'code-block': codeBlock,
   badge,
   alert,
   progress,

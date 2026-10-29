@@ -12,7 +12,7 @@ export type PostmarkConfig = {
   stream: string
   /** "Vishal <diya@idyeah.studio>". */
   from: string
-  /** Defaults to DEFAULT_REPLY_TO in config.ts, the public alias. */
+  /** Defaults to DEFAULT_REPLY_TO in config.ts, the public alias. A message's own `replyTo` wins. */
   replyTo: string
 }
 
@@ -36,7 +36,7 @@ export class PostmarkSender implements WaitlistSender {
       body: JSON.stringify({
         From: this.config.from,
         To: email.to,
-        ReplyTo: this.config.replyTo,
+        ReplyTo: email.replyTo ?? this.config.replyTo,
         Subject: email.subject,
         TextBody: email.text,
         HtmlBody: email.html,
@@ -45,8 +45,18 @@ export class PostmarkSender implements WaitlistSender {
         TrackOpens: false,
         TrackLinks: 'None',
         Headers: email.headers.map((h) => ({ Name: h.name, Value: h.value })),
+        ...(email.attachments?.length
+          ? {
+              Attachments: email.attachments.map((a) => ({
+                Name: a.name,
+                Content: Buffer.from(a.content).toString('base64'),
+                ContentType: a.contentType,
+              })),
+            }
+          : {}),
       }),
-      signal: AbortSignal.timeout(10_000),
+      // A picture makes the message bigger; give it longer than a plain one.
+      signal: AbortSignal.timeout(email.attachments?.length ? 20_000 : 10_000),
     })
     if (!response.ok) {
       // Only the status and Postmark's numeric code: its message text can quote the address.
@@ -65,7 +75,11 @@ export class FakeSender implements WaitlistSender {
   readonly sent: OutboundEmail[] = []
   failNext = false
 
-  constructor(private readonly log = false) {}
+  constructor(
+    private readonly log = false,
+    /** The log line's prefix. */
+    private readonly label = 'waitlist',
+  ) {}
 
   async send(email: OutboundEmail) {
     if (this.failNext) {
@@ -73,6 +87,9 @@ export class FakeSender implements WaitlistSender {
       throw new Error('fake send failure')
     }
     this.sent.push(email)
-    if (this.log) console.info(`[waitlist] would email ${email.to}: ${email.subject}\n${email.text}`)
+    if (!this.log) return
+    const attached = (email.attachments ?? []).map((a) => `\n[attached: ${a.name}, ${a.contentType}, ${a.content.byteLength} bytes]`).join('')
+    const replyTo = email.replyTo ? ` (reply-to ${email.replyTo})` : ''
+    console.info(`[${this.label}] would email ${email.to}${replyTo}: ${email.subject}\n${email.text}${attached}`)
   }
 }

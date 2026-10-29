@@ -1,4 +1,7 @@
 import { isLaunched, launchNow } from './launch'
+import { screenById, screenIsListed, screensPreview } from '../components/screens/screens-data'
+
+export { screenIds } from '../components/screens/screens-data'
 
 export const componentIds = [
   'button',
@@ -6,6 +9,7 @@ export const componentIds = [
   'text-area',
   'select',
   'date-picker',
+  'calendar',
   'combobox',
   'choice',
   'switch',
@@ -18,9 +22,12 @@ export const componentIds = [
   'menu',
   'tag',
   'metric',
+  'rating',
   'avatar',
   'list',
   'accordion',
+  'prose',
+  'code-block',
   'badge',
   'alert',
   'progress',
@@ -44,10 +51,12 @@ export const patternIds = [
   'empty-state',
 ] as const
 
-export type CatalogArea = 'patterns' | 'components' | 'skills' | 'pro'
+export type CatalogArea = 'patterns' | 'components' | 'screens' | 'skills' | 'pro'
 export type CatalogRoute =
   | { area: 'components'; id: (typeof componentIds)[number] }
   | { area: 'patterns'; id: (typeof patternIds)[number] }
+  /** The Screens gallery (`id: null`) or one screen. */
+  | { area: 'screens'; id: string | null }
   | { area: 'skills' }
   | { area: 'pro' }
 type CatalogRouteResult = CatalogRoute | { redirect: string }
@@ -66,18 +75,31 @@ export function catalogIsOpen(
 }
 
 export function catalogArea(area: string | null | undefined): CatalogArea {
-  return area === 'components' || area === 'skills' || area === 'pro' ? area : 'patterns'
+  return area === 'components' || area === 'screens' || area === 'skills' || area === 'pro' ? area : 'patterns'
 }
 
-/** Explicit areas take precedence over stale selectors from another area. */
-export function resolveCatalogRoute(params: SearchParams): CatalogRouteResult {
+/**
+ * Explicit areas take precedence over stale selectors from another area.
+ * `env` decides which screens are listed: screens still being built open
+ * only in preview builds (DIYA_CATALOG_PREVIEW=1).
+ */
+export function resolveCatalogRoute(
+  params: SearchParams,
+  env: Record<string, string | undefined> = process.env
+): CatalogRouteResult {
   if (Array.isArray(params.area)) return { redirect: '/explore' }
   const area = catalogArea(params.area)
   // The Relight page's address before it was neutral; shared links still land.
   if (params.area === 'rebuild') return { redirect: '/explore?area=pro' }
-  if (params.area && !['components', 'patterns', 'skills', 'pro'].includes(params.area))
+  if (params.area && !['components', 'patterns', 'screens', 'skills', 'pro'].includes(params.area))
     return { redirect: '/explore' }
   if (area === 'skills' || area === 'pro') return { area }
+
+  if (area === 'screens') {
+    if (params.screen === undefined) return { area, id: null }
+    const screen = typeof params.screen === 'string' ? screenById(params.screen) : undefined
+    return screen && screenIsListed(screen, screensPreview(env)) ? { area, id: screen.id } : { redirect: '/explore?area=screens' }
+  }
 
   if (area === 'components') {
     if (params.component === 'dialog') return { redirect: '/explore?pattern=dialog' }

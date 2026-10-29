@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DiyaProvider } from '@idyeah/diya'
-import { itemBrief, llmsFull, llmsIndex } from '../components/reference/ai-docs'
+import { itemBrief, llmsFull, llmsIndex, screenLines } from '../components/reference/ai-docs'
+import { screens, type ScreenStatus } from '../components/screens/screens-data'
 import { API, EXPORT_NAMES, itemReference, itemUrl, kebab } from '../components/reference/api'
 import { guidance } from '../components/reference/guidance'
 import { ReferencePanel } from '../components/reference/ReferencePanel'
@@ -65,6 +66,28 @@ describe('the AI channel', () => {
     expect(text).toContain('| `--diya-color-accent` |')
     expect(text).toContain('### `DiyaProvider`')
     expect(text).toContain('### `Toast`')
+  })
+
+  it('lists ready screens in llms.txt and llms-full.txt, never screens still being built or posters', () => {
+    const entry = screens.find((screen) => screen.id === 'dashboard') as { status: ScreenStatus }
+    const url = (id: string) => `https://diya13.ai/explore?area=screens&screen=${id}`
+    for (const text of [llmsIndex(), llmsFull()])
+      for (const screen of screens.filter((item) => item.status !== 'ready')) expect(text, screen.id).not.toContain(url(screen.id))
+    if (!screens.some((screen) => screen.status === 'ready')) expect(llmsIndex()).not.toContain('## Screens')
+    const before = entry.status
+    entry.status = 'ready'
+    try {
+      for (const text of [llmsIndex(), llmsFull()]) {
+        expect(text).toContain('## Screens')
+        expect(text).toContain(
+          `- [Analytics dashboard](${url('dashboard')}): ${(entry as unknown as { description: string }).description} One file: \`app/dashboard/page.tsx\` in Next.js or \`src/Dashboard.tsx\` in Vite; needs \`@idyeah/diya lucide-react echarts@6\`.`
+        )
+        for (const screen of screens.filter((item) => item.status === 'building')) expect(text, screen.id).not.toContain(url(screen.id))
+      }
+      expect(screenLines()).toHaveLength(screens.filter((screen) => screen.status === 'ready').length)
+    } finally {
+      entry.status = before
+    }
   })
 
   it('a Copy for AI brief has install, provider, props and a complete example', () => {

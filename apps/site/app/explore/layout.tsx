@@ -4,6 +4,7 @@ import { CatalogProvider } from '../../components/CatalogProvider'
 import { CatalogSearchProvider } from '../../components/CatalogSearchProvider'
 import { CatalogFlag } from '../../components/site/CatalogFlag'
 import { isLaunched, launchNow } from '../../lib/launch'
+import { listedScreens, screensPreview } from '../../components/screens/screens-data'
 /* The catalog's chrome styles, then the SDK stylesheet, then each page's
    component CSS: the cascade ties depend on that order. The SDK stylesheet
    is scoped to `.diya-root`, so loading it here keeps ~95 KB of unused,
@@ -22,8 +23,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function LibraryLayout({ children }: { children: React.ReactNode }) {
+  // Screens still being built are listed only in preview builds.
+  const screens = listedScreens(screensPreview()).map((screen) => screen.id)
   return (
-    <CatalogSearchProvider>
+    <CatalogSearchProvider screens={screens}>
       <CatalogFlag />
       <CatalogProvider>{children}</CatalogProvider>
     </CatalogSearchProvider>

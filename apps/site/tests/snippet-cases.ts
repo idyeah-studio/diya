@@ -21,6 +21,10 @@ export const variants: Record<ItemId, { playground: Playground; options?: Record
     { playground: { Type: 'Range', Options: [], State: 'Error' } },
     { playground: { Size: 'Large', State: 'Disabled' } },
   ],
+  calendar: [
+    { playground: { Type: 'Range', Size: 'Large', Options: ['Unavailable days'], State: 'Disabled' } },
+    { playground: { Size: 'Small', Options: ['Label', 'Unavailable days'] } },
+  ],
   combobox: [{ playground: { Type: 'Multiple', Options: ['Label'], State: 'Error', Size: 'Small' } }],
   choice: [
     { playground: { Type: 'Multiple', Size: 'Large', Options: ['Label', 'Descriptions', 'Select all', 'Helper text'], State: 'Error' } },
@@ -61,12 +65,23 @@ export const variants: Record<ItemId, { playground: Playground; options?: Record
     { playground: { Color: 'Success', Leading: 'Dot' } },
   ],
   metric: [{ playground: { Size: 'Large', Options: [] } }],
+  rating: [
+    { playground: { Size: 'Large', Options: ['Number'] } },
+    { playground: { Size: 'Small', Options: ['Number', 'Review count'] } },
+  ],
   avatar: [{ playground: { Size: 'Small', Shape: 'Rounded', Status: 'Busy' } }],
   list: [
     { playground: { Size: 'Large', Leading: 'Avatar', Options: [], State: 'Disabled' } },
     { playground: { Leading: 'None', Options: ['Divider'] } },
+    { playground: { Options: ['Description', 'Metadata', 'Current', 'Unread'] } },
   ],
   accordion: [{ playground: { Style: 'Plain', Expand: 'Multiple', State: 'Disabled' } }],
+  prose: [{ playground: { Size: 'Large' } }, { playground: { Size: 'Small' } }],
+  'code-block': [
+    { playground: { Content: 'Command', Options: ['Label'] } },
+    { playground: { Content: 'File', Options: [] } },
+    { playground: { Content: 'Command', Options: [] } },
+  ],
   badge: [
     { playground: { Variant: 'Count', Size: 'Large', Color: 'Error' } },
     { playground: { Color: 'Brand', 'Brand color': '#123456' } },
@@ -92,7 +107,10 @@ export const variants: Record<ItemId, { playground: Playground; options?: Record
     { playground: { Options: ['Notifications', 'Support', 'Avatar'] } },
     { playground: { Options: [] } },
   ],
-  'side-navigation': [{ playground: { Options: ['Collapsed'] } }],
+  'side-navigation': [
+    { playground: { Options: ['Collapsed'] } },
+    { playground: { Options: ['Groups', 'Counts'] } },
+  ],
   card: [
     { playground: { Options: ['Image', 'Shadow', 'Primary action'] } },
     { playground: { Options: ['Tag'] } },

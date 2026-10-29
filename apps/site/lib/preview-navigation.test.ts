@@ -18,6 +18,21 @@ describe('catalog navigation before and after launch', () => {
     }
   })
 
+  it('keeps Screens behind the same gate: the gallery and every screen are a 404 before launch', () => {
+    for (const flag of [undefined, '0']) {
+      vi.stubEnv('DIYA_CATALOG_PREVIEW', flag)
+      for (const path of ['/explore?area=screens', '/explore?area=screens&screen=sign-in', '/explore?area=screens&screen=board']) {
+        const response = proxy(new NextRequest(`https://diya13.ai${path}`))
+        expect(response.headers.get('x-middleware-rewrite'), path).toBe('https://diya13.ai/diya-preview-unavailable')
+      }
+    }
+    vi.stubEnv('DIYA_CATALOG_PREVIEW', '1')
+    expect(proxy(new NextRequest('https://diya13.ai/explore?area=screens')).headers.get('x-middleware-next')).toBe('1')
+    vi.stubEnv('DIYA_CATALOG_PREVIEW', '0')
+    vi.stubEnv('DIYA_NOW', AFTER)
+    expect(proxy(new NextRequest('https://diya13.ai/explore?area=screens&screen=sign-in')).headers.get('x-middleware-next')).toBe('1')
+  })
+
   it('lets the enabled catalog use its original selection and route checks', () => {
     vi.stubEnv('DIYA_CATALOG_PREVIEW', '1')
     const response = proxy(new NextRequest('https://diya13.ai/explore?pattern=data-viz'))
@@ -39,7 +54,7 @@ describe('catalog navigation before and after launch', () => {
 
   it('leaves the public site, API routes and image delivery to their own handlers', () => {
     vi.stubEnv('DIYA_CATALOG_PREVIEW', '0')
-    for (const path of ['/', '/robots.txt', '/sitemap.xml', '/api/launch', '/_next/image?url=hero.png', '/explore-extra']) {
+    for (const path of ['/', '/robots.txt', '/sitemap.xml', '/api/launch', '/api/screen-requests', '/_next/image?url=hero.png', '/explore-extra', '/screens-frame?screen=sign-in']) {
       const response = proxy(new NextRequest(`https://diya13.ai${path}`))
       expect(response.headers.get('x-middleware-next')).toBe('1')
       expect(response.headers.get('x-middleware-rewrite')).toBeNull()

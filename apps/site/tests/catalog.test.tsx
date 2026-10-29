@@ -112,10 +112,15 @@ describe('Button preview to Get code', () => {
     await user.click(screen.getByRole('button', { name: 'Get code' }))
     const before = requestedPackage()
     await user.click(screen.getByRole('radio', { name: state }))
+    // Disabled is the native attribute; Loading stays focusable and inert.
     expect(
       specimens()
         .getAllByRole('button')
-        .every((button) => (button as HTMLButtonElement).disabled)
+        .every((button) =>
+          state === 'Disabled'
+            ? (button as HTMLButtonElement).disabled
+            : !(button as HTMLButtonElement).disabled && button.getAttribute('aria-disabled') === 'true'
+        )
     ).toBe(true)
     expect(getSnapshot().items.button?.options).toEqual(before.button?.options)
     for (const key of ['disabled', 'loading', 'state']) expect(getSnapshot().items.button?.options).not.toHaveProperty(key)
@@ -205,12 +210,12 @@ describe('Patterns discovery', () => {
     const search = screen.getByRole('searchbox', { name: 'Search patterns' }) as HTMLInputElement
     await user.type(search, 'zzzz-missing-pattern')
     expect(patternLinks()).toHaveLength(0)
-    expect(screen.getByText('No components or patterns match “zzzz-missing-pattern”.')).toBeDefined()
+    expect(screen.getByText('No components, patterns or screens match “zzzz-missing-pattern”.')).toBeDefined()
     expect(searchStatus().textContent).toBe('0 patterns found')
     await user.keyboard('{Escape}')
     expect(search.value).toBe('')
     expect(patternLinks()).toHaveLength(13)
-    expect(screen.queryByText(/No components or patterns match/)).toBeNull()
+    expect(screen.queryByText(/No components, patterns or screens match/)).toBeNull()
     expect(
       screen.getByRole('link', { name: 'Content State' }).getAttribute('aria-current')
     ).toBe('page')

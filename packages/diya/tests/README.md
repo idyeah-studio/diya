@@ -14,15 +14,27 @@ Table defaults are checked directly: 10 rows a page, `defaultPageSize` and
 `pageSizeOptions`, no checkboxes until there are bulk actions or a selection
 handler, no search until `searchText`, and filter state kept by `key` so two
 filters with the same label stay independent. Display checks cover an
-indeterminate Progress when there is no `value`, Badge `max`, Tag `tone`, Card
+indeterminate Progress when there is no `value`, Rating's half-star rounding,
+clamping and single accessible name, Badge `max`, Tag `tone`, Card
 `tags`/`actions`, pill Tabs, Breadcrumbs `showHomeIcon`, Wizard
 `showStepCount`, Chatbot `layout`/`showTimestamps` and single or `multiple`
 FileUpload. Field checks include Select `onValueChange` beside the native
 `onChange`, Switch `helperText`/`error`, the visible Slider label, Choice
 option descriptions, and `className`/`style` landing on the field wrapper.
-`messages.test.tsx` checks `DiyaProvider` `messages`: overridden strings
+`inbox-contracts.test.tsx` covers List `current` (`aria-current="true"`) and
+`unread` (named after the label, translatable), Side Navigation `count` (the
+99+ cap, the real count in the name, a dot when collapsed), and a Chatbot
+thread that fills the height it is given and follows the latest message when
+it is resized. `aria-attributes.test.tsx` renders every core component, with
+popups open and the Chatbot in each state, and fails on any `aria-*` attribute
+WAI-ARIA doesn't define. `messages.test.tsx` checks `DiyaProvider` `messages`: overridden strings
 render, missing keys keep their English defaults, function values interpolate,
 and per-instance label props still win.
+`nested-containers.test.tsx` reads the stylesheet: Form, Card, Drawer, Dialog,
+Wizard, Accordion, Table and Chatbot reach a plain element only through the
+guard Prose uses or at a fixed place, so an Alert, List or Switch placed inside
+one keeps its own styles, and their own parts sit where those rules expect them. HappyDOM
+can't match the guard, so the computed styles themselves need a real browser.
 
 Boundary regressions cover real empty table filter values and prototype-like
 filter labels, valid bulk selection after rows are removed, keyboard focus after
@@ -30,7 +42,12 @@ removing a Combobox chip, and native Dialog close/reopen while an old confirmati
 is pending. Menu navigation recovers when disabled choices become available;
 Tabs keeps a matching panel and keyboard stop when the supplied value is disabled.
 DatePicker checks include reopening the selected month and keyboard navigation
-across calendar boundaries.
+across calendar boundaries. Calendar checks cover the same keyboard on the page,
+single and range choices, `min`/`max` and `isDateUnavailable` days (announced,
+refused, still reachable by arrow), `disabled`, a controlled `month`, server
+rendering without a time-zone-dependent "today", and the ARIA date grid both
+share: a grid named by its month, weekday column headers, a row per week, and
+gridcells with `aria-selected` and `aria-current="date"`.
 
 HappyDOM supplies a DOM, not browser layout or accessibility conformance evidence.
 The setup emulates the basic native dialog open/close boundary and defaults to the
@@ -48,7 +65,7 @@ real-browser checks.
 
 Current API boundaries are deliberate: TextInput/TextArea/Search use controlled
 values; custom controls use their documented callbacks rather than generic form
-registration props; Combobox, Choice, Slider and DatePicker return one value by
+registration props; Combobox, Choice, Slider, DatePicker and Calendar return one value by
 default and a list or range with `multiple`/`range`; Slider uses a 0–100 domain;
 DatePicker expects ISO date strings and formats them with the provider's
 `locale`; Accordion owns

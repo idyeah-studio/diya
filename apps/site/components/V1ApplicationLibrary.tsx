@@ -29,8 +29,9 @@ export function V1ApplicationLibrary({
     Timestamps: false,
     Collapsed: false,
     Groups: true,
+    Counts: false,
   })
-  const parts = pattern === 'chatbot' ? ['Suggestions', 'Timestamps'] : ['Collapsed', 'Groups']
+  const parts = pattern === 'chatbot' ? ['Suggestions', 'Timestamps'] : ['Collapsed', 'Groups', 'Counts']
   return (
     <main id="content" className="gallery-study component-library pattern-library">
       <div className="gallery-study-backdrop" aria-hidden="true" />
@@ -76,6 +77,7 @@ export function V1ApplicationLibrary({
               showTimestamps={options.Timestamps}
               collapsed={options.Collapsed}
               groups={options.Groups}
+              counts={options.Counts}
             />
           </div></CustomizationScope>
         </section>

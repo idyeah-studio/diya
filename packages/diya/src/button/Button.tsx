@@ -1,5 +1,5 @@
 'use client'
-import { Children, cloneElement, forwardRef, isValidElement, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type MouseEvent, type ReactElement, type ReactNode, type Ref } from 'react'
+import { Children, cloneElement, forwardRef, isValidElement, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from '../internal/cx.js'
 import { useDiyaLinkComponent } from '../internal/link.js'
 import { renderSlot } from '../internal/slot.js'
@@ -13,7 +13,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   shape?: 'pill' | 'rounded'
   /** Square button for a single icon child; give it an `aria-label`, since the icon is its only content. */
   iconOnly?: boolean
-  /** Shows a working indicator, disables the button and sets `aria-busy`; the label stays unless `iconOnly`. */
+  /** Shows a working indicator and sets `aria-busy`; the label stays unless `iconOnly`. The button stays focusable, so focus isn't lost while it works, but it is inert: `aria-disabled="true"`, and clicks, Enter and Space do nothing, so it can't submit twice. */
   loading?: boolean
   /** Renders a link to this URL that looks like a Button, through the provider's `linkComponent` (a plain anchor by default). */
   href?: string
@@ -31,6 +31,11 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 function stopClick(event: MouseEvent) {
   event.preventDefault()
   event.stopPropagation()
+}
+
+// A loading button keeps focus but must not act: Enter and Space would activate it, so they stop here too.
+function stopActivation(event: KeyboardEvent) {
+  if (event.key === 'Enter' || event.key === ' ') event.preventDefault()
 }
 
 /** A native button in DIYA's styles, or a link that looks like one with `href` or `asChild`; other button attributes pass through, and `type` defaults to 'button'. */
@@ -56,7 +61,14 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     if (inactive) return <a {...anchor} {...shared} ref={anchorRef} role="link" aria-disabled="true" onClickCapture={stopClick}>{content(children)}</a>
     return <Link {...anchor} {...shared} ref={anchorRef} href={href} target={target} rel={rel} download={download}>{content(children)}</Link>
   }
-  return <button {...props} {...shared} ref={ref as Ref<HTMLButtonElement>} type={type} disabled={inactive}>
+  // Loading keeps the button in the tab order with focus on it, unlike disabled; aria-disabled and the
+  // blocked click (which Enter, Space and a form's implicit submission all go through) make it inert.
+  const busy = loading && !disabled
+  const button = props as ButtonHTMLAttributes<HTMLButtonElement>
+  return <button {...button} {...shared} ref={ref as Ref<HTMLButtonElement>} type={type} disabled={!!disabled}
+    aria-disabled={busy ? true : button['aria-disabled']}
+    onClickCapture={busy ? stopClick : button.onClickCapture}
+    onKeyDown={busy ? stopActivation : button.onKeyDown}>
     {content(children)}
   </button>
 })

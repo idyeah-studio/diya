@@ -1,4 +1,5 @@
 import { DatePickerLibrary, ComboboxLibrary } from '../../components/AdvancedInputsLibrary'
+import { CalendarLibrary } from '../../components/CalendarLibrary'
 import { V1WorkflowLibrary, type WorkflowPattern } from '../../components/V1WorkflowLibrary'
 import {
   V1ApplicationLibrary,
@@ -14,9 +15,11 @@ import { DataAtomsLibrary, type DataAtom } from '../../components/DataAtomsLibra
 import { UtilityLibrary, type UtilityAtom } from '../../components/UtilityLibrary'
 import { AlertLibrary } from '../../components/AlertLibrary'
 import { CollectionsLibrary, type CollectionAtom } from '../../components/CollectionsLibrary'
+import { ContentLibrary, type ContentAtom } from '../../components/ContentLibrary'
 import { MoreAtomsLibrary, type MoreAtom } from '../../components/MoreAtomsLibrary'
 import { TabsLibrary } from '../../components/TabsLibrary'
 import { BadgeLibrary } from '../../components/BadgeLibrary'
+import { RatingLibrary } from '../../components/RatingLibrary'
 import { ChoiceLibrary } from '../../components/ChoiceLibrary'
 import { SelectLibrary } from '../../components/SelectLibrary'
 import { PageHeaderLibrary } from '../../components/PageHeaderLibrary'
@@ -27,6 +30,10 @@ import { catalogIsOpen, resolveCatalogRoute, type CatalogRoute } from '../../lib
 import { catalogPath, catalogTitle } from '../../lib/catalog-route-meta'
 import { CatalogFrame } from '../../components/catalog/CatalogFrame'
 import { ProPage } from '../../components/catalog/ProPage'
+import { ScreensLibrary } from '../../components/screens/ScreensLibrary'
+import { builtWith, readScreenSource } from '../../components/screens/screen-source'
+import { screenById } from '../../components/screens/screens-data'
+import { screenRequestsOpen } from '../../lib/screen-requests/runtime'
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
@@ -38,19 +45,21 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function Explore({ searchParams }: Props) {
   if (!catalogIsOpen()) notFound()
-  const route = resolveCatalogRoute(await searchParams)
+  const params = await searchParams
+  const route = resolveCatalogRoute(params)
   if ('redirect' in route) redirect(route.redirect)
   // Skills & Prompts was retired before launch; old links land on the library.
   if (route.area === 'skills') redirect('/explore')
   return (
     <CatalogFrame area={route.area} title={catalogTitle(route)} path={catalogPath(route)}>
-      <CatalogPage route={route} />
+      <CatalogPage route={route} want={typeof params.want === 'string' ? params.want : null} />
     </CatalogFrame>
   )
 }
 
-function CatalogPage({ route }: { route: Exclude<CatalogRoute, { area: 'skills' }> }) {
+function CatalogPage({ route, want }: { route: Exclude<CatalogRoute, { area: 'skills' }>; want: string | null }) {
   if (route.area === 'pro') return <ProPage />
+  if (route.area === 'screens') return <ScreensPage id={route.id} want={want} />
   const initial = {
     area: route.area,
     component: route.area === 'components' ? route.id : '',
@@ -59,6 +68,7 @@ function CatalogPage({ route }: { route: Exclude<CatalogRoute, { area: 'skills' 
   if (initial.area === 'components' && initial.component === 'date-picker')
     return <DatePickerLibrary />
   if (initial.area === 'components' && initial.component === 'combobox') return <ComboboxLibrary />
+  if (initial.area === 'components' && initial.component === 'calendar') return <CalendarLibrary />
   if (['file-upload', 'form', 'drawer', 'empty-state', 'wizard'].includes(initial.pattern))
     return <V1WorkflowLibrary key={initial.pattern} pattern={initial.pattern as WorkflowPattern} />
   if (['side-navigation', 'chatbot'].includes(initial.pattern))
@@ -92,11 +102,34 @@ function CatalogPage({ route }: { route: Exclude<CatalogRoute, { area: 'skills' 
     return (
       <CollectionsLibrary key={initial.component} component={initial.component as CollectionAtom} />
     )
+  if (initial.area === 'components' && ['prose', 'code-block'].includes(initial.component))
+    return <ContentLibrary key={initial.component} component={initial.component as ContentAtom} />
   if (initial.area === 'components' && initial.component === 'badge') return <BadgeLibrary />
+  if (initial.area === 'components' && initial.component === 'rating') return <RatingLibrary />
   if (initial.area === 'components' && initial.component === 'choice') return <ChoiceLibrary />
   if (initial.area === 'components' && initial.component === 'select') return <SelectLibrary />
   if (initial.area === 'components')
     return initial.component === 'text-input' ? <TextInputLibrary /> : <ButtonLibrary />
   if (initial.pattern === 'card') return <CardLibrary />
   return initial.pattern === 'site-header' ? <SiteHeaderLibrary /> : <PageHeaderLibrary />
+}
+
+/**
+ * The Screens gallery, or one screen with its own file (read here, on the
+ * server) for Get code. The gallery ends with the request form, open or closed
+ * as its API is, and started from a poster when `want` names one.
+ */
+function ScreensPage({ id, want }: { id: string | null; want: string | null }) {
+  const screen = screenById(id) ?? null
+  const source = screen && screen.status !== 'poster' ? readScreenSource(screen.id) : null
+  return (
+    <ScreensLibrary
+      key={id ?? ''}
+      screen={screen}
+      source={source}
+      builtWith={source ? builtWith(source) : []}
+      requestsOpen={screen ? false : screenRequestsOpen()}
+      want={want}
+    />
+  )
 }

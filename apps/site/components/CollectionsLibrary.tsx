@@ -91,6 +91,8 @@ export function CollectionsLibrary({ component }: { component: CollectionAtom })
   const [state, setState] = useState('Default')
   const [description, setDescription] = useState(true)
   const [metadata, setMetadata] = useState(true)
+  const [current, setCurrent] = useState(false)
+  const [unread, setUnread] = useState(false)
   const [icons, setIcons] = useState(true)
   const [shortcuts, setShortcuts] = useState(false)
   const [destructive, setDestructive] = useState(false)
@@ -212,6 +214,8 @@ export function CollectionsLibrary({ component }: { component: CollectionAtom })
                       checked: style === 'Divided',
                       onChange: (checked) => setStyle(checked ? 'Divided' : 'Plain'),
                     },
+                    { label: 'Current', checked: current, onChange: setCurrent },
+                    { label: 'Unread', checked: unread, onChange: setUnread },
                   ]}
                 />
               </>
@@ -324,6 +328,8 @@ export function CollectionsLibrary({ component }: { component: CollectionAtom })
                         <Avatar name={item.name} size="small" />
                       ) : undefined,
                     trailing: metadata ? item.meta : undefined,
+                    current: current && item.id === 'brief',
+                    unread: unread && item.id !== 'brief',
                     disabled: state === 'Disabled',
                     onSelect: () => setDocument(item),
                   }))}

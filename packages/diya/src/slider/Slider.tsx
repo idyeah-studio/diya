@@ -17,6 +17,8 @@ type SliderBase = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size' | 
   showValues?: boolean
   /** Shows a visible scale of five evenly spaced numbers from `min` to `max` under the track. */
   showMarks?: boolean
+  /** Formats every number the slider shows (its values and marks) and what screen readers announce for each handle, such as `(value) => '$' + value`. Defaults to the plain number. */
+  formatValue?: (value: number) => string
   /** Lowest value; defaults to 0. Numeric strings work too, so react-hook-form's register() spreads cleanly. */
   min?: number | string
   /** Highest value; defaults to 100. Numeric strings work too. */
@@ -64,6 +66,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
     disabled = false,
     showValues = true,
     showMarks = false,
+    formatValue,
     min = 0,
     max = 100,
     step = 1,
@@ -111,14 +114,15 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
   const percent = (number: number) => `${((number - lowest) / span) * 100}%`
   const marks = Array.from({ length: 5 }, (_, index) => Number((lowest + (span * index) / 4).toFixed(Math.max(decimals, 2))))
   const shared = { name, form, disabled, onBlur }
+  const show = (number: number) => (formatValue ? formatValue(number) : String(number))
   return (
     <div className={cx('diya-slider', className)} style={style} data-disabled={disabled}>
       {/* The inputs carry the accessible name; this is the visible label. */}
       {!hideLabel && <span className="diya-slider-label" aria-hidden="true">{label}</span>}
       {showValues && (
         <div className="diya-slider-values" aria-hidden="true">
-          <span>{range ? low : lowest}</span>
-          <span>{range ? high : low}</span>
+          <span>{show(range ? low : lowest)}</span>
+          <span>{show(range ? high : low)}</span>
         </div>
       )}
       <div
@@ -154,6 +158,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
           {...(controlled ? { value: low } : { defaultValue: fallback[0] })}
           aria-label={range ? t.minimum(label) : label}
           aria-valuemax={range ? high : undefined}
+          aria-valuetext={formatValue ? formatValue(low) : rest['aria-valuetext']}
           onChange={(event) => {
             const pair = controlled ? [low, high] : readDom() ?? [low, high]
             let start = Number(event.target.value)
@@ -178,6 +183,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
             {...(controlled ? { value: high } : { defaultValue: fallback[1] })}
             aria-label={t.maximum(label)}
             aria-valuemin={low}
+            aria-valuetext={formatValue ? formatValue(high) : undefined}
             onChange={(event) => {
               const pair = controlled ? [low, high] : readDom() ?? [low, high]
               let end = Number(event.target.value)
@@ -195,7 +201,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
       {showMarks && (
         <div className="diya-slider-marks" aria-hidden="true">
           {marks.map((mark) => (
-            <span key={mark}>{mark}</span>
+            <span key={mark}>{show(mark)}</span>
           ))}
         </div>
       )}

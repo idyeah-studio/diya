@@ -195,7 +195,9 @@ describe('DatePicker calendar keyboard and limits', () => {
     vi.setSystemTime(new Date(2026, 9, 9, 12))
   })
   const calendar = () => screen.getByRole('group', { name: 'Choose date' })
-  const days = () => within(calendar()).getAllByRole('button').filter((button) => button.hasAttribute('data-date'))
+  const days = () => within(calendar()).getAllByRole('gridcell').filter((cell) => cell.hasAttribute('data-date'))
+  // Empty cells before the 1st, in the first week's row (the row after the weekday headers).
+  const blanks = () => within(within(calendar()).getAllByRole('row')[1]).getAllByRole('gridcell').filter((cell) => !cell.hasAttribute('data-date')).length
 
   it('keeps one Tab stop in the grid and moves it with the arrows', async () => {
     const user = userEvent.setup()
@@ -206,9 +208,9 @@ describe('DatePicker calendar keyboard and limits', () => {
     expect(document.activeElement?.getAttribute('aria-label')).toBe('Previous month')
     await user.tab()
     await user.tab()
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Oct 14, 2026')
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026')
     await user.keyboard('{ArrowRight}')
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Oct 15, 2026')
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Thursday, October 15, 2026')
     expect(days().filter((day) => day.tabIndex === 0).map((day) => day.dataset.date)).toEqual(['2026-10-15'])
     await user.tab()
     expect(document.activeElement?.textContent).toBe('Today')
@@ -216,19 +218,18 @@ describe('DatePicker calendar keyboard and limits', () => {
     expect(document.activeElement?.textContent).toBe('Clear')
     await user.tab({ shift: true })
     await user.tab({ shift: true })
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Oct 15, 2026')
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Thursday, October 15, 2026')
   })
 
   it.each([
-    ['en-US', 'Su', 4, 'Oct 11, 2026', 'Oct 17, 2026'],
-    ['en-GB', 'Mo', 3, '12 Oct 2026', '18 Oct 2026'],
-  ])('starts the week on the %s first day', async (locale, firstHeading, blanks, home, end) => {
+    ['en-US', 'Su', 4, 'Sunday, October 11, 2026', 'Saturday, October 17, 2026'],
+    ['en-GB', 'Mo', 3, 'Monday, 12 October 2026', 'Sunday, 18 October 2026'],
+  ])('starts the week on the %s first day', async (locale, firstHeading, blankCount, home, end) => {
     const user = userEvent.setup()
     render(<DiyaProvider locale={locale}><DatePicker label="Due" defaultValue="2026-10-14" /></DiyaProvider>)
     await user.click(screen.getByRole('button', { name: /Due/ }))
-    const grid = calendar().querySelector('.diya-calendar-grid')!
-    expect(grid.querySelector('.diya-calendar-weekday')?.textContent).toBe(firstHeading)
-    expect(Array.from(grid.children).filter((child) => child.tagName === 'SPAN' && !child.className).length).toBe(blanks)
+    expect(within(calendar()).getAllByRole('columnheader')[0].textContent).toBe(firstHeading)
+    expect(blanks()).toBe(blankCount)
     act(() => days().find((day) => day.dataset.date === '2026-10-14')!.focus())
     await user.keyboard('{Home}')
     expect(document.activeElement?.getAttribute('aria-label')).toBe(home)
@@ -241,7 +242,6 @@ describe('DatePicker calendar keyboard and limits', () => {
     const prototype = Intl.Locale.prototype as never
     if ('weekInfo' in Intl.Locale.prototype) vi.spyOn(prototype, 'weekInfo' as never, 'get' as never).mockReturnValue(undefined as never)
     if ('getWeekInfo' in Intl.Locale.prototype) vi.spyOn(prototype, 'getWeekInfo' as never).mockReturnValue(undefined as never)
-    const blanks = () => Array.from(calendar().querySelector('.diya-calendar-grid')!.children).filter((child) => child.tagName === 'SPAN' && !child.className).length
     for (const [locale, expected] of [['en-GB', 3], ['en-US', 4], ['ar-EG', 5], ['de', 3]] as const) {
       const view = render(<DiyaProvider locale={locale}><DatePicker label="Due" defaultValue="2026-10-14" /></DiyaProvider>)
       await user.click(screen.getByRole('button', { name: /Due/ }))
@@ -259,13 +259,13 @@ describe('DatePicker calendar keyboard and limits', () => {
     expect(unavailable).toEqual(['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', ...Array.from({ length: 11 }, (_, index) => `2026-10-${21 + index}`)])
     expect((within(calendar()).getByRole('button', { name: 'Previous month' }) as HTMLButtonElement).disabled).toBe(true)
     expect((within(calendar()).getByRole('button', { name: 'Next month' }) as HTMLButtonElement).disabled).toBe(true)
-    await user.click(within(calendar()).getByRole('button', { name: 'Oct 3, 2026' }))
+    await user.click(within(calendar()).getByRole('gridcell', { name: 'Saturday, October 3, 2026, unavailable' }))
     expect(changes).not.toHaveBeenCalled()
-    act(() => within(calendar()).getByRole('button', { name: 'Oct 6, 2026' }).focus())
+    act(() => within(calendar()).getByRole('gridcell', { name: 'Tuesday, October 6, 2026' }).focus())
     await user.keyboard('{ArrowUp}')
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Oct 5, 2026')
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Monday, October 5, 2026')
     await user.keyboard('{PageDown}')
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Oct 20, 2026')
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Tuesday, October 20, 2026')
     await user.keyboard('{Enter}')
     expect(changes).toHaveBeenCalledExactlyOnceWith('2026-10-20')
   })

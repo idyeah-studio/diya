@@ -5,7 +5,7 @@
   </picture>
 </h1>
 
-**A library for your next app.** 25 components and 13 patterns for React. Free, MIT, yours to own.
+**A library for your next app.** 29 components and 13 patterns for React. Free, MIT, yours to own.
 
 [Catalog](https://diya13.ai/explore) ·
 [Components](https://diya13.ai/explore?area=components) ·
@@ -281,7 +281,8 @@ Everything in `styles.css` sits in a CSS cascade layer named `diya`. Rules
 outside a layer beat every layered rule, so your own CSS, and any `className`
 or `style` you pass to a component, wins over DIYA's without `!important`.
 DIYA's base styles also reach only its own elements: your headings, paragraphs
-and links inside the provider keep the styles you give them.
+and links inside the provider keep the styles you give them. To give your own
+articles DIYA's type, wrap them in `Prose`.
 
 One thing to watch: a global reset of your own, such as
 `button { background: none; border: 0 }` or `* { margin: 0; padding: 0 }`,
@@ -369,7 +370,7 @@ const { register, handleSubmit } = useForm<{ name: string; volume: number; alert
 
 Slider needs `valueAsNumber: true` to give you a number. Combobox and
 DatePicker need a `Controller`; in a plain form they post their value through
-`name`.
+`name`. Calendar takes no `name`, so it always goes through a `Controller`.
 
 ## Charts
 
@@ -511,7 +512,7 @@ header edges, are worked out once per provider from these tokens.
 | Destructive actions | `--diya-color-destructive` |
 | Statuses | For each of `success`, `warning`, `error` and `info`: `--diya-color-{status}` for text and icons on a surface, `--diya-color-{status}-surface` behind them, and `--diya-color-{status}-fill` with `--diya-color-{status}-on-fill` for solid badges. `--diya-color-error` also colors error messages, a falling Metric and invalid Combobox and DatePicker borders; other fields mark an invalid value with a dashed border. |
 | Neutral badge | `--diya-color-neutral-fill`, `--diya-color-neutral-on-fill` |
-| Glass and overlays | `--diya-color-glass` (the translucent fill when Glass is on), `--diya-color-scrim` (behind dialogs and drawers; unset by default) |
+| Glass and overlays | `--diya-color-glass` (the translucent fill when Glass is on), `--diya-color-scrim` (the dimming behind dialogs and drawers, and for your own overlays; `#00000088`, lighter under Glass) |
 | Font | `--diya-font`, set by `DiyaProvider` from `fontFamily` |
 | Type scale | `--diya-text-caption`, `--diya-text-body`, `--diya-text-large`, `--diya-text-title`, `--diya-text-heading`, `--diya-text-display`, `--diya-text-hero` |
 | Line height | `--diya-leading-tight`, `--diya-leading-body` |

@@ -2,18 +2,22 @@ import { alertMessages } from './alert/messages.js'
 import { avatarMessages } from './avatar/messages.js'
 import { badgeMessages } from './badge/messages.js'
 import { breadcrumbsMessages } from './breadcrumbs/messages.js'
+import { calendarMessages } from './calendar/messages.js'
 import { chartMessages } from './data-viz/messages.js'
 import { chatbotMessages } from './application-patterns/chatbot-messages.js'
 import { choiceMessages } from './choice/messages.js'
+import { codeBlockMessages } from './code-block/messages.js'
 import { comboboxMessages } from './combobox/messages.js'
 import { datePickerMessages } from './date-picker/messages.js'
 import { dialogMessages } from './dialog/messages.js'
 import { drawerMessages } from './workflow/drawer-messages.js'
 import { fileUploadMessages } from './workflow/file-upload-messages.js'
 import { formMessages } from './workflow/form-messages.js'
+import { listMessages } from './list/messages.js'
 import { metricMessages } from './metric/messages.js'
 import { paginationMessages } from './pagination/messages.js'
 import { progressMessages } from './progress/messages.js'
+import { ratingMessages } from './rating/messages.js'
 import { selectMessages } from './select/messages.js'
 import { sideNavigationMessages } from './application-patterns/side-navigation-messages.js'
 import { siteHeaderMessages } from './site-header/messages.js'
@@ -30,18 +34,22 @@ export const defaultMessages = {
   avatar: avatarMessages,
   badge: badgeMessages,
   breadcrumbs: breadcrumbsMessages,
+  calendar: calendarMessages,
   chart: chartMessages,
   chatbot: chatbotMessages,
   choice: choiceMessages,
+  codeBlock: codeBlockMessages,
   combobox: comboboxMessages,
   datePicker: datePickerMessages,
   dialog: dialogMessages,
   drawer: drawerMessages,
   fileUpload: fileUploadMessages,
   form: formMessages,
+  list: listMessages,
   metric: metricMessages,
   pagination: paginationMessages,
   progress: progressMessages,
+  rating: ratingMessages,
   select: selectMessages,
   sideNavigation: sideNavigationMessages,
   siteHeader: siteHeaderMessages,

@@ -145,7 +145,9 @@ describe('Relight waitlist form', () => {
     await submit()
     const button = screen.getByRole('button', { name: /Joining/ })
     expect(button.getAttribute('aria-busy')).toBe('true')
-    expect((button as HTMLButtonElement).disabled).toBe(true)
+    // Still focused and inert, not natively disabled.
+    expect(button.getAttribute('aria-disabled')).toBe('true')
+    expect((button as HTMLButtonElement).disabled).toBe(false)
     expect(screen.getByRole('status').textContent).toBe(COPY.busyStatus)
     await act(async () => finish(new Response('{"ok":true}', { status: 202 })))
     // Let the success path finish inside this test, so its note can't leak into the next.

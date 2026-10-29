@@ -18,6 +18,7 @@ const SECTIONS = [
   { id: 'why', label: 'Why we keep it' },
   { id: 'how-long', label: 'How long we keep it' },
   { id: 'who-helps', label: 'Who helps us' },
+  { id: 'screen-requests', label: 'Screen requests' },
   { id: 'rights', label: 'Your rights' },
   { id: 'contact', label: 'How to reach us' },
 ] as const
@@ -37,9 +38,9 @@ export default async function Privacy() {
       <p className="wp-eyebrow">Last updated {PRIVACY_UPDATED}</p>
       <h1 id="privacy-heading">Privacy</h1>
       <p className="wp-lede">
-        The DIYA library is code you install. It doesn’t collect anything or call home. The only personal details this
-        site keeps belong to people who join the waitlist for Relight, part of DIYA Pro, and this page says exactly
-        what those are.
+        The DIYA library is code you install. It doesn’t collect anything or call home. This site keeps personal details
+        in two places only: the waitlist for Relight, part of DIYA Pro, and the screen requests people send from the
+        Screens gallery. This page says exactly what those are.
       </p>
       <nav aria-label="On this page">
         <ul>
@@ -128,19 +129,67 @@ export default async function Privacy() {
           you load a page and keeps short-lived request logs.
         </li>
         <li>
-          <strong>Neon</strong> runs the database that holds the waitlist.
+          <strong>Neon</strong> runs the database that holds the waitlist and screen requests.
         </li>
         <li>
-          <strong>Postmark</strong> sends our emails. It keeps a copy of each message, your address included, for 45
-          days, and keeps addresses that bounce or report us as spam on a do-not-send list.
+          <strong>Postmark</strong> sends our emails, including the one that brings each screen request to us. It keeps a
+          copy of each message, your address included, for 45 days, and keeps addresses that bounce or report us as spam
+          on a do-not-send list.
+        </li>
+        <li>
+          <strong>Microsoft 365</strong> holds our email, including the copy of each screen request that comes to us.
         </li>
       </ul>
       <p>
-        Each one handles your details only to provide its service to us. We’re based in the United States and so are
-        they, so your details are stored and processed in the US. Each service’s data-processing terms say how it
+        Each one handles your details only to provide its service to us. We’re based in the United States, and these
+        services store and process your details in the US and the other countries where they run. Each service’s data-processing terms say how it
         protects personal data, including data from the EU and UK: {link('https://vercel.com/legal/dpa', 'Vercel')},{' '}
-        {link('https://neon.com/dpa', 'Neon')} and {link('https://postmarkapp.com/dpa', 'Postmark')}.
+        {link('https://neon.com/dpa', 'Neon')}, {link('https://postmarkapp.com/dpa', 'Postmark')} and{' '}
+        {link('https://www.microsoft.com/licensing/docs/view/Microsoft-Products-and-Services-Data-Protection-Addendum-DPA', 'Microsoft')}.
       </p>
+
+      <h2 id="screen-requests">Screen requests</h2>
+      <p>When you send a request from “Don’t see your screen?” in the Screens gallery, we keep:</p>
+      <ul>
+        <li>What you wrote, and the picture if you added one.</li>
+        <li>Your email address.</li>
+        <li>Which screen’s page you came from, if you followed a “Want this one?” link.</li>
+        <li>Whether you ticked “Also tell me when it’s ready”, and which version of this page was current then.</li>
+        <li>When you sent it, and when we replied.</li>
+        <li>
+          A keyed one-way scramble of your IP address, so one place can’t send too many requests. Never the IP address
+          itself. The form uses the same attempt counts and signed code as the waitlist, described above.
+        </li>
+      </ul>
+      <p>
+        Your browser shrinks the picture before it’s sent, which also leaves behind anything else the file carried, such
+        as where a photo was taken. Requests are private: nothing you send is shown on this site, and no page or link
+        serves your picture. Each request comes to us as one email, picture attached, so we can reply. Nothing is sent to
+        you when you send it.
+      </p>
+      <ul>
+        <li>
+          <strong>Why:</strong> to reply about your request, which needs your email address. That rests on our
+          legitimate interest in answering what you asked (Article 6(1)(f)). If you tick “Also tell me when it’s ready”,
+          we’ll also send one email when that screen is ready. That rests on your consent (Article 6(1)(a)), it’s
+          separate from the reply, and you can take it back any time by writing to us.
+        </li>
+        <li>
+          <strong>For how long:</strong> we delete the request, its picture and the email that brought it 90 days after
+          we reply, or 365 days after you sent it if we never do. If we close a request, as we would spam, it goes at
+          the next clean-up. The clean-up runs whenever someone sends a request, so on a quiet day it can happen a little
+          later. If you ticked “Also tell me when it’s ready”, we keep only your email address, which screen it was, the
+          version of this page you agreed to and the dates, until that screen ships or 2 years after your request,
+          whichever comes first. Your words and your picture still go on the schedule above.
+        </li>
+        <li>
+          <strong>Who helps:</strong> Vercel receives the request, Neon stores it, Postmark carries it to us and
+          Microsoft 365 holds that email, as described above.
+        </li>
+        <li>
+          <strong>To delete it sooner,</strong> write to {contact} from the address you used, and we’ll delete it.
+        </li>
+      </ul>
 
       <h2 id="rights">Your rights</h2>
       <p>Wherever you live, you can ask us to:</p>
@@ -209,8 +258,8 @@ export default async function Privacy() {
 
       <h2 id="children">Children</h2>
       <p>
-        The waitlist isn’t meant for anyone under 16. If you’re under 16, please don’t join. If we learn that someone
-        under 16 has, we’ll delete their details.
+        The waitlist and screen requests aren’t meant for anyone under 16. If you’re under 16, please don’t join or send
+        a request. If we learn that someone under 16 has, we’ll delete their details.
       </p>
 
       <h2 id="contact">How to reach us</h2>

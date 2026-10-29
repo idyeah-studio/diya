@@ -31,10 +31,11 @@ button on Menu, Popover and Tooltip, and to the root element everywhere else.
 | TextArea | `label`, `value`, `onValueChange` | `size`, `rows`, `maxLength`, `showCount`, `resizable`, `error`. |
 | Select | `label`, `options`, `value`, `onValueChange` | Native select keyboard behavior; `size`, `placeholder`, `helperText`, `error`, `disabled`. The native `onChange(event)` still works. |
 | DatePicker | `label`, `value`, `onValueChange` | One ISO date (`YYYY-MM-DD`, `''` for none); `range` uses `{start,end}` (`DateRange`). `size`, `error`, `disabled`. `label` is required. |
+| Calendar | `label`, `value`, `onValueChange` | DatePicker's month grid, always on the page. The same values and `range`; `min`, `max`, `isDateUnavailable`, `size`, `disabled`, `hideLabel`. `month` (`YYYY-MM`) with `onMonthChange` controls the month on show. |
 | Combobox | `label`, `options`, `value`, `onValueChange` | One value as a string (`''` for none); `multiple` uses a string array. `size`, `helperText`, `error`, `disabled`. |
-| Choice | `label`, `options`, `value`, `onValueChange` | Radios with a string by default; `multiple` gives checkboxes and a string array, and allows `selectAll`. An option's `description` shows whenever it has one; options can be `disabled`. `helperText`, `error`. |
+| Choice | `label`, `options`, `value`, `onValueChange` | Radios with a string by default; `multiple` gives checkboxes and a string array, and allows `selectAll`. An option's `label` can be a node, such as text with `TextLink`s or a color swatch; its `description` shows whenever it has one; options can be `disabled`. `helperText`, `error`. |
 | Switch | `label`, `checked`, `onCheckedChange` | A native checkbox with `role="switch"`; the ref is the `HTMLInputElement`. `defaultChecked`, `name`, `value` (sent while on), `size`, `helperText`, `error`, `hideLabel`, `disabled`. It uses the brand color when on. |
-| Slider | `label`, `value`, `onValueChange` | One number by default; `range` uses `[start, end]`. `min` (default 0), `max` (default 100), `step` (default 1), `showValues` (default on), `showMarks`, `hideLabel`, `disabled`. |
+| Slider | `label`, `value`, `onValueChange` | One number by default; `range` uses `[start, end]`. `min` (default 0), `max` (default 100), `step` (default 1), `showValues` (default on), `showMarks`, `formatValue`, `hideLabel`, `disabled`. |
 | Search | `label`, `value`, `onValueChange` | Rounded by default, like the other fields; `shape="pill"`, `clearable`, `size`; normal input attributes. |
 
 A controlled value updates only when your callback updates your React state.
@@ -57,11 +58,19 @@ and helper text together. Every other attribute, such as `name`, `required`,
 `autoComplete` or `data-*`, goes on the input itself.
 
 Slider shows its label above the track; `hideLabel` hides it visually and the
-inputs keep their accessible names.
+inputs keep their accessible names. `formatValue`, such as
+`(value) => '$' + value`, formats the numbers it shows (values and marks) and
+sets each handle's `aria-valuetext`, so screen readers hear "$40", not "40".
+
+A Choice option's `label` can be a node as well as a string. For a consent box,
+put `TextLink inline` in it: "I agree to the Terms and Privacy Policy" with real
+links. A link opens without toggling the box, Space still toggles it, and the
+links are their own Tab stops. The option is named by the label's text, so mark
+a color swatch `aria-hidden` and keep the color's name in words.
 
 ### One value or several
 
-Combobox, Choice, Slider and DatePicker take a value shaped like their mode.
+Combobox, Choice, Slider, DatePicker and Calendar take a value shaped like their mode.
 By default they hold one value; `multiple` switches to a list and `range` to a
 start/end pair.
 
@@ -84,6 +93,7 @@ const [teams, setTeams] = useState<string[]>([])
 | Choice | `value: string` (radios) | `multiple`: `value: string[]` (checkboxes) |
 | Slider | `value: number` | `range`: `value: [number, number]` |
 | DatePicker | `value: string` (ISO date) | `range`: `value: DateRange` (`{ start, end }`) |
+| Calendar | `value: string` (ISO date) | `range`: `value: DateRange` (`{ start, end }`) |
 
 ```tsx
 import { DatePicker, type DateRange } from '@idyeah/diya'
@@ -109,8 +119,9 @@ const mode = many
 
 **Wrapping a field.** Each mode has its own exported type:
 `ComboboxSingleProps`/`ComboboxMultipleProps`, `ChoiceSingleProps`/
-`ChoiceMultipleProps`, `SliderSingleProps`/`SliderRangeProps` and
-`DatePickerSingleProps`/`DatePickerRangeProps`. Build a wrapper on the one you
+`ChoiceMultipleProps`, `SliderSingleProps`/`SliderRangeProps`,
+`DatePickerSingleProps`/`DatePickerRangeProps` and
+`CalendarSingleProps`/`CalendarRangeProps`. Build a wrapper on the one you
 need. `Omit` on the combined `ComboboxProps` loses the link between `multiple`
 and `value`.
 
@@ -128,8 +139,40 @@ Escape dismissal and multiple-selection removal. Date Picker supports
 calendar keyboard navigation and Escape: the month grid is one Tab stop, and
 arrows, Home/End and PageUp/PageDown move within it. Weeks start on the
 locale's first day, and `min` and `max` disable (and announce) the days
-outside them. Popups preserve the provider's
-appearance and stay within an open dialog's focus boundary.
+outside them. `isDateUnavailable` marks any other day the same way: it is
+announced and can't be chosen, and the arrows still move through it. The month
+follows the ARIA date grid pattern: a `grid` named by the month, weekday column
+headers with full names, a row per week, and each day a `gridcell` with
+`aria-selected` when chosen (every day of a chosen range) and
+`aria-current="date"` on today. Each day's name includes its weekday in the
+provider's locale ("Thursday, November 12, 2026" in `en-US`), and an
+unavailable day says so in words ("…, unavailable") as well as through
+`aria-disabled`; the `unavailableDay` message in `calendar` and `datePicker`
+changes that wording. Popups
+preserve the provider's appearance and stay within an open dialog's focus
+boundary.
+
+Calendar is the same month grid, kept on the page, with the same keyboard: the
+month buttons, then one day as a Tab stop. Use it where picking the day is the
+screen's main job, such as booking a time. It has no surface of its own, so it
+sits on a Card or straight on the page, and its days are as tall as a field of
+the same `size`.
+
+```tsx
+import { Calendar } from '@idyeah/diya'
+
+const [day, setDay] = useState('')
+const [month, setMonth] = useState('2026-11')  // load that month's open slots
+<Calendar
+  label="Pick a day"
+  value={day}
+  onValueChange={setDay}
+  month={month}
+  onMonthChange={setMonth}
+  min={today}
+  isDateUnavailable={(date) => !openDays.has(date)}
+/>
+```
 
 Keep form field sizes consistent: use the same `size` (for example
 `size="medium"`) on every field. Helper text and multiline fields naturally add
@@ -155,14 +198,30 @@ trigger focus; Tab leaves according to the trigger's document position.
 | --- | --- | --- |
 | Tag | `label`, children | `tone`: neutral/brand/success/warning/error/info; `leading="dot"`, `size`, optional `onRemove`. |
 | Metric | `value`, optional `label` | `unit`, `size`, `change` with direction/meaning/comparison; a positive or negative change shows as a tinted chip. Figures are tabular. Values are display strings. |
+| Rating | `value` | Read-only stars from 0 to `max` (default 5). `count` shows the number of reviews after the stars, as `(128)`; `showValue` shows the rating as a number before them, as `4.3`; `size`. |
 | Avatar | `name` | `src`, `size`, `shape`, `status`; initials fallback if the image fails. |
-| List | `label`, `items` | `divided`, `size`; items can have description, leading/trailing content, `onSelect`, disabled. |
+| List | `label`, `items` | `divided`, `size`; items can have description, leading/trailing content, `onSelect`, disabled. For an inbox, `current` marks the open item (`aria-current="true"` and a selected background) and `unread` gives a heavier label, a dot at the row's end, and "unread" after the label for screen readers. |
 | Accordion | `items: {id,label,content}[]` | `multiple`, `divided`, `disabled`; expansion is managed internally. |
 | Badge | `label` | `variant`: indicator/count; `tone`, `size`, `count`, `max` (default 99, shows `99+`), `showZero`. |
 | Alert | `title`, children | `layout`: card/banner; `tone`: info/success/warning/error/brand; optional action and `onDismiss`; `urgent` for urgent announcements. |
 | Progress | `label`, optional `value` | `variant`: linear/circular; `showValue` (default on). Value is 0–100. Without a `value` it is indeterminate: working, amount unknown. `indeterminate` forces that state. |
 | Tooltip | `content`, your trigger as the child | Wraps one element, such as `<Button iconOnly aria-label="Delete">`, and wires hover, focus and its description. Or give `label` and noninteractive children for a built-in trigger. `placement`; closes with Escape. |
 | Popover | `label`, children | Plain content, or `close => content` to close it from your own controls. `trigger` takes your own element; `open` with `onOpenChange` controls it. `placement`, `disabled`. |
+| Prose | children | Your own HTML in DIYA's type: headings, paragraphs, links, lists, quotes, code, tables and images. `size`: small (15px, inside an app)/medium (default, 17px, articles and docs)/large (20px, long reads). Renders a `div`. Needs no provider context. |
+| CodeBlock | `code` | `label` names it, such as `'TypeScript'` or `'app/page.tsx'`. Copy writes to the clipboard and announces the result; long lines scroll sideways in a region the keyboard can reach. No syntax colors. |
+
+Rating shows a rating; it doesn't collect one. Its stars fill to the nearest
+half, so 4.3 shows four and a half stars, while the number (`showValue`) and
+the accessible name keep one decimal. Values outside 0 to `max` are clamped,
+and one that isn't a number shows as 0. Screen readers hear one phrase, such
+as "Rated 4.3 out of 5, 128 reviews"; the `rating` messages change its words,
+and the provider's `locale` formats its numbers. The stars are neutral, in the
+text color. To ask people for a rating, as in a survey, use Choice with 1 to 5
+as its options.
+
+```tsx
+<Rating value={4.3} count={128} showValue />
+```
 
 Tag, Badge, Alert and Toast share one `Tone` type:
 `'neutral' | 'brand' | 'success' | 'warning' | 'error' | 'info'`. Alert and
@@ -173,6 +232,27 @@ Toast take `AlertTone`, which is every tone except `neutral`.
 `showClose={false}` hides the close button on a toast without an action. It
 pauses automatic dismissal during hover/focus. Avoid putting critical,
 time-sensitive instructions only in a toast.
+
+**Long-form content:** wrap articles, docs pages, changelog entries and legal
+pages in `Prose`. It styles the plain elements inside it and only spaces any
+DIYA component you place there, such as a `CodeBlock` or a `Card`, so those
+keep their own look. It renders a `div`, so put it inside your own `article`
+or `main`. HTML you render yourself, from Markdown for example, goes in through
+`dangerouslySetInnerHTML`. Prose never runs sideways on a phone: long words and
+links wrap, a plain `pre` wraps its lines, and table cells wrap. To let a wide
+table scroll instead, wrap it in an element with `role="region"`, an
+`aria-label` and `tabIndex={0}`. For code people copy, use `CodeBlock`; with
+MDX, map `pre` to it.
+
+```tsx
+<article>
+  <Prose>
+    <h1>Release notes</h1>
+    <p>Two new components for long-form content.</p>
+    <CodeBlock label="Shell" code="npm install @idyeah/diya" />
+  </Prose>
+</article>
+```
 
 **Composition limits:** List uses a button for selectable rows, so that row's
 leading/trailing slots must be noninteractive. Use separate controls outside
@@ -202,6 +282,10 @@ not communicate status. Icon-only buttons need their own `aria-label`.
   `type="submit"` explicitly in a form.
 - **Loading and disabled:** set these while a real operation runs, and clear
   loading on both success and failure. Keep a field's `error` text actionable.
+  A loading Button keeps focus and is inert (`aria-disabled="true"` and
+  `aria-busy`; clicks, Enter and Space do nothing, so it can't submit twice),
+  so a focused Save or Send doesn't drop focus while it works. `disabled` sets
+  the native attribute and takes the button out of the tab order.
 - **Icons:** any React icon can go in an icon slot. Give icon-only buttons an
   `aria-label`, and hide decorative SVGs from assistive technology.
 - **Slots:** omitted Page Header and Card slots collapse. Put real controls in
@@ -225,5 +309,5 @@ not communicate status. Icon-only buttons need their own `aria-label`.
 | A chart is blank | Supply matching `categories` and `series`, or positive `pie`/`donut`/`treemap` data, and give its container a width. |
 | The font hasn't changed | DIYA Sans loads from `dist/fonts` beside `styles.css`; your bundler copies it. For another font, load it yourself and check the family name in `fontFamily`. |
 | Glass looks solid | Check the backdrop behind it, browser support and the reader's transparency setting. |
-| A button stays disabled | Clear `loading` on success and on failure. |
+| A button stays disabled or busy | Clear `loading` on success and on failure. |
 | An event handler errors in Next.js | Functions can't be passed from a Server Component. Move the component into a file that starts with `'use client'`. |

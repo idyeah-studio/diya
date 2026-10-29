@@ -1,4 +1,6 @@
-/** Everything the catalog lists, in sidebar order. Search reads both areas. */
+import { CATEGORIES, screens } from '../screens/screens-data'
+
+/** Everything the catalog lists, in sidebar order. Search reads every area. */
 export const componentGroups = [
   { title: 'Inputs', items: [
     { id: 'button', title: 'Button', keywords: 'action icon button' },
@@ -6,6 +8,7 @@ export const componentGroups = [
     { id: 'text-area', title: 'Text Area', keywords: 'textarea multiline field' },
     { id: 'select', title: 'Select', keywords: 'dropdown combobox picker' },
     { id: 'date-picker', title: 'Date Picker', keywords: 'date calendar range' },
+    { id: 'calendar', title: 'Calendar', keywords: 'date day month booking schedule agenda availability range' },
     { id: 'combobox', title: 'Combobox', keywords: 'search select multiple multiselect' },
     { id: 'choice', title: 'Choice', keywords: 'radio checkbox single multiple' },
     { id: 'switch', title: 'Switch', keywords: 'toggle boolean on off' },
@@ -22,9 +25,12 @@ export const componentGroups = [
   { title: 'Content', items: [
     { id: 'tag', title: 'Tag', keywords: 'label chip removable' },
     { id: 'metric', title: 'Metric', keywords: 'number statistic trend delta value' },
+    { id: 'rating', title: 'Rating', keywords: 'stars reviews score product feedback' },
     { id: 'avatar', title: 'Avatar', keywords: 'profile image initials user' },
     { id: 'list', title: 'List', keywords: 'rows items divider' },
     { id: 'accordion', title: 'Accordion', keywords: 'expand collapse disclosure faq' },
+    { id: 'prose', title: 'Prose', keywords: 'article docs markdown typography blog changelog terms long-form text' },
+    { id: 'code-block', title: 'Code Block', keywords: 'code snippet copy clipboard pre monospace' },
   ] },
   { title: 'Feedback', items: [
     { id: 'badge', title: 'Badge', keywords: 'indicator count status dot' },
@@ -61,7 +67,15 @@ export const patternGroups = [
   ] },
 ] as const
 
-export type CatalogListArea = 'components' | 'patterns'
+/** Every screen, by category. Which of them a build lists is the sidebar's call (see CatalogSearchProvider). */
+export const screenGroups = CATEGORIES.map((category) => ({
+  title: category,
+  items: screens
+    .filter((screen) => screen.category === category)
+    .map((screen) => ({ id: screen.id, title: screen.name, keywords: screen.keywords })),
+}))
+
+export type CatalogListArea = 'components' | 'patterns' | 'screens'
 export type ComponentId = (typeof componentGroups)[number]['items'][number]['id']
 export type PatternId = (typeof patternGroups)[number]['items'][number]['id']
 
@@ -70,10 +84,19 @@ type Group = { title: string; items: readonly { id: string; title: string; keywo
 export const catalogGroups: Record<CatalogListArea, readonly Group[]> = {
   components: componentGroups,
   patterns: patternGroups,
+  screens: screenGroups,
 }
 
 export function catalogHref(area: CatalogListArea, id: string) {
+  if (area === 'screens') return `/explore?area=screens&screen=${id}`
   return area === 'components' ? `/explore?area=components&component=${id}` : `/explore?pattern=${id}`
+}
+
+/** Only the items in `ids`; groups left empty drop out. */
+export function onlyItems(groups: readonly Group[], ids: ReadonlySet<string>) {
+  return groups
+    .map((group) => ({ ...group, items: group.items.filter((item) => ids.has(item.id)) }))
+    .filter((group) => group.items.length > 0)
 }
 
 /** Groups whose items match every word of `query`: title, keywords and, unless `byGroup` is false, the group's title. */

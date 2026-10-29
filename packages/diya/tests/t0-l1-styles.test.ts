@@ -89,4 +89,14 @@ describe('tokens', () => {
     expect(dark['--diya-radius-control']).toBe('calc(6px * var(--diya-corner-scale, 1))')
     expect([1, 2, 3, 4, 5, 6, 7, 8].map(step => dark[`--diya-space-${step}`])).toEqual(['4px', '8px', '12px', '16px', '24px', '32px', '48px', '64px'])
   })
+
+  it('defines the scrim in Light and Dark, not only under Glass, and dims Dialog and Drawer with it', () => {
+    // Unset, var(--diya-color-scrim) was empty outside Glass, so overlays and shadows built on it failed.
+    expect(dark['--diya-color-scrim']).toBe('#00000088')
+    expect(light['--diya-color-scrim']).toBe('#00000088')
+    for (const owner of ['diya-dialog', 'diya-drawer-modal']) {
+      const backdrop = bare.match(new RegExp(`\\.diya-root \\.${owner}::backdrop \\{([^}]*)\\}`))?.[1]
+      expect(backdrop?.replace(/\s/g, ''), owner).toContain('background:var(--diya-color-scrim,#0008)')
+    }
+  })
 })

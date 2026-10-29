@@ -10,7 +10,7 @@ First public release, under the MIT License.
 
 ### Added
 
-- 25 React components and 13 patterns. `Chart` and `DataViz` are exported from
+- 29 React components and 13 patterns. `Chart` and `DataViz` are exported from
   `@idyeah/diya/charts` and render with the optional `echarts` peer dependency;
   everything else is exported from `@idyeah/diya`.
 - `DiyaProvider` with Light, Dark and Glass appearances, brand color, font,
@@ -23,6 +23,11 @@ First public release, under the MIT License.
   entry has no `'use client'` directive, so `defaultMessages` and types can be
   imported in Server Components, and each interactive component carries its own
   directive.
+- `Prose` sets your own long-form HTML (articles, docs pages, changelogs and
+  legal pages) in DIYA's type and rhythm, at three sizes, and leaves DIYA
+  components inside it as they are. `CodeBlock` shows code with a Copy button
+  that announces its result, and long lines scroll in a region the keyboard
+  can reach.
 - `Stack` and `Inline` layout primitives, with `gap` on a public spacing scale
   (`--diya-space-1` to `--diya-space-8`), `align`, `justify`, `wrap` and `as`.
 - Every component takes `className`, `style` and its root element's other
@@ -45,6 +50,11 @@ First public release, under the MIT License.
   Navigation, Breadcrumbs, Site Header and Menu items with an `href` are real
   links (`aria-current="page"` on the current one).
 - Button `variant="destructive"`, and Dialog `confirmVariant="destructive"`.
+- A loading Button keeps focus: it is `aria-disabled="true"` and `aria-busy`
+  rather than natively disabled, and ignores clicks, Enter and Space, so a
+  focused Save or Send stays focused while it works and still can't submit
+  twice. Form's Submit, Dialog's confirm and Wizard's Continue follow.
+  `disabled` is still the native attribute.
 - Menu and Popover take your own `trigger` element and a controlled `open`
   with `onOpenChange`; Popover content can be a plain node. Dialog takes a
   `trigger`. Tooltip wraps your own trigger, such as an icon-only Button.
@@ -52,9 +62,25 @@ First public release, under the MIT License.
   (`defaultValue`, `defaultChecked`) and reset with their form, and pass native
   `name`, `onChange` and `onBlur` through, so react-hook-form's `register()`
   works without a `Controller`. Combobox and DatePicker take `name`.
+- A Choice option's `label` takes a node, not only a string: a consent box
+  with real Terms and Privacy Policy links (a link opens without toggling the
+  box), or a color swatch beside a color's name.
+- Slider takes `formatValue`, such as `(value) => '$' + value`: it formats the
+  values and marks it shows and sets each handle's `aria-valuetext`, both
+  handles in range mode.
 - Slider takes `min`, `max` and `step`. DatePicker takes `min` and `max`, keeps
   one Tab stop in its calendar (arrows, Home/End and PageUp/PageDown move), and
   starts weeks on the locale's first day.
+- `Calendar`, the month grid DatePicker opens, kept on the page: for screens
+  like booking a time or a day's agenda. It shares DatePicker's code, keyboard,
+  `value` and `range` shapes, `min` and `max`, and adds a controlled `month`
+  (`YYYY-MM`) with `onMonthChange`. Calendar and DatePicker take
+  `isDateUnavailable` to mark days that can't be chosen, such as days with no
+  open slots. Both follow the ARIA date grid pattern: a grid named by its
+  month, weekday column headers, gridcells with `aria-selected` on chosen days
+  and `aria-current="date"` on today. Each day's name includes its weekday
+  ("Thursday, November 12, 2026"), and an unavailable day says so in words,
+  through the `unavailableDay` message.
 - `headingLevel` on every pattern that renders a heading; Form's `title` is
   optional.
 - Pagination fits at 320 to 390px.
@@ -77,6 +103,9 @@ First public release, under the MIT License.
   sit over a dimming layer. `prefers-reduced-transparency` and
   `prefers-contrast: more` get solid surfaces. A pill Tabs track is a capsule
   like its thumb.
+- `--diya-color-scrim` is set in Light and Dark (`#00000088`), not only under
+  Glass, so an overlay or shadow built on it works everywhere. Dialog and
+  Drawer share it, so a Drawer dims the page as much as a Dialog.
 - Button is a pill by default; `shape="rounded"` keeps the control corner.
   Pattern actions, Menu and Popover triggers and Table filters follow.
 - `--diya-radius-surface`, the one corner Card, chart cards, Page Header, Form
@@ -85,9 +114,43 @@ First public release, under the MIT License.
 - Figures are tabular: Metric, Table numbers, chart data and Progress line up
   digit for digit, in DIYA Sans's own 0 and 1. A positive or negative
   `Metric` change shows as a tinted chip.
+- `Rating`, read-only stars for products, places and reviews. The stars fill
+  to the nearest half of `value` (out of `max`, 5 by default); `count` adds
+  the number of reviews and `showValue` the rating as a number. Screen readers
+  hear one phrase, such as "Rated 4.3 out of 5, 128 reviews".
 - `DataViz`'s `formatValue` labels the value axis too, and grid lines run
   along the value axis only.
 - A `List` inside a `Card` or `Drawer` lines up with its title.
+- `Form`, `Card`, `Drawer`, `Dialog`, `Wizard`, `Accordion`, `Table` and
+  `Chatbot` style their own parts and your plain elements, never a DIYA
+  component placed inside them: an `Alert` in a sign-in `Form` keeps its title
+  color and spacing, a `Card` or `Form` in a `Drawer` or `Dialog` keeps its own
+  header and footer, and a `Switch` in a `Table` cell stays a switch.
+- `List` items take `current`, for the open item (`aria-current="true"` and a
+  selected background), and `unread`: a heavier label, a dot at the row's end,
+  and "unread" after the label for screen readers (`messages.list.unread`).
+- Side Navigation items take `count`, a quiet number after the label. Above 99
+  it shows `99+`; collapsed, a dot on the icon stands in for it. The item's
+  accessible name keeps the real count, "Inbox, 12"
+  (`messages.sideNavigation.count`).
+- Side Navigation takes `footer`, for an account or workspace Menu pinned to
+  the bottom of a full-height navigation, and `collapsedFooter` for the rail
+  (it defaults to `footer`), following `brand` and `collapsedBrand`. A Menu,
+  Avatar or Button in either slot keeps its own look.
+- A `layout="full-page"` Chatbot fills its container's height: the header and
+  composer stay put and the thread scrolls between them, following the latest
+  message. A height set on any Chatbot is filled the same way; without one,
+  the thread keeps its 280px (380px full-page).
+- Chatbot `showHeader={false}` hides its header for a screen that has its own
+  heading; `title` still names the chat region and its message log.
+- A streaming Chatbot reply replaces "Preparing a response…": the line shows
+  only until the reply's first words arrive. The reply gets its Copy button
+  once it is complete or stopped.
+- A person's Chatbot message is as wide as its text, up to 90% of the thread,
+  in every layout.
+- A tall Chatbot `welcome` stays at its top on a short screen; the thread
+  follows the conversation from the first message. `diya-chat-welcome-title`
+  styles the welcome's heading at any level, as a plain `h3` is styled.
 - `npm create diya@latest` (the `create-diya` package, released with this one
   on the same version) starts a Next.js or Vite app with the provider, styles
   and agent notes in place, from Minimal or from Oriel, a four-screen

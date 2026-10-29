@@ -24,7 +24,7 @@ export function CatalogFrame({
   path: string
   children: ReactNode
 }) {
-  const current = area === 'components' || area === 'patterns' ? area : undefined
+  const current = area === 'components' || area === 'patterns' || area === 'screens' ? area : undefined
   return (
     <div className="catalog-frame" data-area={area}>
       <CatalogHead title={title} path={path} />

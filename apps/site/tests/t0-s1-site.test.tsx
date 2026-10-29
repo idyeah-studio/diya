@@ -26,7 +26,7 @@ describe('the phone catalog sheet', () => {
     await user.click(key)
     const sheet = screen.getByRole('dialog', { name: 'Components' })
     expect(sheet.getAttribute('aria-modal')).toBe('true')
-    expect(within(within(sheet).getByRole('navigation', { name: 'Choose a component' })).getAllByRole('link')).toHaveLength(25)
+    expect(within(within(sheet).getByRole('navigation', { name: 'Choose a component' })).getAllByRole('link')).toHaveLength(29)
     expect(document.activeElement).toBe(within(sheet).getByRole('searchbox', { name: 'Search components' }))
     expect(document.documentElement.dataset.catalogSheet).toBe('open')
     await user.keyboard('{Escape}')

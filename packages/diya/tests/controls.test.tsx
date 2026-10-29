@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
-import { Choice, DiyaProvider, Pagination, Search, Select, Slider, Switch, TextArea, TextInput } from '../dist/index.js'
+import { Choice, DiyaProvider, Pagination, Search, Select, Slider, Switch, TextArea, TextInput, TextLink } from '../dist/index.js'
 
 describe('portable field contracts', () => {
   it('uses native input attributes, updates customer state and clears without submitting', async () => {
@@ -254,6 +254,73 @@ describe('portable field contracts', () => {
     fireEvent.change(slider, { target: { value: '65' } })
     expect(changes).toHaveBeenLastCalledWith(65)
     expect(slider.value).toBe('65')
+  })
+
+  it('takes a node as an option label: links open without toggling, and the name is the label\'s text', async () => {
+    const user = userEvent.setup()
+    const changes = vi.fn()
+    const opened = vi.fn((event: { preventDefault: () => void }) => event.preventDefault())
+    render(
+      <DiyaProvider>
+        <Choice label="Consent" multiple onValueChange={changes} options={[
+          { value: 'agree', label: <>I agree to the <TextLink href="/terms" inline onClick={opened}>Terms</TextLink> and <TextLink href="/privacy" inline onClick={opened}>Privacy Policy</TextLink></> },
+          { value: 'news', label: 'Send me news' },
+        ]} />
+        <Choice label="Color" defaultValue="red" options={[
+          { value: 'red', label: <><span aria-hidden="true" className="swatch" />Red</> },
+          { value: 'blue', label: <><span aria-hidden="true" className="swatch" />Blue</> },
+        ]} />
+      </DiyaProvider>
+    )
+    const agree = screen.getByRole('checkbox', { name: 'I agree to the Terms and Privacy Policy' }) as HTMLInputElement
+    await user.click(screen.getByRole('link', { name: 'Terms' }))
+    expect(opened).toHaveBeenCalledTimes(1)
+    expect(agree.checked).toBe(false)
+    expect(changes).not.toHaveBeenCalled()
+    await user.click(screen.getByText('Send me news'))
+    expect(changes).toHaveBeenLastCalledWith(['news'])
+    // Keyboard: Space toggles the box; Tab then reaches the links, which are their own stops.
+    agree.focus()
+    await user.keyboard(' ')
+    expect(agree.checked).toBe(true)
+    expect(changes).toHaveBeenLastCalledWith(['agree', 'news'])
+    await user.tab()
+    expect(document.activeElement).toBe(screen.getByRole('link', { name: 'Terms' }))
+    // A swatch is hidden, so the radio is named by its word.
+    expect((screen.getByRole('radio', { name: 'Red' }) as HTMLInputElement).checked).toBe(true)
+    expect(screen.getByRole('radio', { name: 'Blue' })).toBeTruthy()
+  })
+
+  it('formats the shown values, the marks and both handles\' aria-valuetext with formatValue', () => {
+    const dollars = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
+    function Example() {
+      const [value, setValue] = useState<[number, number]>([200, 800])
+      return <DiyaProvider><Slider label="Price" range min={0} max={1000} step={50} showMarks formatValue={dollars} value={value} onValueChange={setValue} /></DiyaProvider>
+    }
+    const { container } = render(<Example />)
+    const start = screen.getByRole('slider', { name: 'Price minimum' })
+    const end = screen.getByRole('slider', { name: 'Price maximum' })
+    expect(start.getAttribute('aria-valuetext')).toBe('$200')
+    expect(end.getAttribute('aria-valuetext')).toBe('$800')
+    expect([...container.querySelectorAll('.diya-slider-values span')].map((node) => node.textContent)).toEqual(['$200', '$800'])
+    expect([...container.querySelectorAll('.diya-slider-marks span')].map((node) => node.textContent)).toEqual(['$0', '$250', '$500', '$750', '$1,000'])
+    // The value attribute stays a plain number for forms; only the announced text is formatted.
+    fireEvent.change(end, { target: { value: '950' } })
+    expect((end as HTMLInputElement).value).toBe('950')
+    expect(end.getAttribute('aria-valuetext')).toBe('$950')
+    expect(container.querySelector('.diya-slider-values')!.textContent).toBe('$200$950')
+  })
+
+  it('formats a single, uncontrolled slider and leaves aria-valuetext alone without formatValue', () => {
+    const view = render(<DiyaProvider><Slider label="Tip" defaultValue={15} formatValue={(value) => `${value}%`} /></DiyaProvider>)
+    const slider = screen.getByRole('slider', { name: 'Tip' })
+    expect(slider.getAttribute('aria-valuetext')).toBe('15%')
+    fireEvent.change(slider, { target: { value: '20' } })
+    expect(slider.getAttribute('aria-valuetext')).toBe('20%')
+    view.unmount()
+    render(<DiyaProvider><Slider label="Volume" defaultValue={40} aria-valuetext="Medium" /></DiyaProvider>)
+    expect(screen.getByRole('slider', { name: 'Volume' }).getAttribute('aria-valuetext')).toBe('Medium')
+    expect(screen.getByText('40')).toBeTruthy()
   })
 
   it('reports page and page-size changes to the host', async () => {

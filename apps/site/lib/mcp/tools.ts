@@ -27,7 +27,8 @@ const SYNONYMS: Record<string, string[]> = {
   multiselect: ['combobox'], pick: ['select', 'combobox', 'choice'], choose: ['select', 'combobox', 'choice'], option: ['select', 'choice'],
   country: ['combobox'], timezone: ['combobox'], currency: ['select'],
   input: ['text-input'], field: ['text-input'], textfield: ['text-input'], email: ['text-input'], password: ['text-input'],
-  textarea: ['text-area'], multiline: ['text-area'], calendar: ['date-picker'], date: ['date-picker'], daterange: ['date-picker'],
+  textarea: ['text-area'], multiline: ['text-area'], calendar: ['calendar', 'date-picker'], date: ['date-picker'], daterange: ['date-picker'],
+  day: ['calendar', 'date-picker'], booking: ['calendar'], appointment: ['calendar'], availability: ['calendar'], agenda: ['calendar'], schedule: ['calendar'],
   range: ['slider', 'date-picker'], sidebar: ['side-navigation'], nav: ['side-navigation', 'site-header'],
   navigation: ['side-navigation', 'site-header'], navbar: ['site-header'], topbar: ['site-header'], header: ['site-header', 'page-header'],
   title: ['page-header'], snackbar: ['toast'], notification: ['toast', 'alert'], banner: ['alert'], callout: ['alert'],
@@ -42,7 +43,10 @@ const SYNONYMS: Record<string, string[]> = {
   theme: ['diya-provider'], provider: ['diya-provider'], dark: ['diya-provider'], brand: ['diya-provider'],
   settings: ['form', 'switch', 'choice'], profile: ['form', 'avatar'], login: ['form', 'text-input'], signup: ['form', 'text-input'],
   user: ['avatar'], dashboard: ['metric', 'data-viz', 'table', 'side-navigation'], action: ['button'], cta: ['button'],
-  submit: ['button', 'form'], save: ['button'], tile: ['card'],
+  submit: ['button', 'form'], save: ['button'], tile: ['card'], star: ['rating'], stars: ['rating'], review: ['rating'],
+  reviews: ['rating'], score: ['rating', 'metric'], article: ['prose'], markdown: ['prose'], typography: ['prose'],
+  docs: ['prose'], blog: ['prose'], changelog: ['prose'], terms: ['prose'], snippet: ['code-block'], pre: ['code-block'],
+  clipboard: ['code-block'], monospace: ['code-block'],
 }
 
 /** Things people ask for that DIYA doesn't have, with the honest answer. */

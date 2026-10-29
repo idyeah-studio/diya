@@ -2,9 +2,12 @@
 import { useRef, useState } from 'react'
 import {
   Accordion,
+  Avatar,
   Chatbot,
   Dialog,
+  Inline,
   List,
+  Menu,
   SideNavigation,
   Switch,
   type ChatMessage,
@@ -17,6 +20,8 @@ type Props = {
   showTimestamps: boolean
   collapsed: boolean
   groups: boolean
+  /** Side Navigation item counts. */
+  counts?: boolean
 }
 export function ApplicationPreview(p: Props) {
   const [value, setValue] = useState(''),
@@ -32,8 +37,8 @@ export function ApplicationPreview(p: Props) {
     { id: 'avyra', label: 'Avyra', description: 'Onboarding review · Samira Chen' },
     { id: 'kelmio', label: 'Kelmio', description: 'Reporting walkthrough · Eli Brooks' },
   ]
-  if (p.pattern === 'chatbot')
-    return (
+  if (p.pattern === 'chatbot') {
+    const chat = (
       <Chatbot
         title="Project assistant"
         description="A conversation pattern for your app."
@@ -84,11 +89,27 @@ export function ApplicationPreview(p: Props) {
         }}
       />
     )
+    // Full-page fills the height it is given: here, a frame about the height of the screen.
+    return p.layout === 'Full-page' ? <div className="catalog-chat-page">{chat}</div> : chat
+  }
+  const count = (value: number) => (p.counts ? value : undefined)
+  const account = (
+    <Menu
+      label="Account for Alex Morgan"
+      triggerIcon={<Avatar name="Alex Morgan" size="small" />}
+      items={[
+        { id: 'profile', label: 'View profile', onSelect: () => setSection('people') },
+        { id: 'settings', label: 'Account settings', onSelect: () => setSection('settings') },
+      ]}
+    />
+  )
   return (
     <div className="catalog-navigation-demo">
       <SideNavigation
         brand="Veylo"
         collapsedBrand="v."
+        footer={<Inline gap={2}>{account}<span>Alex Morgan</span></Inline>}
+        collapsedFooter={account}
         collapsed={p.collapsed}
         showGroups={p.groups}
         value={section}
@@ -98,8 +119,8 @@ export function ApplicationPreview(p: Props) {
             id: 'work',
             label: 'Work',
             items: [
-              { value: 'projects', label: 'Projects', icon: <Icon name="layers" /> },
-              { value: 'activity', label: 'Activity', icon: <Icon name="activity" /> },
+              { value: 'projects', label: 'Projects', icon: <Icon name="layers" />, count: count(4) },
+              { value: 'activity', label: 'Activity', icon: <Icon name="activity" />, count: count(128) },
               { value: 'people', label: 'People', icon: <Icon name="users" /> },
             ],
           },

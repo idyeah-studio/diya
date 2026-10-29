@@ -1,21 +1,28 @@
 import type { ConfirmResult, Signup, SignupInput, TokenPurpose, WaitlistStore } from './store'
 import { ATTEMPT_RETENTION_MS } from './config'
 
+export type Attempt = { keyHash: string; at: Date }
+
+/** countAttempt in memory: records one attempt and counts the key's attempts inside the window, pruning old ones. */
+export function countAttemptIn(attempts: Attempt[], keyHash: string, windowMs: number, now: Date) {
+  const prune = now.getTime() - ATTEMPT_RETENTION_MS
+  for (let i = attempts.length - 1; i >= 0; i--) if (attempts[i].at.getTime() < prune) attempts.splice(i, 1)
+  attempts.push({ keyHash, at: now })
+  const since = now.getTime() - windowMs
+  return attempts.filter((a) => a.keyHash === keyHash && a.at.getTime() > since).length
+}
+
 type Token = { signupId: string; purpose: TokenPurpose; expiresAt: Date | null; usedAt: Date | null }
 
 /** The list in memory, for tests and local development. Same rules as the Neon store. */
 export class MemoryWaitlistStore implements WaitlistStore {
   readonly signups = new Map<string, Signup>()
   readonly tokens = new Map<string, Token>()
-  readonly attempts: { keyHash: string; at: Date }[] = []
+  readonly attempts: Attempt[] = []
   private nextId = 1
 
   async countAttempt(keyHash: string, windowMs: number, now: Date) {
-    const prune = now.getTime() - ATTEMPT_RETENTION_MS
-    for (let i = this.attempts.length - 1; i >= 0; i--) if (this.attempts[i].at.getTime() < prune) this.attempts.splice(i, 1)
-    this.attempts.push({ keyHash, at: now })
-    const since = now.getTime() - windowMs
-    return this.attempts.filter((a) => a.keyHash === keyHash && a.at.getTime() > since).length
+    return countAttemptIn(this.attempts, keyHash, windowMs, now)
   }
 
   async findByEmail(email: string) {

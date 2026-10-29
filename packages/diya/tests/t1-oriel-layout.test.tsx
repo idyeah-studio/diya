@@ -7,6 +7,7 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { render } from '@testing-library/react'
 import { Card, DiyaProvider, Table, type TableColumn } from '../dist/index.js'
+import { splitSelectors } from '../scripts/styles-transform.mjs'
 
 const root = process.cwd()
 const strip = (text: string) => text.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -16,7 +17,7 @@ const dist = strip(readFileSync(resolve(root, 'dist/styles.css'), 'utf8'))
 /** Every declaration block whose selector list includes `selector` exactly. */
 function rulesFor(css: string, selector: string) {
   return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-    .filter(([, selectors]) => selectors.split(',').some((part) => part.trim() === selector))
+    .filter(([, selectors]) => splitSelectors(selectors).includes(selector))
     .map(([, , body]) => body)
 }
 
@@ -50,7 +51,8 @@ describe('Card fills its container', () => {
 describe('Table fits a phone', () => {
   it('sets no min-width on the table element in the source or the shipped stylesheet', () => {
     for (const css of [source, dist]) {
-      const rules = rulesFor(css, '.diya-root .diya-table table')
+      // Table's rules end in the guard that keeps them off components placed in its cells.
+      const rules = rulesFor(css, ".diya-root .diya-table table:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *))")
       expect(rules.length).toBeGreaterThan(0)
       for (const body of rules) expect(body).not.toMatch(/min-width/)
     }

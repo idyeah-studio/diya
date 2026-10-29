@@ -18,3 +18,6 @@ next-env.d.ts
 # macOS duplicate files
 * 2.*
 * 3.*
+
+# The Screens preview frame, built by apps/site (pnpm --filter diya-site build:frame)
+/apps/site/public/screens-frame/

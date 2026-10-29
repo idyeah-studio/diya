@@ -18,7 +18,13 @@ import {
 } from './islands'
 import { LandingStyles } from './LandingStyles'
 import { OrielBand } from './OrielBand'
+import { screens } from '../screens/screens-data'
 import { LAUNCH_PENDING_SCRIPT } from './launch-signal'
+
+// The screens the landing names, in gallery order; the count follows the registry.
+const readyScreens = screens.filter((screen) => screen.status === 'ready')
+const FEATURED = ['dashboard', 'sign-in', 'settings', 'checkout', 'ai', 'pricing']
+const featuredScreens = readyScreens.filter((screen) => FEATURED.includes(screen.id))
 
 const patterns = [
   ['page-header', 'Page Header'],
@@ -71,7 +77,7 @@ export function LaunchedLanding() {
               <div className="ld-launch-slot" data-launch-line-slot="" />
               <h1 id="hero-title">A library for your next app.</h1>
               <p className="ld-lede">
-                <b>25 components and 13 patterns for React.</b> Free, MIT, yours to own.
+                <b>29 components, 13 patterns and {readyScreens.length} screens for React.</b> Free, MIT, yours to own.
               </p>
               <div className="ld-actions">
                 <CreateChip />
@@ -120,6 +126,32 @@ export function LaunchedLanding() {
                     </Link>
                   </li>
                 ))}
+              </ol>
+            </div>
+            <div className="ld-patterns">
+              <div className="ld-sub-head">
+                <div>
+                  <h3>{readyScreens.length} screens.</h3>
+                  <p>Whole pages, ready to paste: one file each, with sample data and every state already working.</p>
+                </div>
+              </div>
+              <ol className="ld-index">
+                {featuredScreens.map(({ id, name }) => (
+                  <li key={id}>
+                    <Link href={`/explore?area=screens&screen=${id}`}>
+                      <span>{name}</span>
+                      <i aria-hidden="true" />
+                      <span className="ld-index-go" aria-hidden="true">→</span>
+                    </Link>
+                  </li>
+                ))}
+                <li>
+                  <Link href="/explore?area=screens">
+                    <span>All {readyScreens.length} screens</span>
+                    <i aria-hidden="true" />
+                    <span className="ld-index-go" aria-hidden="true">→</span>
+                  </Link>
+                </li>
               </ol>
             </div>
             <dl className="ld-specs">

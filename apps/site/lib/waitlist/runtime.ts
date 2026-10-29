@@ -19,7 +19,7 @@ type Env = Record<string, string | undefined>
 
 let override: WaitlistDeps | null | undefined
 /** Signs form tokens in local development only; production requires DIYA_WAITLIST_SECRET. */
-const LOCAL_DEVELOPMENT_KEY = 'local-development-only'
+export const LOCAL_DEVELOPMENT_KEY = 'local-development-only'
 let localDev: WaitlistDeps | undefined
 let live: { key: string; deps: WaitlistDeps } | undefined
 

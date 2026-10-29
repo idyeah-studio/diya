@@ -1,0 +1,50 @@
+/* The same opening as create-diya's Vite template (src/index.css): name the
+   layer order once, then DIYA's stylesheet, then a reset. A screen previewed
+   here sees exactly what it sees in a reader's fresh app. */
+@layer reset, theme, base, diya, components, utilities;
+@import "@idyeah/diya/styles.css";
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; }
+}
+
+/* The frame's only addition: on Glass, the photo the catalog paints behind
+   its own Glass, washed toward Light or Dark. A fixed layer inside the
+   provider (as Oriel does), so the provider's ground stays underneath it. */
+.screens-frame[data-glass='true'] {
+  isolation: isolate;
+  --screens-frame-wash: linear-gradient(180deg, #0006, #111315ad 48%, #101214e6);
+  --screens-frame-shade: radial-gradient(ellipse 40% 55% at 72% 52%, #00000099, #0000 75%);
+}
+.screens-frame[data-glass='true'][data-theme='light'] {
+  --screens-frame-wash: linear-gradient(180deg, #f3f4f0d9, #e9edebcf 48%, #e7ebe9ed);
+  --screens-frame-shade: linear-gradient(transparent, transparent);
+}
+.screens-frame[data-glass='true']::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--screens-frame-shade), var(--screens-frame-wash), url('/images/concept-architecture.png');
+  background-size: auto, auto, cover;
+  background-position: 0 0, 0 0, 50% 48%;
+}
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  .screens-frame[data-glass='true']::before { display: none; }
+}
+
+/* A missing screen, or one that failed to load. */
+.screens-frame-message {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  font-family: var(--diya-font);
+  color: var(--diya-color-text);
+}
+.screens-frame-message h1 { margin: 0; font-size: 20px; font-weight: 500; }
+.screens-frame-message p { margin: 0; font-size: 15px; color: var(--diya-color-muted); }

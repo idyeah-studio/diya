@@ -1,0 +1,352 @@
+/* "Don't see your screen?": the request form at the end of the Screens
+   gallery. The panel itself (.screens-request) is in screens.css. The form
+   sits in its own DIYA provider, so every color is a public token. */
+
+/* Open: the heading and its line on the left, the form on the right. */
+:where(html[data-catalog='true']) .screens-request[data-open='true'] {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: start;
+  gap: 32px 64px;
+  padding: 44px 44px 40px;
+}
+:where(html[data-catalog='true']) .screens-request-intro h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--diya-color-text);
+}
+:where(html[data-catalog='true']) .screens-request[data-open='true'] .screens-request-intro h3 {
+  margin-bottom: 14px;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+}
+:where(html[data-catalog='true']) .screens-request-intro p {
+  max-width: 34ch;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--diya-color-muted);
+}
+
+.screens-request-body {
+  min-width: 0;
+}
+.screens-request-body p {
+  margin: 0;
+}
+
+.screens-request-form {
+  display: grid;
+  gap: 28px;
+  margin: 0;
+}
+.screens-request-body .diya-text-field.screens-request-field {
+  max-width: none;
+}
+/* Fields read as wells on the panel: one step lighter in Light, one step up in Dark. */
+.screens-request-body :is(.diya-text-field-control, .diya-textarea textarea) {
+  background: var(--material-raised, var(--diya-color-surface));
+  border-color: color-mix(in srgb, var(--diya-color-line) 80%, transparent);
+}
+.screens-request-body .diya-textarea textarea {
+  min-height: 132px;
+}
+
+/* The picture: DIYA's FileUpload, drawn as one quiet row. */
+.screens-request-body .screens-request-upload.diya-upload {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.screens-request-body .screens-request-upload .diya-upload-drop {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'icon title button' 'icon text button' 'icon help button';
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 2px;
+  padding: 16px 16px 16px 18px;
+  border-color: color-mix(in srgb, var(--diya-color-text) 22%, transparent);
+  border-radius: 16px;
+  text-align: start;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.screens-request-body .screens-request-upload .diya-workflow-symbol {
+  grid-area: icon;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  background: var(--material-raised, var(--diya-color-surface));
+  color: var(--diya-color-muted);
+}
+.screens-request-body .screens-request-upload .diya-workflow-symbol svg {
+  width: 20px;
+  height: 20px;
+}
+.screens-request-body .screens-request-upload .diya-upload-title {
+  grid-area: title;
+  font-size: var(--diya-text-body);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+.screens-request-body .screens-request-upload .diya-upload-drop > p {
+  grid-area: text;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.screens-request-body .screens-request-upload .diya-upload-drop > small {
+  grid-area: help;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.screens-request-body .screens-request-upload .diya-upload-drop .diya-button {
+  grid-area: button;
+  margin: 0;
+}
+
+.screens-request-preview {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 10px 12px 12px;
+  border: 1px solid color-mix(in srgb, var(--diya-color-line) 80%, transparent);
+  border-radius: 16px;
+  background: var(--material-raised, var(--diya-color-surface));
+}
+.screens-request-thumb {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--diya-color-line) 60%, transparent);
+  border-radius: 10px;
+  background: var(--diya-color-hover);
+}
+.screens-request-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+.screens-request-preview p {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.screens-request-preview strong {
+  overflow: hidden;
+  color: var(--diya-color-text);
+  font-size: var(--diya-text-body);
+  font-weight: 500;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.screens-request-preview p span {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--diya-color-muted);
+}
+.screens-request-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in srgb, var(--diya-color-muted) 35%, transparent);
+  border-top-color: var(--diya-color-text);
+  border-radius: 50%;
+  animation: screens-request-spin 0.8s linear infinite;
+}
+@keyframes screens-request-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.screens-request-notify.diya-choice .diya-choice-option {
+  padding: 2px 0;
+}
+
+/* Off-screen, out of the tab order and hidden from assistive tech: only bots fill it. */
+.screens-request-honeypot {
+  position: absolute;
+  inset-inline-start: -10000px;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+}
+
+.screens-request-send {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  margin-top: 4px;
+  padding-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--diya-color-line) 55%, transparent);
+}
+.screens-request-send .diya-button {
+  min-width: 168px;
+}
+.screens-request-privacy {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--diya-color-muted);
+}
+.screens-request-privacy .diya-text-link {
+  color: var(--diya-color-text);
+}
+.screens-request-error {
+  max-width: 56ch;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--diya-color-error);
+}
+.screens-request-error:empty {
+  display: none;
+}
+.screens-request-picture {
+  display: grid;
+  gap: 10px;
+}
+
+/* After sending. */
+.screens-request-done {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 32px;
+  border: 1px solid color-mix(in srgb, var(--diya-color-line) 55%, transparent);
+  border-radius: 20px;
+  background: var(--material-raised, var(--diya-color-surface));
+  box-shadow: var(--diya-shadow-raised);
+  outline: none;
+}
+.screens-request-done:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 3px;
+}
+.screens-request-tick {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: var(--diya-color-accent);
+}
+.screens-request-tick::before {
+  content: '';
+  width: 7px;
+  height: 14px;
+  margin-top: -3px;
+  border: solid var(--diya-color-accent-text);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.screens-request-done h4 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+.screens-request-done p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--diya-color-muted);
+  overflow-wrap: anywhere;
+}
+.screens-request-done strong {
+  font-weight: 500;
+  color: var(--diya-color-text);
+}
+.screens-request-done .diya-button {
+  margin-top: 14px;
+}
+
+.screens-request-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  :where(html[data-catalog='true']) .screens-request[data-open='true'] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    padding: 36px;
+  }
+  :where(html[data-catalog='true']) .screens-request-intro p {
+    max-width: 52ch;
+  }
+}
+@media (max-width: 560px) {
+  :where(html[data-catalog='true']) .screens-request[data-open='true'] {
+    padding: 28px 20px 24px;
+  }
+  /* Remove moves under the name, so the size and "Ready to send" keep one line. */
+  .screens-request-preview {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 14px;
+    row-gap: 2px;
+    padding: 12px 14px 10px 12px;
+  }
+  .screens-request-thumb {
+    grid-row: span 2;
+    align-self: start;
+    width: 56px;
+    height: 56px;
+  }
+  .screens-request-preview .diya-button {
+    justify-self: start;
+    margin-inline-start: -16px;
+  }
+  :where(html[data-catalog='true']) .screens-request[data-open='true'] .screens-request-intro h3 {
+    font-size: 24px;
+  }
+  .screens-request-body .screens-request-upload .diya-upload-drop {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: 'icon title' 'icon text' 'icon help' 'button button';
+    row-gap: 2px;
+  }
+  .screens-request-body .screens-request-upload .diya-upload-drop .diya-button {
+    justify-self: start;
+    margin-top: 14px;
+  }
+  .screens-request-done {
+    padding: 24px;
+  }
+  .screens-request-send .diya-button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screens-request-spinner {
+    animation-duration: 2.4s;
+  }
+  .screens-request-body .screens-request-upload .diya-upload-drop {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .screens-request-preview,
+  .screens-request-done {
+    border: 1px solid CanvasText;
+  }
+}

@@ -6,6 +6,7 @@ import { DiyaProvider } from '@idyeah/diya'
 import { CatalogSearchProvider } from '../components/CatalogSearchProvider'
 import { AtomicSidebar, type AtomicComponent } from '../components/AtomicSidebar'
 import { PatternSidebar } from '../components/PatternSidebar'
+import { CatalogBrowser } from '../components/catalog/CatalogBrowser'
 
 vi.mock('next/link', () => ({
   default: ({ children, ...props }: ComponentProps<'a'>) => <a {...props}>{children}</a>,
@@ -41,13 +42,49 @@ function links(navigation: 'Choose a component' | 'Pattern list') {
 }
 
 describe('catalog search continuity', () => {
+  it('finds screens from Components and Patterns, and both from Screens, counting each area', async () => {
+    const user = userEvent.setup()
+    render(
+      <DiyaProvider>
+        <CatalogSearchProvider screens={['sign-in', 'resource-table', 'board']}>
+          <CatalogBrowser area="components" current="button" />
+        </CatalogSearchProvider>
+      </DiyaProvider>
+    )
+    await user.type(screen.getByRole('searchbox', { name: 'Search components' }), 'table')
+    expect(within(screen.getByRole('region', { name: 'In Patterns' })).getByRole('link', { name: 'Table' })).toBeTruthy()
+    expect(within(screen.getByRole('region', { name: 'In Screens' })).getByRole('link', { name: 'Resource table' }).getAttribute('href')).toBe(
+      '/explore?area=screens&screen=resource-table'
+    )
+    expect(searchStatus().textContent).toBe('1 pattern and 1 screen found')
+  })
+
+  it('lists only the screens the build lists, by category, and searches the others from Screens', async () => {
+    const user = userEvent.setup()
+    render(
+      <DiyaProvider>
+        <CatalogSearchProvider screens={['sign-in', 'board']}>
+          <CatalogBrowser area="screens" current="sign-in" />
+        </CatalogSearchProvider>
+      </DiyaProvider>
+    )
+    const list = screen.getByRole('navigation', { name: 'Screen list' })
+    expect(within(list).getAllByRole('link').map((link) => link.textContent)).toEqual(['Sign in', 'Board'])
+    expect(within(list).getByRole('link', { name: 'Sign in' }).getAttribute('aria-current')).toBe('page')
+    expect(within(list).getByRole('region', { name: 'Sign-in & onboarding' })).toBeTruthy()
+    await user.type(screen.getByRole('searchbox', { name: 'Search screens' }), 'drag')
+    expect(searchStatus().textContent).toBe('1 screen and 1 pattern found')
+    expect(within(screen.getByRole('region', { name: 'In Patterns' })).getByRole('link', { name: 'File Upload' })).toBeTruthy()
+  })
+
   it('finds patterns from the Components list, and components from the Patterns list', async () => {
     const user = userEvent.setup()
     const preview = render(<Preview area="components" component="button" />)
     await user.type(screen.getByRole('searchbox', { name: 'Search components' }), 'table')
     const elsewhere = screen.getByRole('region', { name: 'In Patterns' })
     expect(within(elsewhere).getByRole('link', { name: 'Table' }).getAttribute('href')).toBe('/explore?pattern=table')
-    expect(searchStatus().textContent).toBe('1 pattern found')
+    // Screens that use a Table can match too; the pattern is what this checks.
+    expect(searchStatus().textContent).toMatch(/^1 pattern( and \d+ screens?)? found$/)
     preview.rerender(<Preview area="patterns" />)
     await user.type(screen.getByRole('searchbox', { name: 'Search patterns' }), 'toggle')
     const components = screen.getByRole('region', { name: 'In Components' })
@@ -119,7 +156,7 @@ describe('catalog search continuity', () => {
     await user.click(screen.getByRole('button', { name: 'Clear search components' }))
     expect(componentSearch.value).toBe('')
     expect(document.activeElement).toBe(componentSearch)
-    expect(links('Choose a component')).toHaveLength(25)
+    expect(links('Choose a component')).toHaveLength(29)
 
     preview.rerender(<Preview area="patterns" pattern="site-header" />)
     const returnedPatternSearch = screen.getByRole('searchbox', {
@@ -135,7 +172,7 @@ describe('catalog search continuity', () => {
     expect(
       (screen.getByRole('searchbox', { name: 'Search components' }) as HTMLInputElement).value
     ).toBe('')
-    expect(links('Choose a component')).toHaveLength(25)
+    expect(links('Choose a component')).toHaveLength(29)
   })
 
   it('still supports isolated sidebar previews without a catalog search provider', async () => {
