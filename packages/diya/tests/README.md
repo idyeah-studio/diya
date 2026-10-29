@@ -30,6 +30,11 @@ popups open and the Chatbot in each state, and fails on any `aria-*` attribute
 WAI-ARIA doesn't define. `messages.test.tsx` checks `DiyaProvider` `messages`: overridden strings
 render, missing keys keep their English defaults, function values interpolate,
 and per-instance label props still win.
+`nested-containers.test.tsx` reads the stylesheet: Form, Card, Drawer, Dialog
+and Wizard reach a plain element only through the guard Prose uses or at a
+fixed place, so an Alert, List or Card placed inside one keeps its own styles,
+and the surfaces' own paragraphs sit where those rules expect them. HappyDOM
+can't match the guard, so the computed styles themselves need a real browser.
 
 Boundary regressions cover real empty table filter values and prototype-like
 filter labels, valid bulk selection after rows are removed, keyboard focus after
