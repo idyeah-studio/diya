@@ -180,7 +180,7 @@ describe('Screens routes', () => {
         expect('redirect' in route ? route.redirect : catalogPath(route)).toBe(path)
       }
     })
-    expect(catalogItemPaths()).toHaveLength(38)
+    expect(catalogItemPaths()).toHaveLength(42)
   })
 })
 
