@@ -47,6 +47,10 @@ dist/choice/Choice.d.ts
 dist/choice/Choice.js
 dist/choice/messages.d.ts
 dist/choice/messages.js
+dist/code-block/CodeBlock.d.ts
+dist/code-block/CodeBlock.js
+dist/code-block/messages.d.ts
+dist/code-block/messages.js
 dist/combobox/Combobox.d.ts
 dist/combobox/Combobox.js
 dist/combobox/messages.d.ts
@@ -114,6 +118,8 @@ dist/progress/Progress.d.ts
 dist/progress/Progress.js
 dist/progress/messages.d.ts
 dist/progress/messages.js
+dist/prose/Prose.d.ts
+dist/prose/Prose.js
 dist/search/Search.d.ts
 dist/search/Search.js
 dist/select/Select.d.ts

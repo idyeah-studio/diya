@@ -163,6 +163,8 @@ trigger focus; Tab leaves according to the trigger's document position.
 | Progress | `label`, optional `value` | `variant`: linear/circular; `showValue` (default on). Value is 0–100. Without a `value` it is indeterminate: working, amount unknown. `indeterminate` forces that state. |
 | Tooltip | `content`, your trigger as the child | Wraps one element, such as `<Button iconOnly aria-label="Delete">`, and wires hover, focus and its description. Or give `label` and noninteractive children for a built-in trigger. `placement`; closes with Escape. |
 | Popover | `label`, children | Plain content, or `close => content` to close it from your own controls. `trigger` takes your own element; `open` with `onOpenChange` controls it. `placement`, `disabled`. |
+| Prose | children | Your own HTML in DIYA's type: headings, paragraphs, links, lists, quotes, code, tables and images. `size`: small (15px, inside an app)/medium (default, 17px, articles and docs)/large (20px, long reads). Renders a `div`. Needs no provider context. |
+| CodeBlock | `code` | `label` names it, such as `'TypeScript'` or `'app/page.tsx'`. Copy writes to the clipboard and announces the result; long lines scroll sideways in a region the keyboard can reach. No syntax colors. |
 
 Tag, Badge, Alert and Toast share one `Tone` type:
 `'neutral' | 'brand' | 'success' | 'warning' | 'error' | 'info'`. Alert and
@@ -173,6 +175,27 @@ Toast take `AlertTone`, which is every tone except `neutral`.
 `showClose={false}` hides the close button on a toast without an action. It
 pauses automatic dismissal during hover/focus. Avoid putting critical,
 time-sensitive instructions only in a toast.
+
+**Long-form content:** wrap articles, docs pages, changelog entries and legal
+pages in `Prose`. It styles the plain elements inside it and only spaces any
+DIYA component you place there, such as a `CodeBlock` or a `Card`, so those
+keep their own look. It renders a `div`, so put it inside your own `article`
+or `main`. HTML you render yourself, from Markdown for example, goes in through
+`dangerouslySetInnerHTML`. Prose never runs sideways on a phone: long words and
+links wrap, a plain `pre` wraps its lines, and table cells wrap. To let a wide
+table scroll instead, wrap it in an element with `role="region"`, an
+`aria-label` and `tabIndex={0}`. For code people copy, use `CodeBlock`; with
+MDX, map `pre` to it.
+
+```tsx
+<article>
+  <Prose>
+    <h1>Release notes</h1>
+    <p>Two new components for long-form content.</p>
+    <CodeBlock label="Shell" code="npm install @idyeah/diya" />
+  </Prose>
+</article>
+```
 
 **Composition limits:** List uses a button for selectable rows, so that row's
 leading/trailing slots must be noninteractive. Use separate controls outside

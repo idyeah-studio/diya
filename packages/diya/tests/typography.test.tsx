@@ -44,11 +44,11 @@ it('defines the type scale once and sets no reader text below caption', () => {
   // Every size comes from the scale; a relative size keeps the caption floor.
   const sizes = [...css.matchAll(/font-size\s*:\s*([^;}]+)/g)].map((m) => m[1].trim())
   const scaleToken = /^var\(--diya-text-(caption|body|large|title|heading|display|hero)\)$/
-  // Fields and choices size through their own variables, which take scale values only.
-  const sized = [...css.matchAll(/(--diya-internal-field-font-size|--diya-internal-choice-font)\s*:\s*([^;}]+)/g)].map((m) => m[2].trim())
+  // Fields, choices and Prose size through their own variables, which take scale values only.
+  const sized = [...css.matchAll(/(--diya-internal-field-font-size|--diya-internal-choice-font|--diya-internal-prose-font-[a-z0-9]+)\s*:\s*([^;}]+)/g)].map((m) => m[2].trim())
   expect(sized.length).toBeGreaterThan(0)
   expect(sized.filter((size) => !scaleToken.test(size))).toEqual([])
-  const allowed = /^(var\(--diya-text-(caption|body|large|title|heading|display|hero)\)|var\(--diya-internal-(field-font-size|choice-font)\)|inherit|max\(var\(--diya-text-caption\), [\d.]+em\))$/
+  const allowed = /^(var\(--diya-text-(caption|body|large|title|heading|display|hero)\)|var\(--diya-internal-(field-font-size|choice-font|prose-font-[a-z0-9]+)\)|inherit|max\(var\(--diya-text-caption\), [\d.]+em\))$/
   expect(sizes.filter((size) => !allowed.test(size))).toEqual([])
 })
 

@@ -5,6 +5,7 @@ import { breadcrumbsMessages } from './breadcrumbs/messages.js'
 import { chartMessages } from './data-viz/messages.js'
 import { chatbotMessages } from './application-patterns/chatbot-messages.js'
 import { choiceMessages } from './choice/messages.js'
+import { codeBlockMessages } from './code-block/messages.js'
 import { comboboxMessages } from './combobox/messages.js'
 import { datePickerMessages } from './date-picker/messages.js'
 import { dialogMessages } from './dialog/messages.js'
@@ -33,6 +34,7 @@ export const defaultMessages = {
   chart: chartMessages,
   chatbot: chatbotMessages,
   choice: choiceMessages,
+  codeBlock: codeBlockMessages,
   combobox: comboboxMessages,
   datePicker: datePickerMessages,
   dialog: dialogMessages,

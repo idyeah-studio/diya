@@ -2617,3 +2617,430 @@
 .diya-root .diya-metric-change[data-meaning='positive'] { background: var(--diya-color-success-surface); }
 .diya-root .diya-metric-change[data-meaning='negative'] { background: var(--diya-color-error-surface); }
 @media (forced-colors: active) { .diya-root .diya-metric-change[data-meaning] { background: none; border: 1px solid CanvasText; } }
+
+
+/* prose/Prose.css: your own HTML in DIYA's type and rhythm. Every rule ends in the same
+   guard, so it reaches plain elements in your content only: never a DIYA component placed
+   inside, nor anything that component renders. Prose only spaces those components.
+   Text sizes are set on the text, not on Prose itself, so nothing inherits into them. */
+.diya-root :is(.diya-prose, .diya-code-block) {
+  --diya-internal-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  --diya-internal-code-fill: var(--diya-color-recessed);
+  --diya-internal-code-backdrop: none;
+  /* A neutral hairline that holds on white, near-black and either Glass. */
+  --diya-internal-code-edge: color-mix(in srgb, var(--diya-color-text) 10%, transparent);
+}
+.diya-root .diya-prose {
+  --diya-internal-prose-font-body: var(--diya-text-large);
+  --diya-internal-prose-font-small: var(--diya-text-body);
+  --diya-internal-prose-font-h1: var(--diya-text-display);
+  --diya-internal-prose-font-h2: var(--diya-text-heading);
+  --diya-internal-prose-font-h3: var(--diya-text-title);
+  --diya-internal-prose-font-h4: var(--diya-text-large);
+  --diya-internal-prose-font-mark: var(--diya-text-hero);
+  --diya-internal-prose-leading: 1.65;
+  /* The space around blocks that stand apart: code, tables, figures, quotes and components. */
+  --diya-internal-prose-gap: calc(var(--diya-internal-prose-font-body) * 1.6);
+  min-width: 0;
+  /* A comfortable reading measure, about 70 characters a line at every size. */
+  max-width: calc(var(--diya-internal-prose-font-body) * 34);
+}
+.diya-root .diya-prose[data-size='small'] {
+  --diya-internal-prose-font-body: var(--diya-text-body);
+  --diya-internal-prose-font-small: var(--diya-text-caption);
+  --diya-internal-prose-font-h1: var(--diya-text-heading);
+  --diya-internal-prose-font-h2: var(--diya-text-title);
+  --diya-internal-prose-font-h3: var(--diya-text-large);
+  --diya-internal-prose-font-h4: var(--diya-text-body);
+  --diya-internal-prose-font-mark: var(--diya-text-display);
+  --diya-internal-prose-leading: 1.6;
+}
+.diya-root .diya-prose[data-size='large'] {
+  --diya-internal-prose-font-body: var(--diya-text-title);
+  --diya-internal-prose-font-small: var(--diya-text-large);
+  --diya-internal-prose-font-h1: var(--diya-text-hero);
+  --diya-internal-prose-font-h2: var(--diya-text-display);
+  --diya-internal-prose-font-h3: var(--diya-text-heading);
+  --diya-internal-prose-font-h4: var(--diya-text-title);
+  --diya-internal-prose-leading: 1.6;
+}
+@media (max-width: 600px) {
+  .diya-root .diya-prose[data-size='large'] {
+    --diya-internal-prose-font-h1: var(--diya-text-display);
+    --diya-internal-prose-font-h2: var(--diya-text-heading);
+  }
+}
+
+.diya-root .diya-prose :is(p, ul, ol, dl, blockquote):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  margin: 0;
+  color: var(--diya-color-text);
+  font-size: var(--diya-internal-prose-font-body);
+  line-height: var(--diya-internal-prose-leading);
+  overflow-wrap: break-word;
+}
+.diya-root .diya-prose :is(p, li, dd, blockquote, figcaption):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  text-wrap: pretty;
+}
+.diya-root .diya-prose :is(td, th, figcaption, caption) :is(p, ul, ol, dl):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  font-size: inherit;
+  line-height: inherit;
+}
+.diya-root .diya-prose :is(h1, h2, h3, h4, h5, h6):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  margin: 0;
+  color: var(--diya-color-text);
+  font-weight: 600;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+.diya-root .diya-prose h1:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  font-size: var(--diya-internal-prose-font-h1);
+  line-height: 1.12;
+  letter-spacing: -0.028em;
+}
+.diya-root .diya-prose h2:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  font-size: var(--diya-internal-prose-font-h2);
+  line-height: 1.2;
+  letter-spacing: -0.022em;
+}
+.diya-root .diya-prose h3:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  font-size: var(--diya-internal-prose-font-h3);
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+.diya-root .diya-prose :is(h4, h5, h6):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  font-size: var(--diya-internal-prose-font-h4);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+.diya-root .diya-prose :is(pre, table, figure, hr):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { margin: 0; }
+
+/* Rhythm: each block sits a measured step below the one before it, and the first has no
+   space above. Headings take more space above than below, so they belong to what follows. */
+.diya-root .diya-prose * + :is(p, ul, ol, dl):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  margin-block-start: 1.1em;
+}
+.diya-root .diya-prose * + :is(blockquote, pre, table, figure, :where([role='region'])):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  margin-block-start: var(--diya-internal-prose-gap);
+}
+.diya-root .diya-prose :is(blockquote, pre, table, figure, :where([role='region'], [class*='diya-'])) + *:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  margin-block-start: var(--diya-internal-prose-gap);
+}
+.diya-root .diya-prose * + h1:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { margin-block-start: 1.3em; }
+.diya-root .diya-prose * + h2:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { margin-block-start: 1.7em; }
+.diya-root .diya-prose * + h3:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { margin-block-start: 1.55em; }
+.diya-root .diya-prose * + :is(h4, h5, h6):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  margin-block-start: 1.6em;
+}
+.diya-root .diya-prose h1 + *:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { margin-block-start: 0.85em; }
+.diya-root .diya-prose h2 + *:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { margin-block-start: 0.7em; }
+.diya-root .diya-prose :is(h3, h4, h5, h6) + *:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  margin-block-start: 0.5em;
+}
+.diya-root .diya-prose * + hr:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)),
+.diya-root .diya-prose hr + *:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  margin-block-start: calc(var(--diya-internal-prose-font-body) * 2.25);
+}
+/* DIYA components in the flow keep their own styles; Prose only gives them room. */
+.diya-root .diya-prose > * + :where([class*='diya-']),
+.diya-root .diya-prose :is(li, blockquote, figure, dd):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) > * + :where([class*='diya-']) {
+  margin-block-start: var(--diya-internal-prose-gap);
+}
+.diya-root .diya-prose > :is(h1, h2, h3, h4, h5, h6) + :where([class*='diya-']) {
+  margin-block-start: calc(var(--diya-internal-prose-font-body) * 0.7);
+}
+
+.diya-root .diya-prose a:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  border-radius: 3px;
+  color: var(--diya-color-text);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.24em;
+}
+.diya-root .diya-prose a:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)):hover { text-decoration-thickness: 2px; }
+.diya-root .diya-prose a:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)):focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+.diya-root .diya-prose :is(strong, b):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { font-weight: 600; }
+.diya-root .diya-prose small:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  font-size: max(var(--diya-text-caption), 0.85em);
+}
+.diya-root .diya-prose :is(sup, sub):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  font-size: max(var(--diya-text-caption), 0.75em);
+  line-height: 0;
+}
+
+.diya-root .diya-prose :is(ul, ol):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { padding-inline-start: 1.6em; }
+.diya-root .diya-prose ul:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { list-style: disc; }
+.diya-root .diya-prose ol:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { list-style: decimal; }
+.diya-root .diya-prose ul ul:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { list-style: circle; }
+.diya-root .diya-prose li:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { padding-inline-start: 0.3em; }
+.diya-root .diya-prose li + li:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)),
+.diya-root .diya-prose li > :is(ul, ol):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { margin-block-start: 0.4em; }
+.diya-root .diya-prose li:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *))::marker {
+  color: var(--diya-color-muted);
+  font-variant-numeric: tabular-nums;
+}
+.diya-root .diya-prose dt:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { font-weight: 600; }
+.diya-root .diya-prose dd:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { margin: 0; padding-inline-start: 1.25em; }
+.diya-root .diya-prose dd + dt:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { margin-block-start: 0.75em; }
+
+/* A quote is set in from the text with a hanging quotation mark: no rule beside it. */
+.diya-root .diya-prose blockquote:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  position: relative;
+  padding-inline-start: 1.6em;
+}
+.diya-root .diya-prose blockquote:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *))::before {
+  content: '\201C';
+  content: '\201C' / '';
+  position: absolute;
+  inset-block-start: 0.06em;
+  inset-inline-start: -0.04em;
+  color: var(--diya-color-muted);
+  font-size: var(--diya-internal-prose-font-mark);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.diya-root .diya-prose hr:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  height: 0;
+  border: 0;
+  border-block-start: 1px solid var(--diya-color-line);
+}
+
+.diya-root .diya-prose code:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  padding: 0.1em 0.32em;
+  border-radius: calc(5px * var(--diya-corner-scale, 1));
+  background: color-mix(in srgb, var(--diya-color-text) 7%, transparent);
+  font-family: var(--diya-internal-mono);
+  font-size: max(var(--diya-text-caption), 0.86em);
+  font-variant-ligatures: none;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+/* Plain pre can't take keyboard focus, so its lines wrap rather than scroll. CodeBlock
+   scrolls instead, in a region the keyboard can reach. */
+.diya-root .diya-prose pre:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  padding: 14px 16px;
+  border: 1px solid var(--diya-internal-code-edge);
+  border-radius: calc(12px * var(--diya-corner-scale, 1));
+  background: var(--diya-internal-code-fill);
+  backdrop-filter: var(--diya-internal-code-backdrop);
+  color: var(--diya-color-text);
+  font-family: var(--diya-internal-mono);
+  font-size: var(--diya-text-caption);
+  font-variant-ligatures: none;
+  line-height: 1.7;
+  tab-size: 4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.diya-root .diya-prose pre code:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-size: inherit;
+}
+.diya-root .diya-prose kbd:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 0.4em;
+  border: 1px solid var(--diya-color-line);
+  border-radius: calc(5px * var(--diya-corner-scale, 1));
+  background: var(--diya-color-raised);
+  box-shadow: inset 0 -1px 0 var(--diya-color-line);
+  color: var(--diya-color-text);
+  font-family: inherit;
+  font-size: max(var(--diya-text-caption), 0.82em);
+  font-weight: 500;
+  line-height: 1.6;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Tables fit the measure: words wrap whole, and links and code, the long ones, break
+   anywhere, so a table doesn't run off a phone. Wrap a wide table in an element with
+   role="region", an aria-label and tabindex="0" to let it scroll sideways instead. */
+.diya-root .diya-prose table:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--diya-color-text);
+  font-size: var(--diya-internal-prose-font-small);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.55;
+}
+.diya-root .diya-prose caption:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  padding-block-end: 0.75em;
+  color: var(--diya-color-muted);
+  text-align: start;
+}
+.diya-root .diya-prose :is(th, td):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  padding: 0.7em 1em;
+  border-block-end: 1px solid var(--diya-color-line);
+  overflow-wrap: break-word;
+  vertical-align: top;
+}
+.diya-root .diya-prose :is(th, td) :is(a, code):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  overflow-wrap: anywhere;
+}
+.diya-root .diya-prose th:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { font-weight: 600; }
+.diya-root .diya-prose th:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)):not([align]) { text-align: start; }
+.diya-root .diya-prose thead th:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  border-block-end-color: color-mix(in srgb, var(--diya-color-text) 26%, transparent);
+  vertical-align: bottom;
+}
+.diya-root .diya-prose :is(th, td):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)):first-child {
+  padding-inline-start: 0;
+}
+.diya-root .diya-prose :is(th, td):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)):last-child {
+  padding-inline-end: 0;
+}
+.diya-root .diya-prose [role='region'][tabindex]:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-color: color-mix(in srgb, var(--diya-color-muted) 50%, transparent) transparent;
+  scrollbar-width: thin;
+}
+.diya-root .diya-prose [role='region'][tabindex]:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)):focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 4px;
+}
+.diya-root .diya-prose [role='region'] :is(th, td, a, code):not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  overflow-wrap: normal;
+}
+.diya-root .diya-prose [role='region'] th:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { white-space: nowrap; }
+
+.diya-root .diya-prose img:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { max-width: 100%; height: auto; }
+.diya-root .diya-prose > img:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)),
+.diya-root .diya-prose figure > img:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  display: block;
+  border-radius: calc(10px * var(--diya-corner-scale, 1));
+}
+.diya-root .diya-prose > * + img:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)),
+.diya-root .diya-prose > img + *:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  margin-block-start: var(--diya-internal-prose-gap);
+}
+.diya-root .diya-prose figure > * + *:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { margin-block-start: 0.85em; }
+.diya-root .diya-prose figcaption:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) {
+  color: var(--diya-color-muted);
+  font-size: var(--diya-internal-prose-font-small);
+  line-height: 1.5;
+}
+
+@media (forced-colors: active) {
+  .diya-root .diya-prose a:not(:where([class*='diya-'], .diya-prose [class*='diya-']:not(.diya-prose) *)) { color: LinkText; }
+}
+
+
+/* code-block/CodeBlock.css: portable component rules. It sets its own type, so the text
+   around it (a list item, a quote, Prose) never reaches the code. */
+.diya-root .diya-code-block {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--diya-internal-code-edge);
+  --diya-internal-code-corner: max(0px, calc(12px * var(--diya-corner-scale, 1) - 1px));
+  border-radius: calc(12px * var(--diya-corner-scale, 1));
+  background: var(--diya-internal-code-fill);
+  backdrop-filter: var(--diya-internal-code-backdrop);
+  color: var(--diya-color-text);
+  font-size: var(--diya-text-caption);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.5;
+  overflow-wrap: normal;
+  text-align: start;
+  text-transform: none;
+  text-wrap: wrap;
+}
+.diya-root .diya-code-block-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 6px 6px 6px 16px;
+  border-block-end: 1px solid var(--diya-internal-code-edge);
+}
+.diya-root .diya-code-block-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--diya-color-muted);
+  font-size: var(--diya-text-caption);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.diya-root .diya-code-block-code {
+  min-width: 0;
+  margin: 0;
+  padding: 12px 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  color: var(--diya-color-text);
+  font-family: var(--diya-internal-mono);
+  font-size: var(--diya-text-caption);
+  font-variant-ligatures: none;
+  line-height: 1.7;
+  tab-size: 4;
+  white-space: pre;
+  scrollbar-color: color-mix(in srgb, var(--diya-color-muted) 50%, transparent) transparent;
+  scrollbar-width: thin;
+}
+.diya-root .diya-code-block[data-labelled='true'] .diya-code-block-code { grid-column: 1 / -1; padding-block: 14px 16px; }
+.diya-root .diya-code-block-code code { font: inherit; color: inherit; }
+.diya-root .diya-code-block .diya-code-block-copy { gap: 6px; padding-inline: 10px 12px; color: var(--diya-color-muted); }
+.diya-root .diya-code-block .diya-code-block-copy:hover { color: var(--diya-color-text); }
+.diya-root .diya-code-block > .diya-code-block-copy { margin: 8px 8px 8px 0; }
+.diya-root .diya-code-block-code:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: -2px; }
+/* The code region's corners follow the block's, so its focus ring sits neatly inside. */
+.diya-root .diya-code-block-code { border-radius: var(--diya-internal-code-corner) 0 0 var(--diya-internal-code-corner); }
+.diya-root .diya-code-block[data-labelled='true'] .diya-code-block-code { border-radius: 0 0 var(--diya-internal-code-corner) var(--diya-internal-code-corner); }
+/* The live region: read out quietly after Copy, and shown only when copying failed. */
+.diya-root .diya-code-block-status:not([data-failed]) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.diya-root .diya-code-block-status[data-failed] {
+  grid-column: 1 / -1;
+  padding: 10px 16px 12px;
+  border-block-start: 1px solid var(--diya-internal-code-edge);
+  color: var(--diya-color-muted);
+  font-size: var(--diya-text-caption);
+  line-height: 1.5;
+}
+@media print {
+  .diya-root .diya-code-block-code { white-space: pre-wrap; }
+  .diya-root .diya-code-block .diya-code-block-copy { display: none; }
+}
+
+/* Code on Glass is a smoked pane, clear enough to show the backdrop, dense enough to read. */
+@supports (backdrop-filter: blur(14px)) {
+  .diya-root[data-glass='true'] :is(.diya-prose, .diya-code-block) {
+    --diya-internal-code-fill: color-mix(in srgb, var(--diya-color-recessed) 52%, transparent);
+    --diya-internal-code-backdrop: var(--diya-internal-blur);
+  }
+  .diya-root[data-glass='true']:where([data-theme='light']) :is(.diya-prose, .diya-code-block) {
+    --diya-internal-code-fill: color-mix(in srgb, var(--diya-color-recessed) 66%, transparent);
+  }
+}
+@media (prefers-contrast: more) {
+  .diya-root :is(.diya-prose, .diya-code-block) { --diya-internal-code-edge: color-mix(in srgb, var(--diya-color-text) 40%, transparent); }
+}
+@media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
+  .diya-root[data-glass='true'] :is(.diya-prose, .diya-code-block) {
+    --diya-internal-code-fill: var(--diya-color-recessed);
+    --diya-internal-code-backdrop: none;
+  }
+}
