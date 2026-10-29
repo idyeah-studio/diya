@@ -22,7 +22,7 @@ const INVITE = { from: 'Maya', fromFull: 'Maya Okafor', workspace: 'Northwind St
 const WAITING = [
   { id: 'handbook', label: 'Studio handbook', description: 'Updated yesterday by Aiko Tanaka', icon: <FileText /> },
   { id: 'refresh', label: 'Spring brand refresh', description: 'A project with 14 docs and 9 open tasks', icon: <FolderKanban /> },
-  { id: 'crit', label: 'Weekly crit notes', description: 'Three new pages since Monday', icon: <NotebookPen /> },
+  { id: 'review', label: 'Weekly review notes', description: 'Three new pages since Monday', icon: <NotebookPen /> },
 ]
 
 type Route = '/accounts' | '/accounts/confirm/resend' | '/invites/accept' | '/session/google' | '/session/github'
@@ -311,7 +311,7 @@ function InvitePanel() {
         <Avatar name={INVITE.fromFull} size="small" />
         <span>
           <strong className="sign-up-strong">Invited by {INVITE.fromFull}</strong>
-          <span className="sign-up-point-text">Design lead, and the one who sets the crit agenda</span>
+          <span className="sign-up-point-text">Design lead, and the one who sets the review agenda</span>
         </span>
       </div>
     </aside>

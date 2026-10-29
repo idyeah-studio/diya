@@ -80,9 +80,9 @@ describe('the AI channel', () => {
       for (const text of [llmsIndex(), llmsFull()]) {
         expect(text).toContain('## Screens')
         expect(text).toContain(
-          `- [Analytics dashboard](${url('dashboard')}): The owner’s home screen: key figures, a traffic chart, top pages and campaigns, in one app frame. One file: \`app/dashboard/page.tsx\` in Next.js or \`src/Dashboard.tsx\` in Vite; needs \`@idyeah/diya lucide-react echarts@6\`.`
+          `- [Analytics dashboard](${url('dashboard')}): ${(entry as unknown as { description: string }).description} One file: \`app/dashboard/page.tsx\` in Next.js or \`src/Dashboard.tsx\` in Vite; needs \`@idyeah/diya lucide-react echarts@6\`.`
         )
-        expect(text).not.toContain(url('sign-up'))
+        for (const screen of screens.filter((item) => item.status === 'building')) expect(text, screen.id).not.toContain(url(screen.id))
       }
       expect(screenLines()).toHaveLength(screens.filter((screen) => screen.status === 'ready').length)
     } finally {

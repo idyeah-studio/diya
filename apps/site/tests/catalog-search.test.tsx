@@ -83,7 +83,8 @@ describe('catalog search continuity', () => {
     await user.type(screen.getByRole('searchbox', { name: 'Search components' }), 'table')
     const elsewhere = screen.getByRole('region', { name: 'In Patterns' })
     expect(within(elsewhere).getByRole('link', { name: 'Table' }).getAttribute('href')).toBe('/explore?pattern=table')
-    expect(searchStatus().textContent).toBe('1 pattern found')
+    // Screens that use a Table can match too; the pattern is what this checks.
+    expect(searchStatus().textContent).toMatch(/^1 pattern( and \d+ screens?)? found$/)
     preview.rerender(<Preview area="patterns" />)
     await user.type(screen.getByRole('searchbox', { name: 'Search patterns' }), 'toggle')
     const components = screen.getByRole('region', { name: 'In Components' })

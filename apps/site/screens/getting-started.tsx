@@ -25,7 +25,7 @@ const NAV_MORE = [
   { value: 'settings', label: 'Settings', href: '/settings', icon: <Settings /> },
 ]
 const AGENDA = [
-  { id: 'crit', label: 'Weekly crit', description: 'The notes doc is ready to fill in', when: '10:00 AM' },
+  { id: 'review', label: 'Weekly review', description: 'The notes doc is ready to fill in', when: '10:00 AM' },
   { id: 'brief', label: 'Halvorsen brief', description: 'Aiko Tanaka asked for your eyes on it', when: 'Due today' },
   { id: 'jonah', label: 'Jonah Park joined', description: 'Say hi, or send him the handbook', when: '9:40 AM' },
 ]
