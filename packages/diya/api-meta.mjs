@@ -140,7 +140,8 @@ export const items = {
   choice: {
     kind: 'component', title: 'Choice', ...v1,
     exports: ['Choice'],
-    slots: {},
+    // Text with inline TextLinks (a consent box), or a hidden color swatch beside a name.
+    slots: { 'options[].label': { accepts: ['text-link'], content: ['text', 'icon'] } },
     children: none,
     state: uncontrolledFieldState,
     tokens: ['--diya-color-accent', '--diya-color-accent-text', '--diya-color-muted', '--diya-color-text',
@@ -465,6 +466,8 @@ export const items = {
     slots: {
       brand: { accepts: [], content: ['text', 'image'], multiple: true },
       collapsedBrand: { accepts: [], content: ['text', 'image'] },
+      footer: { accepts: ['menu', 'avatar', 'button', 'text-link'], content: ['text', 'image'], multiple: true },
+      collapsedFooter: { accepts: ['menu', 'avatar', 'button'], content: ['image'] },
       'groups[].items[].icon': iconSlot,
     },
     children: none,

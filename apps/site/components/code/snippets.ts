@@ -278,7 +278,7 @@ function walk(value: unknown, found: Found, key?: string): void {
 
 const MAIN_EXPORTS = new Set([
   'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Calendar', 'Card', 'Chatbot', 'Choice',
-  'CodeBlock', 'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'FileUpload', 'Form', 'List', 'Menu',
+  'CodeBlock', 'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'FileUpload', 'Form', 'Inline', 'List', 'Menu',
   'Metric', 'PageHeader', 'Pagination', 'Popover', 'Progress', 'Prose', 'Rating', 'Search', 'Select',
   'SideNavigation', 'SiteHeader', 'Slider', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput',
   'TextLink', 'Toast', 'Tooltip', 'Wizard',
@@ -1516,6 +1516,14 @@ function siteHeader(p: Playground): Snippet {
 
 function sideNavigation(p: Playground): Snippet {
   const counts = on(p, 'Options', 'Counts', false)
+  const account = h('Menu', {
+    label: 'Account for Alex Morgan',
+    triggerIcon: h('Avatar', { name: 'Alex Morgan', size: 'small' }),
+    items: [
+      { id: 'profile', label: 'View profile', onSelect: v('openProfile', VOID) },
+      { id: 'settings', label: 'Account settings', onSelect: v('openAccountSettings', VOID) },
+    ],
+  })
   const item = (value: string, label: string, icon: string, count?: number) => ({ value, label, icon: comp(icon), count: counts && count })
   return build('side-navigation', {
     consts: [
@@ -1542,6 +1550,8 @@ function sideNavigation(p: Playground): Snippet {
     jsx: h('SideNavigation', {
       brand: 'Veylo',
       collapsedBrand: 'v.',
+      footer: h('Inline', { gap: 2 }, account, h('span', {}, 'Alex Morgan')),
+      collapsedFooter: account,
       groups: raw('groups'),
       value: v('section', 'string', "'projects'"),
       onValueChange: v('setSection', STRING_SETTER),

@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, useId, useRef, type ChangeEventHandler, type FieldsetHTMLAttributes, type FocusEventHandler } from 'react'
+import { forwardRef, useId, useRef, type ChangeEventHandler, type FieldsetHTMLAttributes, type FocusEventHandler, type ReactNode } from 'react'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { useFormReset, useNativeMirror } from '../text-input/native-field.js'
@@ -13,8 +13,8 @@ declare module '../messages.js' {
 export type ChoiceOption = {
   /** The value reported when this option is chosen; unique within the group. */
   value: string
-  /** Visible option text beside the radio or checkbox. */
-  label: string
+  /** Visible option text beside the radio or checkbox: a string, or a node such as text with links ("I agree to the <a>Terms</a>") or a color swatch before a name. A link inside opens without toggling the option, and the option is named by the label's text, so give a swatch `aria-hidden` and visible words. */
+  label: ReactNode
   /** Visible secondary line under the label, announced as the option's description; shown whenever present. */
   description?: string
   /** Shows the option but stops it being chosen. */

@@ -512,7 +512,7 @@ header edges, are worked out once per provider from these tokens.
 | Destructive actions | `--diya-color-destructive` |
 | Statuses | For each of `success`, `warning`, `error` and `info`: `--diya-color-{status}` for text and icons on a surface, `--diya-color-{status}-surface` behind them, and `--diya-color-{status}-fill` with `--diya-color-{status}-on-fill` for solid badges. `--diya-color-error` also colors error messages, a falling Metric and invalid Combobox and DatePicker borders; other fields mark an invalid value with a dashed border. |
 | Neutral badge | `--diya-color-neutral-fill`, `--diya-color-neutral-on-fill` |
-| Glass and overlays | `--diya-color-glass` (the translucent fill when Glass is on), `--diya-color-scrim` (behind dialogs and drawers; unset by default) |
+| Glass and overlays | `--diya-color-glass` (the translucent fill when Glass is on), `--diya-color-scrim` (the dimming behind dialogs and drawers, and for your own overlays; `#00000088`, lighter under Glass) |
 | Font | `--diya-font`, set by `DiyaProvider` from `fontFamily` |
 | Type scale | `--diya-text-caption`, `--diya-text-body`, `--diya-text-large`, `--diya-text-title`, `--diya-text-heading`, `--diya-text-display`, `--diya-text-hero` |
 | Line height | `--diya-leading-tight`, `--diya-leading-body` |

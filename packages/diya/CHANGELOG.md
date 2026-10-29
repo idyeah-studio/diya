@@ -62,6 +62,12 @@ First public release, under the MIT License.
   (`defaultValue`, `defaultChecked`) and reset with their form, and pass native
   `name`, `onChange` and `onBlur` through, so react-hook-form's `register()`
   works without a `Controller`. Combobox and DatePicker take `name`.
+- A Choice option's `label` takes a node, not only a string: a consent box
+  with real Terms and Privacy Policy links (a link opens without toggling the
+  box), or a color swatch beside a color's name.
+- Slider takes `formatValue`, such as `(value) => '$' + value`: it formats the
+  values and marks it shows and sets each handle's `aria-valuetext`, both
+  handles in range mode.
 - Slider takes `min`, `max` and `step`. DatePicker takes `min` and `max`, keeps
   one Tab stop in its calendar (arrows, Home/End and PageUp/PageDown move), and
   starts weeks on the locale's first day.
@@ -95,6 +101,9 @@ First public release, under the MIT License.
   sit over a dimming layer. `prefers-reduced-transparency` and
   `prefers-contrast: more` get solid surfaces. A pill Tabs track is a capsule
   like its thumb.
+- `--diya-color-scrim` is set in Light and Dark (`#00000088`), not only under
+  Glass, so an overlay or shadow built on it works everywhere. Dialog and
+  Drawer share it, so a Drawer dims the page as much as a Dialog.
 - Button is a pill by default; `shape="rounded"` keeps the control corner.
   Pattern actions, Menu and Popover triggers and Table filters follow.
 - `--diya-radius-surface`, the one corner Card, chart cards, Page Header, Form
@@ -122,6 +131,10 @@ First public release, under the MIT License.
   it shows `99+`; collapsed, a dot on the icon stands in for it. The item's
   accessible name keeps the real count, "Inbox, 12"
   (`messages.sideNavigation.count`).
+- Side Navigation takes `footer`, for an account or workspace Menu pinned to
+  the bottom of a full-height navigation, and `collapsedFooter` for the rail
+  (it defaults to `footer`), following `brand` and `collapsedBrand`. A Menu,
+  Avatar or Button in either slot keeps its own look.
 - A `layout="full-page"` Chatbot fills its container's height: the header and
   composer stay put and the thread scrolls between them, following the latest
   message. A height set on any Chatbot is filled the same way; without one,
