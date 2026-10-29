@@ -57,6 +57,9 @@ First public release, under the MIT License.
   (`defaultValue`, `defaultChecked`) and reset with their form, and pass native
   `name`, `onChange` and `onBlur` through, so react-hook-form's `register()`
   works without a `Controller`. Combobox and DatePicker take `name`.
+- A Choice option's `label` takes a node, not only a string: a consent box
+  with real Terms and Privacy Policy links (a link opens without toggling the
+  box), or a color swatch beside a color's name.
 - Slider takes `formatValue`, such as `(value) => '$' + value`: it formats the
   values and marks it shows and sets each handle's `aria-valuetext`, both
   handles in range mode.

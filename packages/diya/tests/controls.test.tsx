@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
-import { Choice, DiyaProvider, Pagination, Search, Select, Slider, Switch, TextArea, TextInput } from '../dist/index.js'
+import { Choice, DiyaProvider, Pagination, Search, Select, Slider, Switch, TextArea, TextInput, TextLink } from '../dist/index.js'
 
 describe('portable field contracts', () => {
   it('uses native input attributes, updates customer state and clears without submitting', async () => {
@@ -254,6 +254,41 @@ describe('portable field contracts', () => {
     fireEvent.change(slider, { target: { value: '65' } })
     expect(changes).toHaveBeenLastCalledWith(65)
     expect(slider.value).toBe('65')
+  })
+
+  it('takes a node as an option label: links open without toggling, and the name is the label\'s text', async () => {
+    const user = userEvent.setup()
+    const changes = vi.fn()
+    const opened = vi.fn((event: { preventDefault: () => void }) => event.preventDefault())
+    render(
+      <DiyaProvider>
+        <Choice label="Consent" multiple onValueChange={changes} options={[
+          { value: 'agree', label: <>I agree to the <TextLink href="/terms" inline onClick={opened}>Terms</TextLink> and <TextLink href="/privacy" inline onClick={opened}>Privacy Policy</TextLink></> },
+          { value: 'news', label: 'Send me news' },
+        ]} />
+        <Choice label="Color" defaultValue="red" options={[
+          { value: 'red', label: <><span aria-hidden="true" className="swatch" />Red</> },
+          { value: 'blue', label: <><span aria-hidden="true" className="swatch" />Blue</> },
+        ]} />
+      </DiyaProvider>
+    )
+    const agree = screen.getByRole('checkbox', { name: 'I agree to the Terms and Privacy Policy' }) as HTMLInputElement
+    await user.click(screen.getByRole('link', { name: 'Terms' }))
+    expect(opened).toHaveBeenCalledTimes(1)
+    expect(agree.checked).toBe(false)
+    expect(changes).not.toHaveBeenCalled()
+    await user.click(screen.getByText('Send me news'))
+    expect(changes).toHaveBeenLastCalledWith(['news'])
+    // Keyboard: Space toggles the box; Tab then reaches the links, which are their own stops.
+    agree.focus()
+    await user.keyboard(' ')
+    expect(agree.checked).toBe(true)
+    expect(changes).toHaveBeenLastCalledWith(['agree', 'news'])
+    await user.tab()
+    expect(document.activeElement).toBe(screen.getByRole('link', { name: 'Terms' }))
+    // A swatch is hidden, so the radio is named by its word.
+    expect((screen.getByRole('radio', { name: 'Red' }) as HTMLInputElement).checked).toBe(true)
+    expect(screen.getByRole('radio', { name: 'Blue' })).toBeTruthy()
   })
 
   it('formats the shown values, the marks and both handles\' aria-valuetext with formatValue', () => {

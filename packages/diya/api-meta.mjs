@@ -140,7 +140,8 @@ export const items = {
   choice: {
     kind: 'component', title: 'Choice', ...v1,
     exports: ['Choice'],
-    slots: {},
+    // Text with inline TextLinks (a consent box), or a hidden color swatch beside a name.
+    slots: { 'options[].label': { accepts: ['text-link'], content: ['text', 'icon'] } },
     children: none,
     state: uncontrolledFieldState,
     tokens: ['--diya-color-accent', '--diya-color-accent-text', '--diya-color-muted', '--diya-color-text',
