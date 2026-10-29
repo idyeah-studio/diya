@@ -125,7 +125,9 @@ The selected files are kept only in your caller state.
 Pass `{id, role: 'user' | 'assistant', text}` messages with unique IDs. On send,
 append your user message, clear the draft and call your own AI service. Append
 its reply when it succeeds. Keep `loading` true during the request and connect
-`onStop` to a real cancellation operation when offered.
+`onStop` to a real cancellation operation when offered. If you stream the reply
+into an assistant message, keep `loading` true until it is complete: the log is
+marked busy meanwhile, so screen readers read the reply once, not word by word.
 
 `layout="full-page"` fills its container's width and height: the header and
 composer stay put, and the thread takes the rest and scrolls, following the
