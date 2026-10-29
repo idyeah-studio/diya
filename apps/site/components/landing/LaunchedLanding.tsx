@@ -71,7 +71,7 @@ export function LaunchedLanding() {
               <div className="ld-launch-slot" data-launch-line-slot="" />
               <h1 id="hero-title">A library for your next app.</h1>
               <p className="ld-lede">
-                <b>25 components and 13 patterns for React.</b> Free, MIT, yours to own.
+                <b>27 components and 13 patterns for React.</b> Free, MIT, yours to own.
               </p>
               <div className="ld-actions">
                 <CreateChip />
