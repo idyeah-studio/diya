@@ -548,7 +548,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'ErrorPages',
     charts: false,
     status: 'ready',
-    tryThis: 'Move between the pages, copy the error ID on the server error, request access on the no-access page, or send a new link on the expired one.',
+    tryThis: 'Switch pages with the Demo control at the bottom, copy the error ID on the server error, request access on the no-access page, or send a new link on the expired one.',
     keywords: 'error 404 500 403 not found maintenance offline expired',
   },
 ]
