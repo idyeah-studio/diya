@@ -37,14 +37,17 @@ const EVENTS = [
   { value: 'email.opened', label: 'email.opened', description: 'Someone opened it.' },
   { value: 'email.complained', label: 'email.complained', description: 'Someone marked it as spam.' },
 ]
-const DAYS = ['Oct 23', 'Oct 24', 'Oct 25', 'Oct 26', 'Oct 27', 'Oct 28', 'Oct 29']
+const shortDate = (date: Date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+const fullDate = (date: Date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+// The last seven days, ending today. The chart only renders in the browser, after you open Webhooks.
+const lastWeek = () => Array.from({ length: 7 }, (_, i) => shortDate(new Date(Date.now() - (6 - i) * 86_400_000)))
 
 // Production starts with keys, endpoints and two connected apps. The sandbox starts empty.
 const KEYS: Key[] = [
   { id: 'k1', name: 'Billing worker', last4: '4f2a', created: 'Aug 14, 2026', lastUsed: '2 minutes ago', scopes: ['send', 'events'], expires: 'Never' },
-  { id: 'k2', name: 'Marketing site forms', last4: '9c71', created: 'Sep 2, 2026', lastUsed: 'Yesterday', scopes: ['send'], expires: 'Dec 1, 2026' },
-  { id: 'k3', name: 'Warehouse sync', last4: 'e03b', created: 'Oct 5, 2026', lastUsed: 'Oct 28', scopes: ['events'], expires: 'Never' },
-  { id: 'k4', name: 'Old staging server', last4: '71d8', created: 'Mar 9, 2026', lastUsed: 'Sep 30', scopes: ['send', 'domains'], expires: 'Never', revoked: 'Oct 2, 2026' },
+  { id: 'k2', name: 'Marketing site forms', last4: '9c71', created: 'Sep 2, 2026', lastUsed: 'Yesterday', scopes: ['send'], expires: 'in 5 weeks' },
+  { id: 'k3', name: 'Warehouse sync', last4: 'e03b', created: 'Oct 5, 2026', lastUsed: '3 days ago', scopes: ['events'], expires: 'Never' },
+  { id: 'k4', name: 'Old staging server', last4: '71d8', created: 'Mar 9, 2026', lastUsed: 'Last month', scopes: ['send', 'domains'], expires: 'Never', revoked: 'Oct 2, 2026' },
 ]
 const ENDPOINTS: Endpoint[] = [
   { id: 'w1', url: 'https://hooks.example.com/postwick', events: ['email.delivered', 'email.bounced', 'email.complained'], status: 'healthy',
@@ -137,6 +140,8 @@ function KeysPanel({ env, keys, onChange, notify }: { env: Env; keys: Key[]; onC
   const [revoking, setRevoking] = useState<Key>()
   const masked = (key: Key) => `sk_${env}_…${key.last4}`
 
+  const expiresText = (k: Key) => `Expires ${k.expires === 'Never' ? 'never' : k.expires.replace(/, \d{4}$/, '')}`
+  const revokedTag = (k: Key) => <Tag size="small" leading="dot" tone="error">Revoked {k.revoked?.replace(/, \d{4}$/, '')}</Tag>
   const columns: TableColumn<Key>[] = [
     { key: 'name', label: 'Name', width: 260, sortValue: (k) => k.name, render: (k) => (
       <span className="api-keys-who" data-revoked={k.revoked ? true : undefined}>
@@ -150,9 +155,7 @@ function KeysPanel({ env, keys, onChange, notify }: { env: Env; keys: Key[]; onC
     ) },
     { key: 'created', label: 'Created', width: 140, render: (k) => k.created },
     { key: 'used', label: 'Last used', width: 140, render: (k) => k.lastUsed },
-    { key: 'status', label: 'Status', width: 150, render: (k) => k.revoked
-      ? <Tag size="small" leading="dot" tone="error">Revoked {k.revoked.replace(/, \d{4}$/, '')}</Tag>
-      : <span className="api-keys-muted">Expires {k.expires === 'Never' ? 'never' : k.expires.replace(/, \d{4}$/, '')}</span> },
+    { key: 'status', label: 'Status', width: 150, render: (k) => k.revoked ? revokedTag(k) : <span className="api-keys-muted">{expiresText(k)}</span> },
     { key: 'actions', label: 'Actions', width: 110, numeric: true, render: (k) => !k.revoked && (
       <Button variant="quiet" size="small" onClick={() => setRevoking(k)} aria-label={`Revoke ${k.name}`}>Revoke</Button>
     ) },
@@ -164,7 +167,28 @@ function KeysPanel({ env, keys, onChange, notify }: { env: Env; keys: Key[]; onC
         text="Your servers use these to send mail. Treat them like passwords: keep them out of your code and your browser."
         action={keys.length > 0 && <Button onClick={() => setCreating(true)}><Plus /> Create key</Button>} />
       {keys.length ? (
-        <Table className="api-keys-table" label="API keys" showTitle={false} rows={keys} columns={columns} rowLabel={(k) => k.name} pagination={false} />
+        <>
+          <div className="api-keys-desk">
+            <Table className="api-keys-table" label="API keys" showTitle={false} rows={keys} columns={columns} rowLabel={(k) => k.name} pagination={false} />
+          </div>
+          {/* Phones get the same keys as stacked rows, so no column is cut off. */}
+          <ul className="api-keys-rows" aria-label="API keys">
+            {keys.map((k) => (
+              <li key={k.id} className="api-keys-row" data-revoked={k.revoked ? true : undefined}>
+                <span className="api-keys-row-text">
+                  <strong className="api-keys-row-name">{k.name}</strong>
+                  <span className="api-keys-row-meta">
+                    <span className="api-keys-mono" aria-hidden="true">{masked(k)}</span>
+                    <span className="api-keys-sr">{env === 'live' ? 'Live' : 'Sandbox'} key ending {k.last4}</span>
+                    {' · '}{k.scopes.map((s) => SCOPE_TAGS[s]).join(', ')}
+                  </span>
+                  <span className="api-keys-row-meta">Used {k.lastUsed.toLowerCase()}{k.revoked ? '' : ` · ${expiresText(k).toLowerCase()}`}</span>
+                </span>
+                {k.revoked ? revokedTag(k) : <Button variant="outline" size="small" onClick={() => setRevoking(k)} aria-label={`Revoke ${k.name}`}>Revoke</Button>}
+              </li>
+            ))}
+          </ul>
+        </>
       ) : (
         <ContentState className="api-keys-empty" headingLevel={3} icon={<KeyRound />} title={`No ${env === 'test' ? 'sandbox ' : ''}keys yet`}
           description="Create one to start sending. Sandbox keys send to a test inbox, so nobody gets an email by accident."
@@ -178,7 +202,7 @@ function KeysPanel({ env, keys, onChange, notify }: { env: Env; keys: Key[]; onC
         onConfirm={async () => {
           if (!revoking) return
           await revokeKey(revoking.id)
-          onChange(keys.map((k) => (k.id === revoking.id ? { ...k, revoked: 'Oct 29, 2026' } : k)))
+          onChange(keys.map((k) => (k.id === revoking.id ? { ...k, revoked: fullDate(new Date()) } : k)))
           notify('success', 'Key revoked', `${revoking.name} no longer works. Requests that use it get a 401.`)
         }}>
         {revoking?.lastUsed.includes('minute') && (
@@ -220,8 +244,8 @@ function CreateKeyDialog({ open, env, keys, onOpenChange, onCreated }: {
     try {
       const full = await createKey(env, name.trim(), keys)
       const days = Number(expiry)
-      const expires = expiry === 'never' ? 'Never' : new Date(2026, 9, 29 + days).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      onCreated({ id: full, name: name.trim(), last4: full.slice(-4), created: 'Oct 29, 2026', lastUsed: 'Never', scopes, expires })
+      const expires = expiry === 'never' ? 'Never' : fullDate(new Date(Date.now() + days * 86_400_000))
+      onCreated({ id: full, name: name.trim(), last4: full.slice(-4), created: fullDate(new Date()), lastUsed: 'Never', scopes, expires })
       setSecret(full)
     } catch (error) {
       setErrors({ name: (error as Error).message })
@@ -339,7 +363,7 @@ function WebhooksPanel({ endpoints, onChange, notify }: { endpoints: Endpoint[];
               <p className="api-keys-muted">Nothing sent yet. Send a test event to check that your server answers.</p>
             ) : (
               <DataViz title="Deliveries, last 7 days" description={`${sum(endpoint.delivered).toLocaleString('en-US')} delivered, ${sum(endpoint.failed).toLocaleString('en-US')} failed`}
-                headingLevel={4} type="bar" variant="stacked" height={240} categories={DAYS} showDataToggle
+                headingLevel={4} type="bar" variant="stacked" height={240} categories={lastWeek()} showDataToggle
                 series={[{ name: 'Delivered', values: endpoint.delivered }, { name: 'Failed', values: endpoint.failed }]} />
             )}
             <div>
@@ -491,7 +515,7 @@ function PanelHead({ id, title, text, action }: { id: string; title: string; tex
 const css = `
 .api-keys { min-height: 100dvh; color: var(--diya-color-text); --api-keys-gutter: var(--diya-space-7); }
 .api-keys-bar, .api-keys-main { width: 100%; max-width: 1200px; margin: 0 auto; padding-inline: var(--api-keys-gutter); }
-.api-keys-bar { display: flex; align-items: center; justify-content: space-between; padding-block: var(--diya-space-5); }
+.api-keys-bar { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding-block: var(--diya-space-5); }
 .api-keys-brand { display: inline-flex; align-items: center; gap: 10px; border-radius: 8px; color: inherit; font-size: var(--diya-text-large); font-weight: 600; letter-spacing: -0.01em; text-decoration: none; }
 .api-keys-brand:focus-visible { outline: 2px solid var(--diya-color-accent); outline-offset: 4px; }
 .api-keys-mark {
@@ -501,10 +525,11 @@ const css = `
 .api-keys-main { padding-top: var(--diya-space-7); padding-bottom: var(--diya-space-8); }
 .api-keys-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--diya-space-4) var(--diya-space-6); }
 .api-keys-heading { display: grid; gap: var(--diya-space-2); min-width: 0; max-width: 720px; }
-.api-keys-title { margin: 0; font-size: var(--diya-text-display); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.025em; }
+.api-keys-title { margin: 0; font-size: 28px; font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.025em; }
 .api-keys-lede { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-large); line-height: var(--diya-leading-body); text-wrap: pretty; }
 .api-keys-env { width: 180px; }
 .api-keys-tabs { margin-top: var(--diya-space-6); }
+.api-keys-tabs [role='tablist'] { width: 100%; }
 .api-keys-panel { display: grid; gap: var(--diya-space-5); padding-top: var(--diya-space-6); }
 .api-keys-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--diya-space-4); }
 .api-keys-muted { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: var(--diya-leading-body); text-wrap: pretty; }
@@ -518,6 +543,12 @@ const css = `
 .api-keys-who[data-revoked] { color: var(--diya-color-muted); }
 .api-keys-mono { color: var(--diya-color-muted); font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--diya-text-caption); }
 .api-keys-scopes { display: flex; flex-wrap: wrap; gap: 6px; }
+.api-keys-rows { display: none; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--diya-color-line); }
+.api-keys-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--diya-space-3); padding: var(--diya-space-3) 0; border-bottom: 1px solid var(--diya-color-line); }
+.api-keys-row-text { display: grid; gap: 2px; min-width: 0; }
+.api-keys-row-name { font-size: var(--diya-text-body); font-weight: 550; }
+.api-keys-row[data-revoked] .api-keys-row-name { color: var(--diya-color-muted); }
+.api-keys-row-meta { overflow: hidden; color: var(--diya-color-muted); font-size: var(--diya-text-caption); text-overflow: ellipsis; white-space: nowrap; }
 
 .api-keys-copy { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--diya-space-3); }
 
@@ -543,8 +574,13 @@ const css = `
   .api-keys { --api-keys-gutter: var(--diya-space-5); }
   .api-keys-hooks { grid-template-columns: minmax(0, 1fr); }
 }
+@media (max-width: 640px) {
+  .api-keys-desk { display: none; }
+  .api-keys-rows { display: block; }
+}
 @media (max-width: 520px) {
   .api-keys { --api-keys-gutter: var(--diya-space-4); }
+  .api-keys-bar { padding-block: 0; }
   .api-keys-main { padding-top: var(--diya-space-5); }
   .api-keys-env { width: 100%; }
   .api-keys-panel-head > :last-child:not(.api-keys-heading) { width: 100%; }
