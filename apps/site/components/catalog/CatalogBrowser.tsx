@@ -159,16 +159,16 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
         </div>
         <nav ref={nav} id={resultsId} className="atomic-navigation" aria-label={words[area].nav}>
           {own.map((group) => (
-            <section className="atomic-group" key={group.title} aria-label={group.title}>
+            <div role="group" className="atomic-group" key={group.title} aria-label={group.title}>
               <h2>{group.title}</h2>
               {group.items.map((item) => link(area, item))}
-            </section>
+            </div>
           ))}
           {elsewhere.map((other) => (
-            <section className="atomic-group catalog-elsewhere" key={other.area} aria-label={`In ${words[other.area].title}`}>
+            <div role="group" className="atomic-group catalog-elsewhere" key={other.area} aria-label={`In ${words[other.area].title}`}>
               <h2>In {words[other.area].title}</h2>
               {other.items.map((item) => link(other.area, item))}
-            </section>
+            </div>
           ))}
           {ownCount === 0 && elsewhere.length === 0 && (
             <p className="atomic-empty">No components, patterns or screens match “{query.trim()}”.</p>
