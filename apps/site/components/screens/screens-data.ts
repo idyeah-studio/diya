@@ -170,7 +170,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'SearchResults',
     charts: false,
     status: 'ready',
-    tryThis: 'Pick a recent search, type “onbaording” for a suggestion, “zebra” for tips, then filter by team; on a phone, filters move to a drawer.',
+    tryThis: 'It opens on a search for “brand”. Clear it for recent searches, type “onbaording” for a suggestion or “zebra” for tips, then filter by team; on a phone, filters move to a drawer.',
     keywords: 'find query filters results directory global search',
   },
   {

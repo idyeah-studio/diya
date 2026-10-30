@@ -2,11 +2,14 @@
 // Search results: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/search/page.tsx. Vite: save as src/SearchResults.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Avatar, Button, Choice, Drawer, Inline, List, Pagination, Search, Select, Stack, Tabs, TextLink } from '@idyeah/diya'
+import { Avatar, Button, Choice, Drawer, Inline, List, Menu, Pagination, Search, Select, Stack, Tabs, TextLink } from '@idyeah/diya'
 import { Clock, FileText, FolderKanban, LucideProvider, SlidersHorizontal } from 'lucide-react'
 
 // Your workspace and what's in it. Replace with your own search index.
 const PRODUCT = 'Fieldbook'
+const ME = { name: 'Imani Brooks' }
+// The page opens on this search. Use '' to open on recent searches instead.
+const START = 'brand'
 const PAGE_SIZE = 6
 const POPULAR = ['onboarding', 'launch', 'roadmap', 'hiring', 'expense policy']
 const TEAMS = ['Design', 'Engineering', 'Marketing', 'Operations', 'People', 'Product']
@@ -127,10 +130,11 @@ function writeQuery(query: string, push: boolean) {
 }
 
 export default function SearchResultsScreen() {
-  const [draft, setDraft] = useState('')
-  const [query, setQuery] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done'>('idle')
-  const [found, setFound] = useState<{ results: Result[]; suggestion?: string }>({ results: [] })
+  const [draft, setDraft] = useState(START)
+  const [query, setQuery] = useState(START)
+  // The opening search is answered on the first render, so the page never opens on a spinner.
+  const [found, setFound] = useState<{ query: string; results: Result[]; suggestion?: string }>(() => ({ query: START, results: matches(START) }))
+  const status = !query ? 'idle' : found.query === query ? 'done' : 'loading'
   const [kind, setKind] = useState<'all' | Kind>('all')
   const [teams, setTeams] = useState<string[]>([])
   const [date, setDate] = useState('any')
@@ -154,8 +158,8 @@ export default function SearchResultsScreen() {
   }
 
   useEffect(() => {
-    const restore = () => {
-      const text = new URLSearchParams(window.location.search).get('q') ?? ''
+    const restore = (event?: PopStateEvent) => {
+      const text = new URLSearchParams(window.location.search).get('q') ?? (event ? '' : START)
       latest.current = text.trim()
       setDraft(text)
       setQuery(text.trim())
@@ -178,13 +182,10 @@ export default function SearchResultsScreen() {
 
   useEffect(() => {
     setPage(1)
-    if (!query) return setStatus('idle')
+    if (!query || query === found.query) return
     let current = true
-    setStatus('loading')
     search(query).then((answer) => {
-      if (!current) return
-      setFound(answer)
-      setStatus('done')
+      if (current) setFound({ query, ...answer })
     })
     return () => {
       current = false
@@ -264,37 +265,45 @@ export default function SearchResultsScreen() {
 
   return (
     <LucideProvider size={18} strokeWidth={1.6}>
-      <main className="search-results">
+      <div className="search-results">
         <style>{css}</style>
-        <header className="search-results-header">
-          <h1 className="search-results-title">Search</h1>
-          <form role="search" className="search-results-form" onSubmit={(event) => { event.preventDefault(); commit(draft) }}>
-            <Search label={`Search ${PRODUCT}`} hideLabel size="large" clearable placeholder="Docs, projects and people"
-              autoComplete="off" enterKeyHint="search" value={draft} onValueChange={setDraft} />
-          </form>
+        <header className="search-results-top">
+          <span className="search-results-brand"><span className="search-results-logo" aria-hidden="true">{PRODUCT[0]}</span>{PRODUCT}</span>
+          <Menu label="Account" items={[{ id: 'settings', label: 'Account settings', href: '/settings' }, { id: 'sign-out', label: 'Sign out', href: '/sign-out' }]}
+            trigger={<button type="button" className="search-results-account" aria-label={`${ME.name}: account`}><Avatar name={ME.name} size="small" /></button>} />
         </header>
+        <main className="search-results-page">
+          <header className="search-results-header">
+            <h1 className="search-results-title">Search</h1>
+            <form role="search" className="search-results-form" onSubmit={(event) => { event.preventDefault(); commit(draft) }}>
+              <Search className="search-results-field" label={`Search ${PRODUCT}`} hideLabel size="large" clearable placeholder="Docs, projects and people"
+                autoComplete="off" enterKeyHint="search" value={draft} onValueChange={setDraft} />
+            </form>
+          </header>
 
-        {query ? (
-          <Tabs
-            label="Result types"
-            value={kind}
-            onValueChange={(next) => { setKind(next as 'all' | Kind); setPage(1) }}
-            items={(['all', 'doc', 'project', 'person'] as const).map((type) => ({
-              value: type,
-              label: type === 'all' ? 'All' : KINDS[type].plural,
-              badge: status === 'done' && type !== 'all' ? { variant: 'count' as const, count: count(type), showZero: true, label: count(type) === 1 ? 'result' : 'results' } : undefined,
-              content: type === kind ? panel : null,
-            }))}
-          />
-        ) : (
-          <Start recent={recent} onPick={(text) => commit(text, true)} onClear={() => setRecent([])} />
-        )}
+          {query ? (
+            <Tabs
+              className="search-results-tabs"
+              label="Result types"
+              value={kind}
+              onValueChange={(next) => { setKind(next as 'all' | Kind); setPage(1) }}
+              items={(['all', 'doc', 'project', 'person'] as const).map((type) => ({
+                value: type,
+                label: type === 'all' ? 'All' : KINDS[type].plural,
+                badge: status === 'done' && type !== 'all' ? { variant: 'count' as const, count: count(type), showZero: true, label: count(type) === 1 ? 'result' : 'results' } : undefined,
+                content: type === kind ? panel : null,
+              }))}
+            />
+          ) : (
+            <Start recent={recent} onPick={(text) => commit(text, true)} onClear={() => setRecent([])} />
+          )}
 
-        <Drawer open={filtersOpen} onOpenChange={setFiltersOpen} title="Filters" headingLevel={2}
-          footer={<Button className="search-results-wide" onClick={() => setFiltersOpen(false)}>Show {plural(sorted.length, 'result')}</Button>}>
-          <Facets {...facets} />
-        </Drawer>
-      </main>
+          <Drawer open={filtersOpen} onOpenChange={setFiltersOpen} title="Filters" headingLevel={2}
+            footer={<Button className="search-results-wide" onClick={() => setFiltersOpen(false)}>Show {plural(sorted.length, 'result')}</Button>}>
+            <Facets {...facets} />
+          </Drawer>
+        </main>
+      </div>
     </LucideProvider>
   )
 }
@@ -384,27 +393,34 @@ function Start({ recent, onPick, onClear }: { recent: string[]; onPick: (text: s
 }
 
 const css = `
-.search-results {
-  min-height: 100dvh;
+.search-results { min-height: 100dvh; color: var(--diya-color-text); }
+.search-results-top { display: none; }
+.search-results-brand { display: inline-flex; align-items: center; gap: 10px; font-size: var(--diya-text-large); font-weight: 600; letter-spacing: -0.01em; }
+.search-results-logo {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: calc(8px * var(--diya-corner-scale, 1));
+  background: var(--diya-color-accent); color: var(--diya-color-accent-text); font-size: var(--diya-text-body); font-weight: 650; line-height: 1;
+}
+.search-results-account { display: grid; padding: 4px; margin-right: -4px; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.search-results-account:focus-visible { outline: 2px solid var(--diya-color-accent); outline-offset: 2px; }
+.search-results-page {
   box-sizing: border-box;
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: var(--diya-space-8) var(--diya-space-7);
+  max-width: calc(880px + 2 * var(--diya-space-7));
+  padding: var(--diya-space-7) var(--diya-space-7) var(--diya-space-8);
   display: flex;
   flex-direction: column;
   gap: var(--diya-space-6);
-  color: var(--diya-color-text);
 }
 .search-results-header { display: grid; gap: var(--diya-space-5); }
 .search-results-title {
   margin: 0;
-  font-size: var(--diya-text-display);
+  font-size: 28px;
   font-weight: 600;
   line-height: var(--diya-leading-tight);
   letter-spacing: -0.02em;
 }
-.search-results-form { max-width: 720px; }
-.search-results-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--diya-space-7); padding-top: var(--diya-space-5); }
+.search-results-field { max-width: none; }
+.search-results-tabs [role='tablist'] { width: 100%; }
+.search-results-layout { display: grid; grid-template-columns: 184px minmax(0, 1fr); gap: var(--diya-space-7); padding-top: var(--diya-space-5); }
 .search-results-main { display: grid; gap: var(--diya-space-5); align-content: start; min-width: 0; }
 .search-results-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--diya-space-3); }
 .search-results-count {
@@ -464,21 +480,27 @@ const css = `
 .search-results-text-button { padding: 0; border: 0; background: none; font: inherit; font-weight: 600; cursor: pointer; }
 .search-results-tips { display: grid; gap: var(--diya-space-3); max-width: 560px; }
 .search-results-tip-list { margin: 0; padding-left: var(--diya-space-5); display: grid; gap: var(--diya-space-2); color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: var(--diya-leading-body); }
-.search-results-start { display: grid; gap: var(--diya-space-7); max-width: 720px; padding-top: var(--diya-space-3); }
+.search-results-start { display: grid; gap: var(--diya-space-7); padding-top: var(--diya-space-3); }
 .search-results-section { display: grid; gap: var(--diya-space-4); align-content: start; }
 .search-results-section-head { display: flex; align-items: center; justify-content: space-between; min-height: 32px; }
 .search-results-section-title { margin: 0; font-size: var(--diya-text-caption); font-weight: 600; color: var(--diya-color-muted); }
 .search-results-section > .search-results-section-title { min-height: 32px; display: flex; align-items: center; }
 .search-results-wide { width: 100%; }
 @media (max-width: 860px) {
-  .search-results { padding: var(--diya-space-6) var(--diya-space-5); }
+  .search-results-page { padding: var(--diya-space-6) var(--diya-space-5); }
   .search-results-layout { grid-template-columns: minmax(0, 1fr); padding-top: var(--diya-space-4); }
   .search-results-facets { display: none; }
   .search-results-filter-button { display: inline-flex; }
 }
+@media (max-width: 720px) {
+  .search-results-top {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-3); position: sticky; top: 0; z-index: 10;
+    height: 56px; box-sizing: border-box; padding: 0 var(--diya-space-4); border-bottom: 1px solid var(--diya-color-line);
+    background: color-mix(in srgb, var(--diya-color-surface) 82%, transparent); backdrop-filter: blur(20px) saturate(1.4);
+  }
+  .search-results-page { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); gap: var(--diya-space-5); }
+}
 @media (max-width: 520px) {
-  .search-results { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); gap: var(--diya-space-5); }
-  .search-results-title { font-size: var(--diya-text-heading); }
   .search-results-sort { width: 148px; }
   .search-results-item { grid-template-columns: minmax(0, 1fr); gap: var(--diya-space-2); }
   .search-results-icon { display: none; }
