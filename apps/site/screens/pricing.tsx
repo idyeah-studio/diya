@@ -1,7 +1,7 @@
 'use client'
 // Pricing: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/pricing/page.tsx. Vite: save as src/Pricing.tsx and render it inside your DiyaProvider.
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import {
   Accordion, Button, Card, Dialog, Metric, Select, SiteHeader, Slider, Table, Tabs, TextArea, TextInput, TextLink, Toast, type TableColumn,
 } from '@idyeah/diya'
@@ -12,6 +12,10 @@ const PRODUCT = 'Lumenary'
 const YEARLY_DISCOUNT = 0.2
 const TRIAL_DAYS = 14
 const MAX_SEATS = 100
+
+// This year, from the reader's clock. The server can't know it, so it renders 0 and the year fills in once the page loads.
+const subscribeNever = () => () => {}
+const useYear = () => useSyncExternalStore(subscribeNever, () => new Date().getFullYear(), () => 0)
 
 type PlanId = 'free' | 'team' | 'business'
 type Plan = { id: PlanId; name: string; pitch: string; monthly: number; action: string; href: string; lead: string; features: string[] }
@@ -81,6 +85,7 @@ const emailProblem = (email: string) =>
   !email.trim() ? 'Enter your work email.' : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? undefined : 'Enter an email address like name@example.com.'
 
 export default function PricingScreen() {
+  const year = useYear()
   const [period, setPeriod] = useState<Period>('yearly')
   const [salesOpen, setSalesOpen] = useState(false)
   const [sentTo, setSentTo] = useState<string>()
@@ -161,7 +166,7 @@ export default function PricingScreen() {
 
         <footer className="pricing-footer">
           <p>Prices in US dollars, before tax.</p>
-          <p>© 2026 {PRODUCT}</p>
+          <p>©{year ? ` ${year}` : ''} {PRODUCT}</p>
         </footer>
 
         <SalesDialog open={salesOpen} onOpenChange={setSalesOpen} onSent={setSentTo} />
@@ -221,7 +226,7 @@ function Calculator({ period, onPeriodChange, onTalk }: { period: Period; onPeri
   return (
     <section className="pricing-section pricing-split" aria-labelledby="pricing-calc">
       <Heading id="pricing-calc" lede="Slide to the size of your team for a monthly estimate. Guests and people who only view are free, so leave them out.">
-        What would we pay?
+        What your team would pay
       </Heading>
       <Card title="Your estimate" className="pricing-calc-card" divided
         footer={
@@ -349,11 +354,11 @@ const css = `
   background: var(--diya-color-accent); color: var(--diya-color-accent-text);
   font-size: var(--diya-text-body); font-weight: 700;
 }
-.pricing-main { flex: 1; width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 var(--diya-space-5); }
+.pricing-main { flex: 1; width: 100%; max-width: calc(1132px + 2 * var(--diya-space-7)); margin: 0 auto; padding: 0 var(--diya-space-7); }
 .pricing-hero { display: grid; justify-items: center; padding: clamp(56px, 10vh, 112px) 0 var(--diya-space-8); text-align: center; }
 .pricing-h1 {
   max-width: 14ch; margin: 0;
-  font-size: clamp(40px, 6.4vw, 80px); font-weight: 650; line-height: 1.02; letter-spacing: -0.045em; text-wrap: balance;
+  font-size: clamp(40px, 6.4vw, 80px); font-weight: 650; line-height: 1.02; letter-spacing: -0.03em; text-wrap: balance;
 }
 .pricing-h2 { margin: 0; font-size: clamp(30px, 3.8vw, 48px); font-weight: 650; line-height: 1.06; letter-spacing: -0.035em; text-wrap: balance; }
 .pricing-lede {
@@ -381,7 +386,7 @@ const css = `
   max-width: 820px; margin: var(--diya-space-7) 0 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: 1.5; text-wrap: pretty;
 }
 .pricing-enterprise strong { color: var(--diya-color-text); font-weight: 600; }
-.pricing-section { display: grid; gap: var(--diya-space-6); padding: var(--diya-space-8) 0; border-top: 1px solid var(--diya-color-line); }
+.pricing-section { display: grid; gap: var(--diya-space-6); padding: var(--diya-space-7) 0; }
 .pricing-heading { display: grid; gap: var(--diya-space-4); }
 .pricing-split { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; gap: var(--diya-space-7); }
 .pricing-full { width: 100%; max-width: none; }
@@ -402,7 +407,7 @@ const css = `
 .pricing-dialog-fields { display: grid; gap: var(--diya-space-4); }
 .pricing-footer {
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--diya-space-2) var(--diya-space-5);
-  width: calc(100% - 2 * var(--diya-space-5)); max-width: 1132px; margin: 0 auto; padding: var(--diya-space-5) 0;
+  width: calc(100% - 2 * var(--diya-space-7)); max-width: 1132px; margin: 0 auto; padding: var(--diya-space-5) 0;
   border-top: 1px solid var(--diya-color-line); color: var(--diya-color-muted); font-size: var(--diya-text-caption);
 }
 .pricing-footer p { margin: 0; }
@@ -410,9 +415,15 @@ const css = `
   .pricing-plans { grid-template-columns: minmax(0, 1fr); max-width: 520px; margin-inline: auto; }
   .pricing-split { grid-template-columns: minmax(0, 1fr); gap: var(--diya-space-6); }
 }
-@media (max-width: 520px) {
+@media (max-width: 900px) {
+  .pricing-main { padding: 0 var(--diya-space-5); }
+  .pricing-footer { width: calc(100% - 2 * var(--diya-space-5)); }
+}
+@media (max-width: 640px) {
   .pricing-main { padding: 0 var(--diya-space-4); }
   .pricing-footer { width: calc(100% - 2 * var(--diya-space-4)); }
+}
+@media (max-width: 520px) {
   .pricing-hero { padding-top: var(--diya-space-7); }
   .pricing-section { padding: var(--diya-space-7) 0; }
   .pricing-calc-results { grid-template-columns: minmax(0, 1fr); }
