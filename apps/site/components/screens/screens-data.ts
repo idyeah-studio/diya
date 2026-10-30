@@ -507,7 +507,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'Booking',
     charts: false,
     status: 'ready',
-    tryThis: 'Choose 45 minutes and pick Friday, November 13 for a day with no times, take the first time on Thursday, November 12 (someone just got it), or book any other to see the confirmation.',
+    tryThis: 'Take the first time on offer (someone just got it), or choose 45 minutes to find that day has no times left. Book any other time for the confirmation, then reschedule or cancel from there.',
     keywords: 'booking appointment calendar schedule demo meeting',
   },
   {
