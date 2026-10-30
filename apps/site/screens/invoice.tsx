@@ -3,8 +3,8 @@
 // Next.js: save as app/invoices/[id]/page.tsx. Vite: save as src/Invoice.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import {
-  Alert, Button, DatePicker, Dialog, Menu, Select, Stack, Table, Tabs, Tag, TextArea, TextInput, TextLink, Toast, useDiyaAppearance,
-  type TableColumn, type Tone,
+  Alert, Button, DatePicker, Dialog, Menu, Select, Stack, Tabs, Tag, TextArea, TextInput, TextLink, Toast, useDiyaAppearance,
+  type Tone,
 } from '@idyeah/diya'
 import { ArrowLeft, Check, ChevronDown, Download, LucideProvider, Send, X } from 'lucide-react'
 
@@ -322,22 +322,6 @@ type PaperProps = {
   dates: [string, string][]; totals: [string, string][]; stamp?: ReactNode; footer: ReactNode
 }
 
-const columns: TableColumn<Item>[] = [
-  { key: 'name', label: 'Description', render: (item) => (
-    <span className="invoice-item"><span>{item.name}</span>{item.detail && <span className="invoice-muted">{item.detail}</span>}</span>
-  ) },
-  { key: 'qty', label: 'Qty', numeric: true, width: 64, render: (item) => item.qty },
-  { key: 'rate', label: 'Rate', numeric: true, width: 110, render: (item) => usd(item.rate) },
-  { key: 'amount', label: 'Amount', numeric: true, width: 120, render: (item) => usd(item.qty * item.rate) },
-]
-// Phones get two columns, with the quantity and rate under each description.
-const phoneColumns: TableColumn<Item>[] = [
-  { key: 'name', label: 'Description', render: (item) => (
-    <span className="invoice-item"><span>{item.name}</span><span className="invoice-muted">{item.qty} × {usd(item.rate)}</span></span>
-  ) },
-  columns[3],
-]
-
 // The printable sheet. Download PDF prints only this, through the print styles at the bottom.
 function Paper(props: PaperProps) {
   const subtotal = sum(props.items)
@@ -368,10 +352,34 @@ function Paper(props: PaperProps) {
         </dl>
       </div>
 
-      {[columns, phoneColumns].map((shown, index) => (
-        <Table key={index} className={index ? 'invoice-lines invoice-lines-phone' : 'invoice-lines invoice-lines-wide'} label="Line items" showTitle={false}
-          rows={props.items} columns={shown} rowLabel={(item) => item.name} pagination={false} density="compact" />
-      ))}
+      {/* A plain table, ruled like paper. Phones fold the quantity and rate under each description. */}
+      <table className="invoice-lines">
+        <caption className="invoice-sr">Line items</caption>
+        <thead>
+          <tr>
+            <th scope="col">Description</th>
+            <th scope="col" className="invoice-num invoice-wide">Qty</th>
+            <th scope="col" className="invoice-num invoice-wide">Rate</th>
+            <th scope="col" className="invoice-num">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {props.items.map((item) => (
+            <tr key={item.id}>
+              <td>
+                <span className="invoice-item">
+                  <span>{item.name}</span>
+                  {item.detail && <span className="invoice-muted">{item.detail}</span>}
+                  <span className="invoice-muted invoice-narrow">{item.qty} × {usd(item.rate)}</span>
+                </span>
+              </td>
+              <td className="invoice-num invoice-wide">{item.qty}</td>
+              <td className="invoice-num invoice-wide">{usd(item.rate)}</td>
+              <td className="invoice-num">{usd(item.qty * item.rate)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
       <dl className="invoice-totals">
         <div><dt>Subtotal</dt><dd>{usd(subtotal)}</dd></div>
@@ -402,11 +410,14 @@ function Party({ label, lines }: { label: string; lines: string[] }) {
 const css = `
 .invoice { min-height: 100dvh; background: var(--diya-color-recessed); color: var(--diya-color-text); }
 .invoice[data-glass] { background: none; }
-.invoice-page { box-sizing: border-box; width: 100%; max-width: 920px; margin: 0 auto; display: grid; gap: var(--diya-space-5);
+.invoice-page { box-sizing: border-box; width: 100%; max-width: 920px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center;
   padding: var(--diya-space-6) var(--diya-space-6) var(--diya-space-8); }
 .invoice-back { justify-self: start; }
-.invoice-tabs { min-width: 0; }
-.invoice-view { display: grid; gap: var(--diya-space-5); padding-top: var(--diya-space-5); }
+/* One row for the way back and the Invoice/Quote switch; the document fills the row under it. */
+.invoice-tabs { display: contents; }
+.invoice-page > .invoice-tabs > [role='tablist'] { grid-column: 2; grid-row: 1; }
+.invoice-page > .invoice-tabs > [role='tabpanel'] { grid-column: 1 / -1; min-width: 0; }
+.invoice-view { display: grid; gap: var(--diya-space-5); }
 .invoice-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--diya-space-3); }
 .invoice-switch, .invoice-number { font-weight: 600; font-variant-numeric: tabular-nums; }
 .invoice-switch { margin-inline-start: calc(var(--diya-space-3) * -1); }
@@ -438,8 +449,13 @@ const css = `
 .invoice-dates { display: grid; gap: var(--diya-space-3); margin: 0; }
 .invoice-dates dd { margin: 0; font-variant-numeric: tabular-nums; }
 .invoice-dates .invoice-label { margin: 0; }
-.invoice-lines { min-width: 0; }
-.invoice-lines-phone { display: none; }
+.invoice-lines { width: 100%; border-collapse: collapse; font-size: var(--diya-text-body); font-variant-numeric: tabular-nums; }
+.invoice-lines th { padding: 0 var(--diya-space-4) var(--diya-space-3); border-bottom: 1px solid var(--diya-color-line); color: var(--diya-color-muted); font-size: var(--diya-text-caption); font-weight: 500; text-align: left; }
+.invoice-lines td { padding: var(--diya-space-3) var(--diya-space-4); border-bottom: 1px solid var(--diya-color-line); vertical-align: top; }
+.invoice-lines :is(th, td):first-child { padding-left: 0; }
+.invoice-lines .invoice-num { text-align: right; white-space: nowrap; }
+.invoice-narrow { display: none; }
+.invoice-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .invoice-item { display: grid; gap: 2px; }
 .invoice-totals { display: grid; gap: var(--diya-space-2); width: min(100%, 320px); margin: calc(var(--diya-space-5) * -1) 0 0 auto; font-size: var(--diya-text-body); font-variant-numeric: tabular-nums; }
 .invoice-totals div { display: flex; justify-content: space-between; gap: var(--diya-space-5); padding-inline: var(--diya-space-4); }
@@ -470,8 +486,8 @@ const css = `
   .invoice-head { flex-direction: column-reverse; }
   .invoice-titles { justify-items: start; text-align: start; }
   .invoice-title { font-size: var(--diya-text-heading); }
-  .invoice-lines-wide { display: none; }
-  .invoice-lines-phone { display: block; }
+  .invoice-lines .invoice-wide { display: none; }
+  .invoice-narrow { display: block; }
   .invoice-parties { grid-template-columns: minmax(0, 1fr); }
   .invoice-paper { margin-inline: calc(var(--diya-space-4) * -1); border-inline: 0; border-radius: 0; }
 }
