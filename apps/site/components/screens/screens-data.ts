@@ -144,7 +144,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'RecordDetail',
     charts: false,
     status: 'ready',
-    tryThis: 'Switch tabs to load each one, filter Activity by Support for the empty state, edit and save the notes, or delete the customer and undo it.',
+    tryThis: 'Switch tabs to load each one, filter Activity by Support for the empty state, edit and save the notes, or delete the customer from the … menu and undo it.',
     keywords: 'detail record project customer order ticket overview',
   },
   {

@@ -1,12 +1,12 @@
 'use client'
 // Record detail: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/customers/[id]/page.tsx. Vite: save as src/RecordDetail.tsx and render it inside your DiyaProvider.
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Avatar, Breadcrumbs, Button, Card, ContentState, Dialog, List, Menu, Metric, Progress, Select, Table, Tabs, Tag, TextArea, TextLink, Toast,
   type ListItem, type Tone,
 } from '@idyeah/diya'
-import { CircleCheck, Copy, Download, Ellipsis, ExternalLink, Headset, LucideProvider, Mail, Pencil, Receipt, Trash, UserPlus, UserRound } from 'lucide-react'
+import { ChevronLeft, CircleCheck, Copy, Download, Ellipsis, ExternalLink, Headset, LucideProvider, Mail, Pencil, Receipt, Trash, UserPlus, UserRound } from 'lucide-react'
 
 // The customer this page shows. In your app, load it by the id in the URL.
 const CUSTOMER = {
@@ -81,7 +81,6 @@ export default function RecordDetailScreen() {
   const [notice, setNotice] = useState<{ id: number; title: string; text: string; tone?: 'info' }>()
   const headingRef = useRef<HTMLDivElement>(null)
   const [moved, moveFocus] = useState(0)
-  const dangerId = useId()
   const c = CUSTOMER
 
   // On a tab's first visit, load its data.
@@ -127,10 +126,17 @@ export default function RecordDetailScreen() {
 
   return (
     <LucideProvider size={18} strokeWidth={1.6}>
-      <main className="record-detail">
+      <div className="record-detail">
         <style>{css}</style>
-        <div className="record-detail-page" ref={headingRef}>
-          <Breadcrumbs items={[{ label: 'Customers', href: '/customers' }, { label: c.name, href: `/customers/${c.id}` }]} />
+        <header className="record-detail-bar">
+          <a className="record-detail-back" href="/customers"><ChevronLeft /> Customers</a>
+          <Menu label="Account" items={[{ id: 'settings', label: 'Account settings', href: '/settings' }, { id: 'sign-out', label: 'Sign out', href: '/sign-out' }]}
+            trigger={<button type="button" className="record-detail-account" aria-label={`${c.owner}: account`}><Avatar name={c.owner} size="small" /></button>} />
+        </header>
+        <main className="record-detail-page" ref={headingRef}>
+          <div className="record-detail-crumbs">
+            <Breadcrumbs items={[{ label: 'Customers', href: '/customers' }, { label: c.name, href: `/customers/${c.id}` }]} />
+          </div>
 
           {deleted ? (
             <ContentState className="record-detail-gone" headingLevel={1} icon={<Trash />} title={`${c.name} was deleted`}
@@ -149,7 +155,7 @@ export default function RecordDetailScreen() {
                 </div>
                 <div className="record-detail-actions">
                   <Button variant="outline" href={`mailto:${c.contact.email}`}><Mail /> Email {first(c.contact.name)}</Button>
-                  <Menu label={`More actions for ${c.name}`} triggerIcon={<Ellipsis />} items={[
+                  <Menu label={`More actions for ${c.name}`} trigger={<Button variant="outline" iconOnly aria-label={`More actions for ${c.name}`}><Ellipsis /></Button>} items={[
                     { id: 'copy', label: 'Copy customer ID', icon: <Copy />, onSelect: copyId },
                     { id: 'billing', label: 'Open in billing system', icon: <ExternalLink />, href: `/billing/customers/${c.ref}` },
                     { id: 'export', label: 'Export history', icon: <Download />, onSelect: () => notify('Export on its way', `We’ll email ${c.id}-history.csv to you in a minute.`) },
@@ -169,9 +175,16 @@ export default function RecordDetailScreen() {
 
                 <aside className="record-detail-side" aria-label="About this customer">
                   <Card title="Details" headingLevel={2}>
-                    <List label="Key facts" divided size="small" items={[
-                      { id: 'contact', label: c.contact.name, description: `${c.contact.role} · ${c.contact.email}`, leading: <Avatar name={c.contact.name} size="small" /> },
-                      ...facts([
+                    <div className="record-detail-contact">
+                      <Avatar name={c.contact.name} size="small" />
+                      <span className="record-detail-contact-text">
+                        <span className="record-detail-strong">{c.contact.name}</span>
+                        <span className="record-detail-sub">{c.contact.role}</span>
+                        <TextLink href={`mailto:${c.contact.email}`} inline className="record-detail-email">{c.contact.email}</TextLink>
+                      </span>
+                    </div>
+                    <dl className="record-detail-facts">
+                      {([
                         ['Plan', `${c.plan}, monthly`],
                         ['Seats', `${c.seats} of ${c.seatLimit}`],
                         ['MRR', usd(c.mrr)],
@@ -180,19 +193,14 @@ export default function RecordDetailScreen() {
                         ['Customer since', c.since],
                         ['Account owner', c.owner],
                         ['Customer ID', c.ref],
-                      ]),
-                    ]} />
+                      ] as const).map(([term, value]) => <div key={term} className="record-detail-fact"><dt>{term}</dt><dd>{value}</dd></div>)}
+                    </dl>
                   </Card>
-                  <section className="record-detail-danger" aria-labelledby={dangerId}>
-                    <h2 id={dangerId} className="record-detail-danger-title">Delete customer</h2>
-                    <p className="record-detail-muted">Removes {c.name}, its notes and activity from Tideline. Your billing system keeps its records.</p>
-                    <Button variant="destructive" size="small" onClick={() => setDeleting(true)}>Delete customer</Button>
-                  </section>
                 </aside>
               </div>
             </>
           )}
-        </div>
+        </main>
 
         <Dialog open={deleting} onOpenChange={setDeleting} title={`Delete ${c.name}?`} size="small"
           description="Its notes, activity and usage history leave Tideline for good. The subscription and invoices stay in your billing system."
@@ -203,13 +211,10 @@ export default function RecordDetailScreen() {
             {notice.text}
           </Toast>
         )}
-      </main>
+      </div>
     </LucideProvider>
   )
 }
-
-const facts = (rows: [string, string][]): ListItem[] =>
-  rows.map(([label, value]) => ({ id: label, label, trailing: <span className="record-detail-fact">{value}</span> }))
 
 const eventItems = (events: Event[]): ListItem[] =>
   events.map((e) => ({ id: e.id, label: e.title, description: `${e.date} · ${e.detail}`, leading: <span className="record-detail-glyph">{ICONS[e.kind]}</span>, trailing: e.amount }))
@@ -226,7 +231,7 @@ function Overview({ onAll }: { onAll: () => void }) {
           <Progress label="Seats in use" value={(c.seats / c.seatLimit) * 100} />
         </div>
       </section>
-      <Card title="Recent activity" headingLevel={2} actions={<Button variant="quiet" size="small" onClick={onAll}>See all</Button>}>
+      <Card title="Recent activity" headingLevel={2} actions={<TextLink asChild><button type="button" className="record-detail-see-all" onClick={onAll}>See all</button></TextLink>}>
         <List label="Recent activity" divided items={eventItems(ACTIVITY.slice(0, 3))} />
       </Card>
     </div>
@@ -346,11 +351,26 @@ function Loading({ title, label }: { title: string; label: string }) {
 
 const css = `
 .record-detail { min-height: 100dvh; color: var(--diya-color-text); }
-.record-detail-page { box-sizing: border-box; width: 100%; max-width: 1200px; margin: 0 auto; display: grid; gap: var(--diya-space-6);
-  padding: var(--diya-space-6) var(--diya-space-7) var(--diya-space-8); }
+.record-detail-bar { display: none; }
+.record-detail-back { display: inline-flex; align-items: center; gap: var(--diya-space-1); margin-left: -6px; padding: 6px; border-radius: var(--diya-radius-control);
+  color: var(--diya-color-text); font-size: var(--diya-text-body); font-weight: 500; text-decoration: none; }
+.record-detail-back:focus-visible,
+.record-detail-account:focus-visible { outline: 2px solid var(--diya-color-accent); outline-offset: 2px; }
+.record-detail-account { display: grid; padding: 4px; margin-right: -4px; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.record-detail-page { box-sizing: border-box; width: 100%; max-width: calc(1200px + 2 * var(--diya-space-7)); display: grid; gap: var(--diya-space-6);
+  padding: var(--diya-space-7) var(--diya-space-7) var(--diya-space-8); }
+.record-detail-tabs [role='tablist'] { width: 100%; }
+.record-detail-see-all { padding: 0; border: 0; background: none; font: inherit; font-size: var(--diya-text-body); line-height: 30px; cursor: pointer; }
+.record-detail-contact { display: flex; gap: var(--diya-space-3); align-items: flex-start; padding-bottom: var(--diya-space-4); }
+.record-detail-contact-text { display: grid; gap: 2px; min-width: 0; font-size: var(--diya-text-body); }
+.record-detail-email { font-size: var(--diya-text-caption); overflow-wrap: anywhere; }
+.record-detail-facts { display: grid; margin: 0; }
+.record-detail-fact { display: flex; justify-content: space-between; gap: var(--diya-space-4); padding-block: 11px; border-top: 1px solid var(--diya-color-line); font-size: var(--diya-text-body); }
+.record-detail-fact dt { color: var(--diya-color-muted); font-weight: 400; }
+.record-detail-fact dd { margin: 0; color: var(--diya-color-text); font-weight: 500; text-align: right; }
 .record-detail-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--diya-space-4) var(--diya-space-5); }
 .record-detail-heading { display: grid; gap: var(--diya-space-2); flex: 1 1 180px; min-width: 0; }
-.record-detail-title { margin: 0; font-size: var(--diya-text-heading); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
+.record-detail-title { margin: 0; font-size: 28px; font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
 .record-detail-title:focus,
 .record-detail h1:focus { outline: none; }
 .record-detail-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
@@ -368,10 +388,7 @@ const css = `
 .record-detail-strong { font-weight: 550; font-variant-numeric: tabular-nums; }
 .record-detail-invoice { display: grid; gap: 2px; }
 .record-detail-sub { color: var(--diya-color-muted); font-size: var(--diya-text-caption); white-space: nowrap; }
-.record-detail-fact { color: var(--diya-color-text); font-size: var(--diya-text-body); text-align: right; }
 .record-detail-side { display: grid; gap: var(--diya-space-6); }
-.record-detail-danger { display: grid; gap: var(--diya-space-3); justify-items: start; padding-inline: var(--diya-space-1); }
-.record-detail-danger-title { margin: 0; font-size: var(--diya-text-body); font-weight: 600; }
 .record-detail-notes { display: grid; gap: var(--diya-space-3); max-width: 64ch; font-size: var(--diya-text-body); line-height: var(--diya-leading-body); }
 .record-detail-notes p { margin: 0; }
 .record-detail-notes-form { display: grid; gap: var(--diya-space-4); }
@@ -390,6 +407,14 @@ const css = `
 @media (max-width: 1020px) {
   .record-detail-body { grid-template-columns: minmax(0, 1fr); }
   .record-detail-side { max-width: 560px; }
+}
+@media (max-width: 720px) {
+  .record-detail-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-3); position: sticky; top: 0; z-index: 10;
+    height: 56px; box-sizing: border-box; padding: 0 var(--diya-space-4); border-bottom: 1px solid var(--diya-color-line);
+    background: color-mix(in srgb, var(--diya-color-surface) 82%, transparent); backdrop-filter: blur(20px) saturate(1.4);
+  }
+  .record-detail-crumbs { display: none; }
 }
 @media (max-width: 640px) {
   .record-detail-page { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); gap: var(--diya-space-5); }
