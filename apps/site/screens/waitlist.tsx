@@ -1,7 +1,7 @@
 'use client'
 // Waitlist & coming soon: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/waitlist/page.tsx. Vite: save as src/Waitlist.tsx and render it inside your DiyaProvider.
-import { useEffect, useRef, useState, type FormEvent, type ReactNode, type Ref } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode, type Ref } from 'react'
 import { Accordion, Alert, Avatar, Button, List, Tag, TextInput, TextLink, Toast, useDiyaAppearance } from '@idyeah/diya'
 import { ArrowLeft, ArrowRight, CalendarRange, Check, Copy, LucideProvider, MapPinned, Vote, WifiOff } from 'lucide-react'
 
@@ -12,9 +12,11 @@ const KIND: Kind = 'waitlist'
 // Your product, the line so far, and the maintenance window.
 const PRODUCT = 'Fernway'
 const IN_LINE = 1283
-const EARLY = [{ name: 'Amara Okafor' }, { name: 'Mateo Silva' }, { name: 'Priya Natarajan' }, { name: 'Lin Zhou' }]
+// First names only, so each face shows one initial that stays whole where the faces overlap.
+const EARLY = [{ name: 'Amara' }, { name: 'Mateo' }, { name: 'Noor' }, { name: 'Lin' }]
 const INVITE_URL = 'https://fernway.example.com/join?ref='
-const MAINTENANCE = { start: '2026-11-15T09:00:00Z', end: '2026-11-15T12:00:00Z', timeZone: 'America/Los_Angeles', statusUrl: '/status' }
+// The demo's window began an hour ago, so it always reads as underway; set yours from your schedule.
+const MAINTENANCE = { startedAgo: 60, hours: 3, timeZone: 'America/Los_Angeles', statusUrl: '/status' }
 const STEPS = [
   { id: 'backup', label: 'Back up every trip', status: 'Done' },
   { id: 'move', label: 'Move to the new servers', status: 'In progress' },
@@ -28,7 +30,7 @@ const POINTS = [
 ]
 
 const FAQ = [
-  { id: 'when', label: 'When do I get in?', content: 'We’re letting people in a few hundred at a time this winter, in the order they joined. Inviting friends moves you up.' },
+  { id: 'when', label: 'When do I get in?', content: 'We’re letting people in a few hundred at a time, in the order they joined. Inviting friends moves you up.' },
   { id: 'cost', label: 'Will it cost anything?', content: 'Planning trips is free. Later we’ll add a paid plan for big groups, and early members get their first year of it on us.' },
   { id: 'email', label: 'What will you do with my email?', content: 'Write to you once when it’s your turn, and that’s it. No newsletter, and you can leave the line from the link in that email.' },
 ]
@@ -45,6 +47,11 @@ async function api(route: '/waitlist', email: string): Promise<Joined> {
 }
 
 const number = (value: number) => new Intl.NumberFormat('en-US').format(value)
+
+// The reader's clock, to the minute. The server can't know it, so it renders 0 and the times fill in once the page loads.
+const subscribeNever = () => () => {}
+const minuteNow = () => Math.floor(Date.now() / 60000) * 60000
+const useNow = () => useSyncExternalStore(subscribeNever, minuteNow, () => 0)
 const emailProblem = (email: string) =>
   !email.trim() ? 'Enter your email address.' : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? undefined : 'Enter an email address like name@example.com.'
 
@@ -53,6 +60,7 @@ export default function WaitlistScreen() {
   const [kind, setKind] = useState<Kind>(KIND)
   const [joined, setJoined] = useState<Joined>()
   const titleRef = useRef<HTMLHeadingElement>(null)
+  const now = useNow()
   const view = kind === 'maintenance' ? 'maintenance' : joined ? (joined.already ? 'already' : 'joined') : 'join'
   const shown = useRef(view)
 
@@ -101,7 +109,7 @@ export default function WaitlistScreen() {
         </main>
 
         <footer className="waitlist-footer">
-          <p>© 2026 {PRODUCT} · <TextLink href="/privacy" inline>Privacy</TextLink> · <TextLink href="/terms" inline>Terms</TextLink></p>
+          <p>©{now ? ` ${new Date(now).getFullYear()}` : ''} {PRODUCT} · <TextLink href="/privacy" inline>Privacy</TextLink> · <TextLink href="/terms" inline>Terms</TextLink></p>
           {/* Demo only: remove this switcher and keep KIND at the top of the file. */}
           <div className="waitlist-demo" role="group" aria-label="Demo page">
             <span aria-hidden="true">Demo</span>
@@ -144,7 +152,7 @@ function Join({ titleRef, onJoined }: ViewProps & { onJoined: (joined: Joined) =
 
   return (
     <Intro titleRef={titleRef} tag={<Tag tone="brand" leading="dot">Early access</Tag>} title="Trips planned together, minus the group chat."
-      lede={`${PRODUCT} turns everyone’s ideas into one day-by-day plan. We’re letting people in a few hundred at a time this winter.`}>
+      lede={`${PRODUCT} turns everyone’s ideas into one day-by-day plan. We’re letting people in a few hundred at a time.`}>
       <form className="waitlist-form" noValidate aria-label="Join the waitlist" onSubmit={join}>
         {failed && (
           <Alert tone="error" urgent className="waitlist-alert">
@@ -160,7 +168,7 @@ function Join({ titleRef, onJoined }: ViewProps & { onJoined: (joined: Joined) =
       </form>
       <div className="waitlist-proof">
         <span className="waitlist-faces" aria-hidden="true">
-          {EARLY.map((person) => <Avatar key={person.name} name={person.name} size="small" />)}
+          {EARLY.map((person) => <span key={person.name} className="waitlist-face"><Avatar name={person.name} size="small" /></span>)}
         </span>
         <span>{number(IN_LINE)} people are already in line</span>
       </div>
@@ -206,25 +214,30 @@ function Already({ titleRef, joined, onBack }: ViewProps & { joined: Joined; onB
 }
 
 function Maintenance({ titleRef }: ViewProps) {
-  const at = (iso: string, options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat('en-US', { timeZone: MAINTENANCE.timeZone, ...options }).format(new Date(iso))
+  const now = useNow()
+  const start = Math.floor((now - MAINTENANCE.startedAgo * 60000) / 900000) * 900000
+  const end = start + MAINTENANCE.hours * 3600000
+  const at = (when: number, options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat('en-US', { timeZone: MAINTENANCE.timeZone, ...options }).format(when)
   const time = { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' } as const
 
   return (
     <Intro titleRef={titleRef} tag={<Tag tone="warning" leading="dot">Planned maintenance</Tag>} title="We’re tuning things up."
       lede={`${PRODUCT} is moving to faster servers. Your trips are safe, and there’s nothing you need to do.`}>
-      <dl className="waitlist-facts">
-        <div>
-          <dt>Back by</dt>
-          <dd className="waitlist-big">{at(MAINTENANCE.end, time)}</dd>
-          <dd>{at(MAINTENANCE.end, { weekday: 'long', month: 'long', day: 'numeric' })}</dd>
-        </div>
-        <div>
-          <dt>Started</dt>
-          <dd className="waitlist-big">{at(MAINTENANCE.start, time)}</dd>
-          <dd>About {(Date.parse(MAINTENANCE.end) - Date.parse(MAINTENANCE.start)) / 3600000} hours of work</dd>
-        </div>
-      </dl>
+      {now > 0 && (
+        <dl className="waitlist-facts">
+          <div>
+            <dt>Back by</dt>
+            <dd className="waitlist-big">{at(end, time)}</dd>
+            <dd>{at(end, { weekday: 'long', month: 'long', day: 'numeric' })}</dd>
+          </div>
+          <div>
+            <dt>Started</dt>
+            <dd className="waitlist-big">{at(start, time)}</dd>
+            <dd>About {MAINTENANCE.hours} hours of work</dd>
+          </div>
+        </dl>
+      )}
       <List label="Maintenance progress" divided className="waitlist-steps"
         items={STEPS.map((step) => ({ id: step.id, label: step.label, trailing: <span className="waitlist-muted" data-state={step.status}>{step.status}</span> }))} />
       <Button size="large" href={MAINTENANCE.statusUrl}>See live status <ArrowRight /></Button>
@@ -248,9 +261,9 @@ function Intro(props: ViewProps & { tag?: ReactNode; icon?: ReactNode; title: st
 function Backdrop() {
   return (
     <svg className="waitlist-backdrop" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-      <path d="M-40 520 C 120 470, 200 590, 330 560 S 520 610, 700 585 S 980 500, 1240 560" />
-      <circle cx="330" cy="560" r="6" />
-      <circle cx="1010" cy="518" r="6" />
+      <path d="M-40 500 C 120 455, 220 548, 340 535 S 540 552, 700 532 S 960 476, 1240 516" />
+      <circle cx="340" cy="535" r="6" />
+      <circle cx="700" cy="532" r="6" />
     </svg>
   )
 }
@@ -284,7 +297,7 @@ const css = `
 .waitlist-icon svg { width: 26px; height: 26px; }
 .waitlist-h1 {
   max-width: 15ch; margin: 0;
-  font-size: clamp(40px, 6.4vw, 80px); font-weight: 650; line-height: 1.02; letter-spacing: -0.045em; text-wrap: balance;
+  font-size: clamp(40px, 6.4vw, 80px); font-weight: 650; line-height: 1.02; letter-spacing: -0.03em; text-wrap: balance;
 }
 .waitlist-h1:focus { outline: none; }
 .waitlist-h2 { margin: 0; font-size: clamp(30px, 3.8vw, 48px); font-weight: 650; line-height: 1.06; letter-spacing: -0.035em; }
@@ -302,9 +315,9 @@ const css = `
 .waitlist-fine { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
 .waitlist-share-title { margin: 0; font-size: var(--diya-text-body); font-weight: 500; text-wrap: balance; }
 .waitlist-proof { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--diya-space-3); color: var(--diya-color-muted); font-size: var(--diya-text-body); font-variant-numeric: tabular-nums; }
-.waitlist-faces { display: inline-flex; }
-.waitlist-faces > * { margin-inline-start: -5px; border-radius: 50%; box-shadow: 0 0 0 2px var(--diya-color-surface); }
-.waitlist-faces > :first-child { margin-inline-start: 0; }
+.waitlist-faces { display: inline-flex; padding: 2px; }
+.waitlist-face { position: relative; display: inline-flex; margin-inline-start: -8px; border-radius: 50%; background: var(--diya-color-surface); box-shadow: 0 0 0 2px var(--diya-color-surface); }
+.waitlist-face:first-child { margin-inline-start: 0; }
 .waitlist-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--diya-space-5); width: 100%; max-width: 520px; margin: var(--diya-space-3) 0 0; }
 .waitlist-facts div { display: grid; gap: var(--diya-space-1); }
 .waitlist-facts dt { color: var(--diya-color-muted); font-size: var(--diya-text-caption); font-weight: 500; }
@@ -317,7 +330,7 @@ const css = `
 .waitlist-points { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--diya-space-7); margin: 0; padding: 0; list-style: none; }
 .waitlist-points li { display: grid; align-content: start; gap: var(--diya-space-3); }
 .waitlist-point-icon { display: inline-grid; place-items: center; width: 40px; height: 40px; margin-bottom: var(--diya-space-2); border-radius: 50%; box-shadow: 0 0 0 1px var(--diya-color-line); }
-.waitlist-faq { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--diya-space-7); align-items: start; border-top: 1px solid var(--diya-color-line); }
+.waitlist-faq { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--diya-space-7); align-items: start; padding-top: 0; }
 .waitlist-accordion { max-width: none; }
 .waitlist-footer {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--diya-space-3) var(--diya-space-5);
