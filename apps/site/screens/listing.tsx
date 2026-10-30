@@ -344,12 +344,13 @@ const css = `
 .listing-brand { font-size: var(--diya-text-title); font-weight: 650; letter-spacing: -0.03em; }
 .listing-bag { position: relative; display: inline-flex; }
 .listing-bag-count { position: absolute; top: 2px; right: 0; pointer-events: none; }
-.listing-main { max-width: 1360px; margin: 0 auto; padding: var(--diya-space-8) var(--diya-space-6); }
+.listing-main { max-width: calc(1296px + 2 * var(--diya-space-7)); margin: 0 auto; padding: var(--diya-space-8) var(--diya-space-7); }
 .listing-intro { display: grid; gap: var(--diya-space-3); max-width: 640px; margin-bottom: var(--diya-space-8); }
 .listing-title { margin: 0; font-size: var(--diya-text-display); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.03em; text-wrap: balance; }
 .listing-lede { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-large); line-height: var(--diya-leading-body); text-wrap: pretty; }
 .listing-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--diya-space-8); align-items: start; }
-.listing-aside { position: sticky; top: var(--diya-space-5); }
+/* Drops the first filter label onto the baseline of the results heading beside it. */
+.listing-aside { position: sticky; top: var(--diya-space-5); padding-top: 18px; }
 .listing-filters { display: grid; gap: var(--diya-space-6); }
 .listing-toolbar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--diya-space-4); margin-bottom: var(--diya-space-5); }
 .listing-heading { display: flex; align-items: baseline; gap: var(--diya-space-3); min-width: 0; }
@@ -406,5 +407,5 @@ const css = `
   .listing-tools > :last-child { flex: 1; }
   .listing-grid { gap: var(--diya-space-6) var(--diya-space-4); }
 }
-@media (max-width: 380px) { .listing-main { padding-inline: var(--diya-space-4); } }
+@media (max-width: 640px) { .listing-main { padding-inline: var(--diya-space-4); } }
 `

@@ -29,7 +29,7 @@ const STOCK: Record<string, Record<string, number>> = {
   sage: { small: 25, medium: 9, large: 2 },
   graphite: { small: 0, medium: 0, large: 0 },
 }
-const BACK_ON = 'November 20'
+const BACK_IN = 'about three weeks'
 
 const VIEWS = [
   { value: 'front', label: 'Front' },
@@ -280,7 +280,7 @@ function NotifyMe({ glaze }: { glaze: string }) {
     <div className="product-soldout">
       <p className="product-copy" role="status">
         <strong className="product-strong">{glaze} is sold out.</strong> The next batch is cooling in the kiln and should
-        ship around {BACK_ON}.
+        ship in {BACK_IN}.
       </p>
       {done ? (
         <Alert tone="success" title="You’re on the list">We’ll email {done} once, the day {glaze} is back. That’s all.</Alert>
@@ -331,7 +331,9 @@ function Reviews() {
 const VASE = 'M91 60H109V65C107 66 107 70 107 76V88C107 94 112 97 119 101C132 108 138 120 138 134C138 157 121 170 100 170C79 170 62 157 62 134C62 120 68 108 81 101C88 97 93 94 93 88V76C93 70 93 66 91 65Z'
 const SHOULDER = 'M76 -25H124V40C124 58 140 66 160 72C200 86 260 140 280 225H-80C-60 140 0 86 40 72C60 66 76 58 76 40Z'
 const scatter = (seed: number) => (Math.sin(seed) * 43758.5453) % 1
-const SPECKS = Array.from({ length: 60 }, (_, i) => ({ x: -20 + Math.abs(scatter(i + 1)) * 240, y: 80 + Math.abs(scatter(i + 99)) * 145, r: 0.8 + (i % 3) * 0.5 }))
+// Rounded, so the server and the browser write the same numbers.
+const round = (value: number) => Math.round(value * 10) / 10
+const SPECKS = Array.from({ length: 60 }, (_, i) => ({ x: round(-20 + Math.abs(scatter(i + 1)) * 240), y: round(80 + Math.abs(scatter(i + 99)) * 145), r: 0.8 + (i % 3) * 0.5 }))
 
 function VaseArt({ view, color }: { view: View; color: string }) {
   const id = useId()
@@ -404,7 +406,7 @@ const css = `
 .product-brand { font-size: var(--diya-text-title); font-weight: 650; letter-spacing: -0.03em; }
 .product-bag { position: relative; display: inline-flex; }
 .product-bag-count { position: absolute; top: 2px; right: 0; pointer-events: none; }
-.product-main { max-width: 1240px; margin: 0 auto; padding: var(--diya-space-6) var(--diya-space-6) var(--diya-space-8); }
+.product-main { max-width: calc(1176px + 2 * var(--diya-space-7)); margin: 0 auto; padding: var(--diya-space-6) var(--diya-space-7) var(--diya-space-8); }
 .product-crumbs { margin-bottom: var(--diya-space-6); }
 .product-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: var(--diya-space-8); align-items: start; }
 .product-gallery { position: sticky; top: var(--diya-space-5); display: grid; gap: var(--diya-space-3); }
@@ -475,8 +477,10 @@ const css = `
   .product-lede { font-size: var(--diya-text-body); }
   .product-reviews { margin-top: var(--diya-space-7); padding-top: var(--diya-space-6); }
 }
-@media (max-width: 380px) {
+@media (max-width: 640px) {
   .product-main { padding-inline: var(--diya-space-4); }
+}
+@media (max-width: 380px) {
   .product-notify { flex-direction: column; align-items: stretch; }
   .product-notify > :last-child { margin-top: 0; }
 }

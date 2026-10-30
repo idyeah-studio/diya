@@ -1,8 +1,8 @@
 'use client'
 // Error & system pages: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/errors/page.tsx. Vite: save as src/ErrorPages.tsx and render it inside your DiyaProvider.
-import { useEffect, useId, useRef, useState, type ReactNode, type Ref } from 'react'
-import { Button, Dialog, Search, Select, TextArea, TextLink } from '@idyeah/diya'
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode, type Ref } from 'react'
+import { Button, Dialog, Search, TextArea, TextLink } from '@idyeah/diya'
 import { ArrowLeft, Check, Copy, Hourglass, LucideProvider, RotateCw, Wifi, WifiOff, Wrench } from 'lucide-react'
 
 // Your product, and what each page knows about the moment it's shown in.
@@ -26,6 +26,10 @@ const KINDS: { value: Kind; label: string }[] = [
 
 // Replace with your API calls. Each waits a moment. The server error is still
 // broken when you retry; requests for access and new links go through.
+// This year, from the reader's clock. The server can't know it, so it renders 0 and the year fills in once the page loads.
+const subscribeNever = () => () => {}
+const useYear = () => useSyncExternalStore(subscribeNever, () => new Date().getFullYear(), () => 0)
+
 async function api(route: '/retry' | '/access-requests' | '/session/email-link', body: Record<string, string> = {}) {
   await new Promise((resolve) => setTimeout(resolve, 900))
   void body
@@ -38,6 +42,7 @@ export default function ErrorPagesScreen() {
   const [kind, setKind] = useState<Kind>('not-found')
   const titleRef = useRef<HTMLHeadingElement>(null)
   const shown = useRef(kind)
+  const year = useYear()
 
   useEffect(() => {
     if (shown.current === kind) return
@@ -55,9 +60,6 @@ export default function ErrorPagesScreen() {
             <span className="errors-mark" aria-hidden="true">{PRODUCT[0]}</span>
             <span className="errors-brand-name">{PRODUCT}</span>
           </a>
-          {/* Remove the switcher and render the kind your router gives you. */}
-          <Select className="errors-switcher" size="small" label="Page to preview" hideLabel options={KINDS} value={kind}
-            onValueChange={(value) => setKind(value as Kind)} />
         </header>
         <main className="errors-main">
           {kind === 'not-found' && <NotFound key={kind} {...page} />}
@@ -68,9 +70,21 @@ export default function ErrorPagesScreen() {
           {kind === 'offline' && <Offline key={kind} {...page} />}
         </main>
         <footer className="errors-foot">
-          <span>© 2026 {PRODUCT}</span>
-          <a className="errors-foot-link" href="/help">Help center</a>
-          <a className="errors-foot-link" href={STATUS_URL}>System status</a>
+          <p className="errors-foot-links">
+            <span>©{year ? ` ${year}` : ''} {PRODUCT}</span>
+            <a className="errors-foot-link" href="/help">Help center</a>
+            <a className="errors-foot-link" href={STATUS_URL}>System status</a>
+          </p>
+          {/* Demo only: remove this switcher and render the page your router gives you. */}
+          <div className="errors-demo" role="group" aria-label="Demo page">
+            <span aria-hidden="true">Demo</span>
+            {KINDS.map((option) => (
+              <Button key={option.value} size="small" variant={kind === option.value ? 'outline' : 'quiet'} aria-pressed={kind === option.value}
+                onClick={() => setKind(option.value)}>
+                {option.label}
+              </Button>
+            ))}
+          </div>
         </footer>
       </div>
     </LucideProvider>
@@ -291,7 +305,7 @@ const css = `
   align-items: center;
   justify-content: space-between;
   gap: var(--diya-space-4);
-  padding: var(--diya-space-5) var(--diya-space-6);
+  padding: var(--diya-space-5) var(--diya-space-7);
 }
 .errors-brand {
   display: inline-flex;
@@ -317,23 +331,18 @@ const css = `
   font-weight: 650;
   line-height: 1;
 }
-.errors-switcher { width: 168px; }
 
 .errors-main { display: grid; place-items: center; padding: var(--diya-space-7) var(--diya-space-5) var(--diya-space-8); }
 .errors-message { display: grid; justify-items: center; width: 100%; max-width: 520px; text-align: center; }
 .errors-numeral {
   margin: 0 0 var(--diya-space-5);
   font-size: clamp(112px, 24vw, 176px);
-  font-weight: 200;
+  font-weight: 300;
   font-stretch: 92%;
   line-height: 0.8;
   letter-spacing: -0.06em;
   font-variant-numeric: lining-nums;
-  color: color-mix(in srgb, var(--diya-color-text) 16%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--diya-color-text) 30%, transparent), color-mix(in srgb, var(--diya-color-text) 8%, transparent));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--diya-color-muted);
   user-select: none;
 }
 .errors-icon { display: grid; margin-bottom: var(--diya-space-6); color: color-mix(in srgb, var(--diya-color-text) 34%, transparent); }
@@ -370,17 +379,22 @@ const css = `
 .errors-code-id { font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--diya-text-body); letter-spacing: 0.02em; user-select: all; }
 .errors-note { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-caption); line-height: var(--diya-leading-body); text-wrap: balance; overflow-wrap: anywhere; }
 .errors-home { margin-top: var(--diya-space-6); font-size: var(--diya-text-body); }
-.errors-foot { justify-content: center; gap: var(--diya-space-5); color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
+.errors-foot { flex-wrap: wrap; gap: var(--diya-space-3) var(--diya-space-5); color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
+.errors-foot-links { display: flex; flex-wrap: wrap; gap: var(--diya-space-2) var(--diya-space-5); margin: 0; }
+.errors-demo { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--diya-space-1); }
+.errors-demo > span { margin-inline-end: var(--diya-space-2); }
 .errors-foot-link { border-radius: 4px; color: inherit; text-decoration: none; }
 .errors-foot-link:hover { color: var(--diya-color-text); text-decoration: underline; text-underline-offset: 3px; }
 .errors-foot-link:focus-visible { outline: 2px solid var(--diya-color-accent); outline-offset: 3px; }
 
 @media (max-width: 640px) {
   .errors-top { padding: var(--diya-space-4); }
-  .errors-switcher { width: 148px; }
-  .errors-main { place-items: start center; padding: var(--diya-space-8) var(--diya-space-5) var(--diya-space-7); }
+  .errors-main { place-items: start center; padding: var(--diya-space-8) var(--diya-space-4) var(--diya-space-7); }
   .errors-title { font-size: 28px; }
   .errors-lede { font-size: var(--diya-text-body); }
-  .errors-foot { flex-wrap: wrap; gap: var(--diya-space-2) var(--diya-space-4); padding: var(--diya-space-5) var(--diya-space-4); }
+  .errors-foot { padding: var(--diya-space-5) var(--diya-space-4); }
+  .errors-foot-links { gap: var(--diya-space-2) var(--diya-space-4); }
+  .errors-demo { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; margin-inline-start: calc(-1 * var(--diya-space-3)); }
+  .errors-demo > span { grid-column: 1 / -1; margin: 0 0 var(--diya-space-1) var(--diya-space-3); }
 }
 `

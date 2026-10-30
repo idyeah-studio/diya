@@ -229,7 +229,7 @@ const css = `
 .contact-main {
   display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-areas: 'intro panel' 'info panel';
   grid-template-rows: auto 1fr; gap: var(--diya-space-6) var(--diya-space-8); align-items: start;
-  max-width: 1120px; margin: 0 auto; padding: var(--diya-space-8) var(--diya-space-6);
+  max-width: calc(1056px + 2 * var(--diya-space-7)); margin: 0 auto; padding: var(--diya-space-8) var(--diya-space-7);
 }
 .contact-intro { grid-area: intro; display: grid; gap: var(--diya-space-4); padding-top: var(--diya-space-5); }
 .contact-info { grid-area: info; display: grid; gap: var(--diya-space-6); }

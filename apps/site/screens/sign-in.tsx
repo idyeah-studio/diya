@@ -486,8 +486,8 @@ const css = `
     max-width: none;
     min-height: 100dvh;
     align-content: start;
-    padding: var(--diya-space-7) max(var(--diya-space-5), env(safe-area-inset-right)) max(var(--diya-space-6), env(safe-area-inset-bottom))
-      max(var(--diya-space-5), env(safe-area-inset-left));
+    padding: var(--diya-space-7) max(var(--diya-space-4), env(safe-area-inset-right)) max(var(--diya-space-6), env(safe-area-inset-bottom))
+      max(var(--diya-space-4), env(safe-area-inset-left));
     border: 0;
     border-radius: 0;
     box-shadow: none;
