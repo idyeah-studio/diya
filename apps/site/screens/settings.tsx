@@ -23,8 +23,8 @@ const ZONES = [
 const SESSIONS = [
   { id: 'laptop', device: 'MacBook Air', app: 'Safari', where: 'Lisbon, Portugal', when: 'Right now', icon: <Laptop />, current: true },
   { id: 'phone', device: 'iPhone', app: `${PRODUCT} for iOS`, where: 'Lisbon, Portugal', when: 'Active 2 hours ago', icon: <Smartphone /> },
-  { id: 'desktop', device: 'Windows desktop', app: 'Chrome', where: 'Porto, Portugal', when: 'Active Nov 3', icon: <Monitor /> },
-  { id: 'tablet', device: 'iPad', app: 'Safari', where: 'Madrid, Spain', when: 'Active Oct 18', icon: <Tablet /> },
+  { id: 'desktop', device: 'Windows desktop', app: 'Chrome', where: 'Porto, Portugal', when: 'Active 4 days ago', icon: <Monitor /> },
+  { id: 'tablet', device: 'iPad', app: 'Safari', where: 'Madrid, Spain', when: 'Active 3 weeks ago', icon: <Tablet /> },
 ]
 
 const CHANNELS = [
@@ -85,11 +85,13 @@ type Notify = (notice: Notice) => void
 
 const emailProblem = (email: string) =>
   !email.trim() ? 'Enter your email address.' : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? undefined : 'Enter an email address like name@example.com.'
-const timeIn = (zone: string) => new Intl.DateTimeFormat('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit' }).format(new Date())
+const timeIn = (zone: string, now: Date) => new Intl.DateTimeFormat('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit' }).format(now)
+const longDate = (date: Date) => new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(date)
 
 export default function SettingsScreen() {
   const [section, setSection] = useState<Section>('profile')
-  const [deleted, setDeleted] = useState(false)
+  // The last day to bring a deleted account back, 30 days after it's deleted.
+  const [deleted, setDeleted] = useState<string>()
   const [notice, setNotice] = useState<Notice & { id: number }>()
   const titleRef = useRef<HTMLHeadingElement>(null)
   const shown = useRef<string>(section)
@@ -115,7 +117,7 @@ export default function SettingsScreen() {
   }
 
   const panes: Record<Section, ReactNode> = {
-    profile: <Profile notify={notify} onDeleted={() => setDeleted(true)} />,
+    profile: <Profile notify={notify} onDeleted={() => setDeleted(longDate(new Date(Date.now() + 30 * 86_400_000)))} />,
     security: <Security notify={notify} />,
     notifications: <Notifications />,
     appearance: <Appearance />,
@@ -131,7 +133,7 @@ export default function SettingsScreen() {
         <main className="settings-gone">
           <span className="settings-mark" aria-hidden="true">{PRODUCT[0]}</span>
           <h1 ref={titleRef} tabIndex={-1} className="settings-heading">Your account is deleted</h1>
-          <p className="settings-lede">We’ll hold on to it for 30 days in case you change your mind. Sign in before December 9 to bring it back. After that, it’s gone for good.</p>
+          <p className="settings-lede">We’ll hold on to it for 30 days in case you change your mind. Sign in before {deleted} to bring it back. After that, it’s gone for good.</p>
           <Button href="/">Back to the start</Button>
         </main>
       </LucideProvider>
@@ -191,6 +193,7 @@ function Profile({ notify, onDeleted }: { notify: Notify; onDeleted: () => void 
   const emailField = useRef<HTMLInputElement>(null)
   const zoneField = useRef<HTMLInputElement>(null)
   const focus = useFocusAfterRender()
+  const now = useNow()
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved)
 
   const edit = (field: keyof typeof ME, value: string) => {
@@ -220,6 +223,7 @@ function Profile({ notify, onDeleted }: { notify: Notify; onDeleted: () => void 
   return (
     <Stack gap={7}>
       <Form
+        className="settings-form"
         aria-label="Profile"
         noValidate
         loading={busy}
@@ -242,7 +246,7 @@ function Profile({ notify, onDeleted }: { notify: Notify; onDeleted: () => void 
         <TextInput ref={nameField} label="Full name" autoComplete="name" value={draft.name} error={errors.name} onValueChange={(value) => edit('name', value)} />
         <TextInput ref={emailField} label="Email" type="email" autoComplete="email" helperText="We’ll send a link to confirm a new address."
           value={draft.email} error={errors.email} onValueChange={(value) => edit('email', value)} />
-        <Combobox ref={zoneField} label="Time zone" options={ZONES} helperText={draft.zone ? `It’s ${timeIn(draft.zone)} there now.` : undefined}
+        <Combobox ref={zoneField} label="Time zone" options={ZONES} helperText={draft.zone ? (now ? `It’s ${timeIn(draft.zone, now)} there now.` : '\u00a0') : undefined}
           value={draft.zone} error={errors.zone} onValueChange={(value) => edit('zone', value)} />
       </Form>
       <DeleteAccount email={saved.email} onDeleted={onDeleted} />
@@ -541,6 +545,18 @@ function Appearance() {
   )
 }
 
+// The clock only starts in the browser, so the server's render and the first
+// client render match; the time shows a moment later and stays current.
+function useNow() {
+  const [now, setNow] = useState<Date>()
+  useEffect(() => {
+    setNow(new Date())
+    const timer = setInterval(() => setNow(new Date()), 15_000)
+    return () => clearInterval(timer)
+  }, [])
+  return now
+}
+
 function useFocusAfterRender() {
   const [target, setTarget] = useState<{ node: HTMLElement | null }>()
   useEffect(() => target?.node?.focus(), [target])
@@ -555,7 +571,7 @@ const css = `
 .settings-brand { display: flex; align-items: center; gap: var(--diya-space-3); margin: 0; padding: 0 var(--diya-space-3); font-size: var(--diya-text-large); font-weight: 600; }
 .settings-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: calc(10px * var(--diya-corner-scale, 1)); background: var(--diya-color-accent); color: var(--diya-color-accent-text); font-size: var(--diya-text-large); font-weight: 650; line-height: 1; }
 .settings-title,
-.settings-heading { margin: 0; font-size: var(--diya-text-heading); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
+.settings-heading { margin: 0; font-size: 28px; font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
 .settings-title { margin-top: var(--diya-space-5); padding: 0 var(--diya-space-3); }
 .settings-heading:focus,
 .settings-main:focus,
@@ -564,16 +580,15 @@ const css = `
 .settings-picker,
 .settings-more { display: none; }
 .settings-main { min-width: 0; padding: 112px var(--diya-space-7) var(--diya-space-8); border-left: 1px solid var(--diya-color-line); }
-.settings-column { max-width: 960px; margin-inline: auto; }
-.settings-head,
-.settings-pane { max-width: 640px; }
+.settings-column { max-width: 720px; }
 .settings-head { display: grid; gap: var(--diya-space-2); margin-bottom: var(--diya-space-6); }
 .settings-pane[hidden] { display: none; }
+.settings-pane .settings-form { max-width: none; margin: 0; }
 .settings-lede,
 .settings-note { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: var(--diya-leading-body); text-wrap: pretty; }
 .settings-person { display: flex; flex-wrap: wrap; align-items: center; gap: var(--diya-space-4); }
 .settings-status { flex: 1 1 auto; align-self: center; margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
-.settings-danger { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--diya-space-4) var(--diya-space-5); padding-top: var(--diya-space-6); border-top: 1px solid var(--diya-color-line); }
+.settings-danger { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--diya-space-4) var(--diya-space-5); }
 .settings-danger-copy { display: grid; flex: 1 1 320px; gap: var(--diya-space-1); }
 .settings-subheading { margin: 0; font-size: var(--diya-text-large); font-weight: 600; line-height: var(--diya-leading-tight); }
 .settings-saved { display: flex; align-items: center; gap: var(--diya-space-2); min-height: 22px; margin: calc(var(--diya-space-3) * -1) 0 0; color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
@@ -586,6 +601,7 @@ const css = `
 .settings-dot { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--diya-color-text); color: var(--diya-color-surface); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--diya-color-text) 16%, transparent); pointer-events: none; }
 .settings-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .settings-gone { min-height: 100dvh; display: grid; place-content: center; justify-items: start; gap: var(--diya-space-4); max-width: 480px; margin: 0 auto; padding: var(--diya-space-7) var(--diya-space-5); color: var(--diya-color-text); }
+.settings-gone .settings-heading { font-size: var(--diya-text-heading); }
 .settings-gone .settings-mark { margin-bottom: var(--diya-space-3); }
 @media (max-width: 860px) {
   .settings { grid-template-columns: minmax(0, 1fr); }
@@ -597,6 +613,6 @@ const css = `
   .settings-picker { display: block; }
   .settings-main { padding: var(--diya-space-6) var(--diya-space-4) var(--diya-space-7); border-left: 0; }
   .settings-status { flex-basis: 100%; }
-  .settings-more { display: block; max-width: 640px; margin-top: var(--diya-space-7); }
+  .settings-more { display: block; margin-top: var(--diya-space-7); }
 }
 `
