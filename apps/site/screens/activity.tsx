@@ -10,6 +10,7 @@ import { BellOff, CheckCheck, CircleCheck, Download, LucideProvider, SearchX, Se
 
 // Your workspace, and the moment the demo calls "now", so it reads the same on any day.
 const PRODUCT = 'Fernhill'
+const USER = 'Sam Rivera'
 const NOW = '2026-11-04T10:24'
 const EXPORT_DAYS = 31
 
@@ -92,9 +93,16 @@ export default function ActivityScreen() {
 
   return (
     <LucideProvider size={18} strokeWidth={1.6}>
-      <main className="activity">
+      <div className="activity">
         <style>{css}</style>
-        <div className="activity-page">
+        <header className="activity-bar">
+          <a className="activity-brand" href="/">
+            <span className="activity-mark" aria-hidden="true">{PRODUCT[0]}</span>
+            {PRODUCT}
+          </a>
+          <Avatar name={USER} size="small" />
+        </header>
+        <main className="activity-page">
           <header className="activity-header">
             <h1 className="activity-title">Activity</h1>
             <p className="activity-lede">What changed in {PRODUCT}, and who changed it.</p>
@@ -104,8 +112,8 @@ export default function ActivityScreen() {
               content: tab === 'notifications' && <Notifications notes={notes} setNotes={setNotes} unread={unread} /> },
             { value: 'audit', label: 'Audit log', content: tab === 'audit' && <AuditLog /> },
           ]} />
-        </div>
-      </main>
+        </main>
+      </div>
     </LucideProvider>
   )
 }
@@ -186,18 +194,18 @@ function Notifications({ notes, setNotes, unread }: { notes: Note[]; setNotes: (
 }
 
 const columns: TableColumn<Event>[] = [
-  { key: 'actor', label: 'Person', width: 200, sortValue: (e) => e.actor, render: (e) => (
+  { key: 'actor', label: 'Person', width: 180, sortValue: (e) => e.actor, render: (e) => (
     <span className="activity-actor">
       {e.actor === PRODUCT ? <span className="activity-system" aria-hidden="true"><Settings2 /></span> : <Avatar name={e.actor} size="small" aria-hidden="true" />}
       <span>{e.actor === PRODUCT ? `${PRODUCT} (automatic)` : e.actor}</span>
     </span>
   ) },
-  { key: 'action', label: 'Action', width: 210, sortValue: (e) => e.action, render: (e) => e.action },
-  { key: 'target', label: 'Target', width: 240, render: (e) => <span className="activity-target">{e.target}</span> },
+  { key: 'action', label: 'Action', width: 180, sortValue: (e) => e.action, render: (e) => e.action },
+  { key: 'target', label: 'Target', width: 200, render: (e) => <span className="activity-target">{e.target}</span> },
   { key: 'where', label: 'IP and location', width: 160, render: (e) => (
     <span className="activity-stacked"><span className="activity-ip">{e.ip}</span><span className="activity-muted">{e.place}</span></span>
   ) },
-  { key: 'at', label: 'Time', width: 150, sortValue: (e) => e.at, render: (e) => <span className="activity-ip">{stamp(at(e.at))}</span> },
+  { key: 'at', label: 'Time', width: 140, sortValue: (e) => e.at, render: (e) => <span className="activity-ip">{stamp(at(e.at))}</span> },
 ]
 
 function AuditLog() {
@@ -277,12 +285,18 @@ function AuditLog() {
 
 const css = `
 .activity { min-height: 100dvh; color: var(--diya-color-text); }
-.activity-page { box-sizing: border-box; width: 100%; max-width: 1080px; margin: 0 auto; display: grid; gap: var(--diya-space-6);
-  padding: var(--diya-space-8) var(--diya-space-7) var(--diya-space-8); }
+.activity-bar,
+.activity-page { box-sizing: border-box; width: 100%; max-width: 976px; margin: 0 auto; padding-inline: var(--diya-space-7); }
+.activity-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-4); min-height: 56px; padding-block: var(--diya-space-5); }
+.activity-brand { display: inline-flex; align-items: center; gap: 10px; border-radius: 8px; color: inherit; font-size: var(--diya-text-large); font-weight: 600; letter-spacing: -0.01em; text-decoration: none; }
+.activity-brand:focus-visible { outline: 2px solid var(--diya-color-accent); outline-offset: 4px; }
+.activity-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: calc(8px * var(--diya-corner-scale, 1)); background: var(--diya-color-accent); color: var(--diya-color-accent-text); font-size: var(--diya-text-body); font-weight: 650; line-height: 1; }
+.activity-page { display: grid; gap: var(--diya-space-6); padding-block: var(--diya-space-7) var(--diya-space-8); }
 .activity-header { display: grid; gap: var(--diya-space-2); }
-.activity-title { margin: 0; font-size: var(--diya-text-display); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.025em; }
+.activity-title { margin: 0; font-size: 28px; font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.025em; }
 .activity-lede { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-large); line-height: var(--diya-leading-body); }
 .activity-tabs { min-width: 0; }
+.activity-tabs [role='tablist'] { width: 100%; }
 .activity-panel { display: grid; gap: var(--diya-space-5); padding-top: var(--diya-space-5); min-width: 0; }
 .activity-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--diya-space-3) var(--diya-space-4); }
 .activity-filters { align-items: flex-end; }
@@ -306,8 +320,8 @@ const css = `
 .activity-ip { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .activity-muted { color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
 @media (max-width: 720px) {
-  .activity-page { padding: var(--diya-space-6) var(--diya-space-4) var(--diya-space-7); gap: var(--diya-space-5); }
-  .activity-title { font-size: var(--diya-text-heading); }
+  .activity-bar { padding: 0 var(--diya-space-4); }
+  .activity-page { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); gap: var(--diya-space-5); }
   .activity-lede { font-size: var(--diya-text-body); }
   .activity-panel { gap: var(--diya-space-5); padding-top: var(--diya-space-5); }
   .activity-show, .activity-person, .activity-dates { width: 100%; }
