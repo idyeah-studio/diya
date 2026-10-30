@@ -9,6 +9,7 @@ import { CatalogProvider } from '../components/CatalogProvider'
 import { CatalogSearchProvider } from '../components/CatalogSearchProvider'
 import { SETUP_COPIED_KEY } from '../components/GetCodeDrawer'
 import { ScreensLibrary } from '../components/screens/ScreensLibrary'
+import { PHONE_MAX_HEIGHT, phoneHeight } from '../components/screens/ScreenStage'
 import { builtWith, namedImports, readScreenSource } from '../components/screens/screen-source'
 import { CATEGORIES, screenById, screens, type ScreenEntry } from '../components/screens/screens-data'
 import { resetStoreForTests } from '../lib/customize/store'
@@ -239,11 +240,32 @@ describe('Built with', () => {
   })
 })
 
+describe('the phone preview on a wide stage', () => {
+  it('stays short enough to fit the window once the stage is in view, and never tiny', () => {
+    expect(PHONE_MAX_HEIGHT).toBe(640)
+    expect(phoneHeight(900)).toBe(640)
+    expect(phoneHeight(1200)).toBe(640)
+    expect(phoneHeight(768)).toBe(508)
+    expect(phoneHeight(560)).toBe(420)
+    // Before the window is measured (server render), the largest.
+    expect(phoneHeight(0)).toBe(640)
+  })
+})
+
 describe('Screens CSS', () => {
   it('has no text under 13px', () => {
     const css = readFileSync(join(process.cwd(), 'components/screens/screens.css'), 'utf8')
     expect(smallFontSizes(css)).toEqual([])
     const frame = readFileSync(join(process.cwd(), 'screens-frame/src/index.css'), 'utf8')
     expect(smallFontSizes(frame)).toEqual([])
+    const request = readFileSync(join(process.cwd(), 'components/screens/ScreenRequest.css'), 'utf8')
+    expect(smallFontSizes(request)).toEqual([])
+  })
+
+  it('shows the gallery as two columns of named pictures on a phone', () => {
+    const css = readFileSync(join(process.cwd(), 'components/screens/screens.css'), 'utf8')
+    const phone = css.slice(css.indexOf('@media (max-width: 640px)'))
+    expect(phone).toMatch(/\.screens-grid \{\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/)
+    expect(phone).toMatch(/\.screens-card-text p \{ display: none; \}/)
   })
 })

@@ -6,7 +6,7 @@ import { brandColorAttribute } from '../../lib/customize/theme'
 import { CodeBlock } from '../code/CodeBlock'
 import { CreateAppNote } from '../code/CreateAppNote'
 import { PackageManagerTabs } from '../code/PackageManagerTabs'
-import { NoteIcon, Step } from '../code/Step'
+import { Step } from '../code/Step'
 import { useFocusDrawerTitle } from '../code/useFocusDrawerTitle'
 import { useCustomizeState } from '../customize/CustomizeContext'
 import { DIYA_REPOSITORY, DIYA_VERSION, SETUP_COPIED_KEY } from '../GetCodeDrawer'
@@ -115,20 +115,17 @@ ${providerOpen.length <= 80 ? providerOpen : `<DiyaProvider\n${providerProps.map
       <div ref={body} className="code-steps get-code screens-get-code">
         <Step n={1} title="Install" titleId={`${uid}-install`} tabs>
           <PackageManagerTabs value={manager} onChange={chooseManager}>
-            <CodeBlock code={installText} language="shell" label="Terminal, in your app’s folder" name="install command" onCopied={rememberSetupCopied} />
+            <CodeBlock code={installText} language="shell" label="Terminal, in your app’s folder" name="install command" onCopied={rememberSetupCopied} wrap />
           </PackageManagerTabs>
           <p>
             Once per app. Screens draw their icons with <code>lucide-react</code>, so it comes along with DIYA.
+            {screen.charts && (
+              <>
+                {' '}This screen has charts, so <code>echarts@6</code> comes too: DIYA draws charts with ECharts, which stays optional so apps without charts don’t carry it.
+              </>
+            )}
           </p>
           <CreateAppNote manager={manager} />
-          {screen.charts && (
-            <div className="code-note">
-              <NoteIcon />
-              <span>
-                <b>This screen has charts.</b> DIYA draws them with ECharts, which stays optional so apps without charts don’t carry it. That’s why <code>echarts@6</code> is in this command.
-              </span>
-            </div>
-          )}
         </Step>
         <Step n={2} title="Add the styles and provider" titleId={`${uid}-styles`} titleRef={styles}>
           {folded ? (

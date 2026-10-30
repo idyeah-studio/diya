@@ -123,7 +123,7 @@
 :where(html[data-catalog='true']) .screens-card-soon {
   position: absolute;
   top: 12px;
-  left: 12px;
+  right: 12px;
   padding: 4px 11px;
   border: 1px solid color-mix(in srgb, var(--diya-color-line) 60%, transparent);
   border-radius: 999px;
@@ -256,6 +256,11 @@
 }
 :where(html[data-catalog='true']) .screens-heading > p {
   grid-column: 1 / -1;
+}
+:where(html[data-catalog='true']) .screens-heading > .screens-poster-note {
+  margin-top: 6px;
+  font-size: 15px;
+  color: var(--diya-color-text);
 }
 .screens-sr {
   position: absolute;
@@ -416,9 +421,39 @@
   :where(html[data-catalog='true']) .screens-heading { grid-template-columns: minmax(0, 1fr); }
   :where(html[data-catalog='true']) .screens-actions { justify-content: flex-start; margin: 12px 0 0 -10px; }
   :where(html[data-catalog='true']) .screens-stage { padding: 14px; }
+  /* A compact controls row, so the preview starts higher: the switch keeps
+     "Viewport" as its name, read out but not shown. */
+  :root[data-catalog='true'] .screens-stage-panel .screens-controls { align-items: center; padding: 12px 16px; }
+  :root[data-catalog='true'] .screens-stage-panel .screens-controls legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :root[data-catalog='true'] .screens-stage-panel .screens-controls .screens-size { padding-bottom: 0; }
+  :where(html[data-catalog='true']) .screens-heading { margin-bottom: 20px; }
   :where(html[data-catalog='true']) .screens-stage[data-device='phone'] .screens-viewport { border-radius: 26px; }
   :where(html[data-catalog='true']) .screens-request { padding: 22px 20px; }
   :where(html[data-catalog='true']) .screens-category { margin-top: 36px; }
+}
+
+/* Phones: two columns of pictures with their names, so 34 screens stay a
+   short scroll. The description waits on the screen's own page. */
+@media (max-width: 640px) {
+  :where(html[data-catalog='true']) .screens-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  :where(html[data-catalog='true']) .screens-card { border-radius: 14px; }
+  :where(html[data-catalog='true']) .screens-card:hover { transform: none; }
+  :where(html[data-catalog='true']) .screens-card-text { padding: 10px 12px 12px; }
+  :where(html[data-catalog='true']) .screens-card-text h4 { font-size: 14px; line-height: 1.3; letter-spacing: -0.01em; }
+  :where(html[data-catalog='true']) .screens-card-text p { display: none; }
+  :where(html[data-catalog='true']) .screens-card-soon { top: 8px; right: 8px; padding: 2px 9px; }
+  :where(html[data-catalog='true']) .screens-category h3 { margin-bottom: 12px; }
+  :where(html[data-catalog='true']) .screens-category { margin-top: 32px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

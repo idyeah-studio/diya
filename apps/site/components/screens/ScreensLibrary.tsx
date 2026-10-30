@@ -174,6 +174,7 @@ function ScreenDocument({ screen, source, builtWith }: { screen: ScreenEntry; so
           </div>
         )}
         <p>{screen.description}</p>
+        {poster && <p className="screens-poster-note">A preview of what’s coming. Not in DIYA yet.</p>}
       </header>
 
       <section className="pattern-stage screens-stage-panel" aria-label={`${screen.name} preview`}>
