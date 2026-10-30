@@ -199,7 +199,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'ResourceTable',
     charts: false,
     status: 'ready',
-    tryThis: 'Pick Today for an empty shop, All time for a timeout with Try again, search “zzz”, select rows to export or archive, or open #1048 and mark it shipped.',
+    tryThis: 'Pick Today for an empty shop, All time for a timeout with Try again, search “zzz”, select rows to export or archive (on a phone, tap Select first), or open #1048 and mark it shipped.',
     keywords: 'table orders products admin data grid crud bulk export',
   },
   {
