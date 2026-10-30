@@ -178,7 +178,7 @@ describe('Patterns discovery', () => {
     expect(
       screen.getByRole('link', { name: 'Content State' }).getAttribute('aria-current')
     ).toBe('page')
-    expect(screen.queryByRole('button', { name: 'Clear search patterns' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Clear Search patterns' })).toBeNull()
   })
 
   it('matches case-insensitive multiword keywords and announces the result count', async () => {
@@ -197,11 +197,11 @@ describe('Patterns discovery', () => {
     // The three Navigation patterns, then Text Link from Components.
     expect(patternLinks().map((link) => link.textContent)).toEqual(['Page Header', 'Site Header', 'Side Navigation', 'Text Link'])
     expect(searchStatus().textContent).toBe('3 patterns and 1 component found')
-    await user.click(screen.getByRole('button', { name: 'Clear search patterns' }))
+    await user.click(screen.getByRole('button', { name: 'Clear Search patterns' }))
     expect(search.value).toBe('')
     expect(document.activeElement).toBe(search)
     expect(patternLinks()).toHaveLength(13)
-    expect(screen.queryByRole('button', { name: 'Clear search patterns' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Clear Search patterns' })).toBeNull()
   })
 
   it('announces no results and lets Escape clear the query without losing the selection', async () => {

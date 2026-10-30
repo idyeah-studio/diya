@@ -220,7 +220,7 @@ describe('Site Header disclosure and content fit', () => {
     expect(search.value).toBe('veylo')
     await user.keyboard('{Enter}')
     expect(submit).toHaveBeenCalledExactlyOnceWith('veylo')
-    await user.click(screen.getByRole('button', { name: 'Clear search projects' }))
+    await user.click(screen.getByRole('button', { name: 'Clear Search projects' }))
     expect(search.value).toBe('')
     expect(document.activeElement).toBe(search)
     await user.click(screen.getByRole('button', { name: 'Notifications' }))
