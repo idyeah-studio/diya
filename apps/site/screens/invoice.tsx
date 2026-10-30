@@ -353,8 +353,7 @@ function Paper(props: PaperProps) {
       </div>
 
       {/* A plain table, ruled like paper. Phones fold the quantity and rate under each description. */}
-      <table className="invoice-lines">
-        <caption className="invoice-sr">Line items</caption>
+      <table className="invoice-lines" aria-label="Line items">
         <thead>
           <tr>
             <th scope="col">Description</th>
@@ -450,12 +449,12 @@ const css = `
 .invoice-dates dd { margin: 0; font-variant-numeric: tabular-nums; }
 .invoice-dates .invoice-label { margin: 0; }
 .invoice-lines { width: 100%; border-collapse: collapse; font-size: var(--diya-text-body); font-variant-numeric: tabular-nums; }
-.invoice-lines th { padding: 0 var(--diya-space-4) var(--diya-space-3); border-bottom: 1px solid var(--diya-color-line); color: var(--diya-color-muted); font-size: var(--diya-text-caption); font-weight: 500; text-align: left; }
-.invoice-lines td { padding: var(--diya-space-3) var(--diya-space-4); border-bottom: 1px solid var(--diya-color-line); vertical-align: top; }
+.invoice-lines th { padding: 0 var(--diya-space-4) var(--diya-space-3); color: var(--diya-color-muted); font-size: var(--diya-text-caption); font-weight: 500; text-align: left; }
+.invoice-lines tr { border-bottom: 1px solid var(--diya-color-line); }
+.invoice-lines td { padding: var(--diya-space-3) var(--diya-space-4); vertical-align: top; }
 .invoice-lines :is(th, td):first-child { padding-left: 0; }
 .invoice-lines .invoice-num { text-align: right; white-space: nowrap; }
 .invoice-narrow { display: none; }
-.invoice-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .invoice-item { display: grid; gap: 2px; }
 .invoice-totals { display: grid; gap: var(--diya-space-2); width: min(100%, 320px); margin: calc(var(--diya-space-5) * -1) 0 0 auto; font-size: var(--diya-text-body); font-variant-numeric: tabular-nums; }
 .invoice-totals div { display: flex; justify-content: space-between; gap: var(--diya-space-5); padding-inline: var(--diya-space-4); }
