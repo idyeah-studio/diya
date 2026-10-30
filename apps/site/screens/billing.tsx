@@ -1,19 +1,17 @@
 'use client'
 // Billing & plan: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/settings/billing/page.tsx. Vite: save as src/Billing.tsx and render it inside your DiyaProvider.
-import { useEffect, useRef, useState } from 'react'
-import { Alert, Button, Card, Choice, Dialog, Metric, Progress, SideNavigation, Stack, Table, Tag, TextInput, TextLink, Toast, type AlertTone } from '@idyeah/diya'
-import { Bell, ChevronLeft, CreditCard, Download, LucideProvider, Palette, Shield, UserRound, Users } from 'lucide-react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Alert, Button, Card, Choice, Dialog, Menu, Metric, Progress, SideNavigation, Stack, Table, Tag, TextInput, Toast, type AlertTone } from '@idyeah/diya'
+import { Bell, CreditCard, Download, LucideProvider, Menu as MenuIcon, Palette, Shield, UserRound, Users } from 'lucide-react'
 
-// Your product, the workspace, and what the demo account shows. Today is November 9, 2026.
+// Your product, the workspace, and what the demo account shows. The plan renews
+// on the 21st of each month; the dates below are worked out from today.
 const PRODUCT = 'Mullion'
 const WORKSPACE = 'Bramble & Finch'
 const BILLING_EMAIL = 'priya@example.com'
-const RENEWS = 'November 21, 2026'
-const PERIOD = 'October 21 to November 21'
+const RENEWAL_DAY = 21
 const SEATS = 10
-const DAYS_LEFT = 12
-const PERIOD_DAYS = 31
 const USED = { seats: 9, storage: 61.4, runs: 8420 }
 
 type PlanId = 'starter' | 'studio' | 'business'
@@ -24,17 +22,50 @@ const PLANS: Record<PlanId, { name: string; price: number; seats: number; storag
 }
 
 type Card = { brand: string; last4: string; expires: string; expired: boolean }
-const CARD: Card = { brand: 'Visa', last4: '4242', expires: '10/26', expired: true }
-
 type Invoice = { id: string; date: string; label: string; amount: number; status: 'Paid' | 'Failed' }
-const INVOICES: Invoice[] = [
-  { id: 'INV-2026-0187', date: '2026-10-21', label: 'Studio, 10 seats', amount: 120, status: 'Paid' },
-  { id: 'INV-2026-0164', date: '2026-09-21', label: 'Studio, 10 seats', amount: 120, status: 'Paid' },
-  { id: 'INV-2026-0152', date: '2026-09-02', label: 'One more seat, Sep 2 to 21', amount: 7.35, status: 'Paid' },
-  { id: 'INV-2026-0139', date: '2026-08-21', label: 'Studio, 9 seats', amount: 108, status: 'Paid' },
-  { id: 'INV-2026-0117', date: '2026-07-21', label: 'Studio, 9 seats', amount: 108, status: 'Paid' },
-  { id: 'INV-2026-0098', date: '2026-06-21', label: 'Studio, 9 seats', amount: 108, status: 'Paid' },
-]
+
+// Every date on the page, from today: the current period, the card on file
+// (it ran out last month) and the invoices for the months before.
+function calendar(now: Date) {
+  const at = (year: number, month: number, date: number) => new Date(Date.UTC(year, month, date, 12))
+  const today = at(now.getFullYear(), now.getMonth(), now.getDate())
+  const back = now.getDate() < RENEWAL_DAY ? 1 : 0
+  const start = at(today.getUTCFullYear(), today.getUTCMonth() - back, RENEWAL_DAY)
+  const end = at(start.getUTCFullYear(), start.getUTCMonth() + 1, RENEWAL_DAY)
+  const months = (n: number) => iso(at(start.getUTCFullYear(), start.getUTCMonth() - n, RENEWAL_DAY))
+  const seatAdded = at(start.getUTCFullYear(), start.getUTCMonth() - 1, 2)
+  const lapsed = at(today.getUTCFullYear(), today.getUTCMonth() - 1, 1)
+  const card: Card = { brand: 'Visa', last4: '4242', expires: `${String(lapsed.getUTCMonth() + 1).padStart(2, '0')}/${String(lapsed.getUTCFullYear() % 100).padStart(2, '0')}`, expired: true }
+  const invoices: Invoice[] = [
+    { id: 'INV-0187', date: months(0), label: 'Studio, 10 seats', amount: 120, status: 'Paid' },
+    { id: 'INV-0164', date: months(1), label: 'Studio, 10 seats', amount: 120, status: 'Paid' },
+    { id: 'INV-0152', date: iso(seatAdded), label: `One more seat, ${short(seatAdded)} to ${RENEWAL_DAY}`, amount: 7.35, status: 'Paid' },
+    { id: 'INV-0139', date: months(2), label: 'Studio, 9 seats', amount: 108, status: 'Paid' },
+    { id: 'INV-0117', date: months(3), label: 'Studio, 9 seats', amount: 108, status: 'Paid' },
+    { id: 'INV-0098', date: months(4), label: 'Studio, 9 seats', amount: 108, status: 'Paid' },
+  ]
+  return {
+    today,
+    start,
+    end,
+    renews: long(end),
+    period: `${month(start)} ${RENEWAL_DAY} to ${month(end)} ${RENEWAL_DAY}`,
+    daysLeft: Math.round((end.getTime() - today.getTime()) / 86_400_000),
+    periodDays: Math.round((end.getTime() - start.getTime()) / 86_400_000),
+    lapsedMonth: month(lapsed),
+    card,
+    invoices,
+  }
+}
+
+// The server and the browser render the same sample day, then the browser
+// moves to today before it paints, so the page hydrates without a mismatch.
+const SAMPLE_DAY = new Date(2026, 10, 9)
+function useToday() {
+  const [today, setToday] = useState(SAMPLE_DAY)
+  useLayoutEffect(() => setToday(new Date()), [])
+  return today
+}
 
 const REASONS = [
   { value: 'price', label: 'It costs too much' },
@@ -70,7 +101,12 @@ async function api(route: Route, body: Record<string, unknown> = {}) {
 }
 
 const money = (amount: number, cents = amount % 1 !== 0) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: cents ? 2 : 0 }).format(amount)
-const day = (iso: string) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${iso}T12:00:00`))
+const utcFormat = (options: Intl.DateTimeFormatOptions) => (date: Date) => new Intl.DateTimeFormat('en-US', { ...options, timeZone: 'UTC' }).format(date)
+const long = utcFormat({ month: 'long', day: 'numeric', year: 'numeric' })
+const short = utcFormat({ month: 'short', day: 'numeric' })
+const month = utcFormat({ month: 'long' })
+const iso = (date: Date) => date.toISOString().slice(0, 10)
+const day = (value: string) => utcFormat({ month: 'short', day: 'numeric', year: 'numeric' })(new Date(`${value}T12:00:00Z`))
 const count = (value: number) => new Intl.NumberFormat('en-US').format(value)
 const brandOf = (number: string) => (number.startsWith('4') ? 'Visa' : /^(5[1-5]|2[2-7])/.test(number) ? 'Mastercard' : /^3[47]/.test(number) ? 'American Express' : 'Card')
 
@@ -89,11 +125,15 @@ type CardForm = { name: string; number: string; expires: string; code: string }
 const EMPTY_CARD: CardForm = { name: '', number: '', expires: '', code: '' }
 
 export default function BillingScreen() {
+  const dates = calendar(useToday())
+  const { renews: RENEWS, period: PERIOD, daysLeft: DAYS_LEFT, periodDays: PERIOD_DAYS } = dates
   const [plan, setPlan] = useState<PlanId>('studio')
   const [canceled, setCanceled] = useState(false)
   const [trialNotice, setTrialNotice] = useState(true)
-  const [card, setCard] = useState(CARD)
-  const [invoices, setInvoices] = useState(INVOICES)
+  const [cardOverride, setCard] = useState<Card>()
+  const [invoiceOverride, setInvoices] = useState<Invoice[]>()
+  const card = cardOverride ?? dates.card
+  const invoices = invoiceOverride ?? dates.invoices
   const [failed, setFailed] = useState<{ plan: PlanId; amount: number; invoice: string }>()
   const [dialog, setDialog] = useState<'plan' | 'cancel' | 'card'>()
   const [choice, setChoice] = useState<PlanId>('business')
@@ -104,12 +144,21 @@ export default function BillingScreen() {
   const [resuming, setResuming] = useState(false)
   const planButton = useRef<HTMLButtonElement>(null)
   const failedAlert = useRef<HTMLDivElement>(null)
-  const focus = useFocusAfterRender()
+  // Where focus goes once the dialog has closed and handed focus back.
+  const [focusNext, setFocusNext] = useState<'failed' | 'plan'>()
   const [notice, setNotice] = useState<Notice>()
+  useEffect(() => {
+    if (!focusNext || dialog) return
+    const target = (focusNext === 'failed' ? failedAlert : planButton).current
+    setFocusNext(undefined)
+    // A task later, after the closing dialog has put focus back where it was.
+    setTimeout(() => target?.focus())
+  }, [focusNext, dialog])
   const current = PLANS[plan]
   const picked = PLANS[choice]
   const notify = (tone: AlertTone, title: string, text: string) => setNotice({ tone, title, text, id: Date.now() })
   const close = (open: boolean) => !open && setDialog(undefined)
+  const upgradeLabel = (name: string) => `${name} upgrade, ${short(dates.today)} to ${short(dates.end)}`
   const prorated = (difference: number) => Math.round(((difference * SEATS * DAYS_LEFT) / PERIOD_DAYS) * 100) / 100
 
   function openPlan(id: PlanId) {
@@ -124,9 +173,9 @@ export default function BillingScreen() {
     setFailed(undefined)
     if (id === 'business') setTrialNotice(false)
     if (amount > 0)
-      setInvoices((rows) => [
-        { id: invoice, date: '2026-11-09', label: `${PLANS[id].name} upgrade, Nov 9 to 21`, amount, status: 'Paid' },
-        ...rows.filter((row) => row.id !== invoice),
+      setInvoices([
+        { id: invoice, date: iso(dates.today), label: upgradeLabel(PLANS[id].name), amount, status: 'Paid' },
+        ...invoices.filter((row) => row.id !== invoice),
       ])
   }
 
@@ -136,15 +185,15 @@ export default function BillingScreen() {
       return false
     }
     const charge = picked.price > current.price ? prorated(picked.price - current.price) : 0
-    const invoice = `INV-2026-0${200 + invoices.length}`
+    const invoice = `INV-0${200 + invoices.length}`
     if (!(await api('/subscription', { plan: choice, charge, cardExpired: card.expired }))) {
       setFailed({ plan: choice, amount: charge, invoice })
-      focus(failedAlert.current)
-      setInvoices([{ id: invoice, date: '2026-11-09', label: `${picked.name} upgrade, Nov 9 to 21`, amount: charge, status: 'Failed' }, ...invoices])
+      setFocusNext('failed')
+      setInvoices([{ id: invoice, date: iso(dates.today), label: upgradeLabel(picked.name), amount: charge, status: 'Failed' }, ...invoices])
       return
     }
     settle(choice, charge, invoice)
-    focus(planButton.current)
+    setFocusNext('plan')
     notify('success', `You’re on ${picked.name}`, charge > 0 ? `We charged ${money(charge)} to ${card.brand} ending ${card.last4} for the rest of this period.` : `Your new price starts today. We’ll credit what’s left of ${current.name} to your next invoice.`)
   }
 
@@ -154,7 +203,7 @@ export default function BillingScreen() {
     const found: Partial<CardForm> = {
       name: form.name.trim() ? undefined : 'Enter the name on the card.',
       number: digits.length >= 15 && digits.length <= 16 ? undefined : 'Enter the 15 or 16 digits on the front of the card.',
-      expires: !month || Number(month) > 12 || Number(month) < 1 ? 'Enter the month and year, like 08 / 29.' : Number(year) * 12 + Number(month) < 26 * 12 + 11 ? 'This card has expired.' : undefined,
+      expires: !month || Number(month) > 12 || Number(month) < 1 ? 'Enter the month and year, like 08 / 29.' : Number(year) * 12 + Number(month) < (dates.today.getUTCFullYear() % 100) * 12 + dates.today.getUTCMonth() + 1 ? 'This card has expired.' : undefined,
       code: /^\d{3,4}$/.test(form.code) ? undefined : 'Enter the 3 or 4 digits on the back.',
     }
     setErrors(found)
@@ -167,7 +216,7 @@ export default function BillingScreen() {
     setCard(next)
     if (failed && (await api('/subscription', { plan: failed.plan, charge: failed.amount, cardExpired: false }))) {
       settle(failed.plan, failed.amount, failed.invoice)
-      focus(planButton.current)
+      setFocusNext('plan')
       return notify('success', 'Card updated, and the payment went through', `You’re on ${PLANS[failed.plan].name}. We charged ${money(failed.amount)} to ${next.brand} ending ${next.last4}.`)
     }
     notify('success', 'Card updated', `We’ll charge ${next.brand} ending ${next.last4} on ${RENEWS}.`)
@@ -176,7 +225,7 @@ export default function BillingScreen() {
   async function cancel() {
     await api('/subscription/cancel', { reason })
     setCanceled(true)
-    focus(planButton.current)
+    setFocusNext('plan')
     notify('info', 'Your plan is canceled', `${current.name} stays on until ${RENEWS}. Change your mind before then and nothing changes.`)
   }
 
@@ -220,7 +269,13 @@ export default function BillingScreen() {
 
         <main className="billing-main" id="billing-main" tabIndex={-1}>
           <div className="billing-column">
-            <TextLink className="billing-back" href="/settings" leadingIcon={<ChevronLeft />}>Settings</TextLink>
+            <div className="billing-bar">
+              <p className="billing-brand">
+                <span className="billing-mark" aria-hidden="true">{PRODUCT[0]}</span>
+                {PRODUCT}
+              </p>
+              <Menu label="Settings sections" triggerIcon={<MenuIcon />} items={NAV.flatMap((group) => group.items.map((item) => ({ id: item.value, label: item.label, icon: item.icon, href: item.href, current: item.value === 'billing' })))} />
+            </div>
             <header className="billing-head">
               <h1 className="billing-title">Billing & plan</h1>
               <p className="billing-lede">{WORKSPACE}’s plan, what you’ve used this month, and every invoice.</p>
@@ -229,11 +284,11 @@ export default function BillingScreen() {
             <Stack gap={6}>
               {failed && (
                 <Alert ref={failedAlert} tabIndex={-1} className="billing-wide" tone="error" urgent title="Your payment didn’t go through" action={{ label: 'Update card', onClick: () => setDialog('card') }}>
-                  We couldn’t charge {money(failed.amount)} for {PLANS[failed.plan].name} to {card.brand} ending {card.last4}, because the card expired in October. Update it and we’ll try again right away.
+                  We couldn’t charge {money(failed.amount)} for {PLANS[failed.plan].name} to {card.brand} ending {card.last4}, because the card expired in {dates.lapsedMonth}. Update it and we’ll try again right away.
                 </Alert>
               )}
               {trialNotice && !failed && (
-                <Alert className="billing-wide" tone="info" title="Your Business trial ended on November 7" action={{ label: 'Upgrade to Business', onClick: () => openPlan('business') }} onDismiss={() => setTrialNotice(false)}>
+                <Alert className="billing-wide" tone="info" title="Your Business trial has ended" action={{ label: 'Upgrade to Business', onClick: () => openPlan('business') }} onDismiss={() => setTrialNotice(false)}>
                   Single sign-on and the audit log are paused. Everything else is just as you left it.
                 </Alert>
               )}
@@ -252,7 +307,7 @@ export default function BillingScreen() {
                   </>
                 }
               >
-                <Metric label={canceled ? 'Last charge' : 'Next charge'} value={money(current.price * SEATS)} unit={canceled ? 'on Oct 21' : 'a month'} />
+                <Metric label={canceled ? 'Last charge' : 'Next charge'} value={money(current.price * SEATS)} unit={canceled ? `on ${short(dates.start)}` : 'a month'} />
               </Card>
 
               <Card headingLevel={2} title="Usage" description={`This billing period, ${PERIOD}.`}>
@@ -394,11 +449,6 @@ export default function BillingScreen() {
   )
 }
 
-function useFocusAfterRender() {
-  const [target, setTarget] = useState<{ node: HTMLElement | null }>()
-  useEffect(() => target?.node?.focus(), [target])
-  return (node: HTMLElement | null) => setTarget({ node })
-}
 
 const css = `
 .billing { min-height: 100dvh; display: grid; grid-template-columns: 272px minmax(0, 1fr); color: var(--diya-color-text); }
@@ -408,15 +458,14 @@ const css = `
 .billing-brand { display: flex; align-items: center; gap: var(--diya-space-3); margin: 0; padding: 0 var(--diya-space-3); font-size: var(--diya-text-large); font-weight: 600; }
 .billing-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: calc(10px * var(--diya-corner-scale, 1)); background: var(--diya-color-accent); color: var(--diya-color-accent-text); font-size: var(--diya-text-large); font-weight: 650; line-height: 1; }
 .billing-section,
-.billing-title { margin: 0; font-size: var(--diya-text-heading); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
+.billing-title { margin: 0; font-size: 28px; font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
 .billing-section { margin-top: var(--diya-space-5); padding: 0 var(--diya-space-3); }
 .billing-nav { width: auto; padding: 0; border: 0; background: transparent; backdrop-filter: none; }
 .billing-main { min-width: 0; padding: 112px var(--diya-space-7) var(--diya-space-8); border-left: 1px solid var(--diya-color-line); }
 .billing-main:focus,
 .billing-wide:focus { outline: none; }
-.billing-column { max-width: 960px; margin-inline: auto; }
-.billing-column > * { max-width: 720px; }
-.billing-back { display: none; }
+.billing-column { max-width: 720px; }
+.billing-bar { display: none; }
 .billing-head { display: grid; gap: var(--diya-space-2); margin-bottom: var(--diya-space-6); }
 .billing-lede,
 .billing-note { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: var(--diya-leading-body); text-wrap: pretty; }
@@ -435,7 +484,8 @@ const css = `
 @media (max-width: 860px) {
   .billing { grid-template-columns: minmax(0, 1fr); }
   .billing-side { display: none; }
-  .billing-main { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); border-left: 0; }
-  .billing-back { display: inline-flex; margin: 0 0 var(--diya-space-5) calc(var(--diya-space-1) * -1); }
+  .billing-main { padding: 0 var(--diya-space-4) var(--diya-space-7); border-left: 0; }
+  .billing-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-4); height: 56px; margin-bottom: var(--diya-space-5); }
+  .billing-bar .billing-brand { padding: 0; }
 }
 `
