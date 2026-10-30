@@ -9,6 +9,8 @@ import { CalendarClock, ChevronDown, CircleAlert, Info, ListPlus, LucideProvider
 
 // Your team, your projects and "today", fixed so the demo reads the same on any day.
 const TODAY = '2026-11-04'
+const SHOP = 'Little Fern Bakery'
+const ME = 'Lucía Fernández'
 const TEAM = ['Lucía Fernández', 'Kenji Watanabe', 'Priya Raman', 'Tomás Ortega', 'Aisha Bello']
 const PROJECTS = [
   { id: 'winter', name: 'Winter menu launch', blurb: 'Four new drinks and six pastries, on the counter by Nov 20.' },
@@ -112,15 +114,22 @@ export default function TaskListScreen() {
 
   return (
     <LucideProvider size={18} strokeWidth={1.6}>
-      <main className="task-list" data-glass={glass || undefined}>
+      <div className="task-list" data-glass={glass || undefined}>
         <style>{css}</style>
-        <div className="task-list-page">
+        <header className="task-list-bar">
+          <span className="task-list-brand"><span className="task-list-logo" aria-hidden="true">{SHOP[0]}</span>{SHOP}</span>
+          <Menu label="Account" items={[{ id: 'settings', label: 'Account settings', href: '/settings' }, { id: 'sign-out', label: 'Sign out', href: '/sign-out' }]}
+            trigger={<button type="button" className="task-list-account" aria-label={`${ME}: account`}><Avatar name={ME} size="small" /></button>} />
+        </header>
+        <main className="task-list-page" data-view={shown.length ? view : undefined}>
           <header className="task-list-header">
             <div className="task-list-heading">
               <Menu label="Projects" items={PROJECTS.map((p) => ({
                 id: p.id, type: 'radio' as const, checked: p.id === project, label: p.name,
                 onSelect: () => { setProject(p.id); setFocus({ id: '', on: 'heading' }) },
-              }))} trigger={<Button variant="quiet" size="small" className="task-list-switch">Little Fern Bakery <ChevronDown /></Button>} />
+              }))} trigger={<Button variant="quiet" size="small" className="task-list-switch">
+                <span className="task-list-wide">{SHOP}</span><span className="task-list-narrow">Projects</span> <ChevronDown />
+              </Button>} />
               <h1 ref={heading} tabIndex={-1} className="task-list-title">{current.name}</h1>
               <p className="task-list-lede">
                 {shown.length ? `${shown.filter((t) => t.status !== 'done').length} open, ${shown.filter((t) => t.status === 'done').length} done` : current.blurb}
@@ -140,7 +149,7 @@ export default function TaskListScreen() {
               description={`${current.blurb} Add the first task and the rest tends to follow.`} action={{ label: 'New task', onClick: create }} />
           )}
           <p className="task-list-sr" role="status">{said}</p>
-        </div>
+        </main>
 
         <TaskDrawer task={editing} onClose={() => setEditing(undefined)} onSave={save}
           onDelete={(task) => { setEditing(undefined); setDeleting(task) }} />
@@ -155,7 +164,7 @@ export default function TaskListScreen() {
             {notice.text}
           </Toast>
         )}
-      </main>
+      </div>
     </LucideProvider>
   )
 }
@@ -312,12 +321,23 @@ function TaskDrawer({ task, onClose, onSave, onDelete }: EditProps & { onDelete:
 
 const css = `
 .task-list { min-height: 100dvh; color: var(--diya-color-text); }
-.task-list-page { box-sizing: border-box; width: 100%; max-width: 1120px; margin: 0 auto; display: grid; align-content: start; gap: var(--diya-space-6);
+.task-list-bar,
+.task-list-narrow { display: none; }
+.task-list-brand { display: inline-flex; align-items: center; gap: 10px; font-size: var(--diya-text-large); font-weight: 600; letter-spacing: -0.01em; }
+.task-list-logo {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: calc(8px * var(--diya-corner-scale, 1));
+  background: var(--diya-color-accent); color: var(--diya-color-accent-text); font-size: var(--diya-text-body); font-weight: 650; line-height: 1;
+}
+.task-list-account { display: grid; padding: 4px; margin-right: -4px; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.task-list-account:focus-visible { outline: 2px solid var(--diya-color-accent); outline-offset: 2px; }
+.task-list-page { box-sizing: border-box; width: 100%; max-width: calc(880px + 2 * var(--diya-space-7)); display: grid; align-content: start; gap: var(--diya-space-6);
   padding: var(--diya-space-7) var(--diya-space-7) var(--diya-space-8); }
+.task-list-tabs [role='tablist'] { width: 100%; }
+.task-list-page[data-view='board'] { max-width: calc(1200px + 2 * var(--diya-space-7)); }
 .task-list-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--diya-space-4); }
 .task-list-heading { display: grid; justify-items: start; gap: var(--diya-space-2); min-width: 0; }
 .task-list-switch { margin-inline-start: calc(var(--diya-space-4) * -1); color: var(--diya-color-muted); }
-.task-list-title { margin: 0; font-size: var(--diya-text-display); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.025em; text-wrap: balance; }
+.task-list-title { margin: 0; font-size: 28px; font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.025em; text-wrap: balance; }
 .task-list-title:focus { outline: none; }
 .task-list-lede { display: flex; flex-wrap: wrap; align-items: center; gap: var(--diya-space-2) var(--diya-space-4); margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-large); line-height: var(--diya-leading-body); }
 .task-list-late { display: inline-flex; align-items: center; gap: var(--diya-space-1); color: var(--diya-color-error); font-weight: 500; }
@@ -335,6 +355,7 @@ const css = `
 .task-list-meta { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--diya-space-3); }
 .task-list-due { display: inline-flex; align-items: center; gap: var(--diya-space-1); color: var(--diya-color-muted); font-size: var(--diya-text-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .task-list-due.task-list-late { color: var(--diya-color-error); }
+.task-list[data-glass] .task-list-late { color: color-mix(in srgb, var(--diya-color-error) 72%, var(--diya-color-text)); }
 .task-list-quiet { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); }
 .task-list-sr { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .task-list-empty { margin-block: var(--diya-space-7); }
@@ -361,9 +382,17 @@ const css = `
 @media (max-width: 900px) {
   .task-list-board { grid-template-columns: minmax(0, 1fr); }
 }
+@media (max-width: 720px) {
+  .task-list-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-3); position: sticky; top: 0; z-index: 10;
+    height: 56px; box-sizing: border-box; padding: 0 var(--diya-space-4); border-bottom: 1px solid var(--diya-color-line);
+    background: color-mix(in srgb, var(--diya-color-surface) 82%, transparent); backdrop-filter: blur(20px) saturate(1.4);
+  }
+  .task-list-wide { display: none; }
+  .task-list-narrow { display: inline; }
+}
 @media (max-width: 640px) {
   .task-list-page { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); gap: var(--diya-space-5); }
-  .task-list-title { font-size: var(--diya-text-heading); }
   .task-list-lede { font-size: var(--diya-text-body); }
   .task-list-header > :last-child { width: 100%; }
   .task-list-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: var(--diya-space-1); padding-block: var(--diya-space-3); }
