@@ -3,7 +3,7 @@
 // Next.js: save as app/bookings/page.tsx. Vite: save as src/Agenda.tsx and render it inside your DiyaProvider.
 import { useState, type ReactNode } from 'react'
 import {
-  Alert, Avatar, Button, Calendar, ContentState, DatePicker, Dialog, Drawer, List, PageHeader, Select, SiteHeader, Stack, Tag, TextArea, TextInput, Toast,
+  Alert, Avatar, Button, Calendar, ContentState, DatePicker, Dialog, Drawer, List, Select, SiteHeader, Stack, Tag, TextArea, TextInput, Toast,
   useDiyaAppearance, type Tone,
 } from '@idyeah/diya'
 import { CalendarCheck, CalendarX2, ChevronLeft, ChevronRight, LucideProvider, Plus, UserCheck } from 'lucide-react'
@@ -127,8 +127,13 @@ export default function AgendaScreen() {
         <SiteHeader brand={<span className="agenda-brand"><span className="agenda-mark" aria-hidden="true">{PLACE[0]}</span>{PLACE}</span>}
           brandHref="/" brandLabel={`${PLACE}, home`} items={NAV} value="bookings" avatar={<Avatar name={ME} size="small" />} />
         <main className="agenda-main">
-          <PageHeader surface={false} headingLevel={1} title="Bookings" description={`${PLACE} Salon. Four stylists, one very good espresso machine.`}
-            actions={<Button onClick={() => setAdding(true)}><Plus /> New booking</Button>} />
+          <header className="agenda-header">
+            <div className="agenda-stack">
+              <h1 className="agenda-title">Bookings</h1>
+              <p className="agenda-lede">{PLACE} Salon. Four stylists, one very good espresso machine.</p>
+            </div>
+            <Button onClick={() => setAdding(true)}><Plus /> New booking</Button>
+          </header>
           <div className="agenda-layout">
             <section className="agenda-day agenda-panel" aria-labelledby="agenda-day-title">
               <div className="agenda-day-head">
@@ -154,16 +159,12 @@ export default function AgendaScreen() {
                   {shown.map((b) => (
                     <li key={b.id}>
                       <button type="button" className="agenda-row" data-status={b.status} aria-haspopup="dialog" onClick={() => setOpenId(b.id)}>
-                        <span className="agenda-time">
-                          <strong>{clock(b.start)}</strong>
-                          <span className="agenda-muted">{service(b.service).minutes} min</span>
-                        </span>
-                        <span className="agenda-who">
-                          <strong className="agenda-client">{b.client}</strong>
-                          <span className="agenda-muted">{service(b.service).label} with {first(person(b.staff))}</span>
-                        </span>
+                        <strong className="agenda-clock">{clock(b.start)}</strong>
+                        <span className="agenda-muted agenda-length">{service(b.service).minutes} min</span>
+                        <strong className="agenda-client">{b.client}</strong>
+                        <span className="agenda-muted agenda-service">{service(b.service).label} with {first(person(b.staff))}</span>
                         <span className="agenda-avatar" aria-hidden="true"><Avatar name={person(b.staff)} size="small" /></span>
-                        <Tag size="small" tone={STATUS[b.status].tone} leading="dot">{STATUS[b.status].label}</Tag>
+                        <span className="agenda-status"><Tag size="small" tone={STATUS[b.status].tone} leading="dot">{STATUS[b.status].label}</Tag></span>
                       </button>
                     </li>
                   ))}
@@ -352,15 +353,16 @@ const css = `
   background: var(--diya-color-accent); color: var(--diya-color-accent-text);
   font-size: var(--diya-text-body); font-weight: 650; line-height: 1;
 }
-.agenda-main { display: grid; gap: var(--diya-space-6); width: 100%; max-width: 1240px; margin: 0 auto; padding: var(--diya-space-7) var(--diya-space-6) var(--diya-space-8); }
+.agenda-main { display: grid; gap: var(--diya-space-6); width: 100%; max-width: calc(1176px + 2 * var(--diya-space-7)); margin: 0 auto; padding: var(--diya-space-7) var(--diya-space-7) var(--diya-space-8); }
+.agenda-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--diya-space-4); }
+.agenda-title { margin: 0; font-size: 28px; font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
+.agenda-lede { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: var(--diya-leading-body); }
 .agenda-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--diya-space-6); align-items: start; }
 .agenda-panel { border: 1px solid var(--diya-color-line); border-radius: var(--diya-radius-surface); background: var(--diya-color-raised); }
-.agenda[data-glass] .agenda-panel,
-.agenda[data-glass] .agenda-rail {
+.agenda[data-glass] .agenda-panel {
   background: color-mix(in srgb, var(--diya-color-raised) 64%, transparent);
   backdrop-filter: blur(28px) saturate(1.15);
 }
-.agenda[data-glass] .agenda-rail { padding: var(--diya-space-5); border: 1px solid var(--diya-color-line); border-radius: var(--diya-radius-surface); }
 .agenda-day { min-width: 0; padding: var(--diya-space-5) 0 var(--diya-space-3); }
 .agenda-day-head { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: var(--diya-space-4); padding: 0 var(--diya-space-5) var(--diya-space-5); border-bottom: 1px solid var(--diya-color-line); }
 .agenda-stack { display: grid; gap: var(--diya-space-1); min-width: 0; }
@@ -372,19 +374,22 @@ const css = `
 .agenda-list { display: grid; margin: 0; padding: var(--diya-space-2) var(--diya-space-3) 0; list-style: none; }
 .agenda-list li + li { border-top: 1px solid var(--diya-color-line); }
 .agenda-row {
-  display: grid; grid-template-columns: 96px minmax(0, 1fr) auto auto; align-items: center; gap: var(--diya-space-4);
+  display: grid; grid-template-columns: 96px minmax(0, 1fr) auto auto; grid-template-areas: 'clock client avatar status' 'length service avatar status';
+  align-items: center; gap: 0 var(--diya-space-4);
   width: 100%; padding: var(--diya-space-3); border: 0; border-radius: var(--diya-radius-control);
   background: none; color: inherit; font: inherit; font-size: var(--diya-text-body); text-align: start; cursor: pointer;
 }
 .agenda-row:hover { background: var(--diya-color-hover); }
 .agenda-row:focus-visible { outline: 2px solid var(--diya-color-accent); outline-offset: 2px; }
-.agenda-time,
-.agenda-who { display: grid; min-width: 0; line-height: var(--diya-leading-body); }
-.agenda-time strong { font-weight: 600; font-variant-numeric: tabular-nums; }
-.agenda-client { font-weight: 500; overflow-wrap: anywhere; }
+.agenda-row > * { min-width: 0; line-height: var(--diya-leading-body); }
+.agenda-clock { grid-area: clock; font-weight: 600; font-variant-numeric: tabular-nums; }
+.agenda-length { grid-area: length; }
+.agenda-client { grid-area: client; font-weight: 500; overflow-wrap: anywhere; }
+.agenda-service { grid-area: service; }
+.agenda-status { grid-area: status; display: inline-flex; justify-self: end; }
 .agenda-row[data-status='canceled'] .agenda-client,
-.agenda-row[data-status='canceled'] .agenda-time strong { color: var(--diya-color-muted); text-decoration: line-through; }
-.agenda-avatar { display: inline-flex; }
+.agenda-row[data-status='canceled'] .agenda-clock { color: var(--diya-color-muted); text-decoration: line-through; }
+.agenda-avatar { grid-area: avatar; display: inline-flex; }
 .agenda-empty { max-width: none; margin: 0; padding: var(--diya-space-8) var(--diya-space-5); border: 0; background: none; }
 .agenda-rail { display: grid; gap: var(--diya-space-6); position: sticky; top: var(--diya-space-5); }
 .agenda-rail-title { margin: 0; font-size: var(--diya-text-body); font-weight: 600; line-height: var(--diya-leading-tight); }
@@ -394,15 +399,14 @@ const css = `
 .agenda-facts div { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: var(--diya-space-4); align-items: center; padding-block: var(--diya-space-3); border-top: 1px solid var(--diya-color-line); }
 .agenda-facts div:last-child { border-bottom: 1px solid var(--diya-color-line); }
 .agenda-facts dt { color: var(--diya-color-muted); }
-.agenda-facts dd { margin: 0; justify-self: start; }
+.agenda-facts dd { margin: 0; justify-self: start; font-weight: 500; }
 .agenda-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--diya-space-4); align-items: start; }
 .agenda-text { margin: 0; font-size: var(--diya-text-body); line-height: var(--diya-leading-body); }
 .agenda-confirm { display: grid; gap: var(--diya-space-3); }
 .agenda-actions { display: flex; flex-wrap: wrap; gap: var(--diya-space-2); }
 .agenda-start { justify-self: start; }
 @media (prefers-reduced-transparency: reduce) {
-  .agenda[data-glass] .agenda-panel,
-  .agenda[data-glass] .agenda-rail { background: var(--diya-color-raised); backdrop-filter: none; }
+  .agenda[data-glass] .agenda-panel { background: var(--diya-color-raised); backdrop-filter: none; }
 }
 @media (max-width: 960px) {
   .agenda-main { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); gap: var(--diya-space-5); }
@@ -415,13 +419,12 @@ const css = `
   .agenda-tools { width: 100%; }
   .agenda-staff { flex: 1; width: auto; min-width: 0; }
   .agenda-list { padding-inline: var(--diya-space-2); }
-  .agenda-row { grid-template-columns: 72px minmax(0, 1fr) auto; gap: var(--diya-space-3); padding-inline: var(--diya-space-2); }
-  .agenda-avatar { display: none; }
+  .agenda-row { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'clock client client' 'service service status'; gap: 2px var(--diya-space-3); padding-inline: var(--diya-space-2); }
+  .agenda-avatar,
+  .agenda-length { display: none; }
   .agenda-pair { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 380px) {
   .agenda-staff { flex-basis: 100%; }
-  .agenda-row { grid-template-columns: minmax(0, 1fr) auto; }
-  .agenda-time { grid-column: 1 / -1; display: flex; gap: var(--diya-space-2); }
 }
 `
