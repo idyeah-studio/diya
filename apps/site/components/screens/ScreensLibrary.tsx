@@ -91,8 +91,8 @@ function Thumbnail({ id }: { id: string }) {
           data-theme-image={theme}
           src={thumbnailSrc(id, theme)}
           alt=""
-          width={864}
-          height={540}
+          width={896}
+          height={560}
           loading="lazy"
           decoding="async"
         />
