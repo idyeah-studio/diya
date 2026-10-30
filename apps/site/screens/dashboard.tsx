@@ -3,7 +3,7 @@
 // Next.js: save as app/dashboard/page.tsx. Vite: save as src/Dashboard.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState } from 'react'
 import {
-  Avatar, Button, Card, ContentState, Drawer, List, Menu, Metric, Select, SideNavigation, Table, Tag, TextLink, Toast, Tooltip,
+  Avatar, Button, Card, ContentState, Drawer, Menu, Metric, Select, SideNavigation, Table, Tag, TextLink, Toast, Tooltip,
   type MetricChange, type SideNavigationGroup, type TableColumn, type Tone,
 } from '@idyeah/diya'
 import { DataViz } from '@idyeah/diya/charts'
@@ -21,8 +21,8 @@ const WORKSPACES = [
 ]
 
 // One figure a month, from the first month (April 2024) to this one (November 2026).
-const MRR = [9040, 10510, 12100, 13840, 15890, 18230, 20670, 23380, 26570, 30030, 33580, 37590, 42200, 46950, 51830, 57430,
-  63620, 69680, 76010, 83320, 90920, 98100, 105850, 114650, 123110, 130990, 139860, 149430, 157870, 165870, 175160, 184320]
+const MRR = [9040, 10720, 11980, 14260, 15890, 17870, 20880, 24200, 26300, 29130, 34250, 37590, 41140, 48360, 52350, 56280,
+  65210, 68980, 73730, 84570, 93650, 98100, 103730, 103730, 124340, 134260, 137760, 152420, 156290, 170850, 174280, 184320]
 const SUBSCRIBERS = [81, 91, 106, 118, 134, 154, 170, 193, 218, 240, 271, 298, 331, 371, 400, 443, 491, 525, 577, 627, 672, 732,
   776, 834, 902, 939, 1004, 1072, 1110, 1175, 1228, 1284]
 const CHURN = [3.9, 4.0, 3.6, 3.5, 3.8, 3.5, 3.2, 3.5, 3.4, 3.0, 3.2, 3.3, 2.8, 2.8, 3.1, 2.8, 2.5, 2.9, 2.7, 2.3, 2.6, 2.6, 2.2,
@@ -92,6 +92,9 @@ const months = (range: Range) => RANGES.find((r) => r.value === range)!.months
 const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format
 const usdCents = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format
 const count = new Intl.NumberFormat('en-US').format
+// The chart's axis and tooltips: $184.3k. Zero stays unlabeled, so the axis's
+// lowest figure never crowds the first month under it.
+const usdK = (value: number) => (value === 0 ? '' : `$${count(Math.round(value / 100) / 10)}k`)
 function monthName(index: number, style: 'short' | 'axis' | 'long') {
   const date = new Date(2024, 3 + index)
   const month = date.toLocaleDateString('en-US', { month: 'short' })
@@ -274,12 +277,12 @@ export default function DashboardScreen() {
         </aside>
 
         <header className="dashboard-bar">
+          {brand}
           <Button variant="quiet" iconOnly aria-label="Open navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
             <MenuIcon />
           </Button>
-          {brand}
         </header>
-        <Drawer open={menuOpen} onOpenChange={setMenuOpen} side="left" title={PRODUCT}>
+        <Drawer open={menuOpen} onOpenChange={setMenuOpen} side="right" title={PRODUCT}>
           <SideNavigation className="dashboard-drawer-nav" value="overview" groups={groups} />
           <div className="dashboard-drawer-foot">{account}</div>
         </Drawer>
@@ -328,7 +331,7 @@ export default function DashboardScreen() {
                 {trend.status === 'ready' ? (
                   <DataViz {...trendText} headingLevel={2}
                     type="area" variant="smooth" legend={false} categories={trend.data.categories}
-                    series={[{ name: 'MRR', values: trend.data.values }]} formatValue={usd} height={280} />
+                    series={[{ name: 'MRR', values: trend.data.values }]} formatValue={usdK} height={280} />
                 ) : trend.status === 'error' ? (
                   <ContentState className="dashboard-panel-error" headingLevel={2} urgent icon={<CircleAlert />} title="Revenue didn’t load"
                     description={`That’s ${months(range)} months of revenue, and the request ran out of time. A second try usually does it.`}
@@ -363,12 +366,16 @@ export default function DashboardScreen() {
           {peek && (
             <div className="dashboard-peek">
               <Metric label="MRR" value={usd(peek.mrr)} size="large" />
-              <List label={`About ${peek.name}`} divided items={[
-                { id: 'status', label: 'Status', trailing: <Tag label="Status" tone={STATUS[peek.status].tone} leading="dot" size="small">{STATUS[peek.status].text}</Tag> },
-                { id: 'contact', label: 'Contact', trailing: peek.contact },
-                { id: 'seats', label: 'Seats', trailing: count(peek.seats) },
-                { id: 'per-seat', label: 'Per seat', trailing: usd(peek.mrr / peek.seats) },
-              ]} />
+              <dl className="dashboard-facts">
+                {([
+                  ['Status', <Tag label="Status" tone={STATUS[peek.status].tone} leading="dot" size="small">{STATUS[peek.status].text}</Tag>],
+                  ['Contact', peek.contact],
+                  ['Seats', count(peek.seats)],
+                  ['Per seat', usd(peek.mrr / peek.seats)],
+                ] as const).map(([term, value]) => (
+                  <div key={term} className="dashboard-fact"><dt>{term}</dt><dd>{value}</dd></div>
+                ))}
+              </dl>
             </div>
           )}
         </Drawer>
@@ -436,12 +443,12 @@ const css = `
 .dashboard-drawer-nav { width: auto; margin-inline: calc(-1 * var(--diya-space-3)); border: 0; padding: 0; background: none; }
 .dashboard-drawer-foot { display: flex; margin: var(--diya-space-5) -6px 0; padding-top: var(--diya-space-4); border-top: 1px solid var(--diya-color-line); }
 
-.dashboard-main { min-width: 0; width: 100%; max-width: 1600px; display: grid; align-content: start; gap: var(--diya-space-6);
+.dashboard-main { min-width: 0; width: 100%; max-width: calc(1200px + 2 * var(--diya-space-7)); display: grid; align-content: start; gap: var(--diya-space-7);
   padding: var(--diya-space-7) var(--diya-space-7) var(--diya-space-8); }
 .dashboard-main:focus { outline: none; }
 .dashboard-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--diya-space-4) var(--diya-space-5); }
 .dashboard-heading { display: grid; gap: var(--diya-space-1); }
-.dashboard-title { margin: 0; font-size: var(--diya-text-heading); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
+.dashboard-title { margin: 0; font-size: 28px; font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
 .dashboard-title:focus { outline: none; }
 .dashboard-lede { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); }
 .dashboard-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--diya-space-3); }
@@ -471,6 +478,11 @@ const css = `
 .dashboard-who-name:focus-visible { outline: 2px solid var(--diya-color-accent); outline-offset: 2px; }
 .dashboard-who-contact { color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
 .dashboard-peek { display: grid; gap: var(--diya-space-5); }
+.dashboard-facts { display: grid; margin: 0; }
+.dashboard-fact { display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-4); min-height: 48px; border-top: 1px solid var(--diya-color-line); font-size: var(--diya-text-body); }
+.dashboard-fact:last-child { border-bottom: 1px solid var(--diya-color-line); }
+.dashboard-fact dt { color: var(--diya-color-muted); font-weight: 400; }
+.dashboard-fact dd { margin: 0; color: var(--diya-color-text); font-weight: 500; font-variant-numeric: tabular-nums; }
 .dashboard-peek-actions { display: flex; flex-wrap: wrap; gap: var(--diya-space-3); }
 
 @media (max-width: 1180px) {
@@ -482,8 +494,8 @@ const css = `
   .dashboard { grid-template-columns: minmax(0, 1fr); }
   .dashboard-side { display: none; }
   .dashboard-bar {
-    display: flex; align-items: center; gap: var(--diya-space-2); position: sticky; top: 0; z-index: 10;
-    padding: var(--diya-space-2) var(--diya-space-4) var(--diya-space-2) var(--diya-space-2);
+    display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-2); position: sticky; top: 0; z-index: 10;
+    height: 56px; box-sizing: border-box; padding: 0 var(--diya-space-2) 0 var(--diya-space-4);
     border-bottom: 1px solid var(--diya-color-line);
     background: color-mix(in srgb, var(--diya-color-surface) 82%, transparent); backdrop-filter: blur(20px) saturate(1.4);
   }
