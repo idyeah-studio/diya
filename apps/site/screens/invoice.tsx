@@ -1,15 +1,16 @@
 'use client'
 // Invoice & quote: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/invoices/[id]/page.tsx. Vite: save as src/Invoice.tsx and render it inside your DiyaProvider.
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import {
-  Alert, Button, DatePicker, Dialog, Menu, Select, Stack, Table, Tabs, Tag, TextArea, TextInput, TextLink, Toast, useDiyaAppearance,
-  type TableColumn, type Tone,
+  Alert, Button, DatePicker, Dialog, Menu, Select, Stack, Tabs, Tag, TextArea, TextInput, TextLink, Toast, useDiyaAppearance,
+  type Tone,
 } from '@idyeah/diya'
 import { ArrowLeft, Check, ChevronDown, Download, LucideProvider, Send, X } from 'lucide-react'
 
-// Your studio, your client and "today", fixed so the demo reads the same on any day.
-const TODAY = '2026-11-04'
+// Your studio and your client. The samples are dated as if today were SAMPLE_DAY;
+// datedFor() below moves them to the real today.
+const SAMPLE_DAY = '2026-11-04'
 const TAX_RATE = 0.07
 const STUDIO = { name: 'Saltwind Studio', line: 'Brand and packaging design', city: 'Providence, Rhode Island', email: 'billing@example.com' }
 const CLIENT = { name: 'Calloway & Finch', contact: 'Mara Lindqvist', city: 'Asheville, North Carolina', email: 'accounts@example.com', paysIn: 6 }
@@ -21,8 +22,8 @@ type Doc = { id: string; number: string; status: Status; issued: string; due: st
 
 // Your invoices for this client. In your app, load the one in the URL.
 const INVOICES: Doc[] = [
-  { id: 'inv-2048', number: 'INV-2048', status: 'draft', issued: TODAY, due: '2026-11-18', note: 'November’s retainer, plus the holiday page you asked for on the 2nd.', items: [
-    { id: 'a', name: 'Design retainer, November', detail: 'Up to 40 hours of design and art direction', qty: 1, rate: 4800 },
+  { id: 'inv-2048', number: 'INV-2048', status: 'draft', issued: SAMPLE_DAY, due: '2026-11-18', note: '{0}’s retainer, plus the holiday page you asked for last week.', items: [
+    { id: 'a', name: 'Design retainer, {0}', detail: 'Up to 40 hours of design and art direction', qty: 1, rate: 4800 },
     { id: 'b', name: 'Holiday landing page', detail: 'Design and build, one round of changes', qty: 1, rate: 2400 },
     { id: 'c', name: 'Product photo retouching', detail: 'Per image', qty: 24, rate: 35 },
   ] },
@@ -31,17 +32,17 @@ const INVOICES: Doc[] = [
     { id: 'b', name: 'Press proofs', detail: 'Per round, with the printer', qty: 3, rate: 180 },
     { id: 'c', name: 'Brand guidelines update', detail: 'Hourly', qty: 6, rate: 150 },
   ] },
-  { id: 'inv-2046', number: 'INV-2046', status: 'overdue', issued: '2026-10-07', due: '2026-10-21', note: 'October’s retainer and the spring catalog layout.', items: [
-    { id: 'a', name: 'Design retainer, October', detail: 'Up to 40 hours of design and art direction', qty: 1, rate: 4800 },
+  { id: 'inv-2046', number: 'INV-2046', status: 'overdue', issued: '2026-10-07', due: '2026-10-21', note: '{1}’s retainer and the spring catalog layout.', items: [
+    { id: 'a', name: 'Design retainer, {1}', detail: 'Up to 40 hours of design and art direction', qty: 1, rate: 4800 },
     { id: 'b', name: 'Spring catalog layout', detail: 'Per page', qty: 32, rate: 95 },
   ] },
-  { id: 'inv-2045', number: 'INV-2045', status: 'paid', issued: '2026-09-30', due: '2026-10-14', paidOn: '2026-10-09', note: 'September’s retainer and a year of hosting.', items: [
-    { id: 'a', name: 'Design retainer, September', detail: 'Up to 40 hours of design and art direction', qty: 1, rate: 4800 },
+  { id: 'inv-2045', number: 'INV-2045', status: 'paid', issued: '2026-09-30', due: '2026-10-14', paidOn: '2026-10-09', note: '{2}’s retainer and a year of hosting.', items: [
+    { id: 'a', name: 'Design retainer, {2}', detail: 'Up to 40 hours of design and art direction', qty: 1, rate: 4800 },
     { id: 'b', name: 'Website hosting, 12 months', qty: 1, rate: 360 },
   ] },
 ]
 
-const QUOTE = { number: 'Q-0119', title: 'Spring campaign', issued: '2026-11-02', validUntil: '2026-11-25', note: 'Shoot dates are flexible in March. Half the total is due on acceptance, the rest on delivery.', items: [
+const QUOTE = { number: 'Q-0119', title: 'Spring campaign', issued: '2026-11-02', validUntil: '2026-11-25', note: 'Shoot dates are flexible. Half the total is due on acceptance, the rest on delivery.', items: [
   { id: 'a', name: 'Campaign concept and art direction', detail: 'Two directions, one refined', qty: 1, rate: 3800 },
   { id: 'b', name: 'Photography', detail: 'Per day, studio and one location', qty: 2, rate: 1600 },
   { id: 'c', name: 'Retouching', detail: 'Per image', qty: 40, rate: 35 },
@@ -59,13 +60,43 @@ async function api(route: string, body: Record<string, string> = {}) {
 const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format
 const date = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format
 const longDate = (iso: string) => date(new Date(iso))
-const daysLate = (due: string) => Math.round((Date.parse(TODAY) - Date.parse(due)) / 86_400_000)
+const daysLate = (due: string, today: string) => Math.round((Date.parse(today) - Date.parse(due)) / 86_400_000)
+const move = (iso: string, by: number) => new Date(Date.parse(iso) + by * 86_400_000).toISOString().slice(0, 10)
+const monthsBack = (iso: string, back: number) => {
+  const day = new Date(iso)
+  return new Intl.DateTimeFormat('en-US', { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth() - back, 1)))
+}
+// {0} is this month's name, {1} last month's, {2} the month before.
+const withMonths = (text: string, today: string) => text.replace(/\{(\d)\}/g, (_, back: string) => monthsBack(today, Number(back)))
+
+// The samples above are dated as if today were SAMPLE_DAY. This moves every
+// date by the same number of days, so the draft is always today's and the
+// overdue one is always two weeks late.
+function datedFor(today: string) {
+  const by = Math.round((Date.parse(today) - Date.parse(SAMPLE_DAY)) / 86_400_000)
+  return {
+    invoices: INVOICES.map((doc): Doc => ({
+      ...doc, issued: move(doc.issued, by), due: move(doc.due, by), paidOn: doc.paidOn && move(doc.paidOn, by), note: withMonths(doc.note, today),
+      items: doc.items.map((item) => ({ ...item, name: withMonths(item.name, today) })),
+    })),
+    quote: { ...QUOTE, issued: move(QUOTE.issued, by), validUntil: move(QUOTE.validUntil, by) },
+  }
+}
+
+// The server and the browser render SAMPLE_DAY first, then the browser moves to
+// today before it paints, so the page hydrates without a mismatch.
+function useToday() {
+  const [today, setToday] = useState(SAMPLE_DAY)
+  useLayoutEffect(() => setToday(new Date().toLocaleDateString('en-CA')), [])
+  return today
+}
 const sum = (items: Item[]) => items.reduce((total, item) => total + item.qty * item.rate, 0)
 const STATUS: Record<Status, [Tone, string]> = { draft: ['neutral', 'Draft'], sent: ['info', 'Sent'], overdue: ['warning', 'Overdue'], paid: ['success', 'Paid'] }
 type Notice = { id: number; title: string; text: string; tone?: 'success' | 'info' }
 
 export default function InvoiceScreen() {
   const { glass } = useDiyaAppearance()
+  const today = useToday()
   const [mode, setMode] = useState('invoice')
   const [notice, setNotice] = useState<Notice>()
   const notify = (title: string, text: string, tone?: 'info') => setNotice({ id: Date.now(), title, text, tone })
@@ -77,8 +108,8 @@ export default function InvoiceScreen() {
         <div className="invoice-page">
           <TextLink className="invoice-back" href="/invoices" leadingIcon={<ArrowLeft />}>Invoices</TextLink>
           <Tabs className="invoice-tabs" variant="pill" size="small" label="Document" value={mode} onValueChange={setMode} items={[
-            { value: 'invoice', label: 'Invoice', content: mode === 'invoice' && <InvoiceView notify={notify} /> },
-            { value: 'quote', label: 'Quote', content: mode === 'quote' && <QuoteView notify={notify} /> },
+            { value: 'invoice', label: 'Invoice', content: mode === 'invoice' && <InvoiceView key={today} today={today} notify={notify} /> },
+            { value: 'quote', label: 'Quote', content: mode === 'quote' && <QuoteView key={today} today={today} notify={notify} /> },
           ]} />
         </div>
         {notice && (
@@ -89,8 +120,8 @@ export default function InvoiceScreen() {
   )
 }
 
-function InvoiceView({ notify }: { notify: (title: string, text: string, tone?: 'info') => void }) {
-  const [docs, setDocs] = useState(INVOICES)
+function InvoiceView({ today, notify }: { today: string; notify: (title: string, text: string, tone?: 'info') => void }) {
+  const [docs, setDocs] = useState(() => datedFor(today).invoices)
   const [id, setId] = useState('inv-2047')
   const [dialog, setDialog] = useState<'send' | 'paid'>()
   const [reminding, setReminding] = useState(false)
@@ -135,7 +166,7 @@ function InvoiceView({ notify }: { notify: (title: string, text: string, tone?: 
       </div>
 
       {doc.status === 'overdue' && (
-        <Alert className="invoice-alert" tone="warning" title={`${daysLate(doc.due)} days overdue`} action={reminding ? undefined : { label: doc.reminded ? 'Send another reminder' : 'Send reminder', onClick: remind }}>
+        <Alert className="invoice-alert" tone="warning" title={`${daysLate(doc.due, today)} days overdue`} action={reminding ? undefined : { label: doc.reminded ? 'Send another reminder' : 'Send reminder', onClick: remind }}>
           {reminding ? 'Sending the reminder…' : doc.reminded
             ? `You sent a reminder today. ${CLIENT.name} usually pays within ${CLIENT.paysIn} days of one.`
             : `${CLIENT.name} usually pays within ${CLIENT.paysIn} days, so a nudge may be all it takes.`}
@@ -152,11 +183,11 @@ function InvoiceView({ notify }: { notify: (title: string, text: string, tone?: 
         footer={<><h3 className="invoice-label">How to pay</h3>{PAYMENT.map((line) => <p key={line} className="invoice-text">{line}</p>)}</>} />
 
       <SendDialog open={dialog === 'send'} doc={doc} onClose={() => setDialog(undefined)} onSent={(to) => {
-          update({ status: doc.status === 'draft' ? 'sent' : doc.status, issued: doc.status === 'draft' ? TODAY : doc.issued })
+          update({ status: doc.status === 'draft' ? 'sent' : doc.status, issued: doc.status === 'draft' ? today : doc.issued })
           notify(`${doc.number} sent`, `It’s on its way to ${to}.`)
           moveFocus(Date.now())
         }} />
-      <PaidDialog open={dialog === 'paid'} doc={doc} total={total} onClose={() => setDialog(undefined)} onPaid={(paidOn) => {
+      <PaidDialog open={dialog === 'paid'} today={today} doc={doc} total={total} onClose={() => setDialog(undefined)} onPaid={(paidOn) => {
           update({ status: 'paid', paidOn })
           notify(`${doc.number} is paid`, `${CLIENT.contact} gets a receipt by email.`)
           moveFocus(Date.now())
@@ -208,8 +239,8 @@ function SendDialog({ open, doc, onClose, onSent }: DialogProps & { onSent: (to:
   )
 }
 
-function PaidDialog({ open, doc, total, onClose, onPaid }: DialogProps & { total: number; onPaid: (on: string) => void }) {
-  const [on, setOn] = useState(TODAY)
+function PaidDialog({ open, today, doc, total, onClose, onPaid }: DialogProps & { today: string; total: number; onPaid: (on: string) => void }) {
+  const [on, setOn] = useState(today)
   const [method, setMethod] = useState('bank')
   const [busy, setBusy] = useState(false)
 
@@ -227,7 +258,7 @@ function PaidDialog({ open, doc, total, onClose, onPaid }: DialogProps & { total
     <Dialog open={open} onOpenChange={(next) => !next && onClose()} title={`Mark ${doc.number} as paid?`} size="small"
       description={`This records a payment of ${usd(total)} and emails ${CLIENT.name} a receipt.`} confirmLabel="Mark as paid" loading={busy} onConfirm={confirm}>
       <Stack gap={4}>
-        <DatePicker label="Payment date" value={on} max={TODAY} min={doc.issued} onValueChange={setOn} />
+        <DatePicker label="Payment date" value={on} max={today} min={doc.issued} onValueChange={setOn} />
         <Select label="Paid by" value={method} onValueChange={setMethod}
           options={[{ value: 'bank', label: 'Bank transfer' }, { value: 'card', label: 'Card' }, { value: 'check', label: 'Check' }]} />
       </Stack>
@@ -237,7 +268,8 @@ function PaidDialog({ open, doc, total, onClose, onPaid }: DialogProps & { total
 
 type Answer = { kind: 'accepted'; name: string; on: string } | { kind: 'declined'; reason: string; on: string }
 
-function QuoteView({ notify }: { notify: (title: string, text: string, tone?: 'info') => void }) {
+function QuoteView({ today, notify }: { today: string; notify: (title: string, text: string, tone?: 'info') => void }) {
+  const [quote] = useState(() => datedFor(today).quote)
   const [answer, setAnswer] = useState<Answer>()
   const [dialog, setDialog] = useState<'accept' | 'decline'>()
   const [name, setName] = useState('')
@@ -246,7 +278,7 @@ function QuoteView({ notify }: { notify: (title: string, text: string, tone?: 'i
   const [busy, setBusy] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
   const [moved, moveFocus] = useState(0)
-  const subtotal = sum(QUOTE.items)
+  const subtotal = sum(quote.items)
 
   useEffect(() => {
     if (moved) heading.current?.focus()
@@ -258,27 +290,27 @@ function QuoteView({ notify }: { notify: (title: string, text: string, tone?: 'i
       return false
     }
     setBusy(true)
-    await api(`/quotes/${QUOTE.number}/accept`, { name: name.trim() })
+    await api(`/quotes/${quote.number}/accept`, { name: name.trim() })
     setBusy(false)
-    setAnswer({ kind: 'accepted', name: name.trim(), on: TODAY })
+    setAnswer({ kind: 'accepted', name: name.trim(), on: today })
     notify('Quote accepted', `${STUDIO.name} will be in touch about shoot dates. A signed copy is on its way to your inbox.`)
     moveFocus(Date.now())
   }
 
   async function decline() {
     setBusy(true)
-    await api(`/quotes/${QUOTE.number}/decline`, { reason })
+    await api(`/quotes/${quote.number}/decline`, { reason })
     setBusy(false)
-    setAnswer({ kind: 'declined', reason: reason.trim(), on: TODAY })
+    setAnswer({ kind: 'declined', reason: reason.trim(), on: today })
     notify('Quote declined', `We let ${STUDIO.name} know. No hard feelings.`, 'info')
     moveFocus(Date.now())
   }
 
-  const [tone, label]: [Tone, string] = !answer ? ['info', `Valid until ${longDate(QUOTE.validUntil)}`] : answer.kind === 'accepted' ? ['success', 'Accepted'] : ['neutral', 'Declined']
+  const [tone, label]: [Tone, string] = !answer ? ['info', `Valid until ${longDate(quote.validUntil)}`] : answer.kind === 'accepted' ? ['success', 'Accepted'] : ['neutral', 'Declined']
   return (
     <div className="invoice-view">
       <div className="invoice-toolbar">
-        <span className="invoice-number">{QUOTE.number}</span>
+        <span className="invoice-number">{quote.number}</span>
         <Tag tone={tone} leading={answer?.kind === 'accepted' ? <Check /> : answer ? <X /> : 'dot'} size="small">{label}</Tag>
         <div className="invoice-actions">
           <Button variant="outline" size="small" onClick={() => window.print()}><Download /> Download PDF</Button>
@@ -287,8 +319,8 @@ function QuoteView({ notify }: { notify: (title: string, text: string, tone?: 'i
         </div>
       </div>
 
-      <Paper kind="Quote" number={QUOTE.number} subject={QUOTE.title} headingRef={heading} items={QUOTE.items} note={QUOTE.note}
-        dates={[['Issued', longDate(QUOTE.issued)], ['Valid until', longDate(QUOTE.validUntil)], ['Deposit', usd(subtotal * (1 + TAX_RATE) / 2)]]}
+      <Paper kind="Quote" number={quote.number} subject={quote.title} headingRef={heading} items={quote.items} note={quote.note}
+        dates={[['Issued', longDate(quote.issued)], ['Valid until', longDate(quote.validUntil)], ['Deposit', usd(subtotal * (1 + TAX_RATE) / 2)]]}
         totals={[]}
         footer={
           <div className="invoice-sign">
@@ -304,12 +336,12 @@ function QuoteView({ notify }: { notify: (title: string, text: string, tone?: 'i
           </div>
         } />
 
-      <Dialog open={dialog === 'accept'} onOpenChange={(open) => !open && setDialog(undefined)} title={`Accept ${QUOTE.number}?`} size="small"
+      <Dialog open={dialog === 'accept'} onOpenChange={(open) => !open && setDialog(undefined)} title={`Accept ${quote.number}?`} size="small"
         description={`Typing your name signs the quote for ${usd(subtotal * (1 + TAX_RATE))}, with half due now.`} confirmLabel="Accept and sign" loading={busy} onConfirm={accept}>
         <TextInput label="Full name" autoComplete="name" value={name} error={error} helperText={`As it should appear for ${CLIENT.name}`}
           onValueChange={(value) => { setName(value); setError(undefined) }} />
       </Dialog>
-      <Dialog open={dialog === 'decline'} onOpenChange={(open) => !open && setDialog(undefined)} title={`Decline ${QUOTE.number}?`} size="small"
+      <Dialog open={dialog === 'decline'} onOpenChange={(open) => !open && setDialog(undefined)} title={`Decline ${quote.number}?`} size="small"
         description={`${STUDIO.name} will hear that it’s a no for now.`} confirmLabel="Decline quote" loading={busy} onConfirm={decline}>
         <TextArea label="Anything they should know? (optional)" rows={3} value={reason} onValueChange={setReason} />
       </Dialog>
@@ -321,22 +353,6 @@ type PaperProps = {
   kind: 'Invoice' | 'Quote'; number: string; subject?: string; headingRef: RefObject<HTMLHeadingElement | null>; items: Item[]; note: string
   dates: [string, string][]; totals: [string, string][]; stamp?: ReactNode; footer: ReactNode
 }
-
-const columns: TableColumn<Item>[] = [
-  { key: 'name', label: 'Description', render: (item) => (
-    <span className="invoice-item"><span>{item.name}</span>{item.detail && <span className="invoice-muted">{item.detail}</span>}</span>
-  ) },
-  { key: 'qty', label: 'Qty', numeric: true, width: 64, render: (item) => item.qty },
-  { key: 'rate', label: 'Rate', numeric: true, width: 110, render: (item) => usd(item.rate) },
-  { key: 'amount', label: 'Amount', numeric: true, width: 120, render: (item) => usd(item.qty * item.rate) },
-]
-// Phones get two columns, with the quantity and rate under each description.
-const phoneColumns: TableColumn<Item>[] = [
-  { key: 'name', label: 'Description', render: (item) => (
-    <span className="invoice-item"><span>{item.name}</span><span className="invoice-muted">{item.qty} × {usd(item.rate)}</span></span>
-  ) },
-  columns[3],
-]
 
 // The printable sheet. Download PDF prints only this, through the print styles at the bottom.
 function Paper(props: PaperProps) {
@@ -368,10 +384,33 @@ function Paper(props: PaperProps) {
         </dl>
       </div>
 
-      {[columns, phoneColumns].map((shown, index) => (
-        <Table key={index} className={index ? 'invoice-lines invoice-lines-phone' : 'invoice-lines invoice-lines-wide'} label="Line items" showTitle={false}
-          rows={props.items} columns={shown} rowLabel={(item) => item.name} pagination={false} density="compact" />
-      ))}
+      {/* A plain table, ruled like paper. Phones fold the quantity and rate under each description. */}
+      <table className="invoice-lines" aria-label="Line items">
+        <thead>
+          <tr>
+            <th scope="col">Description</th>
+            <th scope="col" className="invoice-num invoice-wide">Qty</th>
+            <th scope="col" className="invoice-num invoice-wide">Rate</th>
+            <th scope="col" className="invoice-num">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {props.items.map((item) => (
+            <tr key={item.id}>
+              <td>
+                <span className="invoice-item">
+                  <span>{item.name}</span>
+                  {item.detail && <span className="invoice-muted">{item.detail}</span>}
+                  <span className="invoice-muted invoice-narrow">{item.qty} × {usd(item.rate)}</span>
+                </span>
+              </td>
+              <td className="invoice-num invoice-wide">{item.qty}</td>
+              <td className="invoice-num invoice-wide">{usd(item.rate)}</td>
+              <td className="invoice-num">{usd(item.qty * item.rate)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
       <dl className="invoice-totals">
         <div><dt>Subtotal</dt><dd>{usd(subtotal)}</dd></div>
@@ -402,11 +441,14 @@ function Party({ label, lines }: { label: string; lines: string[] }) {
 const css = `
 .invoice { min-height: 100dvh; background: var(--diya-color-recessed); color: var(--diya-color-text); }
 .invoice[data-glass] { background: none; }
-.invoice-page { box-sizing: border-box; width: 100%; max-width: 920px; margin: 0 auto; display: grid; gap: var(--diya-space-5);
+.invoice-page { box-sizing: border-box; width: 100%; max-width: 920px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center;
   padding: var(--diya-space-6) var(--diya-space-6) var(--diya-space-8); }
 .invoice-back { justify-self: start; }
-.invoice-tabs { min-width: 0; }
-.invoice-view { display: grid; gap: var(--diya-space-5); padding-top: var(--diya-space-5); }
+/* One row for the way back and the Invoice/Quote switch; the document fills the row under it. */
+.invoice-tabs { display: contents; }
+.invoice-page > .invoice-tabs > [role='tablist'] { grid-column: 2; grid-row: 1; }
+.invoice-page > .invoice-tabs > [role='tabpanel'] { grid-column: 1 / -1; min-width: 0; }
+.invoice-view { display: grid; gap: var(--diya-space-5); }
 .invoice-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--diya-space-3); }
 .invoice-switch, .invoice-number { font-weight: 600; font-variant-numeric: tabular-nums; }
 .invoice-switch { margin-inline-start: calc(var(--diya-space-3) * -1); }
@@ -438,8 +480,13 @@ const css = `
 .invoice-dates { display: grid; gap: var(--diya-space-3); margin: 0; }
 .invoice-dates dd { margin: 0; font-variant-numeric: tabular-nums; }
 .invoice-dates .invoice-label { margin: 0; }
-.invoice-lines { min-width: 0; }
-.invoice-lines-phone { display: none; }
+.invoice-lines { width: 100%; border-collapse: collapse; font-size: var(--diya-text-body); font-variant-numeric: tabular-nums; }
+.invoice-lines th { padding: 0 var(--diya-space-4) var(--diya-space-3); color: var(--diya-color-muted); font-size: var(--diya-text-caption); font-weight: 500; text-align: left; }
+.invoice-lines tr { border-bottom: 1px solid var(--diya-color-line); }
+.invoice-lines td { padding: var(--diya-space-3) var(--diya-space-4); vertical-align: top; }
+.invoice-lines :is(th, td):first-child { padding-left: 0; }
+.invoice-lines .invoice-num { text-align: right; white-space: nowrap; }
+.invoice-narrow { display: none; }
 .invoice-item { display: grid; gap: 2px; }
 .invoice-totals { display: grid; gap: var(--diya-space-2); width: min(100%, 320px); margin: calc(var(--diya-space-5) * -1) 0 0 auto; font-size: var(--diya-text-body); font-variant-numeric: tabular-nums; }
 .invoice-totals div { display: flex; justify-content: space-between; gap: var(--diya-space-5); padding-inline: var(--diya-space-4); }
@@ -470,8 +517,8 @@ const css = `
   .invoice-head { flex-direction: column-reverse; }
   .invoice-titles { justify-items: start; text-align: start; }
   .invoice-title { font-size: var(--diya-text-heading); }
-  .invoice-lines-wide { display: none; }
-  .invoice-lines-phone { display: block; }
+  .invoice-lines .invoice-wide { display: none; }
+  .invoice-narrow { display: block; }
   .invoice-parties { grid-template-columns: minmax(0, 1fr); }
   .invoice-paper { margin-inline: calc(var(--diya-space-4) * -1); border-inline: 0; border-radius: 0; }
 }

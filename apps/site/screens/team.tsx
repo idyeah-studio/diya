@@ -2,8 +2,8 @@
 // Team & roles: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/settings/team/page.tsx. Vite: save as src/Team.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { Avatar, Button, Card, ContentState, Dialog, Progress, Select, SideNavigation, Stack, Table, Tag, TextInput, TextLink, Toast, type AlertTone } from '@idyeah/diya'
-import { Bell, Check, ChevronLeft, CreditCard, LucideProvider, Minus, Palette, Shield, UserPlus, UserRound, Users } from 'lucide-react'
+import { Avatar, Button, Card, ContentState, Dialog, Menu, Progress, Select, SideNavigation, Stack, Table, Tag, TextInput, TextLink, Toast, type AlertTone } from '@idyeah/diya'
+import { Bell, Check, CreditCard, Ellipsis, LucideProvider, Menu as MenuIcon, Minus, Palette, Shield, UserPlus, UserRound, Users } from 'lucide-react'
 
 // Your product, the workspace, and what the demo account shows. You are Priya, the only owner.
 const PRODUCT = 'Mullion'
@@ -24,15 +24,15 @@ const MEMBERS: Member[] = [
   { id: 'priya', name: 'Priya Natarajan', email: 'priya@example.com', role: 'owner', seen: 'Active now', order: 0 },
   { id: 'tomas', name: 'Tomás Herrera', email: 'tomas@example.com', role: 'admin', seen: '2 hours ago', order: 1 },
   { id: 'amara', name: 'Amara Okafor', email: 'amara@example.com', role: 'editor', seen: 'Yesterday', order: 2 },
-  { id: 'kenji', name: 'Kenji Watanabe', email: 'kenji@example.com', role: 'editor', seen: 'Nov 6', order: 3 },
-  { id: 'leah', name: 'Leah Goldberg', email: 'leah@example.com', role: 'editor', seen: 'Nov 4', order: 4 },
-  { id: 'noor', name: 'Noor Haddad', email: 'noor@example.com', role: 'viewer', seen: 'Nov 2', order: 5 },
-  { id: 'mateus', name: 'Mateus Silva', email: 'mateus@example.com', role: 'editor', seen: 'Oct 30', order: 6 },
-  { id: 'daniel', name: 'Daniel Mensah', email: 'daniel@example.com', role: 'viewer', seen: 'Oct 12', order: 7 },
+  { id: 'kenji', name: 'Kenji Watanabe', email: 'kenji@example.com', role: 'editor', seen: '3 days ago', order: 3 },
+  { id: 'leah', name: 'Leah Goldberg', email: 'leah@example.com', role: 'editor', seen: '5 days ago', order: 4 },
+  { id: 'noor', name: 'Noor Haddad', email: 'noor@example.com', role: 'viewer', seen: 'Last week', order: 5 },
+  { id: 'mateus', name: 'Mateus Silva', email: 'mateus@example.com', role: 'editor', seen: '10 days ago', order: 6 },
+  { id: 'daniel', name: 'Daniel Mensah', email: 'daniel@example.com', role: 'viewer', seen: 'Last month', order: 7 },
 ]
 
 type Invite = { id: string; email: string; role: Role; sent: string }
-const INVITES: Invite[] = [{ id: 'sofia', email: 'sofia.lindqvist@example.com', role: 'editor', sent: 'Nov 7, by Priya' }]
+const INVITES: Invite[] = [{ id: 'sofia', email: 'sofia.lindqvist@example.com', role: 'editor', sent: '2 days ago, by Priya' }]
 
 const PERMISSIONS: { label: string; roles: Role[] }[] = [
   { label: 'See projects and files', roles: ['owner', 'admin', 'editor', 'viewer'] },
@@ -216,7 +216,13 @@ export default function TeamScreen() {
 
         <main className="team-main" id="team-main" tabIndex={-1}>
           <div className="team-column">
-            <TextLink className="team-back" href="/settings" leadingIcon={<ChevronLeft />}>Settings</TextLink>
+            <div className="team-bar">
+              <p className="team-brand">
+                <span className="team-mark" aria-hidden="true">{PRODUCT[0]}</span>
+                {PRODUCT}
+              </p>
+              <Menu label="Settings sections" triggerIcon={<MenuIcon />} items={NAV.flatMap((group) => group.items.map((item) => ({ id: item.value, label: item.label, icon: item.icon, href: item.href, current: item.value === 'team' })))} />
+            </div>
             {left ? (
               <div className="team-head">
                 <h1 ref={leftRef} tabIndex={-1} className="team-title">You left {WORKSPACE}</h1>
@@ -253,6 +259,8 @@ export default function TeamScreen() {
                       action={{ label: 'Invite people', onClick: openInvite }}
                     />
                   ) : (
+                    <>
+                    <div className="team-desk">
                     <Table
                       label="Members"
                       headingLevel={2}
@@ -292,6 +300,31 @@ export default function TeamScreen() {
                         { key: 'seen', label: 'Last active', width: 130, render: (member) => member.seen, sortValue: (member) => member.order },
                       ]}
                     />
+                    </div>
+                    {/* Phones get the same members as stacked rows, so no column is cut off. */}
+                    <section className="team-phone" aria-labelledby="team-members-phone">
+                      <h2 id="team-members-phone" className="team-subtitle">Members</h2>
+                      <ul className="team-rows">
+                        {members.map((member) => (
+                          <li key={member.id} className="team-row">
+                            <Avatar name={member.name} size="small" />
+                            <span className="team-row-text">
+                              <span className="team-row-name"><span>{member.name}</span>{member.id === ME && <Tag size="small">You</Tag>}</span>
+                              <span className="team-row-meta">{member.email}</span>
+                            </span>
+                            <span className="team-row-role">
+                              <Select size="small" hideLabel label={`Role for ${member.name}`} options={ROLES} value={member.role} onValueChange={(value) => changeRole(member, value as Role)} />
+                            </span>
+                            <Menu label={`More for ${member.name}`} triggerIcon={<Ellipsis />} items={[
+                              member.id === ME
+                                ? { id: 'leave', label: 'Leave team', onSelect: () => askRemove([ME]) }
+                                : { id: 'remove', label: 'Remove from team', destructive: true, onSelect: () => askRemove([member.id]) },
+                            ]} />
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                    </>
                   )}
                 </div>
 
@@ -300,6 +333,8 @@ export default function TeamScreen() {
                   {invites.length === 0 ? (
                     <p className="team-note">No pending invites. Everyone you’ve invited has joined, which is nice.</p>
                   ) : (
+                    <>
+                    <div className="team-desk">
                     <Table
                       label="Pending invites"
                       showTitle={false}
@@ -323,10 +358,34 @@ export default function TeamScreen() {
                         },
                       ]}
                     />
+                    </div>
+                    <ul className="team-rows team-phone" aria-label="Pending invites">
+                      {invites.map((invite) => (
+                        <li key={invite.id} className="team-row team-row-invite">
+                          <span className="team-row-text">
+                            <span className="team-row-name">{invite.email}</span>
+                            <span className="team-row-meta">{roleLabel(invite.role)} · Sent {invite.sent.charAt(0).toLowerCase() + invite.sent.slice(1)}</span>
+                          </span>
+                          <span className="team-actions">
+                            <Button size="small" variant="outline" loading={busy === invite.id} aria-label={`Resend invite to ${invite.email}`} onClick={() => resend(invite)}>Resend</Button>
+                            <Button size="small" variant="quiet" disabled={busy === invite.id} aria-label={`Revoke invite to ${invite.email}`} onClick={() => revoke(invite)}>Revoke</Button>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    </>
                   )}
                 </section>
 
                 <Card headingLevel={2} title="Roles" description="What each role can do. Everyone uses a seat, whatever their role.">
+                  <dl className="team-role-list">
+                    {ROLES.map((item) => (
+                      <div key={item.value}>
+                        <dt>{item.label}</dt>
+                        <dd>{item.hint}</dd>
+                      </div>
+                    ))}
+                  </dl>
                   <div className="team-scroll" role="region" aria-label="What each role can do" tabIndex={0}>
                     <table className="team-grid">
                       <caption className="team-hidden">What each role can do</caption>
@@ -448,7 +507,7 @@ const css = `
 .team-brand { display: flex; align-items: center; gap: var(--diya-space-3); margin: 0; padding: 0 var(--diya-space-3); font-size: var(--diya-text-large); font-weight: 600; }
 .team-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: calc(10px * var(--diya-corner-scale, 1)); background: var(--diya-color-accent); color: var(--diya-color-accent-text); font-size: var(--diya-text-large); font-weight: 650; line-height: 1; }
 .team-section,
-.team-title { margin: 0; font-size: var(--diya-text-heading); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
+.team-title { margin: 0; font-size: 28px; font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
 .team-section { margin-top: var(--diya-space-5); padding: 0 var(--diya-space-3); }
 .team-title:focus,
 .team-subtitle:focus,
@@ -456,8 +515,10 @@ const css = `
 .team-main:focus { outline: none; }
 .team-nav { width: auto; padding: 0; border: 0; background: transparent; backdrop-filter: none; }
 .team-main { min-width: 0; padding: 112px var(--diya-space-7) var(--diya-space-8); border-left: 1px solid var(--diya-color-line); }
-.team-column { max-width: 960px; margin-inline: auto; }
-.team-back { display: none; }
+.team-column { max-width: 880px; }
+.team-bar,
+.team-phone,
+.team-role-list { display: none; }
 .team-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--diya-space-6) var(--diya-space-5); }
 .team-head { display: grid; gap: var(--diya-space-2); }
 .team-lede,
@@ -483,12 +544,31 @@ const css = `
 .team-yes { vertical-align: middle; }
 .team-no { vertical-align: middle; color: var(--diya-color-muted); opacity: 0.6; }
 .team-tags { display: flex; flex-wrap: wrap; gap: var(--diya-space-2); margin: 0; padding: 0; list-style: none; }
+.team-rows { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--diya-color-line); }
+.team-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: var(--diya-space-3); padding: var(--diya-space-3) 0; border-bottom: 1px solid var(--diya-color-line); }
+.team-row-role { width: 112px; }
+.team-row-invite { grid-template-columns: minmax(0, 1fr); gap: var(--diya-space-2); }
+.team-row-text { display: grid; gap: 2px; min-width: 0; }
+.team-row-name { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--diya-space-2); min-width: 0; font-size: var(--diya-text-body); font-weight: 500; overflow-wrap: anywhere; }
+.team-row-meta { overflow: hidden; color: var(--diya-color-muted); font-size: var(--diya-text-caption); text-overflow: ellipsis; white-space: nowrap; }
+.team-role-list { gap: var(--diya-space-4); margin: 0; }
+.team-role-list div { display: grid; gap: 2px; }
+.team-role-list dt { font-size: var(--diya-text-body); font-weight: 500; }
+.team-role-list dd { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-caption); line-height: var(--diya-leading-body); }
 .team-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 860px) {
   .team { grid-template-columns: minmax(0, 1fr); }
   .team-side { display: none; }
-  .team-main { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); border-left: 0; }
-  .team-back { display: inline-flex; margin: 0 0 var(--diya-space-5) calc(var(--diya-space-1) * -1); }
+  .team-main { padding: 0 var(--diya-space-4) var(--diya-space-7); border-left: 0; }
+  .team-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-4); height: 56px; margin-bottom: var(--diya-space-5); }
+  .team-bar .team-brand { padding: 0; }
+}
+@media (max-width: 640px) {
+  .team-desk,
+  .team-scroll { display: none; }
+  .team-phone { display: grid; gap: var(--diya-space-4); }
+  ul.team-phone { display: block; }
+  .team-role-list { display: grid; }
 }
 @media (max-width: 560px) {
   .team-top { grid-template-columns: minmax(0, 1fr); }

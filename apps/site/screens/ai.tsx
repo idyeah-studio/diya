@@ -2,8 +2,8 @@
 // AI assistant: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/assistant/page.tsx. Vite: save as src/Assistant.tsx and render it inside your DiyaProvider.
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { Avatar, Button, Chatbot, Dialog, Drawer, Menu, Select, SideNavigation, TextInput, Toast, type ChatMessage } from '@idyeah/diya'
-import { CircleAlert, Ellipsis, LucideProvider, PanelLeft, Pencil, Sparkles, SquarePen, Trash } from 'lucide-react'
+import { Avatar, Button, Chatbot, Dialog, Drawer, Menu, Select, TextInput, Toast, type ChatMessage } from '@idyeah/diya'
+import { CircleAlert, Ellipsis, LucideProvider, PanelRight, Pencil, Sparkles, SquarePen, Trash } from 'lucide-react'
 
 // Your assistant, its models, and the chats it remembers.
 const PRODUCT = 'Lumen'
@@ -69,7 +69,7 @@ const CHATS: Chat[] = [
 // The stub's canned answers, picked by topic.
 const ANSWERS: [RegExp, string][] = [
   [/kyoto|weekend|trip/i, 'Here’s a calm, affordable weekend in Kyoto.\n\nSaturday: go early to the Fushimi Inari gates before the crowds, then lunch at a standing noodle bar. Spend the afternoon in the lanes of Higashiyama.\n\nSunday: rent a bike for about ¥1,000 and follow the Kamo River north to the Philosopher’s Path. Most temples along it charge ¥400 to ¥600.\n\nFor two, plan on about ¥38,000 with a guesthouse, bus passes and simple meals.'],
-  [/notes|email/i, 'Happy to. Paste your notes, and I’ll shape them into an email: a clear subject, a two-line summary, the decisions, and who owns what by when.\n\nHere’s the shape I’ll aim for:\n\nSubject: Recap and next steps from Thursday\n\nHi team,\nWe agreed to ship the beta on Nov 20 and keep pricing as it is until January.\n\nNext steps\nPriya: final copy by Nov 16\nMarcus: testing done by Nov 18'],
+  [/notes|email/i, 'Happy to. Paste your notes, and I’ll shape them into an email: a clear subject, a two-line summary, the decisions, and who owns what by when.\n\nHere’s the shape I’ll aim for:\n\nSubject: Recap and next steps from Thursday\n\nHi team,\nWe agreed to ship the beta in two weeks and keep pricing as it is until next quarter.\n\nNext steps\nPriya: final copy by Monday\nMarcus: testing done by Wednesday'],
   [/interest/i, 'Imagine a jar that adds 10% to whatever is inside it, once a year.\n\nYou put in $100. After a year, the jar adds $10, so you have $110.\nThe next year, it adds 10% of $110, which is $11. Now you have $121.\n\nThat extra dollar is the whole trick: you earn money on money you already earned. Leave the jar alone for 30 years, and the $100 grows to about $1,745.'],
   [/toast|wedding|friend/i, 'Here’s a toast you can say in about two minutes:\n\n“For anyone who doesn’t know me, I’m the friend who has been borrowing Sam’s jacket since 2014.\n\nSam is the person who remembers your coffee order and your mother’s birthday. Tonight, I get to watch someone remember Sam’s.\n\nSo please raise a glass: to the two of you, and to many more years of keeping each other warm.”'],
 ]
@@ -238,19 +238,15 @@ export default function AssistantScreen() {
             {PRODUCT}
           </p>
           <NewChat onClick={() => open('')} />
-          <History chats={chats} value={openId} onOpen={open} footer={
-            <p className="ai-account">
-              <Avatar name={USER} size="small" aria-hidden="true" />
-              {USER}
-            </p>
-          } />
+          <History chats={chats} value={openId} onOpen={open} />
+          <p className="ai-account">
+            <Avatar name={USER} size="small" aria-hidden="true" />
+            {USER}
+          </p>
         </aside>
 
         <main className="ai-main">
           <header className="ai-header">
-            <Button variant="quiet" iconOnly aria-label="Show chats" className="ai-show-history" onClick={() => setHistoryOpen(true)}>
-              <PanelLeft />
-            </Button>
             <h1 ref={titleRef} tabIndex={-1} className="ai-title">{chat?.title ?? 'New chat'}</h1>
             <Select label="Model" hideLabel className="ai-model" options={MODELS} value={model} onValueChange={setModel} />
             <Menu
@@ -262,6 +258,9 @@ export default function AssistantScreen() {
                 { id: 'clear', label: 'Clear all chats', destructive: true, separatorBefore: true, disabled: !chats.length, onSelect: () => setDialog('clear') },
               ]}
             />
+            <Button variant="quiet" iconOnly aria-label="Show chats" className="ai-show-history" onClick={() => setHistoryOpen(true)}>
+              <PanelRight />
+            </Button>
           </header>
           <Chatbot
             className="ai-chat"
@@ -291,10 +290,10 @@ export default function AssistantScreen() {
           />
         </main>
 
-        <Drawer className="ai-drawer" open={historyOpen} onOpenChange={setHistoryOpen} onClose={settled} side="left" title="Chats">
+        <Drawer className="ai-drawer" open={historyOpen} onOpenChange={setHistoryOpen} onClose={settled} side="right" title="Chats">
           <div className="ai-drawer-body">
             <NewChat onClick={() => openFromSheet('')} />
-            <History chats={chats} value={openId} onOpen={openFromSheet} />
+            <History chats={chats} value={openId} onOpen={openFromSheet} headingLevel={3} />
           </div>
         </Drawer>
 
@@ -327,22 +326,32 @@ export default function AssistantScreen() {
   )
 }
 
-function History({ chats, value, onOpen, footer }: { chats: Chat[]; value: string; onOpen: (id: string) => void; footer?: ReactNode }) {
-  const groups = GROUPS.map((group) => ({
-    ...group,
-    items: chats.filter((entry) => entry.group === group.id).map((entry) => ({ value: entry.id, label: entry.title })),
-  })).filter((group) => group.items.length > 0)
+function History({ chats, value, onOpen, headingLevel = 2 }: { chats: Chat[]; value: string; onOpen: (id: string) => void; headingLevel?: 2 | 3 }) {
+  const id = useId()
+  const Heading = headingLevel === 2 ? 'h2' : 'h3'
+  const groups = GROUPS.map((group) => ({ ...group, items: chats.filter((entry) => entry.group === group.id) })).filter((group) => group.items.length > 0)
   return (
-    <>
+    <nav className="ai-history" aria-label="Chat history">
       {!chats.length && (
         <p className="ai-history-empty">
           <strong className="ai-strong">No chats yet.</strong> Your conversations will show up here.
         </p>
       )}
-      {(groups.length > 0 || footer) && (
-        <SideNavigation className="ai-history" label="Chat history" groups={groups} value={value} onValueChange={onOpen} footer={footer} />
-      )}
-    </>
+      {groups.map((group) => (
+        <section key={group.id} className="ai-group" aria-labelledby={`${id}-${group.id}`}>
+          <Heading id={`${id}-${group.id}`} className="ai-group-label">{group.label}</Heading>
+          <ul className="ai-group-list">
+            {group.items.map((entry) => (
+              <li key={entry.id}>
+                <button type="button" className="ai-history-item" aria-current={entry.id === value ? 'true' : undefined} onClick={() => onOpen(entry.id)}>
+                  {entry.title}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </nav>
   )
 }
 
@@ -451,12 +460,34 @@ const css = `
   display: flex;
   align-items: center;
   gap: var(--diya-space-3);
-  margin: 0;
+  margin: auto 0 0;
   padding: var(--diya-space-4) var(--diya-space-3) 0;
   border-top: 1px solid var(--diya-color-line);
   font-size: var(--diya-text-caption);
 }
-.ai-history { flex: 1 0 auto; width: auto; padding: 0; border: 0; border-radius: 0; background: transparent; backdrop-filter: none; box-shadow: none; overflow: visible; }
+.ai-history { display: grid; gap: var(--diya-space-5); padding-top: var(--diya-space-2); }
+.ai-group { display: grid; gap: var(--diya-space-2); }
+.ai-group-label { margin: 0; padding: 0 var(--diya-space-3); color: var(--diya-color-muted); font-size: 13px; font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: 0; }
+.ai-group-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.ai-history-item {
+  display: block;
+  width: 100%;
+  padding: var(--diya-space-2) var(--diya-space-3);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--diya-radius-control);
+  background: transparent;
+  color: var(--diya-color-text);
+  font: inherit;
+  font-size: var(--diya-text-caption);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ai-history-item:hover { background: var(--diya-color-hover); }
+.ai-history-item[aria-current] { background: var(--diya-color-selected); font-weight: 500; }
+.ai-history-item:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: -2px; }
 .ai-history-empty { margin: 0; padding: var(--diya-space-2) var(--diya-space-3); color: var(--diya-color-muted); font-size: var(--diya-text-caption); line-height: var(--diya-leading-body); }
 .ai-strong { display: block; color: var(--diya-color-text); font-weight: 600; }
 .ai-main {
@@ -465,7 +496,7 @@ const css = `
   gap: var(--diya-space-3);
   min-width: 0;
   min-height: 0;
-  padding: var(--diya-space-3) var(--diya-space-6) var(--diya-space-5);
+  padding: 36px var(--diya-space-7) var(--diya-space-5);
 }
 .ai-header { display: flex; align-items: center; gap: var(--diya-space-2); width: 100%; max-width: 880px; min-height: 56px; margin-inline: auto; }
 .ai-show-history { display: none; }
@@ -474,15 +505,16 @@ const css = `
   min-width: 0;
   margin: 0;
   overflow: hidden;
-  font-size: var(--diya-text-title);
+  font-size: 28px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .ai-title:focus { outline: none; }
 .ai-model { width: 112px; }
-.ai-chat { flex: 1 1 0; width: 100%; max-width: 880px; min-height: 0; margin-inline: auto; }
+/* No card around the chat: the composer is the one container, lined up with the title. */
+.ai-main .ai-chat { flex: 1 1 0; width: calc(100% + 40px); max-width: 920px; min-height: 0; margin-inline: max(-20px, calc((100% - 920px) / 2)); border: 0; border-radius: 0; background: transparent; }
 .ai-welcome { display: grid; justify-items: center; gap: var(--diya-space-3); padding-top: clamp(0px, 14dvh - 64px, var(--diya-space-8)); }
 .ai-welcome-mark { width: 44px; height: 44px; border-radius: calc(13px * var(--diya-corner-scale, 1)); }
 .ai-welcome-title { margin: var(--diya-space-2) 0 0; font-size: var(--diya-text-heading); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
@@ -493,7 +525,12 @@ const css = `
   .ai { grid-template-columns: minmax(0, 1fr); }
   .ai-rail { display: none; }
   .ai-show-history { display: inline-flex; }
-  .ai-main { padding: var(--diya-space-2) var(--diya-space-3) var(--diya-space-3); gap: var(--diya-space-2); }
+  .ai-main { padding: 0 var(--diya-space-4) var(--diya-space-3); gap: var(--diya-space-2); }
+  .ai-header { gap: var(--diya-space-1); }
+  .ai-title { font-size: var(--diya-text-title); }
+}
+@media (max-width: 600px) {
+  .ai-main .ai-chat { width: calc(100% + 24px); margin-inline: -12px; }
   .ai-model { width: 96px; }
   .ai-welcome-title { font-size: var(--diya-text-title); }
 }
