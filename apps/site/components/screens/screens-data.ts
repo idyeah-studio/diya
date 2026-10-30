@@ -206,7 +206,7 @@ export const screens: readonly ScreenEntry[] = [
     id: 'file-manager',
     name: 'File manager',
     category: 'Data & documents',
-    description: 'Folders and files in a grid or a list, with uploads, sharing and a storage meter.',
+    description: 'Folders and files in a grid or a list, with image previews, uploads, moves and a storage meter.',
     layout: 'Browse with grid or list',
     route: 'files',
     component: 'FileManager',

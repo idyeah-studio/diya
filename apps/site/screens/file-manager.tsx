@@ -3,7 +3,7 @@
 // Next.js: save as app/files/page.tsx. Vite: save as src/FileManager.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import {
-  Breadcrumbs, Button, Card, Choice, Dialog, FileUpload, Inline, Menu, Progress, Search, Table, TextInput, TextLink, Toast,
+  Avatar, Breadcrumbs, Button, Card, Choice, Dialog, FileUpload, Inline, Menu, Progress, Search, Table, TextInput, TextLink, Toast,
   type MenuItem, type TableColumn,
 } from '@idyeah/diya'
 import {
@@ -12,6 +12,7 @@ import {
 
 // Your studio's files. Replace with a request for the folder on show.
 const WORKSPACE = 'Halden Studio'
+const ME = { name: 'Ines Halden', email: 'ines@example.com' }
 const TODAY = '2026-11-06'
 const LIMIT = 25 * 1024 * 1024
 const PLAN = 20 * 1024 ** 3
@@ -45,6 +46,17 @@ type Naming = { mode: 'rename'; item: Item } | { mode: 'folder' }
 const EXTENSIONS: Record<string, Kind> = { pdf: 'pdf', png: 'image', jpg: 'image', jpeg: 'image', svg: 'image', gif: 'image', fig: 'design', ai: 'design', xlsx: 'sheet', csv: 'sheet', docx: 'doc', txt: 'doc', mp4: 'video', mov: 'video', zip: 'zip' }
 const ICONS: Record<Kind, ReactNode> = {
   folder: <Folder />, pdf: <FileText />, doc: <FileText />, image: <FileImage />, design: <FilePenLine />, sheet: <FileSpreadsheet />, video: <FilePlay />, zip: <FileArchive />, other: <File />,
+}
+// The previews stand in for the thumbnails your server makes from each image,
+// so they keep their own colors in every theme. Other files show an icon.
+const CREAM = '#f3ead8', WALL = '#e4dccf', KRAFT = '#cbb79a', CRUST = '#c9894f', ROSE = '#d9a79a', BOARD = '#2f4a3f', CHALK = '#f6f1e6', INK = '#3a2a1f'
+const PREVIEWS: Record<string, ReactNode> = {
+  'Logo primary.svg': <><rect width="160" height="120" fill={CREAM} /><circle cx="40" cy="60" r="14" fill={CRUST} /><path d="M35 65c3-8 7-12 10-12" stroke={CREAM} strokeWidth="3" fill="none" strokeLinecap="round" /><text x="62" y="67" fill={INK} fontSize="20" fontFamily="Georgia, serif" fontWeight="600">Marlow</text></>,
+  'Logo mark.svg': <><rect width="160" height="120" fill={ROSE} /><circle cx="80" cy="60" r="30" fill={CREAM} /><text x="80" y="71" textAnchor="middle" fill={INK} fontSize="30" fontFamily="Georgia, serif" fontWeight="600">M</text></>,
+  'Storefront mockup.png': <><rect width="160" height="120" fill={WALL} /><rect x="30" y="34" width="100" height="86" fill={CREAM} /><path d="M26 34h108l-6 16H32z" fill={CRUST} /><path d="M44 34l-4 16M62 34l-2 16M80 34v16M98 34l2 16M116 34l4 16" stroke={CREAM} strokeWidth="5" /><rect x="40" y="62" width="44" height="34" rx="2" fill={BOARD} opacity="0.85" /><rect x="94" y="62" width="24" height="58" rx="2" fill={INK} /><circle cx="54" cy="84" r="7" fill={CRUST} /><circle cx="70" cy="86" r="5" fill={ROSE} /></>,
+  'Menu board draft.fig': <><rect width="160" height="120" fill={WALL} /><rect x="34" y="14" width="92" height="92" rx="4" fill={BOARD} /><path d="M58 50c6-14 38-14 44 0-8 8-36 8-44 0z" fill={CRUST} /><path d="M70 42l4 12M80 40v14M90 42l-4 12" stroke={INK} strokeWidth="1.5" opacity="0.5" /><path d="M48 72h64M48 84h46" stroke={CHALK} strokeWidth="2" strokeLinecap="round" strokeDasharray="1 5" /></>,
+  'Label artwork.fig': <><rect width="160" height="120" fill={KRAFT} /><circle cx="80" cy="60" r="34" fill={CREAM} stroke={CRUST} strokeWidth="3" /><text x="80" y="66" textAnchor="middle" fill={INK} fontSize="18" fontFamily="Georgia, serif" fontWeight="600">Marlow</text></>,
+  'Opening day teaser.mp4': <><rect width="160" height="120" fill={INK} /><ellipse cx="80" cy="74" rx="44" ry="20" fill={CRUST} /><path d="M52 70c8-6 16-6 24 0M76 66c8-6 16-6 24 0" stroke={CREAM} strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.7" /><circle cx="80" cy="44" r="13" fill={CHALK} opacity="0.92" /><path d="M76 38v12l10-6z" fill={INK} /></>,
 }
 const kindOf = (name: string): Kind => EXTENSIONS[name.split('.').pop()!.toLowerCase()] ?? 'other'
 const SAMPLE: Item[] = [
@@ -207,162 +219,171 @@ export default function FileManagerScreen() {
 
   return (
     <LucideProvider size={18} strokeWidth={1.6}>
-      <main className="file-manager">
+      <div className="file-manager">
         <style>{css}</style>
-        <header className="file-manager-header">
-          {trail.length > 1 && (
-            <Breadcrumbs items={trail.map((item) => ({ label: item.name, href: `/files/${item.id}` }))}
-              onNavigate={(crumb) => open(crumb.href.split('/').pop()!)} />
-          )}
-          <div className="file-manager-heading">
-            <div>
-              <h1 ref={titleRef} tabIndex={-1} className="file-manager-title">{folder.name}</h1>
-              <p className="file-manager-lede">{empty ? 'Nothing here yet' : summary.filter(Boolean).join(', ')}</p>
-            </div>
-            <Inline gap={2}>
-              <Button variant="outline" onClick={() => setNaming({ mode: 'folder' })}><FolderPlus /> New folder</Button>
-              <Button onClick={() => setPicking(true)}><Upload /> Upload</Button>
-            </Inline>
-          </div>
+        <header className="file-manager-bar">
+          <span className="file-manager-brand"><span className="file-manager-mark" aria-hidden="true">{WORKSPACE[0]}</span>{WORKSPACE}</span>
+          <Menu label="Account" items={[{ id: 'settings', label: 'Account settings', href: '/settings' }, { id: 'sign-out', label: 'Sign out', href: '/sign-out' }]}
+            trigger={<button type="button" className="file-manager-account" aria-label={`${ME.name}: account`}><Avatar name={ME.name} size="small" /></button>} />
         </header>
-
-        {!empty && (
-          <div className="file-manager-toolbar">
-            <Search className="file-manager-search" label={`Search ${folder.name}`} hideLabel size="small" clearable
-              placeholder={`Search ${folder.name}`} value={query} onValueChange={setQuery} />
-            <Inline gap={2}>
-              <Menu
-                label={`Sort: ${sortLabels[sort]}`}
-                trigger={<Button variant="outline" size="small">Sort: {sortLabels[sort]}</Button>}
-                items={(Object.keys(sortLabels) as Sort[]).map((key) => ({ id: key, type: 'radio', label: sortLabels[key], checked: sort === key, onSelect: () => setSort(key) }))}
-              />
-              <div className="file-manager-views" role="group" aria-label="View">
-                {(['grid', 'list'] as const).map((mode) => (
-                  <Button key={mode} iconOnly size="small" shape="rounded" variant={view === mode ? 'outline' : 'quiet'} aria-pressed={view === mode}
-                    aria-label={mode === 'grid' ? 'Grid view' : 'List view'} onClick={() => setView(mode)}>
-                    {mode === 'grid' ? <LayoutGrid /> : <List />}
-                  </Button>
-                ))}
+        <main className="file-manager-main">
+          <header className="file-manager-header">
+            {trail.length > 1 && (
+              <Breadcrumbs items={trail.map((item) => ({ label: item.name, href: `/files/${item.id}` }))}
+                onNavigate={(crumb) => open(crumb.href.split('/').pop()!)} />
+            )}
+            <div className="file-manager-heading">
+              <div>
+                <h1 ref={titleRef} tabIndex={-1} className="file-manager-title">{folder.name}</h1>
+                <p className="file-manager-lede">{empty ? 'Nothing here yet' : summary.filter(Boolean).join(', ')}</p>
               </div>
-            </Inline>
-          </div>
-        )}
+              <Inline gap={2}>
+                <Button variant="outline" onClick={() => setNaming({ mode: 'folder' })}><FolderPlus /> New folder</Button>
+                <Button onClick={() => setPicking(true)}><Upload /> Upload</Button>
+              </Inline>
+            </div>
+          </header>
 
-        {uploads.length > 0 && <Uploads uploads={uploads} onDismiss={(id) => setUploads(uploads.filter((item) => item.id !== id))} />}
+          {!empty && (
+            <div className="file-manager-toolbar">
+              <Search className="file-manager-search" label={`Search ${folder.name}`} hideLabel size="small" clearable
+                placeholder={`Search ${folder.name}`} value={query} onValueChange={setQuery} />
+              <Inline gap={2}>
+                <Menu
+                  label={`Sort: ${sortLabels[sort]}`}
+                  trigger={<Button variant="outline" size="small">Sort: {sortLabels[sort]}</Button>}
+                  items={(Object.keys(sortLabels) as Sort[]).map((key) => ({ id: key, type: 'radio', label: sortLabels[key], checked: sort === key, onSelect: () => setSort(key) }))}
+                />
+                <div className="file-manager-views" role="group" aria-label="View">
+                  {(['grid', 'list'] as const).map((mode) => (
+                    <Button key={mode} iconOnly size="small" shape="rounded" variant={view === mode ? 'outline' : 'quiet'} aria-pressed={view === mode}
+                      aria-label={mode === 'grid' ? 'Grid view' : 'List view'} onClick={() => setView(mode)}>
+                      {mode === 'grid' ? <LayoutGrid /> : <List />}
+                    </Button>
+                  ))}
+                </div>
+              </Inline>
+            </div>
+          )}
 
-        {empty ? (
-          <FileUpload multiple files={[]} onFilesChange={startUploads} className="file-manager-drop" headingLevel={2}
-            title={`${folder.name} is empty`} description="Drop files here, or choose them from your device." helperText="Up to 25 MB each." />
-        ) : !found.length ? (
-          <div className="file-manager-none" role="status">
-            <p className="file-manager-none-title">Nothing in {folder.name} matches “{query.trim()}”</p>
-            <p className="file-manager-muted">
-              Search looks at names in this folder only.{' '}
-              <TextLink asChild inline><button type="button" className="file-manager-text-button" onClick={() => setQuery('')}>Clear search</button></TextLink>
-            </p>
-          </div>
-        ) : view === 'grid' ? (
-          <>
-            {folders.length > 0 && (
-              <section className="file-manager-section" aria-labelledby="file-manager-folders">
-                <h2 id="file-manager-folders" className="file-manager-section-title">Folders</h2>
-                <ul className="file-manager-folders">
-                  {folders.map((item) => (
-                    <li key={item.id} className="file-manager-folder">
-                      {openLink(item, (
-                        <>
-                          <span className="file-manager-folder-icon" aria-hidden="true"><Folder /></span>
-                          <span className="file-manager-name">{item.name}</span>
-                          <span className="file-manager-muted">{amount(item)}</span>
-                        </>
-                      ), 'file-manager-open')}
-                      <Menu label={`Actions for ${item.name}`} triggerIcon={<Ellipsis />} items={actionsFor(item)} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-            {files.length > 0 && (
-              <section className="file-manager-section" aria-labelledby="file-manager-files">
-                <h2 id="file-manager-files" className="file-manager-section-title">Files</h2>
-                <ul className="file-manager-files">
-                  {files.map((item) => (
-                    <li key={item.id} className="file-manager-file">
-                      {openLink(item, (
-                        <>
-                          <span className="file-manager-thumb" aria-hidden="true">{ICONS[item.kind]}</span>
-                          <span className="file-manager-name">{item.name}</span>
-                          <span className="file-manager-muted">{size(item.size)} · {shortDate(item.modified)}</span>
-                        </>
-                      ), 'file-manager-open')}
-                      <Menu className="file-manager-more" label={`Actions for ${item.name}`} triggerIcon={<Ellipsis />} items={actionsFor(item)} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </>
-        ) : (
-          <Table
-            label={`Contents of ${folder.name}`}
-            showTitle={false}
-            rows={[...folders, ...files]}
-            columns={columns}
-            density="compact"
-            pagination={false}
-            rowLabel={(item) => item.name}
-            rowActions={actionsFor}
-            bulkActions={[
-              { label: 'Download', onAction: (ids) => setNotice({ text: `Zipping ${plural(ids.length, 'item')}. Your download starts in a moment.`, tone: 'info' }) },
-              { label: 'Move to…', onAction: setToMove },
-              { label: 'Delete…', onAction: setToDelete, destructive: true },
-            ]}
+          {uploads.length > 0 && <Uploads uploads={uploads} onDismiss={(id) => setUploads(uploads.filter((item) => item.id !== id))} />}
+
+          {empty ? (
+            <FileUpload multiple files={[]} onFilesChange={startUploads} className="file-manager-drop" headingLevel={2}
+              title={`${folder.name} is empty`} description="Drop files here, or choose them from your device." helperText="Up to 25 MB each." />
+          ) : !found.length ? (
+            <div className="file-manager-none" role="status">
+              <p className="file-manager-none-title">Nothing in {folder.name} matches “{query.trim()}”</p>
+              <p className="file-manager-muted">
+                Search looks at names in this folder only.{' '}
+                <TextLink asChild inline><button type="button" className="file-manager-text-button" onClick={() => setQuery('')}>Clear search</button></TextLink>
+              </p>
+            </div>
+          ) : view === 'grid' ? (
+            <>
+              {folders.length > 0 && (
+                <section className="file-manager-section" aria-labelledby="file-manager-folders">
+                  <h2 id="file-manager-folders" className="file-manager-section-title">Folders</h2>
+                  <ul className="file-manager-folders">
+                    {folders.map((item) => (
+                      <li key={item.id} className="file-manager-folder">
+                        {openLink(item, (
+                          <>
+                            <span className="file-manager-folder-icon" aria-hidden="true"><Folder /></span>
+                            <span className="file-manager-name">{item.name}</span>
+                            <span className="file-manager-muted">{amount(item)}</span>
+                          </>
+                        ), 'file-manager-open')}
+                        <Menu label={`Actions for ${item.name}`} triggerIcon={<Ellipsis />} items={actionsFor(item)} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              {files.length > 0 && (
+                <section className="file-manager-section" aria-labelledby="file-manager-files">
+                  <h2 id="file-manager-files" className="file-manager-section-title">Files</h2>
+                  <ul className="file-manager-files">
+                    {files.map((item) => (
+                      <li key={item.id} className="file-manager-file">
+                        {openLink(item, (
+                          <>
+                            <span className="file-manager-thumb" aria-hidden="true" data-preview={PREVIEWS[item.name] ? '' : undefined}>
+                              {PREVIEWS[item.name] ? <svg viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice" focusable="false">{PREVIEWS[item.name]}</svg> : ICONS[item.kind]}
+                            </span>
+                            <span className="file-manager-name">{item.name}</span>
+                            <span className="file-manager-muted">{size(item.size)} · {shortDate(item.modified)}</span>
+                          </>
+                        ), 'file-manager-open')}
+                        <Menu className="file-manager-more" label={`Actions for ${item.name}`} triggerIcon={<Ellipsis />} items={actionsFor(item)} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </>
+          ) : (
+            <Table
+              label={`Contents of ${folder.name}`}
+              showTitle={false}
+              rows={[...folders, ...files]}
+              columns={columns}
+              density="compact"
+              pagination={false}
+              rowLabel={(item) => item.name}
+              rowActions={actionsFor}
+              bulkActions={[
+                { label: 'Download', onAction: (ids) => setNotice({ text: `Zipping ${plural(ids.length, 'item')}. Your download starts in a moment.`, tone: 'info' }) },
+                { label: 'Move to…', onAction: setToMove },
+                { label: 'Delete…', onAction: setToDelete, destructive: true },
+              ]}
+            />
+          )}
+
+          <footer className="file-manager-storage">
+            <span className="file-manager-storage-label">Storage</span>
+            <Progress label="Storage used" value={(used / PLAN) * 100} showValue={false} className="file-manager-meter" />
+            <span className="file-manager-muted">{size(used)} of {size(PLAN)} used on the {WORKSPACE} plan</span>
+          </footer>
+
+          <Dialog open={picking} onOpenChange={setPicking} headingLevel={2} title={`Upload to ${folder.name}`} description="Uploads start as soon as you choose. You can keep working while they finish.">
+            <FileUpload multiple files={[]} onFilesChange={startUploads} title="Add files" headingLevel={3} helperText="Up to 25 MB each." />
+          </Dialog>
+          <NameDialog naming={naming} siblings={inside} onClose={() => setNaming(undefined)}
+            onDone={(name) => {
+              if (naming?.mode === 'rename') {
+                setItems(items.map((item) => (item.id === naming.item.id ? { ...item, name, kind: item.kind === 'folder' ? 'folder' : kindOf(name) } : item)))
+                setNotice({ text: `Renamed to ${name}` })
+              } else {
+                setItems([...items, { id: `folder-${Date.now()}`, name, kind: 'folder', parent: folderId, size: 0, modified: TODAY }])
+                setNotice({ text: `Created ${name}` })
+              }
+            }} />
+          <Dialog
+            open={toDelete.length > 0}
+            onOpenChange={(next) => !next && setToDelete([])}
+            size="small"
+            headingLevel={2}
+            title={toDelete.length === 1 ? `Delete “${byId(toDelete[0]).name}”?` : `Delete ${toDelete.length} items?`}
+            description={`${toDelete.some((id) => byId(id).kind === 'folder') ? 'Folders go with everything in them. ' : ''}Deleted items wait in Recently deleted for 30 days, then they’re gone for good.`}
+            confirmVariant="destructive"
+            confirmLabel="Delete"
+            onConfirm={async () => {
+              await api('/files/delete', { ids: toDelete })
+              const gone = new Set(toDelete)
+              for (let grew = true; grew;) {
+                grew = false
+                for (const item of items) if (!gone.has(item.id) && gone.has(item.parent)) { gone.add(item.id); grew = true }
+              }
+              setItems(items.filter((item) => !gone.has(item.id)))
+              setNotice({ text: `Moved ${toDelete.length === 1 ? byId(toDelete[0]).name : plural(toDelete.length, 'item')} to Recently deleted` })
+              setToDelete([])
+            }}
           />
-        )}
-
-        <footer className="file-manager-storage">
-          <span className="file-manager-storage-label">Storage</span>
-          <Progress label="Storage used" value={(used / PLAN) * 100} showValue={false} className="file-manager-meter" />
-          <span className="file-manager-muted">{size(used)} of {size(PLAN)} used on the {WORKSPACE} plan</span>
-        </footer>
-
-        <Dialog open={picking} onOpenChange={setPicking} headingLevel={2} title={`Upload to ${folder.name}`} description="Uploads start as soon as you choose. You can keep working while they finish.">
-          <FileUpload multiple files={[]} onFilesChange={startUploads} title="Add files" headingLevel={3} helperText="Up to 25 MB each." />
-        </Dialog>
-        <NameDialog naming={naming} siblings={inside} onClose={() => setNaming(undefined)}
-          onDone={(name) => {
-            if (naming?.mode === 'rename') {
-              setItems(items.map((item) => (item.id === naming.item.id ? { ...item, name, kind: item.kind === 'folder' ? 'folder' : kindOf(name) } : item)))
-              setNotice({ text: `Renamed to ${name}` })
-            } else {
-              setItems([...items, { id: `folder-${Date.now()}`, name, kind: 'folder', parent: folderId, size: 0, modified: TODAY }])
-              setNotice({ text: `Created ${name}` })
-            }
-          }} />
-        <Dialog
-          open={toDelete.length > 0}
-          onOpenChange={(next) => !next && setToDelete([])}
-          size="small"
-          headingLevel={2}
-          title={toDelete.length === 1 ? `Delete “${byId(toDelete[0]).name}”?` : `Delete ${toDelete.length} items?`}
-          description={`${toDelete.some((id) => byId(id).kind === 'folder') ? 'Folders go with everything in them. ' : ''}Deleted items wait in Recently deleted for 30 days, then they’re gone for good.`}
-          confirmVariant="destructive"
-          confirmLabel="Delete"
-          onConfirm={async () => {
-            await api('/files/delete', { ids: toDelete })
-            const gone = new Set(toDelete)
-            for (let grew = true; grew;) {
-              grew = false
-              for (const item of items) if (!gone.has(item.id) && gone.has(item.parent)) { gone.add(item.id); grew = true }
-            }
-            setItems(items.filter((item) => !gone.has(item.id)))
-            setNotice({ text: `Moved ${toDelete.length === 1 ? byId(toDelete[0]).name : plural(toDelete.length, 'item')} to Recently deleted` })
-            setToDelete([])
-          }}
-        />
-        <MoveDialog ids={toMove} places={places(toMove)} onClose={() => setToMove([])} onMove={move} />
-        {notice && <Toast key={notice.text} tone={notice.tone ?? 'success'} onDismiss={() => setNotice(undefined)}>{notice.text}</Toast>}
-      </main>
+          <MoveDialog ids={toMove} places={places(toMove)} onClose={() => setToMove([])} onMove={move} />
+          {notice && <Toast key={notice.text} tone={notice.tone ?? 'success'} onDismiss={() => setNotice(undefined)}>{notice.text}</Toast>}
+        </main>
+      </div>
     </LucideProvider>
   )
 }
@@ -494,22 +515,30 @@ function MoveDialog({ ids, places, onClose, onMove }: { ids: string[]; places: I
 }
 
 const css = `
-.file-manager {
-  min-height: 100dvh;
+.file-manager { min-height: 100dvh; display: flex; flex-direction: column; color: var(--diya-color-text); }
+.file-manager-bar { display: none; }
+.file-manager-main {
+  flex: 1;
   box-sizing: border-box;
-  max-width: 1280px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: calc(1200px + 2 * var(--diya-space-7));
   padding: var(--diya-space-7) var(--diya-space-7) var(--diya-space-6);
   display: flex;
   flex-direction: column;
   gap: var(--diya-space-6);
-  color: var(--diya-color-text);
 }
+.file-manager-brand { display: inline-flex; align-items: center; gap: 10px; font-size: var(--diya-text-large); font-weight: 600; letter-spacing: -0.01em; }
+.file-manager-mark {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: calc(8px * var(--diya-corner-scale, 1));
+  background: var(--diya-color-accent); color: var(--diya-color-accent-text); font-size: var(--diya-text-body); font-weight: 650; line-height: 1;
+}
+.file-manager-account { display: grid; padding: 4px; margin-right: -4px; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.file-manager-account:focus-visible { outline: 2px solid var(--diya-color-accent); outline-offset: 2px; }
 .file-manager-header { display: grid; gap: var(--diya-space-4); }
 .file-manager-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--diya-space-4); }
 .file-manager-title {
   margin: 0;
-  font-size: var(--diya-text-heading);
+  font-size: 28px;
   font-weight: 600;
   line-height: var(--diya-leading-tight);
   letter-spacing: -0.02em;
@@ -536,7 +565,8 @@ const css = `
 }
 .file-manager-open,
 .file-manager-row-open { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: start; text-decoration: none; cursor: pointer; }
-.file-manager-open { flex: 1; min-width: 0; display: grid; gap: 2px; border-radius: var(--diya-radius-control); }
+.file-manager-open { flex: 1; min-width: 0; display: grid; grid-auto-rows: auto; align-content: start; gap: 2px; border-radius: var(--diya-radius-control); }
+.file-manager-file .file-manager-open { display: flex; flex-direction: column; }
 .file-manager-folder .file-manager-open { grid-template-columns: auto minmax(0, 1fr); column-gap: var(--diya-space-3); align-items: center; }
 .file-manager-folder-icon { grid-row: span 2; display: grid; color: var(--diya-color-muted); }
 .file-manager-open:focus-visible,
@@ -551,10 +581,16 @@ const css = `
   color: var(--diya-color-muted);
   transition: background-color 0.15s;
 }
+.file-manager-thumb { overflow: hidden; }
 .file-manager-thumb svg { width: 36px; height: 36px; stroke-width: 1.2; }
+.file-manager-thumb[data-preview] svg { width: 100%; height: 100%; }
+.file-manager-open:hover .file-manager-thumb[data-preview] { opacity: 0.9; }
+.file-manager-file:has([data-preview]) .file-manager-more { background: color-mix(in srgb, var(--diya-color-raised) 88%, transparent); }
 .file-manager-open:hover .file-manager-thumb { background: color-mix(in srgb, var(--diya-color-text) 8%, transparent); }
 .file-manager-file .file-manager-more { position: absolute; top: var(--diya-space-2); right: var(--diya-space-2); }
 .file-manager-name {
+  flex: none;
+  min-height: calc(var(--diya-text-body) * var(--diya-leading-tight));
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -588,7 +624,12 @@ const css = `
 .file-manager-storage-label { font-size: var(--diya-text-caption); font-weight: 600; }
 .file-manager-meter { width: 200px; }
 @media (max-width: 720px) {
-  .file-manager { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-5); gap: var(--diya-space-5); }
+  .file-manager-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-3); position: sticky; top: 0; z-index: 10;
+    height: 56px; box-sizing: border-box; padding: 0 var(--diya-space-4); border-bottom: 1px solid var(--diya-color-line);
+    background: color-mix(in srgb, var(--diya-color-surface) 82%, transparent); backdrop-filter: blur(20px) saturate(1.4);
+  }
+  .file-manager-main { padding: var(--diya-space-5) var(--diya-space-4); gap: var(--diya-space-5); }
   .file-manager-search { max-width: none; flex-basis: 100%; }
   .file-manager-files { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .file-manager-meter { width: 100%; order: 3; }
