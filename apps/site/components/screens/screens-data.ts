@@ -373,7 +373,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'DocsArticle',
     charts: false,
     status: 'ready',
-    tryThis: 'Switch the code sample between Node.js and Python, scroll to watch On this page follow along, then answer “Was this helpful?” both ways.',
+    tryThis: 'Switch the code sample between Node.js and Python, scroll to watch On this page follow along, then answer “Was this page helpful?” both ways.',
     keywords: 'docs documentation article blog guide reading',
   },
   {
