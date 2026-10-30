@@ -520,7 +520,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'Agenda',
     charts: false,
     status: 'ready',
-    tryThis: 'Step to Tuesday, November 17 for an empty day, open Hannah Becker to check her in or move her to 5:00 PM (Rafael is busy), or add a new booking.',
+    tryThis: 'Press Next day three times for an empty day, open Hannah Becker to check her in or move her to 5:00 PM (Rafael is busy), or add a new booking.',
     keywords: 'agenda bookings appointments schedule calendar staff',
   },
 

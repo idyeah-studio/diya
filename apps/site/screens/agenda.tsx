@@ -1,7 +1,7 @@
 'use client'
 // Bookings agenda: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/bookings/page.tsx. Vite: save as src/Agenda.tsx and render it inside your DiyaProvider.
-import { useState, type ReactNode } from 'react'
+import { useState, useSyncExternalStore, type ReactNode } from 'react'
 import {
   Alert, Avatar, Button, Calendar, ContentState, DatePicker, Dialog, Drawer, List, Select, SiteHeader, Stack, Tag, TextArea, TextInput, Toast,
   useDiyaAppearance, type Tone,
@@ -11,8 +11,8 @@ import { CalendarCheck, CalendarX2, ChevronLeft, ChevronRight, LucideProvider, P
 // Your salon, its people and services, and who is booked when.
 const PLACE = 'Kestrel'
 const ME = 'Lucía Fernández'
-const TODAY = '2026-11-12'
-const CLOSED = (day: string) => new Date(`${day}T12:00:00Z`).getUTCDay() === 0 || day === '2026-11-26'
+// Closed on Sundays. The demo keeps today open, so its sample day always has bookings.
+const isClosed = (day: string, today: string) => day !== today && new Date(`${day}T12:00:00Z`).getUTCDay() === 0
 const NAV = ['Bookings', 'Clients', 'Services', 'Team', 'Reports'].map((label) => ({ value: label.toLowerCase(), label, href: `/${label.toLowerCase()}` }))
 const STAFF = [
   { value: 'ana', label: 'Ana Lima' },
@@ -37,32 +37,35 @@ const STATUS: Record<Status, { label: string; tone: Tone }> = {
   canceled: { label: 'Canceled', tone: 'neutral' },
   'no-show': { label: 'No-show', tone: 'warning' },
 }
-const row = (id: string, day: string, time: string, service: string, staff: string, client: string, status: Status = 'confirmed', notes = ''): Booking =>
+// Sample bookings. `day` counts open days from today (0 is today, -1 the last open day, 1 the next),
+// so the demo never goes stale. Your API brings real dates.
+type Sample = Omit<Booking, 'day'> & { day: number }
+const row = (id: string, day: number, time: string, service: string, staff: string, client: string, status: Status = 'confirmed', notes = ''): Sample =>
   ({ id, day, start: toMinutes(time), service, staff, client, phone: `(555) 010-${String(2000 + Number(id) * 137).slice(-4)}`, status, notes })
-const BOOKINGS: Booking[] = [
-  row('1', '2026-11-12', '9:00', 'cut', 'ana', 'Maya Chen', 'arrived', 'Likes it short at the back. Oat milk in the coffee.'),
-  row('2', '2026-11-12', '9:30', 'color', 'mei', 'Priya Nair', 'arrived', 'Patch test done Nov 5. Going two shades warmer.'),
-  row('3', '2026-11-12', '10:00', 'trim', 'kofi', 'Daniel Okoro', 'no-show'),
-  row('4', '2026-11-12', '10:30', 'gloss', 'rafa', 'Hannah Becker'),
-  row('5', '2026-11-12', '11:30', 'cut', 'ana', 'Tomás Rivera', 'canceled', 'Canceled by text on Tuesday. Wants to rebook next week.'),
-  row('6', '2026-11-12', '12:00', 'consult', 'mei', 'Aisha Rahman'),
-  row('7', '2026-11-12', '13:00', 'cut', 'kofi', 'Jonah Park'),
-  row('8', '2026-11-12', '14:00', 'color', 'ana', 'Sofia Rossi', 'confirmed', 'First visit. Box dye underneath, so allow extra time.'),
-  row('9', '2026-11-12', '15:30', 'gloss', 'mei', 'Grace Mensah'),
-  row('10', '2026-11-12', '17:00', 'cut', 'rafa', 'Leo Alvarez'),
-  row('11', '2026-11-09', '10:00', 'cut', 'ana', 'Nora Lindqvist', 'arrived'),
-  row('12', '2026-11-09', '13:00', 'trim', 'kofi', 'Samuel Adeyemi', 'arrived'),
-  row('13', '2026-11-10', '9:30', 'color', 'mei', 'Elena Petrova', 'arrived'),
-  row('14', '2026-11-10', '11:00', 'cut', 'rafa', 'Marcus Webb', 'arrived'),
-  row('15', '2026-11-10', '16:00', 'gloss', 'ana', 'Chloe Martin', 'no-show'),
-  row('16', '2026-11-11', '10:00', 'cut', 'kofi', 'Ravi Shah', 'arrived'),
-  row('17', '2026-11-13', '9:00', 'color', 'ana', 'Isabel Cruz'),
-  row('18', '2026-11-13', '11:00', 'cut', 'rafa', 'Kenji Watanabe'),
-  row('19', '2026-11-13', '15:00', 'trim', 'kofi', 'Omar Haddad'),
-  row('20', '2026-11-14', '10:00', 'gloss', 'mei', 'Zoe Laurent'),
-  row('21', '2026-11-14', '10:00', 'cut', 'ana', 'Femi Adebayo'),
-  row('22', '2026-11-14', '12:30', 'color', 'rafa', 'Lena Novak'),
-  row('23', '2026-11-19', '14:00', 'cut', 'ana', 'Tomás Rivera'),
+const SAMPLE: Sample[] = [
+  row('1', 0, '9:00', 'cut', 'ana', 'Maya Chen', 'arrived', 'Likes it short at the back. Oat milk in the coffee.'),
+  row('2', 0, '9:30', 'color', 'mei', 'Priya Nair', 'arrived', 'Patch test done last week. Going two shades warmer.'),
+  row('3', 0, '10:00', 'trim', 'kofi', 'Daniel Okoro', 'no-show'),
+  row('4', 0, '10:30', 'gloss', 'rafa', 'Hannah Becker'),
+  row('5', 0, '11:30', 'cut', 'ana', 'Tomás Rivera', 'canceled', 'Canceled by text yesterday. Wants to rebook next week.'),
+  row('6', 0, '12:00', 'consult', 'mei', 'Aisha Rahman'),
+  row('7', 0, '13:00', 'cut', 'kofi', 'Jonah Park'),
+  row('8', 0, '14:00', 'color', 'ana', 'Sofia Rossi', 'confirmed', 'First visit. Box dye underneath, so allow extra time.'),
+  row('9', 0, '15:30', 'gloss', 'mei', 'Grace Mensah'),
+  row('10', 0, '17:00', 'cut', 'rafa', 'Leo Alvarez'),
+  row('11', -3, '10:00', 'cut', 'ana', 'Nora Lindqvist', 'arrived'),
+  row('12', -3, '13:00', 'trim', 'kofi', 'Samuel Adeyemi', 'arrived'),
+  row('13', -2, '9:30', 'color', 'mei', 'Elena Petrova', 'arrived'),
+  row('14', -2, '11:00', 'cut', 'rafa', 'Marcus Webb', 'arrived'),
+  row('15', -2, '16:00', 'gloss', 'ana', 'Chloe Martin', 'no-show'),
+  row('16', -1, '10:00', 'cut', 'kofi', 'Ravi Shah', 'arrived'),
+  row('17', 1, '9:00', 'color', 'ana', 'Isabel Cruz'),
+  row('18', 1, '11:00', 'cut', 'rafa', 'Kenji Watanabe'),
+  row('19', 1, '15:00', 'trim', 'kofi', 'Omar Haddad'),
+  row('20', 2, '10:00', 'gloss', 'mei', 'Zoe Laurent'),
+  row('21', 2, '10:00', 'cut', 'ana', 'Femi Adebayo'),
+  row('22', 2, '12:30', 'color', 'rafa', 'Lena Novak'),
+  row('23', 6, '14:00', 'cut', 'ana', 'Tomás Rivera'),
 ]
 
 type Route = '/bookings' | '/bookings/move' | '/bookings/cancel' | '/bookings/check-in' | '/bookings/notes'
@@ -89,7 +92,22 @@ const service = (id: string) => SERVICES.find((s) => s.value === id)!
 const person = (id: string) => STAFF.find((s) => s.value === id)!.label
 const first = (name: string) => name.split(' ')[0]
 const TIMES = Array.from({ length: (OPEN.to - OPEN.from) / 15 }, (_, i) => OPEN.from + i * 15).map((m) => ({ value: String(m), label: clock(m) }))
-const stepOpen = (day: string, by: number) => { let next = shift(day, by); while (CLOSED(next)) next = shift(next, by); return next }
+const stepOpen = (day: string, by: number, today: string) => { let next = shift(day, by); while (isClosed(next, today)) next = shift(next, by); return next }
+// The sample's open-day offsets, as dates around today.
+function openDay(today: string, offset: number) {
+  let day = today
+  for (let i = 0; i < Math.abs(offset); i++) day = stepOpen(day, Math.sign(offset), today)
+  return day
+}
+const sampleFor = (today: string): Booking[] => SAMPLE.map((b) => ({ ...b, day: openDay(today, b.day) }))
+
+// Today's date in the reader's browser. The server can't know it, so it renders '' and the agenda fills in once the page loads.
+const subscribeNever = () => () => {}
+function todayIso() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+const useToday = () => useSyncExternalStore(subscribeNever, todayIso, () => '')
 
 // Another live booking for the same stylist that overlaps this time, if any.
 function clash(bookings: Booking[], draft: Pick<Booking, 'day' | 'start' | 'service' | 'staff'>, except?: string) {
@@ -103,21 +121,25 @@ type Notice = { id: number; title: string; text: string }
 
 export default function AgendaScreen() {
   const { glass } = useDiyaAppearance()
-  const [bookings, setBookings] = useState(BOOKINGS)
-  const [day, setDay] = useState(TODAY)
+  const today = useToday()
+  const [changed, setBookings] = useState<Booking[]>()
+  const bookings = changed ?? (today ? sampleFor(today) : [])
+  const [picked, setDay] = useState('')
+  const day = picked || today
+  const closed = (d: string) => isClosed(d, today)
   const [staff, setStaff] = useState('all')
   const [openId, setOpenId] = useState<string>()
   const [adding, setAdding] = useState(false)
   const [notice, setNotice] = useState<Notice>()
 
   const say = (title: string, text: string) => setNotice({ id: Date.now(), title, text })
-  const update = (id: string, change: Partial<Booking>) => setBookings((now) => now.map((b) => (b.id === id ? { ...b, ...change } : b)))
+  const update = (id: string, change: Partial<Booking>) => setBookings((now = sampleFor(today)) => now.map((b) => (b.id === id ? { ...b, ...change } : b)))
   const onDay = bookings.filter((b) => b.day === day).sort((a, b) => a.start - b.start)
   const shown = onDay.filter((b) => staff === 'all' || b.staff === staff)
   const live = shown.filter((b) => b.status !== 'canceled')
   const hours = live.reduce((sum, b) => sum + service(b.service).minutes, 0) / 60
-  const monday = shift(day, -((new Date(noon(day)).getUTCDay() + 6) % 7))
-  const week = Array.from({ length: 6 }, (_, i) => shift(monday, i))
+  const monday = day && shift(day, -((new Date(noon(day)).getUTCDay() + 6) % 7))
+  const week = monday ? Array.from({ length: 7 }, (_, i) => shift(monday, i)).filter((d, i) => i < 6 || !closed(d)) : []
   const open = bookings.find((b) => b.id === openId)
 
   return (
@@ -134,13 +156,14 @@ export default function AgendaScreen() {
             </div>
             <Button onClick={() => setAdding(true)}><Plus /> New booking</Button>
           </header>
+          {!today ? <p className="agenda-muted agenda-wait">Loading today’s bookings…</p> : (
           <div className="agenda-layout">
             <section className="agenda-day agenda-panel" aria-labelledby="agenda-day-title">
               <div className="agenda-day-head">
                 <div className="agenda-stack">
                   <h2 id="agenda-day-title" className="agenda-day-title">
                     {longDay(day)}
-                    {day === TODAY && <Tag size="small" tone="brand">Today</Tag>}
+                    {day === today && <Tag size="small" tone="brand">Today</Tag>}
                   </h2>
                   <p className="agenda-muted" role="status">
                     {live.length ? `${live.length} ${live.length === 1 ? 'booking' : 'bookings'}, ${hours.toLocaleString('en-US')} ${hours === 1 ? 'hour' : 'hours'} in the chair` : staff === 'all' ? 'Nothing booked yet' : `Nothing booked for ${first(person(staff))}`}
@@ -148,9 +171,9 @@ export default function AgendaScreen() {
                   </p>
                 </div>
                 <div className="agenda-tools">
-                  <Button variant="outline" iconOnly aria-label="Previous day" onClick={() => setDay(stepOpen(day, -1))}><ChevronLeft /></Button>
-                  <Button variant="outline" iconOnly aria-label="Next day" onClick={() => setDay(stepOpen(day, 1))}><ChevronRight /></Button>
-                  <Button variant="outline" disabled={day === TODAY} onClick={() => setDay(TODAY)}>Today</Button>
+                  <Button variant="outline" iconOnly aria-label="Previous day" onClick={() => setDay(stepOpen(day, -1, today))}><ChevronLeft /></Button>
+                  <Button variant="outline" iconOnly aria-label="Next day" onClick={() => setDay(stepOpen(day, 1, today))}><ChevronRight /></Button>
+                  <Button variant="outline" disabled={day === today} onClick={() => setDay(today)}>Today</Button>
                   <Select className="agenda-staff" label="Staff" hideLabel options={[{ value: 'all', label: 'Everyone' }, ...STAFF]} value={staff} onValueChange={setStaff} />
                 </div>
               </div>
@@ -179,27 +202,28 @@ export default function AgendaScreen() {
             </section>
 
             <aside className="agenda-rail" aria-label="Pick a day">
-              <Calendar label="Jump to a day" value={day} onValueChange={setDay} isDateUnavailable={CLOSED} />
+              <Calendar label="Jump to a day" value={day} onValueChange={setDay} isDateUnavailable={closed} />
               <div className="agenda-stack agenda-week">
                 <h2 className="agenda-rail-title">Week of {dateText(monday, { month: 'long', day: 'numeric' })}</h2>
                 <List className="agenda-week-list" label={`Bookings each day, week of ${dateText(monday, { month: 'long', day: 'numeric' })}`} size="small"
                   items={week.map((d) => {
                     const count = bookings.filter((b) => b.day === d && b.status !== 'canceled').length
-                    return { id: d, label: shortDay(d), current: d === day, onSelect: () => setDay(d), disabled: CLOSED(d),
-                      trailing: <span className="agenda-muted">{CLOSED(d) ? 'Closed' : count ? `${count} booked` : 'Open'}</span> }
+                    return { id: d, label: shortDay(d), current: d === day, onSelect: () => setDay(d), disabled: closed(d),
+                      trailing: <span className="agenda-muted">{closed(d) ? 'Closed' : count ? `${count} booked` : 'Open'}</span> }
                   })} />
               </div>
             </aside>
           </div>
+          )}
         </main>
 
         {open && (
-          <BookingDrawer key={open.id} booking={open} bookings={bookings} onClose={() => setOpenId(undefined)}
+          <BookingDrawer key={open.id} today={today} booking={open} bookings={bookings} onClose={() => setOpenId(undefined)}
             onSaved={(change, title, text) => { update(open.id, change); say(title, text) }} />
         )}
         {adding && (
-          <NewBooking day={day} bookings={bookings} onClose={() => setAdding(false)}
-            onAdded={(b) => { setBookings((now) => [...now, b]); setDay(b.day); setStaff('all'); say('Booked', `${b.client}, ${shortDay(b.day)} at ${clock(b.start)} with ${first(person(b.staff))}.`) }} />
+          <NewBooking today={today} day={day} bookings={bookings} onClose={() => setAdding(false)}
+            onAdded={(b) => { setBookings((now = sampleFor(today)) => [...now, b]); setDay(b.day); setStaff('all'); say('Booked', `${b.client}, ${shortDay(b.day)} at ${clock(b.start)} with ${first(person(b.staff))}.`) }} />
         )}
         {notice && <Toast key={notice.id} tone="success" title={notice.title} onDismiss={() => setNotice(undefined)} duration={6000}>{notice.text}</Toast>}
       </div>
@@ -207,18 +231,19 @@ export default function AgendaScreen() {
   )
 }
 
-type DrawerProps = { booking: Booking; bookings: Booking[]; onClose: () => void; onSaved: (change: Partial<Booking>, title: string, text: string) => void }
+type DrawerProps = { today: string; booking: Booking; bookings: Booking[]; onClose: () => void; onSaved: (change: Partial<Booking>, title: string, text: string) => void }
 
-function BookingDrawer({ booking: b, bookings, onClose, onSaved }: DrawerProps) {
+function BookingDrawer({ today, booking: b, bookings, onClose, onSaved }: DrawerProps) {
+  const closed = (d: string) => isClosed(d, today)
   const [mode, setMode] = useState<'view' | 'move' | 'cancel'>('view')
   const [busy, setBusy] = useState<Route>()
-  const [date, setDate] = useState(b.day < TODAY ? TODAY : b.day)
+  const [date, setDate] = useState(b.day < today ? today : b.day)
   const [time, setTime] = useState(String(b.start))
   const [timeError, setTimeError] = useState<string>()
   const [notes, setNotes] = useState(b.notes)
   const s = service(b.service)
   const canceled = b.status === 'canceled'
-  const checkIn = b.status === 'confirmed' && b.day === TODAY
+  const checkIn = b.status === 'confirmed' && b.day === today
 
   async function run(route: Route, change: Partial<Booking>, title: string, text: string) {
     setBusy(route)
@@ -276,7 +301,7 @@ function BookingDrawer({ booking: b, bookings, onClose, onSaved }: DrawerProps) 
           <section className="agenda-stack agenda-gap" aria-labelledby="agenda-move-title">
             <h3 id="agenda-move-title" className="agenda-rail-title">{canceled ? 'Rebook for' : 'Move to'}</h3>
             <div className="agenda-pair">
-              <DatePicker label="Date" value={date} min={TODAY} isDateUnavailable={CLOSED} onValueChange={(value) => { setDate(value || date); setTimeError(undefined) }} />
+              <DatePicker label="Date" value={date} min={today} isDateUnavailable={closed} onValueChange={(value) => { setDate(value || date); setTimeError(undefined) }} />
               <Select label="Time" options={TIMES} value={time} onValueChange={(value) => { setTime(value); setTimeError(undefined) }}
                 error={timeError ? 'Overlaps another booking.' : undefined} />
             </div>
@@ -294,10 +319,11 @@ function BookingDrawer({ booking: b, bookings, onClose, onSaved }: DrawerProps) 
   )
 }
 
-type NewProps = { day: string; bookings: Booking[]; onClose: () => void; onAdded: (booking: Booking) => void }
+type NewProps = { today: string; day: string; bookings: Booking[]; onClose: () => void; onAdded: (booking: Booking) => void }
 
-function NewBooking({ day, bookings, onClose, onAdded }: NewProps) {
-  const [draft, setDraft] = useState({ client: '', phone: '', service: 'cut', staff: 'ana', day: day < TODAY ? TODAY : day, start: '', notes: '' })
+function NewBooking({ today, day, bookings, onClose, onAdded }: NewProps) {
+  const closed = (d: string) => isClosed(d, today)
+  const [draft, setDraft] = useState({ client: '', phone: '', service: 'cut', staff: 'ana', day: day < today ? today : day, start: '', notes: '' })
   const [errors, setErrors] = useState<{ client?: string; start?: string; clash?: string }>({})
   const [busy, setBusy] = useState(false)
   const edit = (key: keyof typeof draft, value: string) => {
@@ -334,7 +360,7 @@ function NewBooking({ day, bookings, onClose, onAdded }: NewProps) {
           <Select label="Stylist" options={STAFF} value={draft.staff} onValueChange={(v) => edit('staff', v)} />
         </div>
         <div className="agenda-pair">
-          <DatePicker label="Date" value={draft.day} min={TODAY} isDateUnavailable={CLOSED} onValueChange={(v) => edit('day', v || draft.day)} />
+          <DatePicker label="Date" value={draft.day} min={today} isDateUnavailable={closed} onValueChange={(v) => edit('day', v || draft.day)} />
           <Select label="Time" placeholder="Choose" options={TIMES} value={draft.start} error={errors.start} onValueChange={(v) => edit('start', v)} />
         </div>
         <TextArea label="Notes (optional)" rows={2} value={draft.notes} onValueChange={(v) => edit('notes', v)} />
@@ -390,6 +416,7 @@ const css = `
 .agenda-row[data-status='canceled'] .agenda-client,
 .agenda-row[data-status='canceled'] .agenda-clock { color: var(--diya-color-muted); text-decoration: line-through; }
 .agenda-avatar { grid-area: avatar; display: inline-flex; }
+.agenda-wait { padding-block: var(--diya-space-8); text-align: center; }
 .agenda-empty { max-width: none; margin: 0; padding: var(--diya-space-8) var(--diya-space-5); border: 0; background: none; }
 .agenda-rail { display: grid; gap: var(--diya-space-6); position: sticky; top: var(--diya-space-5); }
 .agenda-rail-title { margin: 0; font-size: var(--diya-text-body); font-weight: 600; line-height: var(--diya-leading-tight); }
