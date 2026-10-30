@@ -36,6 +36,8 @@ export function ScreensLibrary(props: {
   requestsOpen?: boolean
   /** The poster a "Want this one?" link asked for (`want=` in the address). */
   want?: string | null
+  /** Whether the launch moment has passed (lib/launch.ts), for the closed request copy. */
+  launched?: boolean
 }) {
   const { screen } = props
   return (
@@ -43,13 +45,13 @@ export function ScreensLibrary(props: {
       <div className="gallery-study-backdrop" aria-hidden="true" />
       <CatalogBrowser area="screens" current={screen?.id} />
       <div className="component-document">
-        {screen ? <ScreenDocument key={screen.id} screen={screen} source={props.source ?? null} builtWith={props.builtWith ?? []} /> : <ScreensGallery requestsOpen={props.requestsOpen ?? false} want={props.want ?? null} />}
+        {screen ? <ScreenDocument key={screen.id} screen={screen} source={props.source ?? null} builtWith={props.builtWith ?? []} /> : <ScreensGallery requestsOpen={props.requestsOpen ?? false} want={props.want ?? null} launched={props.launched ?? true} />}
       </div>
     </main>
   )
 }
 
-function ScreensGallery({ requestsOpen, want }: { requestsOpen: boolean; want: string | null }) {
+function ScreensGallery({ requestsOpen, want, launched }: { requestsOpen: boolean; want: string | null; launched: boolean }) {
   const listed = useListedScreens()
   const shown = screens.filter((screen) => listed.has(screen.id))
   return (
@@ -74,7 +76,7 @@ function ScreensGallery({ requestsOpen, want }: { requestsOpen: boolean; want: s
           </section>
         )
       })}
-      <ScreenRequest open={requestsOpen} want={want} />
+      <ScreenRequest open={requestsOpen} want={want} launched={launched} />
     </>
   )
 }
@@ -91,8 +93,8 @@ function Thumbnail({ id }: { id: string }) {
           data-theme-image={theme}
           src={thumbnailSrc(id, theme)}
           alt=""
-          width={864}
-          height={540}
+          width={896}
+          height={560}
           loading="lazy"
           decoding="async"
         />
@@ -172,6 +174,7 @@ function ScreenDocument({ screen, source, builtWith }: { screen: ScreenEntry; so
           </div>
         )}
         <p>{screen.description}</p>
+        {poster && <p className="screens-poster-note">A preview of what’s coming. Not in DIYA yet.</p>}
       </header>
 
       <section className="pattern-stage screens-stage-panel" aria-label={`${screen.name} preview`}>

@@ -1,2 +1,3 @@
 /** textInput: English defaults, overridable through DiyaProvider `messages`. */
-export const textInputMessages = { clear: (label: string) => `Clear ${label.toLowerCase()}` }
+// The label keeps its case: "Clear Search Fieldbook", never "Clear search fieldbook".
+export const textInputMessages = { clear: (label: string) => `Clear ${label}` }

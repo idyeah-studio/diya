@@ -5,7 +5,7 @@ import { useAppearance } from '../../app/Appearance'
 import { IMAGE_ACCEPT, ORIGINAL_IMAGE_MAX_BYTES, TEXT_COUNTER_FROM, TEXT_MAX, TEXT_MIN } from '../../lib/screen-requests/config'
 import { cleanText, textLength } from '../../lib/screen-requests/text'
 import { ShrinkError, shrinkImage, type ShrunkImage } from '../../lib/screen-requests/shrink'
-import { FORM_TOKEN_REFRESH_MS, MIN_FILL_MS } from '../../lib/waitlist/config'
+import { CONTACT_EMAIL, FORM_TOKEN_REFRESH_MS, MIN_FILL_MS } from '../../lib/waitlist/config'
 import { emailProblem } from '../../lib/waitlist/email-address'
 import { screenById } from './screens-data'
 import './ScreenRequest.css'
@@ -15,7 +15,11 @@ export const REQUESTS_PATH = '/api/screen-requests'
 export const REQUEST_COPY = {
   heading: 'Don’t see your screen?',
   line: 'Describe it, add a picture if you have one, and I’ll reply with what it would take.',
+  /** Closed before the launch moment (only a catalog preview shows it then). */
   closed: 'Requests open with the launch.',
+  /** Closed after it: the services aren't set up, or the server says no. Followed by the address. */
+  paused: 'Requests are paused right now. Write to',
+  pausedEnd: 'instead.',
   textLabel: 'What screen do you need?',
   textPlaceholder: 'A support queue where each priority has its own column.',
   textEmpty: 'Describe the screen you need.',
@@ -84,16 +88,27 @@ type Picture = { name: string; url: string | null; image: ShrunkImage | null }
 /**
  * "Don't see your screen?" at the end of the Screens gallery. Open, it takes a
  * description, an optional picture (shrunk in the browser) and an email, and
- * sends them privately to DIYA. Closed (before launch, or without its
- * services), it keeps the heading and says when it opens.
+ * sends them privately to DIYA. Closed, it keeps the heading: before the
+ * launch it says requests open then; after it (services missing, or the
+ * server saying no) it says they're paused and gives the address to write to.
  */
-export function ScreenRequest({ open, want = null }: { open: boolean; want?: string | null }) {
+export function ScreenRequest({ open, want = null, launched = true }: { open: boolean; want?: string | null; launched?: boolean }) {
   const [closed, setClosed] = useState(!open)
   return (
     <section id="request" className="screens-request" aria-labelledby="screens-request-title" data-open={!closed}>
       <div className="screens-request-intro">
         <h3 id="screens-request-title">{COPY.heading}</h3>
-        <p>{closed ? COPY.closed : COPY.line}</p>
+        <p>
+          {!closed ? (
+            COPY.line
+          ) : launched ? (
+            <>
+              {COPY.paused} <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> {COPY.pausedEnd}
+            </>
+          ) : (
+            COPY.closed
+          )}
+        </p>
       </div>
       {!closed && <RequestForm want={want} onClosed={() => setClosed(true)} />}
     </section>

@@ -112,7 +112,7 @@ describe('react-hook-form register() with no Controller', () => {
     expect((screen.getByRole('radio', { name: 'Pro' }) as HTMLInputElement).checked).toBe(true)
     expect(screen.getByText('5 / 80')).toBeTruthy()
     expect(document.querySelector('.diya-slider-values')?.textContent).toContain('70')
-    expect(screen.getByRole('button', { name: 'Clear name' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Clear Name' })).toBeTruthy()
   })
 
   it('clears a registered TextInput through the input, so the form sees the empty value', async () => {
@@ -120,9 +120,9 @@ describe('react-hook-form register() with no Controller', () => {
     const save = vi.fn()
     const form: { current?: UseFormReturn<Values> } = {}
     render(<Settings onSave={save} form={form} initial={{ ...defaults, name: 'Ada', team: 'alpha' }} />)
-    await user.click(screen.getByRole('button', { name: 'Clear name' }))
+    await user.click(screen.getByRole('button', { name: 'Clear Name' }))
     expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Name' }))
     expect(form.current!.getValues('name')).toBe('')
-    expect(screen.queryByRole('button', { name: 'Clear name' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Clear Name' })).toBeNull()
   })
 })

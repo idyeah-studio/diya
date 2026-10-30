@@ -22,7 +22,7 @@ pnpm --filter diya-site verify:production
 
 ## Screens thumbnails
 
-`screens-thumbnails.mjs` renders the Screens gallery's thumbnails from the built preview frame: every ready screen and every poster, at 1440×900 in Light and Dark, as compact JPEGs in `public/screens/thumbs/`. It serves `public/` itself on port 3106 (`--port` to change it). Playwright isn't a dependency of this repo, so point the script at a copy:
+`screens-thumbnails.mjs` renders the Screens gallery's thumbnails from the built preview frame: every ready screen and every poster, rendered at 1120×700 and saved at 896×560 in Light and Dark, as compact JPEGs in `public/screens/thumbs/`. Each capture waits until the screen is truly ready: nothing `aria-busy`, no skeletons, charts drawn, images and fonts loaded, and the page quiet for a moment. A screen that never gets there is still captured, but the run names it and exits with an error, so look at those by eye. It serves `public/` itself on port 3106 (`--port` to change it). Playwright isn't a dependency of this repo, so point the script at a copy:
 
 ```sh
 pnpm --filter diya-site build:frame

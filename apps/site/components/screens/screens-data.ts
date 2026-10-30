@@ -1,5 +1,5 @@
 /**
- * Every Screen the catalog lists: 33 whole pages and 3 posters for pages
+ * Every Screen the catalog lists: 34 whole pages and 2 posters for pages
  * that wait on a DIYA piece. The order here is the gallery's and the
  * sidebar's: categories in CATEGORIES order, each screen in its category's
  * order, posters last in theirs.

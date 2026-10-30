@@ -224,6 +224,36 @@
 .ld-index-go { font-size: 15px; color: var(--diya-color-muted); transition: transform .15s ease; }
 .ld-index a:hover .ld-index-go { color: var(--diya-color-text); transform: translateX(3px); }
 
+/* Screens: three of them, as pictures in the page's theme, and the way to the rest. */
+.ld-screens-all {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 15px;
+  color: var(--diya-color-text);
+  border-radius: 4px;
+}
+.ld-screens-all:hover .ld-index-go { color: var(--diya-color-text); transform: translateX(3px); }
+.ld-screens-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 0; list-style: none; }
+.ld-screens-list a { display: grid; gap: 14px; color: var(--diya-color-text); border-radius: 14px; }
+.ld-screens-picture {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--diya-color-hover);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--diya-color-line) 70%, transparent), 0 1px 2px #0000000d, 0 16px 40px -24px #0000004d;
+}
+.ld-screens-picture img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center; transition: transform .4s cubic-bezier(.2, .7, .2, 1); }
+.ld-screens-list a:hover .ld-screens-picture img { transform: scale(1.02); }
+:root[data-theme='light'] .ld-screens-picture img[data-theme-image='dark'],
+:root:not([data-theme='light']) .ld-screens-picture img[data-theme-image='light'] { display: none; }
+.ld-screens-name { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 15px; }
+.ld-screens-list a:hover .ld-index-go { color: var(--diya-color-text); transform: translateX(3px); }
+.ld-screens-list a:focus-visible, .ld-screens-all:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 4px; }
+
 /* What else is in the box */
 .ld-specs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; margin: 88px 0 0; }
 .ld-specs div { padding-top: 20px; border-top: 1px solid var(--diya-color-line); }
@@ -447,6 +477,20 @@
   .ld-row { gap: 8px; }
   .ld-patterns { margin-top: 64px; }
   .ld-index { grid-template-columns: 1fr; grid-auto-flow: row; grid-template-rows: none; }
+  .ld-screens-list {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 80%;
+    gap: 12px;
+    margin: 0 -16px;
+    padding: 4px 16px 8px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    scrollbar-width: none;
+  }
+  .ld-screens-list::-webkit-scrollbar { display: none; }
+  .ld-screens-list > li { scroll-snap-align: start; }
   .ld-specs { grid-template-columns: 1fr; gap: 24px; margin-top: 64px; }
   .ld-glass h2 code { font-size: 24px; }
   .ld-glass-cards { grid-template-columns: 1fr; gap: 24px; }
@@ -487,6 +531,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ld-index-go { transition: none; }
+  .ld-screens-picture img { transition: none; }
+  .ld-screens-list a:hover .ld-screens-picture img { transform: none; }
 }
 @media (prefers-reduced-transparency: reduce) {
   .ld-plates[data-glass='true'] .ld-plate,
@@ -496,6 +542,7 @@
   .ld-photo, .ld-sheet-photo { display: none; }
   .ld-launch-dot { forced-color-adjust: none; background: CanvasText; }
   .ld-plate, .ld-cell, .ld-ask, .ld-built, .ld-shot { border: 1px solid CanvasText; background: Canvas; }
+  .ld-screens-picture { border: 1px solid CanvasText; }
   .ld-finish button[aria-pressed='true'], .ld-seg input:checked + span { outline: 2px solid CanvasText; }
 }
 

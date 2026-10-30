@@ -52,8 +52,8 @@ describe('catalog search continuity', () => {
       </DiyaProvider>
     )
     await user.type(screen.getByRole('searchbox', { name: 'Search components' }), 'table')
-    expect(within(screen.getByRole('region', { name: 'In Patterns' })).getByRole('link', { name: 'Table' })).toBeTruthy()
-    expect(within(screen.getByRole('region', { name: 'In Screens' })).getByRole('link', { name: 'Resource table' }).getAttribute('href')).toBe(
+    expect(within(screen.getByRole('group', { name: 'In Patterns' })).getByRole('link', { name: 'Table' })).toBeTruthy()
+    expect(within(screen.getByRole('group', { name: 'In Screens' })).getByRole('link', { name: 'Resource table' }).getAttribute('href')).toBe(
       '/explore?area=screens&screen=resource-table'
     )
     expect(searchStatus().textContent).toBe('1 pattern and 1 screen found')
@@ -71,23 +71,25 @@ describe('catalog search continuity', () => {
     const list = screen.getByRole('navigation', { name: 'Screen list' })
     expect(within(list).getAllByRole('link').map((link) => link.textContent)).toEqual(['Sign in', 'Board'])
     expect(within(list).getByRole('link', { name: 'Sign in' }).getAttribute('aria-current')).toBe('page')
-    expect(within(list).getByRole('region', { name: 'Sign-in & onboarding' })).toBeTruthy()
+    expect(within(list).getByRole('group', { name: 'Sign-in & onboarding' })).toBeTruthy()
+    // Groups, not regions: the gallery's category regions carry the same names.
+    expect(within(list).queryAllByRole('region')).toHaveLength(0)
     await user.type(screen.getByRole('searchbox', { name: 'Search screens' }), 'drag')
     expect(searchStatus().textContent).toBe('1 screen and 1 pattern found')
-    expect(within(screen.getByRole('region', { name: 'In Patterns' })).getByRole('link', { name: 'File Upload' })).toBeTruthy()
+    expect(within(screen.getByRole('group', { name: 'In Patterns' })).getByRole('link', { name: 'File Upload' })).toBeTruthy()
   })
 
   it('finds patterns from the Components list, and components from the Patterns list', async () => {
     const user = userEvent.setup()
     const preview = render(<Preview area="components" component="button" />)
     await user.type(screen.getByRole('searchbox', { name: 'Search components' }), 'table')
-    const elsewhere = screen.getByRole('region', { name: 'In Patterns' })
+    const elsewhere = screen.getByRole('group', { name: 'In Patterns' })
     expect(within(elsewhere).getByRole('link', { name: 'Table' }).getAttribute('href')).toBe('/explore?pattern=table')
     // Screens that use a Table can match too; the pattern is what this checks.
     expect(searchStatus().textContent).toMatch(/^1 pattern( and \d+ screens?)? found$/)
     preview.rerender(<Preview area="patterns" />)
     await user.type(screen.getByRole('searchbox', { name: 'Search patterns' }), 'toggle')
-    const components = screen.getByRole('region', { name: 'In Components' })
+    const components = screen.getByRole('group', { name: 'In Components' })
     expect(within(components).getByRole('link', { name: 'Switch' }).getAttribute('href')).toBe(
       '/explore?area=components&component=switch'
     )
@@ -153,7 +155,7 @@ describe('catalog search continuity', () => {
       name: 'Search components',
     }) as HTMLInputElement
     expect(componentSearch.value).toBe('field')
-    await user.click(screen.getByRole('button', { name: 'Clear search components' }))
+    await user.click(screen.getByRole('button', { name: 'Clear Search components' }))
     expect(componentSearch.value).toBe('')
     expect(document.activeElement).toBe(componentSearch)
     expect(links('Choose a component')).toHaveLength(29)

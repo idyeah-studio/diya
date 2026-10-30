@@ -359,6 +359,19 @@ describe('the launched landing', () => {
       'Pro’s code needs nothing from us but @idyeah/diya.',
       'Library screens stay free and MIT. Relight’s screens are yours.',
     ])
+    // Screens: three pictures in the page's theme, each linking its screen, and the way to all of them.
+    const shots = Array.from(container.querySelectorAll('.ld-screens-list a'))
+    expect(shots.map((a) => [a.textContent?.replace('→', '').trim(), a.getAttribute('href')])).toEqual([
+      ['Analytics dashboard', '/explore?area=screens&screen=dashboard'],
+      ['Pricing', '/explore?area=screens&screen=pricing'],
+      ['Product listing with filters', '/explore?area=screens&screen=listing'],
+    ])
+    for (const shot of shots)
+      expect(Array.from(shot.querySelectorAll('img')).map((img) => [img.getAttribute('data-theme-image'), img.getAttribute('alt')])).toEqual([
+        ['light', ''],
+        ['dark', ''],
+      ])
+    expect(screen.getByRole('link', { name: 'All 34 screens' }).getAttribute('href')).toBe('/explore?area=screens')
     const main = container.querySelector('main')!
     expect(within(main).getByRole('button', { name: 'Copy command: npm create diya@latest' })).toBeTruthy()
     expect(within(main).getByRole('button', { name: 'Copy install command: npm install @idyeah/diya' })).toBeTruthy()
