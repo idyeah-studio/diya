@@ -1,7 +1,7 @@
 'use client'
 // SaaS landing page: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/page.tsx. Vite: save as src/Landing.tsx and render it inside your DiyaProvider.
-import { useEffect, useRef, useState, type FormEvent, type MouseEvent, type Ref } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type MouseEvent, type Ref } from 'react'
 import { Accordion, Alert, Avatar, Button, SiteHeader, Tag, TextInput, TextLink, useDiyaAppearance } from '@idyeah/diya'
 import { ArrowLeft, ArrowRight, CornerUpLeft, Inbox, LucideProvider, MailCheck, Moon, Paperclip, Search, Smile, Sparkles } from 'lucide-react'
 
@@ -56,10 +56,11 @@ const PLANS = [
   { name: 'Business', price: '$39', per: 'per person, per month', text: 'Single sign-on, an audit log and a named person to call.' },
 ]
 
+// Sample notes, dated a few weeks back from today so the section never goes stale. Your changelog brings real dates.
 const UPDATES = [
-  { date: '2026-10-27', title: 'Replies in 40 languages', text: 'Write in English. Your customer reads it in Portuguese, and their answer comes back in English.' },
-  { date: '2026-10-13', title: 'Quiet hours for whole teams', text: 'Set a team’s hours once, and routing waits for the next person who’s actually awake.' },
-  { date: '2026-09-29', title: 'CSV export with no row limit', text: 'Export a whole year of conversations in one file. Sorry it took us this long, Tomás.' },
+  { daysAgo: 2, title: 'Replies in 40 languages', text: 'Write in English. Your customer reads it in Portuguese, and their answer comes back in English.' },
+  { daysAgo: 16, title: 'Quiet hours for whole teams', text: 'Set a team’s hours once, and routing waits for the next person who’s actually awake.' },
+  { daysAgo: 30, title: 'CSV export with no row limit', text: 'Export a whole year of conversations in one file. Sorry it took us this long, Tomás.' },
 ]
 
 const FAQ = [
@@ -84,11 +85,21 @@ async function api(route: '/sign-up', body: { email: string }) {
 }
 
 const day = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+
+// Today's date in the reader's browser. The server can't know it, so it renders '' and the dates fill in once the page loads.
+const subscribeNever = () => () => {}
+function todayIso() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+const useToday = () => useSyncExternalStore(subscribeNever, todayIso, () => '')
+const daysBefore = (today: string, days: number) => new Date(Date.parse(`${today}T12:00:00Z`) - days * 86400000).toISOString().slice(0, 10)
 const emailProblem = (email: string) =>
   !email.trim() ? 'Enter your work email.' : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? undefined : 'Enter an email address like name@example.com.'
 
 export default function LandingScreen() {
   const { glass } = useDiyaAppearance()
+  const today = useToday()
   const start = useRef<HTMLElement>(null)
 
   // Every "Start free" glides to the sign-up and puts the cursor in the email field.
@@ -203,13 +214,13 @@ export default function LandingScreen() {
 
           <section className="landing-section landing-split" aria-labelledby="changelog">
             <div className="landing-split-head">
-              <h2 id="changelog" className="landing-h2">Fresh this fall.</h2>
+              <h2 id="changelog" className="landing-h2">Fresh from the team.</h2>
               <TextLink href="/changelog" trailingIcon={<ArrowRight />}>Read the changelog</TextLink>
             </div>
             <ol className="landing-updates">
               {UPDATES.map((update) => (
                 <li key={update.title} className="landing-update">
-                  <time dateTime={update.date}>{day.format(new Date(update.date))}</time>
+                  <time dateTime={today ? daysBefore(today, update.daysAgo) : undefined}>{today && day.format(Date.parse(`${daysBefore(today, update.daysAgo)}T12:00:00Z`))}</time>
                   <div>
                     <h3 className="landing-h3">{update.title}</h3>
                     <p className="landing-muted">{update.text}</p>
@@ -245,7 +256,7 @@ export default function LandingScreen() {
               </ul>
             </nav>
           ))}
-          <p className="landing-legal">© 2026 {PRODUCT}, Inc. Made for the people who answer.</p>
+          <p className="landing-legal">©{today && ` ${today.slice(0, 4)}`} {PRODUCT}, Inc. Made for the people who answer.</p>
         </footer>
       </div>
     </LucideProvider>
@@ -397,7 +408,7 @@ function Brand() {
 }
 
 const css = `
-.landing { --landing-gutter: clamp(20px, 5vw, 56px); --landing-width: min(1180px, calc(100% - 2 * var(--landing-gutter))); min-height: 100dvh; color: var(--diya-color-text); }
+.landing { --landing-gutter: clamp(16px, 4vw, 48px); --landing-width: min(1180px, calc(100% - 2 * var(--landing-gutter))); min-height: 100dvh; color: var(--diya-color-text); }
 @media (prefers-reduced-motion: no-preference) { html:has(.landing) { scroll-behavior: smooth; } }
 .landing-header { position: sticky; top: 0; z-index: 2; }
 .landing-brand { display: inline-flex; align-items: center; gap: 10px; font-size: var(--diya-text-large); font-weight: 650; letter-spacing: -0.02em; }
@@ -410,7 +421,7 @@ const css = `
 .landing h2[id], .landing-h1 { scroll-margin-top: 104px; }
 .landing-h2:focus { outline: none; }
 
-.landing-h1 { max-width: 14ch; margin: 0; font-size: clamp(40px, 7.2vw, 96px); font-weight: 650; line-height: 0.98; letter-spacing: -0.05em; text-wrap: balance; }
+.landing-h1 { max-width: 14ch; margin: 0; font-size: clamp(40px, 7.2vw, 96px); font-weight: 650; line-height: 0.98; letter-spacing: -0.03em; text-wrap: balance; }
 .landing-h2 { max-width: 18ch; margin: 0; font-size: clamp(34px, 4.6vw, 60px); font-weight: 650; line-height: 1.03; letter-spacing: -0.042em; text-wrap: balance; }
 .landing-h3 { margin: 0; font-size: var(--diya-text-title); font-weight: 600; line-height: 1.25; letter-spacing: -0.015em; text-wrap: balance; }
 .landing-kicker { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-large); font-weight: 600; letter-spacing: -0.01em; }
