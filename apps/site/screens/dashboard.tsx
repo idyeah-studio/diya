@@ -39,7 +39,7 @@ type Customer = { id: string; name: string; contact: string; email: string; plan
 
 const CUSTOMERS: Customer[] = [
   { id: 'ostara-health', name: 'Ostara Health', contact: 'Amara Okafor', email: 'amara.okafor@example.com', plan: 'Enterprise', seats: 240, mrr: 4320, since: 'May 2024', status: 'active' },
-  { id: 'lumen-freight', name: 'Lumen Freight', contact: 'Priya Raman', email: 'priya@example.com', plan: 'Enterprise', seats: 180, mrr: 3240, since: 'Sep 2024', status: 'active' },
+  { id: 'lumen-freight', name: 'Lumen Freight', contact: 'Nadia Karimi', email: 'nadia@example.com', plan: 'Enterprise', seats: 180, mrr: 3240, since: 'Sep 2024', status: 'active' },
   { id: 'halvorsen-dental', name: 'Halvorsen Dental Group', contact: 'Ingrid Halvorsen', email: 'ingrid@example.com', plan: 'Enterprise', seats: 150, mrr: 2700, since: 'Jan 2025', status: 'past-due' },
   { id: 'bluefin-robotics', name: 'Bluefin Robotics', contact: 'Kenji Watanabe', email: 'kenji@example.com', plan: 'Business', seats: 96, mrr: 2112, since: 'Jun 2025', status: 'active' },
   { id: 'saffron-table', name: 'Saffron Table', contact: 'Leila Haddad', email: 'leila@example.com', plan: 'Business', seats: 84, mrr: 1848, since: 'Feb 2025', status: 'at-risk' },

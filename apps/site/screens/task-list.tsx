@@ -11,7 +11,7 @@ import { CalendarClock, ChevronDown, CircleAlert, Info, ListPlus, LucideProvider
 const TODAY = '2026-11-04'
 const SHOP = 'Little Fern Bakery'
 const ME = 'Lucía Fernández'
-const TEAM = ['Lucía Fernández', 'Kenji Watanabe', 'Priya Raman', 'Tomás Ortega', 'Aisha Bello']
+const TEAM = ['Lucía Fernández', 'Kenji Watanabe', 'Paulo Reis', 'Tomás Ortega', 'Aisha Bello']
 const PROJECTS = [
   { id: 'winter', name: 'Winter menu launch', blurb: 'Four new drinks and six pastries, on the counter by Nov 20.' },
   { id: 'popup', name: 'Holiday pop-up', blurb: 'A weekend stall at the night market in December.' },
@@ -25,12 +25,12 @@ type Task = { id: string; project: string; title: string; status: Status; assign
 const TASKS: Task[] = [
   { id: 't1', project: 'winter', title: 'Cost out the winter menu', status: 'todo', assignee: 'Aisha Bello', due: '2026-11-06', priority: 'high' },
   { id: 't2', project: 'winter', title: 'Order holiday cups and sleeves', status: 'todo', assignee: 'Tomás Ortega', due: '2026-11-02', priority: 'high' },
-  { id: 't3', project: 'winter', title: 'Photograph the new pastries', status: 'todo', assignee: 'Priya Raman', due: '2026-11-10', priority: 'medium' },
+  { id: 't3', project: 'winter', title: 'Photograph the new pastries', status: 'todo', assignee: 'Paulo Reis', due: '2026-11-10', priority: 'medium' },
   { id: 't4', project: 'winter', title: 'Write allergen cards for every item', status: 'todo', assignee: 'Kenji Watanabe', due: '2026-11-12', priority: 'medium' },
-  { id: 't5', project: 'winter', title: 'Update the menu on the website', status: 'todo', assignee: 'Priya Raman', due: '2026-11-16', priority: 'low' },
+  { id: 't5', project: 'winter', title: 'Update the menu on the website', status: 'todo', assignee: 'Paulo Reis', due: '2026-11-16', priority: 'low' },
   { id: 't6', project: 'winter', title: 'Test the cardamom buns at full batch size', status: 'doing', assignee: 'Kenji Watanabe', due: '2026-11-05', priority: 'high' },
   { id: 't7', project: 'winter', title: 'Train the weekend team on the new drinks', status: 'doing', assignee: 'Tomás Ortega', due: '2026-11-03', priority: 'medium' },
-  { id: 't8', project: 'winter', title: 'Draft the launch email', status: 'doing', assignee: 'Priya Raman', due: '2026-11-09', priority: 'low' },
+  { id: 't8', project: 'winter', title: 'Draft the launch email', status: 'doing', assignee: 'Paulo Reis', due: '2026-11-09', priority: 'low' },
   { id: 't9', project: 'winter', title: 'Pick the four winter drinks', status: 'done', assignee: 'Lucía Fernández', due: '2026-10-28', priority: 'medium' },
   { id: 't10', project: 'winter', title: 'Taste-test the gingerbread latte, again', status: 'done', assignee: 'Lucía Fernández', due: '2026-10-30', priority: 'low' },
   { id: 't11', project: 'winter', title: 'Find a second oat milk supplier', status: 'done', assignee: 'Aisha Bello', due: '2026-10-31', priority: 'low' },

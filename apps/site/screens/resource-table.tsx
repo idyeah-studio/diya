@@ -22,7 +22,7 @@ const PRODUCTS = {
   sub: { name: 'Subscription, 2 bags a month', price: 34 },
 }
 const CITIES: Record<string, string> = {
-  'Amara Okafor': 'Portland, OR', 'Diego Hernández': 'Austin, TX', 'Mei Tanaka': 'Seattle, WA', 'Priya Raman': 'Chicago, IL',
+  'Amara Okafor': 'Portland, OR', 'Diego Hernández': 'Austin, TX', 'Mei Tanaka': 'Seattle, WA', 'Pilar Ramos': 'Chicago, IL',
   'Jonas Lindqvist': 'Minneapolis, MN', 'Fatima Al-Sayed': 'Brooklyn, NY', 'Kwame Mensah': 'Atlanta, GA', 'Sofia Rossi': 'Boston, MA',
   'Liam O’Connor': 'Denver, CO', 'Hana Kim': 'Oakland, CA', 'Mateo Silva': 'Miami, FL', 'Aisha Bello': 'Raleigh, NC',
   'Noah Goldberg': 'Philadelphia, PA', 'Leilani Kahale': 'Honolulu, HI', 'Ravi Patel': 'Columbus, OH', 'Ingrid Berg': 'Burlington, VT',
@@ -30,7 +30,7 @@ const CITIES: Record<string, string> = {
 // Order number, placed, customer, items and how many, payment, fulfillment.
 const ORDERS: [number, string, string, Partial<Record<Product, number>>, Payment, Fulfillment][] = [
   [1052, '2026-11-05T16:48', 'Amara Okafor', { mt: 2 }, 'Paid', 'Unfulfilled'], [1051, '2026-11-05T11:02', 'Diego Hernández', { kit: 1, gu: 1 }, 'Paid', 'Unfulfilled'],
-  [1050, '2026-11-05T08:15', 'Mei Tanaka', { sub: 1 }, 'Paid', 'Unfulfilled'], [1049, '2026-11-04T19:37', 'Priya Raman', { nh: 1 }, 'Paid', 'Unfulfilled'],
+  [1050, '2026-11-05T08:15', 'Mei Tanaka', { sub: 1 }, 'Paid', 'Unfulfilled'], [1049, '2026-11-04T19:37', 'Pilar Ramos', { nh: 1 }, 'Paid', 'Unfulfilled'],
   [1048, '2026-11-04T09:41', 'Jonas Lindqvist', { mt: 1, mug: 2 }, 'Pending', 'Unfulfilled'], [1047, '2026-11-03T14:20', 'Fatima Al-Sayed', { gu: 2 }, 'Paid', 'Shipped'],
   [1046, '2026-11-03T07:55', 'Kwame Mensah', { hu: 1, mt: 1 }, 'Paid', 'Shipped'], [1045, '2026-11-02T18:10', 'Sofia Rossi', { sub: 1 }, 'Paid', 'Shipped'],
   [1044, '2026-11-01T10:26', 'Liam O’Connor', { kit: 1 }, 'Paid', 'Shipped'], [1043, '2026-10-31T15:03', 'Hana Kim', { mt: 3 }, 'Paid', 'Delivered'],
@@ -38,7 +38,7 @@ const ORDERS: [number, string, string, Partial<Record<Product, number>>, Payment
   [1040, '2026-10-28T20:30', 'Noah Goldberg', { mug: 1 }, 'Paid', 'Delivered'], [1039, '2026-10-27T13:58', 'Leilani Kahale', { sub: 1 }, 'Paid', 'Delivered'],
   [1038, '2026-10-26T08:44', 'Ravi Patel', { mt: 2, nh: 1 }, 'Paid', 'Delivered'], [1037, '2026-10-24T17:21', 'Ingrid Berg', { kit: 1, mt: 1 }, 'Paid', 'Delivered'],
   [1036, '2026-10-23T11:39', 'Amara Okafor', { gu: 1 }, 'Paid', 'Delivered'], [1035, '2026-10-22T09:05', 'Diego Hernández', { mt: 6 }, 'Pending', 'Delivered'],
-  [1034, '2026-10-20T15:50', 'Mei Tanaka', { hu: 2 }, 'Paid', 'Delivered'], [1033, '2026-10-19T10:18', 'Priya Raman', { sub: 1 }, 'Paid', 'Delivered'],
+  [1034, '2026-10-20T15:50', 'Mei Tanaka', { hu: 2 }, 'Paid', 'Delivered'], [1033, '2026-10-19T10:18', 'Pilar Ramos', { sub: 1 }, 'Paid', 'Delivered'],
   [1032, '2026-10-17T19:02', 'Kwame Mensah', { mt: 1, mug: 1 }, 'Paid', 'Delivered'], [1031, '2026-10-16T12:33', 'Fatima Al-Sayed', { nh: 1 }, 'Paid', 'Delivered'],
   [1030, '2026-10-15T08:27', 'Sofia Rossi', { kit: 1, gu: 1 }, 'Paid', 'Delivered'], [1029, '2026-10-13T16:14', 'Jonas Lindqvist', { mt: 2 }, 'Paid', 'Delivered'],
   [1028, '2026-10-12T09:49', 'Hana Kim', { sub: 1 }, 'Paid', 'Delivered'], [1027, '2026-10-10T14:06', 'Liam O’Connor', { gu: 1 }, 'Refunded', 'Delivered'],
