@@ -494,7 +494,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'Checkout',
     charts: false,
     status: 'ready',
-    tryThis: 'Pay with empty fields for the error summary. Apply DIYA10, then any other code. Use declined@example.com to have the card declined; any other email places the order.',
+    tryThis: 'Pay with empty fields for the error summary. Apply DIYA10 for 10% off, or any other code to see it turned down. Use declined@example.com to have the card declined; any other email places the order.',
     keywords: 'checkout cart payment order shipping ecommerce',
   },
   {
