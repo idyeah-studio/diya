@@ -15,7 +15,7 @@ const POINTS = [
 ]
 const QUOTE = {
   text: 'We moved the whole studio into Lintel in an afternoon. Nobody has asked where a file lives since.',
-  name: 'Priya Natarajan',
+  name: 'Wren Abernathy',
   role: 'Studio lead at Kestrel & Vine',
 }
 const INVITE = { from: 'Maya', fromFull: 'Maya Okafor', workspace: 'Northwind Studio', email: 'jonah.park@example.com', others: 11 }
@@ -411,15 +411,8 @@ const css = `
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   color: var(--diya-color-text);
 }
-.sign-up-main { display: grid; place-items: center; padding: var(--diya-space-7) var(--diya-space-6); }
+.sign-up-main { display: grid; place-items: center; padding: var(--diya-space-6); }
 .sign-up-form { width: 100%; max-width: 400px; margin: 0; padding: 0; gap: var(--diya-space-5); background: none; border: 0; box-shadow: none; backdrop-filter: none; }
-.sign-up[data-glass] .sign-up-main {
-  margin: var(--diya-space-3);
-  border: 1px solid color-mix(in srgb, var(--diya-color-text) 10%, transparent);
-  border-radius: calc(20px * var(--diya-corner-scale, 1));
-  background: color-mix(in srgb, var(--diya-color-raised) 62%, transparent);
-  backdrop-filter: blur(28px) saturate(1.15);
-}
 .sign-up-header { display: grid; gap: var(--diya-space-2); }
 .sign-up-mark {
   display: grid;
@@ -479,12 +472,15 @@ const css = `
   flex-direction: column;
   justify-content: space-between;
   gap: var(--diya-space-7);
-  margin: var(--diya-space-3);
+  margin: var(--diya-space-4);
   padding: var(--diya-space-8) clamp(var(--diya-space-6), 6vw, 96px) var(--diya-space-7);
   border-radius: calc(20px * var(--diya-corner-scale, 1));
   background: var(--diya-color-recessed);
 }
-.sign-up[data-glass] .sign-up-aside { background: none; }
+.sign-up[data-glass] .sign-up-aside {
+  background: color-mix(in srgb, var(--diya-color-raised) 55%, transparent);
+  backdrop-filter: blur(28px) saturate(1.15);
+}
 .sign-up-aside-body { display: grid; gap: var(--diya-space-6); max-width: 440px; margin-block: auto; }
 .sign-up-aside-title {
   margin: 0;
@@ -510,13 +506,12 @@ const css = `
 @media (max-width: 520px) {
   .sign-up-main {
     place-items: start stretch;
-    padding: var(--diya-space-7) max(var(--diya-space-5), env(safe-area-inset-right)) max(var(--diya-space-6), env(safe-area-inset-bottom))
-      max(var(--diya-space-5), env(safe-area-inset-left));
+    padding: var(--diya-space-7) max(var(--diya-space-4), env(safe-area-inset-right)) max(var(--diya-space-6), env(safe-area-inset-bottom))
+      max(var(--diya-space-4), env(safe-area-inset-left));
   }
   .sign-up-form { max-width: none; }
-  .sign-up[data-glass] .sign-up-main { margin: 0; border: 0; border-radius: 0; }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .sign-up[data-glass] .sign-up-main { background: var(--diya-color-raised); backdrop-filter: none; }
+  .sign-up[data-glass] .sign-up-aside { background: var(--diya-color-raised); backdrop-filter: none; }
 }
 `
