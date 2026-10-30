@@ -343,6 +343,7 @@ export default function BillingScreen() {
                 </div>
               </Card>
 
+              <div className="billing-desk">
               <Table
                 label="Billing history"
                 headingLevel={2}
@@ -368,6 +369,26 @@ export default function BillingScreen() {
                   },
                 ]}
               />
+              </div>
+              {/* Phones get the same invoices as stacked rows, so no column is cut off. */}
+              <section className="billing-phone" aria-labelledby="billing-history-phone">
+                <h2 id="billing-history-phone" className="billing-subtitle">Billing history</h2>
+                <ul className="billing-rows">
+                  {invoices.map((row) => (
+                    <li key={row.id} className="billing-row">
+                      <span className="billing-row-text">
+                        <span className="billing-row-main">{row.label}</span>
+                        <span className="billing-row-meta">{day(row.date)}</span>
+                      </span>
+                      <span className="billing-row-end">
+                        <span className="billing-row-main billing-figure-strong">{money(row.amount, true)}</span>
+                        <Tag size="small" tone={row.status === 'Paid' ? 'success' : 'error'} leading="dot">{row.status}</Tag>
+                      </span>
+                      <Button size="small" variant="quiet" aria-label={`Download receipt ${row.id}`} onClick={() => download(row)}><Download /></Button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             </Stack>
           </div>
         </main>
@@ -480,6 +501,16 @@ const css = `
 .billing-card-copy > span:last-child { color: var(--diya-color-muted); font-size: var(--diya-text-caption); font-variant-numeric: tabular-nums; }
 .billing-card-name { display: flex; flex-wrap: wrap; align-items: center; gap: var(--diya-space-1) var(--diya-space-2); }
 .billing-wide { width: 100%; max-width: none; }
+.billing-phone { display: none; gap: var(--diya-space-4); }
+.billing-subtitle { margin: 0; font-size: var(--diya-text-body); font-weight: 600; line-height: var(--diya-leading-tight); }
+.billing-rows { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--diya-color-line); }
+.billing-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--diya-space-3); padding: var(--diya-space-3) 0; border-bottom: 1px solid var(--diya-color-line); }
+.billing-row-text,
+.billing-row-end { display: grid; gap: 4px; min-width: 0; }
+.billing-row-end { justify-items: end; }
+.billing-row-main { font-size: var(--diya-text-body); font-weight: 500; }
+.billing-row-meta { color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
+.billing-figure-strong { font-variant-numeric: tabular-nums; }
 .billing-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: var(--diya-space-4); }
 @media (max-width: 860px) {
   .billing { grid-template-columns: minmax(0, 1fr); }
@@ -487,5 +518,9 @@ const css = `
   .billing-main { padding: 0 var(--diya-space-4) var(--diya-space-7); border-left: 0; }
   .billing-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-4); height: 56px; margin-bottom: var(--diya-space-5); }
   .billing-bar .billing-brand { padding: 0; }
+}
+@media (max-width: 640px) {
+  .billing-desk { display: none; }
+  .billing-phone { display: grid; }
 }
 `
