@@ -33,6 +33,7 @@ import { ProPage } from '../../components/catalog/ProPage'
 import { ScreensLibrary } from '../../components/screens/ScreensLibrary'
 import { builtWith, readScreenSource } from '../../components/screens/screen-source'
 import { screenById } from '../../components/screens/screens-data'
+import { isLaunched, launchNow } from '../../lib/launch'
 import { screenRequestsOpen } from '../../lib/screen-requests/runtime'
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
@@ -129,6 +130,7 @@ function ScreensPage({ id, want }: { id: string | null; want: string | null }) {
       source={source}
       builtWith={source ? builtWith(source) : []}
       requestsOpen={screen ? false : screenRequestsOpen()}
+      launched={isLaunched(launchNow())}
       want={want}
     />
   )

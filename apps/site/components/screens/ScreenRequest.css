@@ -33,6 +33,25 @@
   color: var(--diya-color-muted);
 }
 
+:where(html[data-catalog='true']) .screens-request-intro p a {
+  color: var(--diya-color-text);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--diya-color-text) 40%, transparent);
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+:where(html[data-catalog='true']) .screens-request-intro p a:hover {
+  text-decoration-color: currentColor;
+}
+:where(html[data-catalog='true']) .screens-request-intro p a:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+:where(html[data-catalog='true']) .screens-request[data-open='false'] .screens-request-intro p {
+  max-width: 52ch;
+}
+
 .screens-request-body {
   min-width: 0;
 }

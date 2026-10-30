@@ -105,8 +105,10 @@ describe('the Screens gallery', () => {
       ['/screens/thumbs/board-dark.jpg', ''],
     ])
     expect(document.getElementById('request')?.textContent).toContain('Don’t see your screen?')
-    // Closed unless the page says the form is open: the heading stays, with when it opens.
-    expect(document.getElementById('request')?.textContent).toContain('Requests open with the launch.')
+    // Closed unless the page says the form is open: the heading stays, and after
+    // the launch (the default) it says requests are paused, never "open with the launch".
+    expect(document.getElementById('request')?.textContent).toContain('Requests are paused right now. Write to diya@idyeah.studio instead.')
+    expect(document.getElementById('request')?.textContent).not.toContain('with the launch')
     expect(document.querySelectorAll('[title]')).toHaveLength(0)
   })
 
