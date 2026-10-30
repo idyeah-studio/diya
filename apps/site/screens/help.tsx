@@ -114,7 +114,7 @@ export default function HelpCenterScreen() {
             <h1 className="help-title">How can we help?</h1>
             <p className="help-lede">Answers to the questions people ask us most, from your first form to your hundredth.</p>
             <form role="search" className="help-search" onSubmit={(event) => event.preventDefault()}>
-              <Search ref={field} size="large" label="Search the help center" hideLabel placeholder="Search articles, like “export”" clearable
+              <Search ref={field} className="help-search-field" size="large" label="Search the help center" hideLabel placeholder="Search articles, like “export”" clearable
                 autoComplete="off" value={query} onValueChange={setQuery} />
             </form>
             <div className="help-pills" role="group" aria-label="Popular searches">
@@ -285,7 +285,8 @@ const css = `
 .help-hero { display: grid; justify-items: center; gap: var(--diya-space-4); text-align: center; padding-top: var(--diya-space-6); }
 .help-title { margin: 0; font-size: var(--diya-text-hero); font-weight: 600; line-height: 1.1; letter-spacing: -0.03em; text-wrap: balance; }
 .help-lede { max-width: 560px; margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-large); line-height: var(--diya-leading-body); text-wrap: pretty; }
-.help-search { width: 100%; max-width: 600px; margin-top: var(--diya-space-4); }
+.help-search { width: 100%; max-width: 560px; margin-top: var(--diya-space-4); }
+.help-search .help-search-field { max-width: none; }
 .help-pills { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--diya-space-2); }
 .help-pills-label { margin-inline-end: var(--diya-space-1); color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
 .help-found { display: grid; gap: var(--diya-space-4); width: 100%; max-width: 600px; margin: calc(var(--diya-space-5) * -1) auto 0; }
@@ -328,7 +329,7 @@ const css = `
 .help-article-topic { color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
 .help-article-chevron { flex-shrink: 0; color: var(--diya-color-muted); }
 .help-answer { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: 1.6; text-wrap: pretty; }
-.help-stuck { display: grid; justify-items: center; gap: var(--diya-space-3); padding-top: var(--diya-space-8); border-top: 1px solid var(--diya-color-line); text-align: center; }
+.help-stuck { display: grid; justify-items: center; gap: var(--diya-space-3); text-align: center; }
 .help-stuck-icon {
   display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: var(--diya-space-2);
   border-radius: 50%; background: color-mix(in srgb, var(--diya-color-text) 6%, transparent);
