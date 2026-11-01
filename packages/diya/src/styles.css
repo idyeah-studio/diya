@@ -1174,10 +1174,6 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.diya-root .diya-text-field[data-invalid='true'] .diya-text-field-control {
-  border-color: var(--diya-color-text);
-  border-style: dashed;
-}
 .diya-root .diya-text-field-description > span {
   display: inline-grid;
   place-items: center;
@@ -1266,10 +1262,6 @@
   transform: translateY(-50%);
   color: var(--diya-color-muted);
   pointer-events: none;
-}
-.diya-root .diya-select-field[data-invalid='true'] .diya-select-control {
-  border-color: var(--diya-color-text);
-  border-style: dashed;
 }
 .diya-root .diya-select-control select:disabled {
   cursor: not-allowed;
@@ -1462,7 +1454,6 @@
 .diya-root .diya-textarea[data-size='large'] textarea { min-height: 136px; padding: 14px 16px; font-size: var(--diya-text-large); }
 .diya-root .diya-textarea textarea:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }
 .diya-root .diya-textarea textarea::placeholder { color: var(--diya-color-muted); opacity:1; }
-.diya-root .diya-textarea[data-invalid='true'] textarea { border-style: dashed; border-color: var(--diya-color-text); }
 .diya-root .diya-textarea[data-disabled='true'] { opacity: .4; }
 .diya-root .diya-textarea-footer { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; }
 .diya-root .diya-textarea-count { margin-top: 10px; margin-left: auto; color: var(--diya-color-muted); font-size: var(--diya-text-caption); white-space: nowrap; }
@@ -2275,12 +2266,19 @@
   overflow-wrap: anywhere;
 }
 
+/* Every invalid field reads the same: a solid error border, and the message (with its "!") in the error color. */
+.diya-root .diya-text-field[data-invalid='true'] .diya-text-field-description,
+.diya-root .diya-select-field[data-invalid='true'] .diya-text-field-description,
+.diya-root .diya-choice[aria-invalid='true'] > .diya-text-field-description,
 .diya-root .diya-combobox[data-invalid='true'] .diya-field-help,
 .diya-root .diya-date-field[data-invalid='true'] .diya-field-help,
 .diya-root .diya-workflow-error {
   color: var(--diya-color-error);
 }
 
+.diya-root .diya-text-field[data-invalid='true'] .diya-text-field-control,
+.diya-root .diya-select-field[data-invalid='true'] .diya-select-control,
+.diya-root .diya-textarea[data-invalid='true'] textarea,
 .diya-root .diya-combobox[data-invalid='true'] .diya-combobox-control,
 .diya-root .diya-date-field[data-invalid='true'] .diya-date-trigger {
   border-color: var(--diya-color-error);
