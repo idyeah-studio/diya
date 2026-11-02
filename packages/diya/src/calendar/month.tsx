@@ -52,7 +52,7 @@ export function monthOf(day: string, min?: string, max?: string) {
 
 const subscribeNever = () => () => {}
 /** Today as an ISO date; '' while hydrating server HTML, so a server in another time zone never marks the wrong day. */
-const useToday = () => useSyncExternalStore(subscribeNever, () => iso(new Date()), () => '')
+export const useToday = () => useSyncExternalStore(subscribeNever, () => iso(new Date()), () => '')
 
 export type MonthGridStrings = { previousMonth: string; nextMonth: string; chooseStart: string; chooseEnd: string; unavailableDay: (date: string) => string }
 type MonthGridOptions = {
