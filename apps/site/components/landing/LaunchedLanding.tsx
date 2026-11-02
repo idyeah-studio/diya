@@ -94,7 +94,7 @@ export function LaunchedLanding() {
                   </a>
                 </li>
                 <li>MIT license</li>
-                <li>React 18 and 19</li>
+                <li>React 18.3 and 19</li>
                 <li>Light, Dark and Glass</li>
               </ul>
             </div>

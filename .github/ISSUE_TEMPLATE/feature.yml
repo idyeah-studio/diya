@@ -13,7 +13,7 @@ body:
     id: proposal
     attributes:
       label: What would help
-      description: The prop, component or behaviour you would like, with a small example if you can.
+      description: The prop, component or behavior you would like, with a small example if you can.
     validations:
       required: true
   - type: textarea

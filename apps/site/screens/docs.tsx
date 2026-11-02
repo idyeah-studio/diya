@@ -315,7 +315,7 @@ function Feedback() {
         <p ref={thanks} tabIndex={-1} className="docs-thanks" role="status">
           {answer === 'no'
             ? 'Thanks for telling us. The docs team reads every note, and this page gets better because of them.'
-            : 'Thanks! Glad it helped. Happy shipping.'}
+            : 'Thanks. Glad it helped. Happy shipping.'}
         </p>
       ) : (
         <>

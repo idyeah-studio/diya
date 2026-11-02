@@ -241,7 +241,7 @@ function SupportChat({ started, open, onOpenChange }: { started: boolean; open: 
         loading={replying}
         onRetry={failed ? () => void answer(failed) : undefined}
         notice={failed && 'That message didn’t reach us. Check your connection, then try again.'}
-        welcome={<p className="help-welcome">Hi! Ask anything about {PRODUCT}. I’ll check the help center first, and get you a person if that doesn’t do it.</p>}
+        welcome={<p className="help-welcome">Hi. Ask anything about {PRODUCT}. I’ll check the help center first, and get you a person if that doesn’t do it.</p>}
         suggestions={['How do I export responses?', 'Can I get a refund?', 'I’d like to talk to a person']}
       />
     </div>
