@@ -86,4 +86,23 @@ describe('where counts go', () => {
     await expect(pg.query(`insert into diya_mcp_searches (day, query, found) values ('2026-11-07', $1, true)`, ['x'.repeat(81)])).rejects.toThrow()
     await pg.close()
   })
+
+  it('stores only so many different searches a day, and keeps counting the ones it has', async () => {
+    const pg = new PGlite()
+    await pg.exec(migration)
+    const log = new NeonSearchLog({ query: async (text, params) => (await pg.query(text, params as unknown[])).rows }, 2)
+    await log.record([{ query: 'tabs', found: true }, { query: 'table', found: true }, { query: 'thing 3', found: false }], DAY)
+    await log.record([{ query: 'tabs', found: true }], DAY)
+    await log.record([{ query: 'thing 3', found: false }], new Date(DAY.getTime() + 86_400_000))
+    const rows = (await pg.query<{ day: Date; query: string; count: number }>(`select * from diya_mcp_searches order by day, query`)).rows
+    expect(rows.map(({ day, query, count }) => [day.toISOString().slice(0, 10), query, count])).toEqual([
+      ['2026-11-07', 'table', 1],
+      ['2026-11-07', 'tabs', 2],
+      ['2026-11-08', 'thing 3', 1],
+    ])
+    await pg.close()
+    const memory = new MemorySearchLog(2)
+    await memory.record([{ query: 'tabs', found: true }, { query: 'table', found: true }, { query: 'thing 3', found: false }, { query: 'tabs', found: true }], DAY)
+    expect([...memory.counts.values()].map(({ query, count }) => [query, count])).toEqual([['tabs', 2], ['table', 1]])
+  })
 })

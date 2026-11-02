@@ -19,6 +19,12 @@ export const QUERY_MAX = 80
 export const SEARCHES_PER_REQUEST = 10
 /** Counts older than this are deleted as new ones arrive. */
 export const RETENTION_DAYS = 365
+/**
+ * At most this many different searches are stored a day; past it, searches
+ * already seen that day still count. The endpoint is public, so one script
+ * can't fill the database the waitlist shares.
+ */
+export const NEW_QUERIES_PER_DAY = 2000
 
 /**
  * The words worth counting, or null. Anything that could carry personal
@@ -34,7 +40,10 @@ export function normalizeQuery(query: string): string | null {
 
 /** Postgres, through the same driver as the waitlist. Schema: db/002_mcp_searches.sql. */
 export class NeonSearchLog implements SearchLog {
-  constructor(private readonly db: { query(text: string, params: unknown[]): Promise<unknown[]> }) {}
+  constructor(
+    private readonly db: { query(text: string, params: unknown[]): Promise<unknown[]> },
+    private readonly newPerDay = NEW_QUERIES_PER_DAY
+  ) {}
 
   async record(searches: Search[], now: Date) {
     const day = now.toISOString().slice(0, 10)
@@ -42,9 +51,12 @@ export class NeonSearchLog implements SearchLog {
     for (const { query, found } of searches) {
       await this.db.query(
         `with pruned as (delete from diya_mcp_searches where day < $4::date)
-         insert into diya_mcp_searches (day, query, found, count) values ($1::date, $2, $3, 1)
+         insert into diya_mcp_searches (day, query, found, count)
+         select $1::date, $2::text, $3::boolean, 1
+         where exists (select 1 from diya_mcp_searches where day = $1::date and query = $2::text)
+            or (select count(*) from diya_mcp_searches where day = $1::date) < $5::int
          on conflict (day, query) do update set count = diya_mcp_searches.count + 1, found = excluded.found`,
-        [day, query, found, cutoff]
+        [day, query, found, cutoff, this.newPerDay]
       )
     }
   }
@@ -54,10 +66,13 @@ export class NeonSearchLog implements SearchLog {
 export class MemorySearchLog implements SearchLog {
   readonly counts = new Map<string, { day: string; query: string; found: boolean; count: number }>()
 
+  constructor(private readonly newPerDay = NEW_QUERIES_PER_DAY) {}
+
   async record(searches: Search[], now: Date) {
     const day = now.toISOString().slice(0, 10)
     for (const { query, found } of searches) {
       const key = `${day}\n${query}`
+      if (!this.counts.has(key) && [...this.counts.values()].filter((row) => row.day === day).length >= this.newPerDay) continue
       const row = this.counts.get(key) ?? { day, query, found, count: 0 }
       this.counts.set(key, { ...row, found, count: row.count + 1 })
     }
