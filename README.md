@@ -340,8 +340,9 @@ TextLink take it:
 ```
 
 DIYA's classes, attributes and handlers merge into your child, and the ref
-reaches it. TextLink with `asChild` needs no provider, so it renders in a
-Server Component.
+reaches it. TextLink never uses `linkComponent`: with `href` it's a plain
+`<a>`, so for client-side routing give it your router's link with `asChild`.
+Either way it needs no provider, so it renders in a Server Component.
 
 ## Forms
 
@@ -555,9 +556,11 @@ major version:
 - peer dependency ranges.
 
 Not covered, so don't build on them: `.diya-*` class names, DOM structure,
-anything named `--diya-internal-*`, file paths inside `dist`, and anything
-marked `"stability": "experimental"` in `api.json`. In 1.0 that's Chatbot and
-the charts (`DataViz` and `Chart`).
+the `data-*` attributes components set on their own elements (the provider's
+`data-theme` is covered), anything named `--diya-internal-*`, file paths inside
+`dist`, and anything marked `"stability": "experimental"` in `api.json`, with
+its own messages and types. In 1.0 that's Chatbot and the charts (`DataViz`
+and `Chart`).
 
 ## License and fonts
 

@@ -202,7 +202,7 @@ trigger focus; Tab leaves according to the trigger's document position.
 | Avatar | `name` | `src`, `size`, `shape`, `status`; initials fallback if the image fails. |
 | List | `label`, `items` | `divided`, `size`; items can have description, leading/trailing content, `onSelect`, disabled. For an inbox, `current` marks the open item (`aria-current="true"` and a selected background) and `unread` gives a heavier label, a dot at the row's end, and "unread" after the label for screen readers. |
 | Accordion | `items: {id,label,content}[]` | `multiple`, `divided`, `disabled`; expansion is managed internally. |
-| Badge | `label` | `variant`: indicator/count; `tone`, `size`, `count`, `max` (default 99, shows `99+`), `showZero`. |
+| Badge | `label` | `variant`: count/dot; `tone`, `size`, `count`, `max` (default 99, shows `99+`), `showZero`. |
 | Alert | `title`, children | `layout`: card/banner; `tone`: info/success/warning/error/brand; optional action and `onDismiss`; `urgent` for urgent announcements. |
 | Progress | `label`, optional `value` | `variant`: linear/circular; `showValue` (default on). Value is 0–100. Without a `value` it is indeterminate: working, amount unknown. `indeterminate` forces that state. |
 | Tooltip | `content`, your trigger as the child | Wraps one element, such as `<Button iconOnly aria-label="Delete">`, and wires hover, focus and its description. Or give `label` and noninteractive children for a built-in trigger. `placement`; closes with Escape. |
