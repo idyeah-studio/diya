@@ -1,7 +1,21 @@
+import * as React from 'react'
 import { Children, cloneElement, isValidElement, version, type CSSProperties, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from './cx.js'
 
 type AnyProps = Record<string, unknown>
+
+// In development, a Server Component hands elements to a client component as
+// lazy references, which Children.only rejects; React 19's `use` unwraps them.
+// The name is looked up at run time so React 18 builds don't expect the export.
+const use = (React as unknown as AnyProps)[' use '.trim()] as (<T>(usable: PromiseLike<T>) => T) | undefined
+const lazyType = Symbol.for('react.lazy')
+
+/** The caller's single child element, unwrapped first if it arrived lazily from a Server Component. */
+export function onlyChild(children: ReactNode): ReactNode {
+  const node = children as { $$typeof?: symbol; _payload?: PromiseLike<ReactNode> } | null
+  if (use && node && typeof node === 'object' && node.$$typeof === lazyType && typeof node._payload?.then === 'function') return Children.only(use(node._payload))
+  return Children.only(children)
+}
 
 /** Points every ref at the same node. */
 export function composeRefs<T>(...refs: Array<Ref<T> | undefined>): (node: T | null) => void {
@@ -43,7 +57,7 @@ export function mergeSlotProps(slot: AnyProps, child: AnyProps): AnyProps {
  * A function, not a component, so a forwarded ref reaches the child on React 18 too.
  */
 export function renderSlot(children: ReactNode, slotProps: AnyProps, ref?: Ref<unknown>): ReactElement | null {
-  const child = Children.only(children)
+  const child = onlyChild(children)
   if (!isValidElement(child)) return null
   const merged = mergeSlotProps(slotProps, child.props as AnyProps)
   const theirRef = childRef(child)
