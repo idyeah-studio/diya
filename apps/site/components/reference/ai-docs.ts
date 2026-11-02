@@ -32,20 +32,28 @@ import { DiyaProvider } from '${API.package}'
 export const RULES = `- Every component renders inside \`DiyaProvider\`; popups, tooltips and toasts need it. Its \`theme\` defaults to \`"system"\` (follows the OS light or dark setting, in CSS, with no flash); pass \`"light"\` or \`"dark"\` to fix it. It paints its own background and text color; \`surface={false}\` leaves that to your page.
 - Fields work controlled (\`value\` with \`onValueChange\`; Switch: \`checked\` with \`onCheckedChange\`) or uncontrolled (\`defaultValue\`; Switch: \`defaultChecked\`). Native \`name\`, \`onChange\` and \`onBlur\` reach the native control, so react-hook-form \`register()\` works on TextInput, TextArea, Select, Switch, Choice and Slider without a Controller. Labels are required, even when hidden with \`hideLabel\`.
 - Lay screens out with \`Stack\` (vertical) and \`Inline\` (horizontal, wrapping): \`gap\` takes a spacing step (1–8) or any CSS length, plus \`align\`, \`justify\`, \`wrap\` and \`as\`.
-- One brand color, set once: \`<DiyaProvider brandColor="#1F4E7A">\`, or \`{ light, dark }\`. Components take no color props; \`tone\` picks a status.
+- One brand color, set once: \`<DiyaProvider brandColor="#1F4E7A">\`, or \`{ light, dark }\`. Components take no color props (chart series aside); \`tone\` picks a status.
 - Every component takes \`className\`, \`style\` and its root element's attributes. Theme with public \`--diya-*\` tokens on \`.diya-root\`, never by overriding internal classes. DIYA's CSS sits in \`@layer diya\`, so your CSS and Tailwind utilities win.
-- Links: items with \`href\` render the provider's \`linkComponent\` (such as Next.js \`Link\`, passed from a \`'use client'\` providers file) or a plain anchor. Button takes \`href\` and \`asChild\`.
+- Links: items with \`href\` render the provider's \`linkComponent\` (such as Next.js \`Link\`, passed from a \`'use client'\` providers file) or a plain anchor. Button takes \`href\` and \`asChild\`. TextLink's \`href\` is always a plain anchor; for client-side routing, pass your router's link to it with \`asChild\`.
 - DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.
 - Charts import from \`${API.package}/charts\` and need \`echarts@6\` installed.
 - Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.`
 
-function propsTable(reference: Pick<ItemReference, 'props' | 'extendsDom'>) {
-  const rows = reference.props.map(([name, prop]) => {
-    const fallback = defaultText(prop)
-    return `| \`${name}\`${prop.required ? ' (required)' : ''} | \`${cell(prop.type)}\` | ${fallback ? `\`${cell(fallback)}\`` : ''} | ${cell(prop.description)} |`
-  })
-  const native = reference.extendsDom ? `\n\nAlso takes the native \`<${reference.extendsDom}>\` attributes.` : ''
-  return `| Prop | Type | Default | Description |\n| --- | --- | --- | --- |\n${rows.join('\n')}${native}`
+function propsTable(reference: Pick<ItemReference, 'props' | 'extendsDom'> & Partial<Pick<ItemReference, 'modes'>>) {
+  const table = (props: ItemReference['props']) => {
+    const rows = props.map(([name, prop]) => {
+      const fallback = defaultText(prop)
+      return `| \`${name}\`${prop.required ? ' (required)' : ''} | \`${cell(prop.type)}\` | ${fallback ? `\`${cell(fallback)}\`` : ''} | ${cell(prop.description)} |`
+    })
+    return `| Prop | Type | Default | Description |\n| --- | --- | --- | --- |\n${rows.join('\n')}`
+  }
+  const modes = (reference.modes ?? []).map((mode) => `\n\nWhen \`${mode.when}\`${mode.isDefault ? ' (the default)' : ''}:\n\n${table(mode.props)}`)
+  const native = !reference.extendsDom
+    ? ''
+    : reference.extendsDom === 'element'
+      ? '\n\nAlso takes the attributes of the element it renders (`as`).'
+      : `\n\nAlso takes the native \`<${reference.extendsDom}>\` attributes.`
+  return `${table(reference.props)}${modes.join('')}${native}`
 }
 
 function guidanceText(id: ItemId) {

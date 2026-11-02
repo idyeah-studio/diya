@@ -30,7 +30,7 @@ describe('elements sent lazily from a Server Component', () => {
     render(<DiyaProvider>
       <Dialog title="Rename project" trigger={fromServer(<button type="button">Rename</button>)}>Pick a new name.</Dialog>
       <Popover label="Filters" trigger={fromServer(<button type="button">Filters</button>)}>Only open invoices.</Popover>
-      <Menu label="Actions" items={[{ label: 'Archive' }]} trigger={fromServer(<button type="button">Actions</button>)} />
+      <Menu label="Actions" items={[{ id: 'archive', label: 'Archive' }]} trigger={fromServer(<button type="button">Actions</button>)} />
     </DiyaProvider>)
     expect(screen.getByRole('button', { name: 'Rename' }).getAttribute('aria-haspopup')).toBe('dialog')
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }))

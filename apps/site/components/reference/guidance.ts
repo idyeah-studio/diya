@@ -21,7 +21,7 @@ export const guidance: Record<ItemId, Guidance> = {
   'text-area': {
     use: 'For longer text: a description, a note, a message.',
     instead: 'One short line? Text Input.',
-    access: 'Labelled like Text Input. The character count is part of the field’s description, so it is read with the field.',
+    access: 'Labeled like Text Input. The character count is part of the field’s description, so it is read with the field.',
   },
   select: {
     use: 'For one choice from a list of about five to fifteen known options.',
@@ -29,9 +29,9 @@ export const guidance: Record<ItemId, Guidance> = {
     access: 'A native select, so every platform’s own keyboard and screen reader support comes with it.',
   },
   'date-picker': {
-    use: 'For a date or a start and end date, typed or picked from a calendar.',
+    use: 'For a date or a start and end date, picked from a calendar.',
     instead: 'A date far in the past, like a birthday? A plain Text Input is often quicker.',
-    access: 'The field takes typed dates. In the calendar, arrow keys move by day and week, and Escape closes it.',
+    access: 'The field is a button that opens the calendar. There, arrow keys move by day and week, Page Up and Page Down by month, and Escape closes it.',
   },
   calendar: {
     use: 'For a screen where picking the day is the main job: booking a time, or choosing the day an agenda shows. The month stays on the page.',
@@ -71,17 +71,17 @@ export const guidance: Record<ItemId, Guidance> = {
   pagination: {
     use: 'For long lists split into pages, with the count of results.',
     instead: 'A feed people read straight through? A "Show more" Button may suit better.',
-    access: 'A labelled navigation region. Each page number is named, and the current one carries aria-current.',
+    access: 'A labeled navigation region. Each page number is named, and the current one carries aria-current.',
   },
   tabs: {
     use: 'For switching between related views of the same thing without leaving the page.',
     instead: 'Steps in order? Wizard. Separate pages? Side Navigation or links.',
-    access: 'Follows the ARIA tabs pattern: one Tab stop for the list, arrow keys move between tabs, and each panel is labelled by its tab.',
+    access: 'Follows the ARIA tabs pattern: one Tab stop for the list, arrow keys move between tabs, and each panel is labeled by its tab.',
   },
   breadcrumbs: {
     use: 'For showing where a page sits in a deep hierarchy, with a way back up.',
     instead: 'A flat app with a few sections? Leave them out.',
-    access: 'A labelled navigation with an ordered list; the current page is marked with aria-current="page".',
+    access: 'A labeled navigation with an ordered list; the current page is marked with aria-current="page".',
   },
   menu: {
     use: 'For a short list of actions or options behind one button: row actions, sort order, visible columns.',
@@ -159,12 +159,12 @@ export const guidance: Record<ItemId, Guidance> = {
   'site-header': {
     use: 'For the bar across the top of an app or site: brand, navigation, search and account.',
     instead: 'An app with many sections? Pair it with Side Navigation.',
-    access: 'Labelled navigation that folds into a menu button when space runs out, so every link stays reachable by keyboard.',
+    access: 'Labeled navigation that folds into a menu button when space runs out, so every link stays reachable by keyboard.',
   },
   'side-navigation': {
     use: 'For moving between the main sections of an app, grouped, with an optional collapsed rail.',
     instead: 'Five or fewer top-level sections? Site Header’s navigation may be enough.',
-    access: 'A labelled navigation; the current item carries aria-current="page". Collapsed, each icon keeps its name. A count is part of its item’s name, such as "Inbox, 12".',
+    access: 'A labeled navigation; the current item carries aria-current="page". Collapsed, each icon keeps its name. A count is part of its item’s name, such as "Inbox, 12".',
   },
   card: {
     use: 'For one self-contained item in a grid or list: a project, a plan, an article.',
@@ -193,11 +193,11 @@ export const guidance: Record<ItemId, Guidance> = {
   },
   'file-upload': {
     use: 'For choosing files to send: drag and drop, or the file picker.',
-    access: 'The drop zone is also a real file input with a label, so it works without dragging. Rejected files come back to you with the reason, so you can say why.',
+    access: 'Works without dragging: Choose files opens the device’s file picker. Rejected files come back to you with the reason, so you can say why.',
   },
   chatbot: {
     use: 'For a conversation surface you connect to your own assistant or support. Full-page fills the height you give it, such as a whole screen, and the conversation scrolls between the header and the composer. A screen with its own heading turns the header off with showHeader={false}.',
-    access: 'Messages live in a log that announces new replies politely. The title names the chat and its log, even with the header hidden. The composer is labelled and sends with Enter.',
+    access: 'Messages live in a log that announces new replies politely. The title names the chat and its log, even with the header hidden. The composer is labeled and sends with Enter.',
   },
   dialog: {
     use: 'For a short task or decision that has to happen before going on: confirm, rename, a quick form.',

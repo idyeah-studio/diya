@@ -1,6 +1,6 @@
 import { isItemId, type ItemId } from '../../lib/customize/registry'
 import { itemBrief } from './ai-docs'
-import { defaultText, itemReference, MCP_INSTALL } from './api'
+import { defaultText, itemReference, MCP_INSTALL, type ItemReference } from './api'
 import { ConnectEditor } from './ConnectEditor'
 import { CopyForAi } from './CopyForAi'
 import { guidance } from './guidance'
@@ -9,6 +9,36 @@ import './reference.css'
 /** api.json text, with `backticked` names set as code. */
 function Prose({ text }: { text: string }) {
   return text.split(/`([^`]+)`/).map((part, index) => (index % 2 ? <code key={index}>{part}</code> : part))
+}
+
+/** One prop per row: name, required and type on the left, what it does on the right. */
+function PropList({ props }: { props: ItemReference['props'] }) {
+  return (
+    <dl>
+      {props.map(([name, prop]) => {
+        const fallback = defaultText(prop)
+        return (
+          <div key={name} className="item-reference-prop">
+            <dt>
+              <code className="item-reference-name">{name}</code>
+              {prop.required && <span className="item-reference-required">Required</span>}
+              <code className="item-reference-type">{prop.type}</code>
+            </dt>
+            <dd>
+              <p>
+                <Prose text={prop.description} />
+              </p>
+              {fallback && (
+                <p className="item-reference-quiet">
+                  Default <code>{fallback}</code>
+                </p>
+              )}
+            </dd>
+          </div>
+        )
+      })}
+    </dl>
+  )
 }
 
 /** The item a catalog path documents, such as `/explore?pattern=table`. */
@@ -68,33 +98,20 @@ export function ReferencePanel({ path }: { path: string }) {
               </span>
             </p>
           </div>
-          <dl>
-            {reference.props.map(([name, prop]) => {
-              const fallback = defaultText(prop)
-              return (
-                <div key={name} className="item-reference-prop">
-                  <dt>
-                    <code className="item-reference-name">{name}</code>
-                    {prop.required && <span className="item-reference-required">Required</span>}
-                    <code className="item-reference-type">{prop.type}</code>
-                  </dt>
-                  <dd>
-                    <p>
-                      <Prose text={prop.description} />
-                    </p>
-                    {fallback && (
-                      <p className="item-reference-quiet">
-                        Default <code>{fallback}</code>
-                      </p>
-                    )}
-                  </dd>
-                </div>
-              )
-            })}
-          </dl>
+          <PropList props={reference.props} />
+          {reference.modes.map((mode) => (
+            <section key={mode.when} className="item-reference-mode" aria-label={`When ${mode.when}`}>
+              <h4>
+                When <code>{mode.when}</code>
+                {mode.isDefault && <span className="item-reference-quiet"> (the default)</span>}
+              </h4>
+              <PropList props={mode.props} />
+            </section>
+          ))}
           {reference.extendsDom && (
             <p className="item-reference-quiet">
-              Also takes every native <code>{`<${reference.extendsDom}>`}</code> attribute, such as <code>name</code>, <code>id</code> or <code>data-*</code>.
+              Also takes every native <code>{`<${reference.extendsDom}>`}</code> attribute, such as{' '}
+              {['input', 'textarea', 'select', 'button'].includes(reference.extendsDom) ? <><code>name</code>, <code>id</code></> : <><code>id</code>, <code>aria-*</code></>} or <code>data-*</code>.
             </p>
           )}
           {reference.variants.length > 0 && (

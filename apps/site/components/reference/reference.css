@@ -282,6 +282,16 @@
 :where(html[data-catalog='true']) .item-reference-prop dd .item-reference-quiet {
   font-size: 14px;
 }
+/* Props a mode adds (`multiple`, `range`), under their own label. */
+:where(html[data-catalog='true']) .item-reference-mode {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+:where(html[data-catalog='true']) .item-reference-mode h4 {
+  font-size: 15px;
+  font-weight: 500;
+}
 :where(html[data-catalog='true']) .item-reference-props > p {
   font-size: 14px;
   line-height: 1.5;

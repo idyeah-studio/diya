@@ -90,6 +90,13 @@ describe('Catalog route selection', () => {
     ).toEqual({ area: 'components', id: 'combobox' })
   })
 
+  it('opens the page that holds each api.json id', () => {
+    expect(resolveCatalogRoute({ area: 'components', component: 'text-link' })).toEqual({ redirect: '/explore?area=components&component=link' })
+    expect(resolveCatalogRoute({ area: 'components', component: 'toast' })).toEqual({ redirect: '/explore?area=components&component=alert' })
+    expect(resolveCatalogRoute({ area: 'patterns', pattern: 'content-state' })).toEqual({ redirect: '/explore?pattern=empty-state' })
+    expect(resolveCatalogRoute({ pattern: 'content-state' })).toEqual({ redirect: '/explore?pattern=empty-state' })
+  })
+
   it('recovers ambiguous repeated selectors without guessing one value', () => {
     expect(resolveCatalogRoute({ area: ['components', 'skills'] })).toEqual({
       redirect: '/explore',
