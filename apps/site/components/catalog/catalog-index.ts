@@ -4,12 +4,12 @@ import { CATEGORIES, screens } from '../screens/screens-data'
 export const componentGroups = [
   { title: 'Inputs', items: [
     { id: 'button', title: 'Button', keywords: 'action icon button' },
-    { id: 'text-input', title: 'Text Input', keywords: 'field email password input' },
+    { id: 'text-input', title: 'Text Input', keywords: 'field email password input textfield' },
     { id: 'text-area', title: 'Text Area', keywords: 'textarea multiline field' },
     { id: 'select', title: 'Select', keywords: 'dropdown combobox picker' },
     { id: 'date-picker', title: 'Date Picker', keywords: 'date calendar range' },
     { id: 'calendar', title: 'Calendar', keywords: 'date day month booking schedule agenda availability range' },
-    { id: 'combobox', title: 'Combobox', keywords: 'search select multiple multiselect' },
+    { id: 'combobox', title: 'Combobox', keywords: 'search select multiple multiselect autocomplete typeahead tags' },
     { id: 'choice', title: 'Choice', keywords: 'radio checkbox single multiple' },
     { id: 'switch', title: 'Switch', keywords: 'toggle boolean on off' },
     { id: 'slider', title: 'Slider', keywords: 'range value volume' },
@@ -34,7 +34,7 @@ export const componentGroups = [
   ] },
   { title: 'Feedback', items: [
     { id: 'badge', title: 'Badge', keywords: 'indicator count status dot' },
-    { id: 'alert', title: 'Alert', keywords: 'toast notification message status banner' },
+    { id: 'alert', title: 'Alert', keywords: 'toast notification message status banner snackbar error warning success' },
     { id: 'progress', title: 'Progress', keywords: 'loading spinner percentage circular linear' },
   ] },
   { title: 'Overlays', items: [
@@ -56,14 +56,14 @@ export const patternGroups = [
   ] },
   { title: 'Workflows', items: [
     { id: 'form', title: 'Form', keywords: 'fields input validation submit project' },
-    { id: 'wizard', title: 'Wizard', keywords: 'steps multi-step onboarding flow' },
+    { id: 'wizard', title: 'Wizard', keywords: 'steps multi-step onboarding flow stepper progress' },
     { id: 'file-upload', title: 'File Upload', keywords: 'attachment files dropzone drag drop' },
     { id: 'chatbot', title: 'Chatbot', keywords: 'chat assistant conversation message ai' },
   ] },
   { title: 'Feedback & overlays', items: [
     { id: 'dialog', title: 'Dialog', keywords: 'modal confirmation alert overlay' },
     { id: 'drawer', title: 'Drawer', keywords: 'panel sheet overlay details' },
-    { id: 'empty-state', title: 'Content State', keywords: 'no results missing unavailable feedback retry' },
+    { id: 'empty-state', title: 'Content State', keywords: 'no results missing unavailable feedback retry empty blank zero error offline loading skeleton 404' },
   ] },
 ] as const
 
@@ -102,12 +102,15 @@ export function onlyItems(groups: readonly Group[], ids: ReadonlySet<string>) {
 /** Groups whose items match every word of `query`: title, keywords and, unless `byGroup` is false, the group's title. */
 export function filterGroups(groups: readonly Group[], query: string, byGroup = true) {
   const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
+  // "datepicker" finds Date Picker and "multi step" finds multi-step: spaces and hyphens don't count.
+  const flat = (text: string) => text.replace(/[\s-]+/g, '')
   return groups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) =>
-        terms.every((term) => `${item.title} ${item.keywords} ${byGroup ? group.title : ''}`.toLowerCase().includes(term))
-      ),
+      items: group.items.filter((item) => {
+        const text = `${item.title} ${item.keywords} ${byGroup ? group.title : ''}`.toLowerCase()
+        return terms.every((term) => text.includes(term) || flat(text).includes(flat(term)))
+      }),
     }))
     .filter((group) => group.items.length > 0)
 }
