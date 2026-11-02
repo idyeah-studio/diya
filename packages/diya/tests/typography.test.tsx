@@ -43,13 +43,16 @@ it('defines the type scale once and sets no reader text below caption', () => {
   expect(literal).toEqual([])
   // Every size comes from the scale; a relative size keeps the caption floor.
   const sizes = [...css.matchAll(/font-size\s*:\s*([^;}]+)/g)].map((m) => m[1].trim())
-  const scaleToken = /^var\(--diya-text-(caption|body|large|title|heading|display|hero)\)$/
+  // On touch screens a field's text has a 16px floor, so iOS Safari doesn't zoom the page when it's tapped.
+  const floor = 'max\\(var\\(--diya-internal-field-min, 0px\\), var\\(--diya-text-(caption|body)\\)\\)'
+  expect(css).toMatch(/@media \(pointer: coarse\) \{\s*\.diya-root \{ --diya-internal-field-min: 16px; \}/)
+  const scaleToken = new RegExp(`^(var\\(--diya-text-(caption|body|large|title|heading|display|hero)\\)|${floor})$`)
   // Fields, choices and Prose size through their own variables, which take scale values only.
   const sized = [...css.matchAll(/(--diya-internal-field-font-size|--diya-internal-choice-font|--diya-internal-prose-font-[a-z0-9]+)\s*:\s*([^;}]+)/g)].map((m) => m[2].trim())
   expect(sized.length).toBeGreaterThan(0)
   expect(sized.filter((size) => !scaleToken.test(size))).toEqual([])
   const allowed = /^(var\(--diya-text-(caption|body|large|title|heading|display|hero)\)|var\(--diya-internal-(field-font-size|choice-font|prose-font-[a-z0-9]+)\)|inherit|max\(var\(--diya-text-caption\), [\d.]+em\))$/
-  expect(sizes.filter((size) => !allowed.test(size))).toEqual([])
+  expect(sizes.filter((size) => !allowed.test(size) && !new RegExp(`^${floor}$`).test(size))).toEqual([])
 })
 
 it('names every custom property as public or --diya-internal-*', () => {
