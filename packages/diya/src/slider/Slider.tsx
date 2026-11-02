@@ -60,7 +60,7 @@ const numberOr = (value: number | string | undefined, fallback: number) => {
 }
 const decimalsOf = (value: number) => (String(value).split('.')[1] ?? '').length
 const samePair = (a: [number, number], b: [number, number]) => a[0] === b[0] && a[1] === b[1]
-/** A labelled slider with one handle, or two for a start and end with `range`; 0–100 unless `min` and `max` say otherwise. */
+/** A labeled slider with one handle, or two for a start and end with `range`; 0–100 unless `min` and `max` say otherwise. */
 export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(props, ref) {
   const {
     disabled = false,

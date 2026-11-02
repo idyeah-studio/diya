@@ -59,7 +59,7 @@ export type CalendarProps = CalendarSingleProps | CalendarRangeProps
 const toMonth = (date: Date) => iso(date).slice(0, 7)
 const fromMonth = (text: string | undefined) => text && /^\d{4}-(0[1-9]|1[0-2])$/.test(text) ? new Date(Number(text.slice(0, 4)), Number(text.slice(5)) - 1, 1) : undefined
 
-/** A labelled month calendar that stays on the page; picks one ISO date, or a start and end date with `range`. */
+/** A labeled month calendar that stays on the page; picks one ISO date, or a start and end date with `range`. */
 export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calendar(props, ref) {
   const {
     label, hideLabel = false, size = 'medium', min, max, isDateUnavailable, disabled = false, month: monthProp, onMonthChange, className,
