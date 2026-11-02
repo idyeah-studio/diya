@@ -10,7 +10,7 @@ First public release, under the MIT License.
 
 ### Added
 
-- 29 React components and 13 patterns. `Chart` and `DataViz` are exported from
+- 30 React components and 13 patterns. `Chart` and `DataViz` are exported from
   `@idyeah/diya/charts` and render with the optional `echarts` peer dependency;
   everything else is exported from `@idyeah/diya`.
 - `DiyaProvider` with Light, Dark and Glass appearances, brand color, font,

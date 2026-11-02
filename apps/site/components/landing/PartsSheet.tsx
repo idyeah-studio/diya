@@ -31,7 +31,7 @@ export function PartsSheet() {
     <div className="ld-sheet-block">
       <div className="ld-sub-head">
         <div>
-          <h3>29 components.</h3>
+          <h3>30 components.</h3>
           <p>Button to Date Picker, built to work with a keyboard and a screen reader.</p>
         </div>
         <div className="ld-finish" role="group" aria-label="Finish of the sheet below">
@@ -108,7 +108,7 @@ export function PartsSheet() {
             </Cell>
             <div className="ld-cell" data-more="">
               <Link className="ld-more" href="/explore?area=components">
-                All 29 components
+                All 30 components
                 <span>And the 13 patterns below. →</span>
               </Link>
             </div>

@@ -5,7 +5,7 @@
   </picture>
 </h1>
 
-**A library for your next app.** 29 components and 13 patterns for React. Free, MIT, yours to own.
+**A library for your next app.** 30 components and 13 patterns for React. Free, MIT, yours to own.
 
 [Catalog](https://diya13.ai/explore) ·
 [Components](https://diya13.ai/explore?area=components) ·
@@ -280,9 +280,13 @@ to `--diya-space-8` for your own CSS.
 Everything in `styles.css` sits in a CSS cascade layer named `diya`. Rules
 outside a layer beat every layered rule, so your own CSS, and any `className`
 or `style` you pass to a component, wins over DIYA's without `!important`.
-DIYA's base styles also reach only its own elements: your headings, paragraphs
-and links inside the provider keep the styles you give them. To give your own
-articles DIYA's type, wrap them in `Prose`.
+DIYA's base styles reach its own elements and what sits inside them. Your
+headings, paragraphs, links and buttons placed straight in the provider keep the
+styles you give them. Inside a DIYA component or layout, such as Stack, Card or
+Drawer, plain ones start the way DIYA's own do: links in the text color with no
+underline, buttons with no border or fill, paragraphs muted, and no margins. Your
+CSS still wins, so give them a class, or use `TextLink` and `Button`. To give
+your own articles DIYA's type, wrap them in `Prose`.
 
 One thing to watch: a global reset of your own, such as
 `button { background: none; border: 0 }` or `* { margin: 0; padding: 0 }`,
