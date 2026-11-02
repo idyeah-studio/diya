@@ -66,7 +66,7 @@
   background: var(--bg);
 }
 :root[data-catalog='true'] body:has(.gallery-study) .gallery-study-backdrop {
-  background-image: var(--catalog-wash), url('/images/concept-architecture.png');
+  background-image: var(--catalog-wash), url('/images/concept-architecture.webp');
 }
 /* Dark Glass: the photo's bright light shaft shows through the translucent
    stage, so a soft shade over that area keeps text on the stage at 4.5:1. */
@@ -74,7 +74,7 @@
   background-image:
     radial-gradient(ellipse 40% 55% at 72% 52%, #00000099, #0000 75%),
     var(--catalog-wash),
-    url('/images/concept-architecture.png');
+    url('/images/concept-architecture.webp');
   background-size: auto, auto, cover;
   background-position: 0 0, 0 0, 50% 48%;
 }
@@ -325,7 +325,7 @@
 /* Landing retains its imagery; chrome uses the same material and state tokens. */
 :root[data-catalog='true'] body:has(.concept-landing) { color:var(--diya-color-text); background:var(--bg); }
 :root[data-catalog='true'] body:has(.concept-landing) .concept-backdrop {
-  background:var(--catalog-wash), url('/images/concept-architecture.png') center / cover;
+  background:var(--catalog-wash), url('/images/concept-architecture.webp') center / cover;
 }
 :root[data-catalog='true'] body:has(.concept-landing) .brand img { filter:var(--logo); }
 :root[data-catalog='true'] body:has(.concept-landing) .site-header nav {

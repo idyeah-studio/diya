@@ -80,7 +80,7 @@ export function CardLibrary() {
               media={
                 options.Image && (
                   <img
-                    src="/images/concept-architecture.png"
+                    src="/images/concept-architecture.webp"
                     alt="Sculptural concrete architecture"
                   />
                 )
