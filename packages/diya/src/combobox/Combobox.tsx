@@ -66,7 +66,7 @@ export type ComboboxMultipleProps = ComboboxBase & {
 /** One option is a string ('' for none); `multiple` takes and returns an array. Native input attributes and the ref go on the text input; `className` and `style` go on the outer field wrapper. */
 export type ComboboxProps = ComboboxSingleProps | ComboboxMultipleProps
 
-/** A labelled text field that filters a list of options as you type; picks one value, or several with `multiple`. */
+/** A labeled text field that filters a list of options as you type; picks one value, or several with `multiple`. */
 export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Combobox(props, ref) {
   const {
     label, options, disabled = false, error, helperText, hideLabel = false, size = 'medium', name, className, style, id: idProp,
@@ -201,7 +201,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
           setOpen(!isOpen)
         }}><Icon name="chevron-down" size={14} /></button>
     </div>
-    {(error || helperText) && <p id={`${id}-help`} className="diya-field-help">{error || helperText}</p>}
+    {(error || helperText) && <p id={`${id}-help`} className="diya-field-help">{error && <span aria-hidden="true">!</span>}{error || helperText}</p>}
     {isOpen && portal && createPortal(<ul ref={panel} id={`${id}-options`} className="diya-combobox-options"
       role="listbox" aria-label={label} aria-multiselectable={multiple || undefined} style={{ position: 'fixed', inset: 'auto', margin: 0 }}>
       {filtered.length ? filtered.map((option, index) => <li id={`${id}-option-${index}`} role="option" key={option.value}

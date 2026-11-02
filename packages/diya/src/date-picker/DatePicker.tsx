@@ -62,7 +62,7 @@ export type DatePickerRangeProps = DatePickerBase & {
 /** One ISO date ('' for none) by default; `range` takes and returns a DateRange. Native button attributes and the ref go on the trigger; `className` and `style` go on the outer field wrapper. */
 export type DatePickerProps = DatePickerSingleProps | DatePickerRangeProps
 
-/** A labelled date field that opens a calendar popup; picks one ISO date, or a start and end date with `range`. */
+/** A labeled date field that opens a calendar popup; picks one ISO date, or a start and end date with `range`. */
 export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(function DatePicker(props, ref) {
   const {
     label, disabled = false, error, hideLabel = false, helperText, size = 'medium', min, max, isDateUnavailable, name, className, style,
@@ -165,7 +165,7 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(functio
       <span id={`${id}-value`}>{value.start ? `${display(value.start, locale)}${range ? ` – ${value.end ? display(value.end, locale) : t.endDate}` : ''}` : range ? t.chooseRange : t.chooseDate} </span>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M7 3v4m10-4v4M3 10h18" /></svg>
     </button>
-    {(error || helperText) && <p id={`${id}-help`} className="diya-field-help">{error || helperText}</p>}
+    {(error || helperText) && <p id={`${id}-help`} className="diya-field-help">{error && <span aria-hidden="true">!</span>}{error || helperText}</p>}
     {isOpen && portal && createPortal(<div ref={calendar} id={`${id}-calendar`} className="diya-calendar"
       role="group" aria-label={t.chooseDate} onKeyDown={(event) => {
         escape(event)

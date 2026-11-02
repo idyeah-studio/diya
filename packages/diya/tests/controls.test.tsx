@@ -213,7 +213,10 @@ describe('portable field contracts', () => {
     expect(control.hasAttribute('aria-invalid')).toBe(false)
     view.rerender(<DiyaProvider><Switch label="Alerts" helperText="Sent by email" error="Add an email address first" checked={false} onCheckedChange={() => {}} /></DiyaProvider>)
     expect(control.getAttribute('aria-invalid')).toBe('true')
-    expect(document.getElementById(control.getAttribute('aria-describedby')!)?.textContent).toBe('Add an email address first')
+    const description = document.getElementById(control.getAttribute('aria-describedby')!)
+    expect(description?.textContent).toBe('!Add an email address first')
+    // The "!" every invalid field shows is for the eye only.
+    expect(description?.querySelector('[aria-hidden="true"]')?.textContent).toBe('!')
     expect(screen.queryByText('Sent by email')).toBe(null)
   })
 

@@ -111,7 +111,7 @@ export const items = {
     state: uncontrolledFieldState,
     tokens: ['--diya-radius-control', '--diya-color-accent-soft', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover',
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-text',
-      '--diya-corner-scale', '--diya-elevation', '--diya-text-body', '--diya-text-caption',
+      '--diya-corner-scale', '--diya-elevation', '--diya-text-body', '--diya-text-caption', '--diya-text-large',
       '--diya-text-title'],
     messages: 'datePicker',
   },

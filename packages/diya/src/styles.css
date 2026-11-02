@@ -568,11 +568,14 @@
   backdrop-filter: var(--diya-internal-backdrop);
 }
 
+/* Underline Tabs have no track, so Glass gives them no pane either. */
 .diya-root .diya-tabs[data-variant='underline'] .diya-tab-list {
   gap: 24px;
   padding: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--diya-color-line) 55%, transparent);
   border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .diya-root .diya-tab {
@@ -1174,7 +1177,9 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.diya-root .diya-text-field-description > span {
+.diya-root .diya-text-field-description > span,
+.diya-root .diya-field-help > span,
+.diya-root .diya-switch-description > span {
   display: inline-grid;
   place-items: center;
   border: 1px solid currentColor;
@@ -1414,7 +1419,7 @@
 .diya-root .diya-switch-label { font-size: var(--diya-text-body); }
 /* With helper text, the switch lines up with the label's line, not the middle of the block. */
 .diya-root .diya-switch-field:has(.diya-switch-description) { align-items: flex-start; }
-.diya-root .diya-switch-description { margin: 5px 0 0; color: var(--diya-color-muted); font-size: var(--diya-text-caption); line-height: 1.5; }
+.diya-root .diya-switch-description { margin: 5px 0 0; color: var(--diya-color-muted); font-size: var(--diya-text-caption); line-height: 1.5; display: flex; gap: 8px; align-items: baseline; }
 .diya-root .diya-avatar { display: inline-flex; position: relative; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; background: var(--diya-color-selected); color: var(--diya-color-text); font-size: var(--diya-text-large); font-weight: 500; }
 .diya-root .diya-avatar[data-size='small'] { width: 32px; height: 32px; font-size: var(--diya-text-caption); }
 .diya-root .diya-avatar[data-size='large'] { width: 64px; height: 64px; font-size: var(--diya-text-title); }
@@ -1591,7 +1596,7 @@
 .diya-root .diya-date-field{position:relative;width:100%;min-width:0;max-width:min(100%,400px);color:var(--diya-color-text)}
 .diya-root .diya-date-field>label{display:block;font-size:var(--diya-text-body);font-weight:500;margin-bottom:10px;overflow-wrap:anywhere}
 .diya-root .diya-date-trigger{width:100%;min-height:40px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px;border:1px solid var(--diya-color-line);border-radius:var(--diya-radius-control, calc(10px * var(--diya-corner-scale, 1)));background:var(--diya-color-hover);color:inherit;font-size:var(--diya-text-body);text-align:left}
-.diya-root .diya-date-field[data-size='small'] .diya-date-trigger{min-height:32px}.diya-root .diya-date-field[data-size='large'] .diya-date-trigger{min-height:48px}
+.diya-root .diya-date-field[data-size='small'] .diya-date-trigger{min-height:32px;font-size:var(--diya-text-caption)}.diya-root .diya-date-field[data-size='large'] .diya-date-trigger{min-height:48px;font-size:var(--diya-text-large)}
 .diya-root .diya-date-trigger:disabled{opacity:.45;cursor:not-allowed}.diya-root .diya-date-field[data-invalid='true'] .diya-date-trigger{border-color:var(--diya-color-error)}.diya-root .diya-field-help{font-size:var(--diya-text-caption);color:var(--diya-color-muted);margin:10px 0 0}.diya-root .diya-date-field[data-invalid='true'] .diya-field-help{color:var(--diya-color-error)}
 .diya-root .diya-calendar{position:absolute;top:calc(100% + 8px);left:0;width:300px;z-index:30;padding:16px;background:var(--diya-color-raised);border:1px solid var(--diya-color-line);border-radius:calc(16px * var(--diya-corner-scale, 1));box-shadow:0 calc(12px * var(--diya-elevation, 1)) calc(36px * var(--diya-elevation, 1)) #0003}
 .diya-root .diya-calendar-heading,
@@ -2264,6 +2269,9 @@
   line-height: 1.6;
   min-width: 0;
   overflow-wrap: anywhere;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
 }
 
 /* Every invalid field reads the same: a solid error border, and the message (with its "!") in the error color. */
@@ -2280,7 +2288,9 @@
 .diya-root .diya-select-field[data-invalid='true'] .diya-select-control,
 .diya-root .diya-textarea[data-invalid='true'] textarea,
 .diya-root .diya-combobox[data-invalid='true'] .diya-combobox-control,
-.diya-root .diya-date-field[data-invalid='true'] .diya-date-trigger {
+.diya-root .diya-date-field[data-invalid='true'] .diya-date-trigger,
+.diya-root .diya-switch[aria-invalid='true'],
+.diya-root .diya-choice[aria-invalid='true'] .diya-choice-option input:not(:checked) {
   border-color: var(--diya-color-error);
 }
 
