@@ -35,7 +35,7 @@ export type DrawerProps = Omit<DialogHTMLAttributes<HTMLDialogElement>, 'title' 
 }
 
 /** A modal panel that slides in from the side, traps focus and returns it on close. The ref, `className`, `style` and other attributes go to the native `dialog` element. */
-export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer({ open, onOpenChange, title, headingLevel = 3, description, children, footer, side = 'right', showClose = true, className, onCancel, onClose, ...props }, ref) {
+export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer({ open, onOpenChange, title, headingLevel = 3, description, children, footer, side = 'right', showClose = true, className, onCancel, onClose, onClick, ...props }, ref) {
   const t = useDiyaMessages('drawer', drawerMessages)
   const dialog = useRef<HTMLDialogElement>(null)
   const setDialog = useMemo(() => composeRefs<HTMLDialogElement>(dialog, ref as Ref<HTMLDialogElement>), [ref])
@@ -59,7 +59,14 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
     return () => { if (node?.open) node.close(); restoreFocus() }
   }, [])
   return <dialog {...props} ref={setDialog} className={cx('diya-workflow-surface diya-drawer-modal', className)} data-side={side} aria-labelledby={`${id}-title`} aria-describedby={description ? `${id}-description` : undefined}
-    onCancel={event => { onCancel?.(event); if (event.defaultPrevented) return; event.preventDefault(); onOpenChange(false) }} onClose={event => { onClose?.(event); if (event.currentTarget.open) return; restoreFocus(); if (open) onOpenChange(false) }}>
+    onCancel={event => { onCancel?.(event); if (event.defaultPrevented) return; event.preventDefault(); onOpenChange(false) }} onClose={event => { onClose?.(event); if (event.currentTarget.open) return; restoreFocus(); if (open) onOpenChange(false) }}
+    onClick={event => {
+      onClick?.(event)
+      // A click on the dimmed page (the dialog's backdrop) closes it, as it does a Dialog.
+      if (event.target !== event.currentTarget) return
+      const box = event.currentTarget.getBoundingClientRect()
+      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) onOpenChange(false)
+    }}>
     <header><div><Heading id={`${id}-title`} className="diya-drawer-title">{title}</Heading>{description && <p id={`${id}-description`}>{description}</p>}</div>{showClose && <Button variant="quiet" iconOnly aria-label={t.close} onClick={() => onOpenChange(false)}><Icon name="close" /></Button>}</header>
     <div className="diya-drawer-body">{children}</div>
     {footer && <footer>{footer}</footer>}

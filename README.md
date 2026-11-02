@@ -522,7 +522,7 @@ header edges, are worked out once per provider from these tokens.
 | Type scale | `--diya-text-caption`, `--diya-text-body`, `--diya-text-large`, `--diya-text-title`, `--diya-text-heading`, `--diya-text-display`, `--diya-text-hero` |
 | Line height | `--diya-leading-tight`, `--diya-leading-body` |
 | Space | `--diya-space-1` to `--diya-space-8`: 4, 8, 12, 16, 24, 32, 48 and 64px |
-| Shape and depth | `--diya-corner-scale`; `--diya-radius-control`, the one corner every control shares; `--diya-radius-surface`, the one corner every in-page surface shares; `--diya-shadow-raised` for cards, dialogs, toasts and floating menus; `--diya-elevation` scales popup and table shadows (`0` removes them) |
+| Shape and depth | `--diya-corner-scale`; `--diya-radius-control`, the one corner every control shares; `--diya-radius-surface`, the one corner every in-page surface shares; `--diya-shadow-raised` for cards, dialogs, drawers, toasts, menus and popups; `--diya-elevation` scales table, tooltip and floating chat shadows (`0` removes them). For a flat look, set `--diya-shadow-raised: none` as well |
 
 ```tsx
 <DiyaProvider

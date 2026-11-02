@@ -302,6 +302,19 @@ describe('Dialog and Drawer', () => {
     expect(drawer.classList.contains('diya-drawer-modal')).toBe(true)
     expect(within(drawer).getByRole('heading', { level: 2, name: 'Filters' })).toBeDefined()
   })
+
+  it('Drawer closes on a click on the dimmed page, like Dialog, and not on a click inside it', () => {
+    const change = vi.fn()
+    render(<DiyaProvider><Drawer open onOpenChange={change} title="Filters" data-testid="drawer"><p>Body</p></Drawer></DiyaProvider>)
+    const drawer = screen.getByTestId('drawer')
+    vi.spyOn(drawer, 'getBoundingClientRect').mockReturnValue({ left: 600, right: 1040, top: 0, bottom: 900, x: 600, y: 0, width: 440, height: 900, toJSON: () => ({}) })
+    fireEvent.click(screen.getByText('Body'), { clientX: 700, clientY: 100 })
+    fireEvent.click(drawer, { clientX: 800, clientY: 100 })
+    expect(change).not.toHaveBeenCalled()
+    // The backdrop belongs to the dialog element, so a click there lands on it, outside its box.
+    fireEvent.click(drawer, { clientX: 200, clientY: 100 })
+    expect(change).toHaveBeenCalledWith(false)
+  })
 })
 
 describe('escape hatches on Pagination and Tabs', () => {
