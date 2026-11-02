@@ -3012,3 +3012,10 @@ body:has(.concept-landing) .site-footer {
 :where(html[data-catalog='true']) .site-header nav a:last-child {
   display: inline-flex;
 }
+
+/* The site's global :focus-visible outline is unlayered, so inside DIYA's fields it beat
+   DIYA's own focus styles and drew a second, square ring on the native input. There,
+   focus falls back to DIYA's layer: one ring on the field. */
+:where(html[data-catalog='true']) :is(.diya-text-field-control, .diya-select-control, .diya-combobox-control, .diya-textarea, .diya-chat-composer) :is(input, select, textarea):focus-visible {
+  outline: revert-layer;
+}

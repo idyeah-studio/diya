@@ -62,8 +62,9 @@
   overscroll-behavior: contain;
   padding: 12px 26px 24px;
   scroll-padding-block: 20px 44px;
-  /* Content fades into the footer instead of showing through it. */
-  mask-image: linear-gradient(to bottom, transparent, #000 14px, #000 calc(100% - 28px), transparent);
+  /* Content fades into the footer instead of showing through it. The top stays sharp,
+     so the intro line reads in full before anything scrolls. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
   display: grid;
   align-content: start;
   gap: 32px;
