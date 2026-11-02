@@ -251,13 +251,15 @@ const block = (selector: string, tokens: Record<string, string>, indent: string)
  * `.diya-root.diya-root` in a download). Colour rules sit inside
  * `@media (forced-colors: none)`, as the SDK's own colour rules do, so
  * forced colours still win; glass and reduced transparency derive from
- * these base tokens, so they keep working.
+ * these base tokens, so they keep working. `accent: false` leaves the
+ * `--diya-color-accent*` tokens to DiyaProvider's brandColor.
  */
-export function appearanceCss(appearance: Appearance, scope: string): string {
+export function appearanceCss(appearance: Appearance, scope: string, { accent = true }: { accent?: boolean } = {}): string {
   const shared = block(scope, sharedTokens(appearance), '')
   const declarations = (t: Theme) => {
     const o = themeOutput(appearance, t)
-    return { ...o.tokens, ...(o.colorScheme ? { 'color-scheme': o.colorScheme } : {}) }
+    const tokens = accent ? o.tokens : Object.fromEntries(Object.entries(o.tokens).filter(([name]) => !name.startsWith('--diya-color-accent')))
+    return { ...tokens, ...(o.colorScheme ? { 'color-scheme': o.colorScheme } : {}) }
   }
   const themed = themes.map((t) => block(`${scope}[data-theme='${t}']`, declarations(t), '  ')).join('')
   /* theme="system" (the provider's default) follows the OS, as the SDK's own rules do. */
