@@ -21,7 +21,6 @@ vi.mock('../components/landing/islands', async () => ({
   InstallChip: (await import('../components/site/InstallChip')).InstallChip,
   CreateChip: (await import('../components/landing/CreateChip')).CreateChip,
   InstallLine: (await import('../components/landing/CreateChip')).InstallLine,
-  HeroPlates: (await import('../components/landing/HeroPlates')).HeroPlates,
   PartsSheet: (await import('../components/landing/PartsSheet')).PartsSheet,
   GlassCards: (await import('../components/landing/GlassBand')).GlassCards,
   ProScreen: (await import('../components/landing/ProScreen')).ProScreen,

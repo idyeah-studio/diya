@@ -7,7 +7,6 @@ import { ORIEL_SCREENS } from '../oriel/links'
 import {
   CreateChip,
   GlassCards,
-  HeroPlates,
   InstallLine,
   LaunchMoment,
   PartsSheet,
@@ -85,7 +84,6 @@ export function LaunchedLanding() {
                   Explore the library
                 </Link>
               </div>
-              <InstallLine />
               <ul className="ld-meta">
                 <li>
                   <a href={GITHUB_URL}>
@@ -95,10 +93,8 @@ export function LaunchedLanding() {
                 </li>
                 <li>MIT license</li>
                 <li>React 18.3 and 19</li>
-                <li>Light, Dark and Glass</li>
               </ul>
             </div>
-            <HeroPlates />
           </div>
         </section>
 
@@ -107,6 +103,7 @@ export function LaunchedLanding() {
             <div className="ld-section-head">
               <h2 id="package-title">What’s in the package</h2>
               <p>One install. Nothing held back for later.</p>
+              <InstallLine />
             </div>
             <PartsSheet />
             <div className="ld-patterns">
@@ -121,7 +118,6 @@ export function LaunchedLanding() {
                   <li key={id}>
                     <Link href={`/explore?area=patterns&pattern=${id}`}>
                       <span>{name}</span>
-                      <i aria-hidden="true" />
                       <span className="ld-index-go" aria-hidden="true">→</span>
                     </Link>
                   </li>

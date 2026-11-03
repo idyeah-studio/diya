@@ -106,7 +106,7 @@ function light(node: HTMLDivElement) {
   const mark = node.querySelector<SVGSVGElement>('.ld-moment-mark')!
   const glow = mark.querySelector<SVGElement>('.site-mark-glow')!
   const target = document.querySelector<HTMLElement>('[data-site-mark] svg')
-  const rise = Array.from(document.querySelectorAll<HTMLElement>('.ld-hero-copy > *, .ld-plates'))
+  const rise = Array.from(document.querySelectorAll<HTMLElement>('.ld-hero-copy > *'))
   const at = (ms: number) => ms / TOTAL_MS
 
   const first = mark.getBoundingClientRect()
