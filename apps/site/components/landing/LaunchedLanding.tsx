@@ -81,7 +81,7 @@ export function LaunchedLanding() {
               </p>
               <div className="ld-actions">
                 <CreateChip />
-                <Link className="diya-button ld-explore" data-variant="solid" data-size="large" data-shape="pill" href="/explore?area=components">
+                <Link className="diya-button ld-explore" data-variant="solid" data-size="medium" data-shape="pill" href="/explore?area=components">
                   Explore the library
                 </Link>
               </div>
