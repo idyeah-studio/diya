@@ -31,10 +31,6 @@
 .cm-foot-link:hover { color: var(--diya-color-text); background: var(--diya-color-hover); }
 .cm-foot-link[aria-current='page'] { color: var(--diya-color-text); background: var(--diya-color-selected); }
 .cm-foot-link:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: -2px; }
-.cm-foot-link .site-soon { gap: 6px; padding: 2px 8px 2px 7px; border-radius: 6px; font-size: 13px; }
-.cm-foot-link .site-soon::before { width: 6px; height: 6px; box-shadow: 0 0 8px color-mix(in srgb, var(--site-dot) 60%, transparent); }
-/* On the Relight page the row takes the current tint; the tag steps back so it still shows. */
-.cm-foot-link[aria-current='page'] .site-soon { background: var(--diya-color-hover); }
 
 /* /ask and /changelog, inside the quiet page frame (waitlist/WaitlistPage). */
 .waitlist-page .cm-page a:not(.diya-button) { color: var(--diya-color-text); }

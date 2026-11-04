@@ -81,7 +81,7 @@ export default function BoardPoster() {
           <div className="board-poster-head">
             <div>
               <h1 className="board-poster-title">Checkout redesign</h1>
-              <p className="board-poster-meta">Sprint 14 · Nov 3 to Nov 14 · 9 days left</p>
+              <p className="board-poster-meta">Sprint 14 · Nov 3 to Nov 14</p>
             </div>
             <div className="board-poster-actions">
               <span className="board-poster-team" role="group" aria-label={`${TEAM.length} people on this board`}>

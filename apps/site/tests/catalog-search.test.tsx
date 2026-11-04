@@ -69,7 +69,7 @@ describe('catalog search continuity', () => {
       </DiyaProvider>
     )
     const list = screen.getByRole('navigation', { name: 'Screen list' })
-    expect(within(list).getAllByRole('link').map((link) => link.textContent)).toEqual(['Sign in', 'Board'])
+    expect(within(list).getAllByRole('link').map((link) => link.textContent)).toEqual(['Sign in', 'Board, Soon'])
     expect(within(list).getByRole('link', { name: 'Sign in' }).getAttribute('aria-current')).toBe('page')
     expect(within(list).getByRole('group', { name: 'Sign-in & onboarding' })).toBeTruthy()
     // Groups, not regions: the gallery's category regions carry the same names.

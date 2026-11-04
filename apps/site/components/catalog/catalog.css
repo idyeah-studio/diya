@@ -43,6 +43,9 @@
    control, so it shows no ring. */
 .catalog-frame main h1:focus { outline: none; }
 
+/* A screen still to come (a poster) carries Relight's "Soon" tag in the list and in search. */
+:where(html[data-catalog='true']) .atomic-navigation-item:has(.site-soon) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
 /* Sidebar foot: the install command and the Relight entry, pinned under the list. */
 .catalog-foot { display: grid; gap: 10px; min-width: 0; }
 :where(html[data-catalog='true']) .component-browser .catalog-foot {

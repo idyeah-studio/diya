@@ -22,7 +22,9 @@ export function SidebarFoot({ pro = false, placement }: { pro?: boolean; placeme
         <li>
           <Link href="/explore?area=pro" className="cm-foot-link" aria-current={pro ? 'page' : undefined}>
             Relight<span className="cm-sr">, the DIYA Pro waitlist, </span>
-            <span className="site-soon">Soon</span>
+            <span className="site-soon" data-size="small">
+              Soon
+            </span>
           </Link>
         </li>
       </ul>

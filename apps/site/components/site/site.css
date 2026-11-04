@@ -162,6 +162,11 @@ html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2p
   background: var(--site-dot);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--site-dot) 18%, transparent), 0 0 10px color-mix(in srgb, var(--site-dot) 55%, transparent);
 }
+/* The small tag, in a 38px sidebar row; on the current row it steps back to the
+   hover tint so it still shows against the selected one. */
+.site-soon[data-size='small'] { gap: 6px; padding: 2px 8px 2px 7px; border-radius: 6px; font-size: 13px; }
+.site-soon[data-size='small']::before { width: 6px; height: 6px; box-shadow: 0 0 8px color-mix(in srgb, var(--site-dot) 60%, transparent); }
+[aria-current='page'] > .site-soon { background: var(--diya-color-hover); }
 .site-top-end { justify-self: end; display: flex; align-items: center; gap: 10px; min-width: 0; }
 .site-top-button {
   display: inline-flex;

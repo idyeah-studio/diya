@@ -72,14 +72,14 @@ export const screenGroups = CATEGORIES.map((category) => ({
   title: category,
   items: screens
     .filter((screen) => screen.category === category)
-    .map((screen) => ({ id: screen.id, title: screen.name, keywords: screen.keywords })),
+    .map((screen) => ({ id: screen.id, title: screen.name, keywords: screen.keywords, soon: screen.status === 'poster' })),
 }))
 
 export type CatalogListArea = 'components' | 'patterns' | 'screens'
 export type ComponentId = (typeof componentGroups)[number]['items'][number]['id']
 export type PatternId = (typeof patternGroups)[number]['items'][number]['id']
 
-type Group = { title: string; items: readonly { id: string; title: string; keywords: string }[] }
+type Group = { title: string; items: readonly { id: string; title: string; keywords: string; soon?: boolean }[] }
 
 export const catalogGroups: Record<CatalogListArea, readonly Group[]> = {
   components: componentGroups,
