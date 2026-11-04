@@ -127,7 +127,7 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
       >
         <div className="component-browser-heading">
           <div className="catalog-browser-title">
-            <h1 id={sheetTitle}>{words[area].title}</h1>
+            <div id={sheetTitle} className="catalog-browser-name">{words[area].title}</div>
             <button type="button" className="catalog-sheet-close" aria-label="Close" onClick={() => {
               setOpen(false)
               opener.current?.focus()

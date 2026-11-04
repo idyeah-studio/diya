@@ -57,7 +57,7 @@ function ScreensGallery({ requestsOpen, want, launched }: { requestsOpen: boolea
   return (
     <>
       <header className="screens-intro">
-        <h2>Whole pages, ready to paste</h2>
+        <h1>Whole pages, ready to paste</h1>
         <p>Each one is a single file built from DIYA, with sample data and its states already working. Paste it into Next.js or Vite and it runs.</p>
       </header>
       {CATEGORIES.map((category, index) => {
@@ -154,7 +154,7 @@ function ScreenDocument({ screen, source, builtWith }: { screen: ScreenEntry; so
           All screens
         </Link>
         <div className="screens-title">
-          <h2>{screen.name}</h2>
+          <h1>{screen.name}</h1>
           {poster && <Tag size="small">Coming soon</Tag>}
           {screen.status === 'building' && <Tag size="small">In progress</Tag>}
         </div>

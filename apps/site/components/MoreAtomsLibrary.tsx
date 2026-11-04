@@ -41,7 +41,7 @@ export function MoreAtomsLibrary({ component }: { component: MoreAtom }) {
   const results = ['Button', 'Text Input', 'Select', 'Choice', 'Badge', 'Tabs', 'Switch', 'Tooltip', 'Avatar', 'Search', 'Text Area'].filter((name) => name.toLowerCase().includes(value.trim().toLowerCase()))
   return <main id="content" className="gallery-study component-library button-library more-atoms-library" data-area="components">
     <div className="gallery-study-backdrop" aria-hidden="true" /><AtomicSidebar current={component} />
-    <div className="component-document"><header className="component-document-heading"><LibraryActions id={component} /><h2>{title}</h2></header>
+    <div className="component-document"><header className="component-document-heading"><h1>{title}</h1><LibraryActions id={component} /></header>
       <div className="component-preview-stage input-specimens">
         <div className="input-preview-controls">
           {component === 'tooltip' ? <Setting label="Position" options={['Top', 'Bottom', 'Left', 'Right']} value={placement} onChange={setPlacement} /> : <Setting label="Size" options={['Small', 'Medium', 'Large']} value={size} onChange={setSize} />}

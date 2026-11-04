@@ -198,7 +198,7 @@ describe('the Relight page in the catalog', () => {
   it('reuses the three steps, links the parts, and ends with the waitlist', async () => {
     const { container } = page()
     await act(async () => {})
-    screen.getByRole('heading', { level: 2, name: 'From a sketch to a screen you own.' })
+    screen.getByRole('heading', { level: 1, name: 'From a sketch to a screen you own.' })
     const steps = container.querySelector('ol.rl-steps')!
     expect(
       Array.from(steps.children).map((li) => li.querySelector('.rl-step-label')?.textContent?.replace(/^\d/, ''))

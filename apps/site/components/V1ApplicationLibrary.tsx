@@ -38,8 +38,8 @@ export function V1ApplicationLibrary({
       {sidebar ?? <PatternSidebar current={pattern} />}
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>{titles[pattern]}</h1>
           <LibraryActions id={pattern} />
-          <h2>{titles[pattern]}</h2>
         </header>
         <section className="pattern-stage" aria-label={`${titles[pattern]} playground`}>
           <div className="pattern-controls">

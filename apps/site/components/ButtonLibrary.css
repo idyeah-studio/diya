@@ -76,7 +76,7 @@
 :where(html[data-catalog='true']) .button-library .component-browser-heading {
   padding: 0;
 }
-:where(html[data-catalog='true']) .button-library .component-browser h1 {
+:where(html[data-catalog='true']) .button-library .component-browser .catalog-browser-name {
   margin: 0 0 24px;
   font-size: 20px;
 }

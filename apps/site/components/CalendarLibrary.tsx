@@ -35,8 +35,8 @@ export function CalendarLibrary() {
       <AtomicSidebar current="calendar" />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>Calendar</h1>
           <LibraryActions id="calendar" />
-          <h2>Calendar</h2>
         </header>
         <div className="component-preview-stage input-specimens">
           <div className="input-preview-controls">

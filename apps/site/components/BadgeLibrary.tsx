@@ -31,8 +31,8 @@ export function BadgeLibrary() {
       <div className="gallery-study-backdrop" aria-hidden="true" />
       <AtomicSidebar current="badge" />
       <div className="component-document">
-        <header className="component-document-heading"><LibraryActions id="badge" />
-          <h2>Badge</h2>
+        <header className="component-document-heading">          <h1>Badge</h1>
+<LibraryActions id="badge" />
         </header>
         <div className="component-preview-stage input-specimens">
           <div className="button-preview-controls">

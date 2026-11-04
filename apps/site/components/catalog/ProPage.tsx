@@ -21,7 +21,7 @@ export function ProPage() {
                 <span className="site-relight-name">Relight</span>
                 <span className="sr-only">,</span> <span className="site-soon">Coming to DIYA Pro</span>
               </p>
-              <h2 id="relight-title">From a sketch to a screen you own.</h2>
+              <h1 id="relight-title">From a sketch to a screen you own.</h1>
             </div>
             <div className="rl-body">
               <p>

@@ -187,8 +187,8 @@ export function TableLibrary() {
       <PatternSidebar current="table" />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>Table</h1>
           <LibraryActions id="table" />
-          <h2>Table</h2>
         </header>
         <section className="pattern-stage" aria-label="Table playground">
           <div className="pattern-controls table-pattern-controls">

@@ -33,8 +33,8 @@ export function RatingLibrary() {
       <AtomicSidebar current="rating" />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>Rating</h1>
           <LibraryActions id="rating" />
-          <h2>Rating</h2>
         </header>
         <div className="component-preview-stage input-specimens">
           <div className="input-preview-controls">

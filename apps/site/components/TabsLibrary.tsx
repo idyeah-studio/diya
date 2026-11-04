@@ -112,8 +112,8 @@ export function TabsLibrary() {
       <AtomicSidebar current="tabs" />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>Tabs</h1>
           <LibraryActions id="tabs" />
-          <h2>Tabs</h2>
         </header>
         <div className="component-preview-stage input-specimens">
           <div className="button-preview-controls">

@@ -48,8 +48,8 @@ export function CardLibrary() {
       <PatternSidebar current="card" />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>Card</h1>
           <LibraryActions id="card" />
-          <h2>Card</h2>
         </header>
         <section className="pattern-stage" aria-label="Card playground">
           <div className="pattern-controls">

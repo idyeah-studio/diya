@@ -32,7 +32,7 @@
   font-size: var(--diya-text-caption, 13px);
   letter-spacing: 0.15em;
 }
-:where(html[data-catalog='true']) .component-browser h1 {
+:where(html[data-catalog='true']) .component-browser .catalog-browser-name {
   font-size: 20px;
   font-weight: 400;
   letter-spacing: -0.03em;
@@ -129,7 +129,7 @@
   margin: 0 10px;
   color: #737e82;
 }
-:where(html[data-catalog='true']) .component-document-heading > h2 {
+:where(html[data-catalog='true']) .component-document-heading > h1 {
   font-size: 38px;
   font-weight: 400;
   letter-spacing: -0.045em;
@@ -287,7 +287,7 @@
     top: 0;
     max-height: 310px;
   }
-  :where(html[data-catalog='true']) .component-document-heading > h2 {
+  :where(html[data-catalog='true']) .component-document-heading > h1 {
     font-size: 30px;
   }
 }

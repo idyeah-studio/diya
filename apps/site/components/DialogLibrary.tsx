@@ -34,7 +34,7 @@ export function DialogLibrary() {
   }
   const field = <TextInput label="Project name" value={name} onValueChange={setName} required maxLength={80} />
   return <main id="content" className="gallery-study component-library pattern-library"><div className="gallery-study-backdrop" aria-hidden="true" /><PatternSidebar current="dialog" />
-    <div className="component-document"><header className="component-document-heading"><LibraryActions id="dialog" /><h2>Dialog</h2></header>
+    <div className="component-document"><header className="component-document-heading"><h1>Dialog</h1><LibraryActions id="dialog" /></header>
       <section className="pattern-stage" aria-label="Dialog playground"><div className="pattern-controls">
         <PreviewSetting label="Size" options={['Small','Medium','Large']} value={size} onChange={setSize} />
         <PreviewOptions items={[{label:'Description',checked:description,onChange:setDescription},{label:'Close button',checked:close,onChange:setClose},{label:'Divider',checked:divider,onChange:setDivider}]} />
