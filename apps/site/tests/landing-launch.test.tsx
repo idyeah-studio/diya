@@ -320,7 +320,7 @@ describe('the launched landing', () => {
       'Explore the library',
       'What’s in the package',
       'One install. Nothing held back for later.',
-      'Relight · coming to DIYA Pro',
+      'Relight, Coming to DIYA Pro',
       'From a sketch to a screen you own.',
       'Any picture of a screen. A screenshot, a wireframe, a whiteboard photo, a napkin sketch.',
       'Any kind of app. Dashboards, settings, sign-up flows, landing pages, admin tools.',

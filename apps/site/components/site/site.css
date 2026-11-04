@@ -134,6 +134,34 @@ html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2p
   background: var(--diya-color-raised);
   box-shadow: 0 1px 2px #0000001f, 0 0 0 .5px #0000000f;
 }
+/* Relight, named like a product, with the tag that says it's still coming:
+   the landing, the Relight page and the catalog sidebar. The dot is the
+   mark's own. */
+.site-relight { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 22px; }
+.site-relight-name { font-size: 26px; font-weight: 560; font-stretch: 108%; line-height: 1.1; letter-spacing: -.025em; color: var(--diya-color-text); }
+.site-soon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 9px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0;
+  white-space: nowrap;
+  color: var(--diya-color-text);
+  background: var(--diya-color-selected);
+}
+.site-soon::before {
+  content: '';
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--site-dot);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--site-dot) 18%, transparent), 0 0 10px color-mix(in srgb, var(--site-dot) 55%, transparent);
+}
 .site-top-end { justify-self: end; display: flex; align-items: center; gap: 10px; min-width: 0; }
 .site-top-button {
   display: inline-flex;
@@ -452,6 +480,8 @@ a.site-menu-row:hover, button.site-menu-row:hover { background: var(--diya-color
   .site-top-nav, .site-chip, .site-top-button, .site-top .appearance-popover > summary, .site-top-menu-button { backdrop-filter: none; }
 }
 @media (forced-colors: active) {
+  .site-soon { border: 1px solid CanvasText; }
+  .site-soon::before { forced-color-adjust: none; background: CanvasText; box-shadow: none; }
   .site-top-nav, .site-top-button, .site-chip, .site-chip-key, .site-menu { border: 1px solid CanvasText; }
   .site-top-nav a[aria-current] { outline: 2px solid CanvasText; }
   /* The D dot keeps its place in forced colors, in the text color. */

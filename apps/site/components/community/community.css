@@ -11,24 +11,18 @@
 .site-foot .cm-trust a:hover { text-decoration-color: currentColor; }
 .site-foot ul.cm-checks { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 16px; }
 
-/* Catalog sidebar foot: one line of two links under the install chip. */
-.cm-foot-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
+/* Catalog sidebar foot: two rows built like the sidebar's own items (same
+   size, edge, hover and current tint), then the install chip. */
+.cm-foot-links { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
 .cm-foot-link {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  min-height: 36px;
-  padding: 0 8px;
-  margin: 0 -8px;
-  border-radius: 10px;
-  font-size: 14px;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 12px 0 16px;
+  border-radius: 8px;
+  font-size: 13px;
   line-height: 1.3;
   color: var(--diya-color-muted);
   text-decoration: none;
@@ -36,9 +30,11 @@
 }
 .cm-foot-link:hover { color: var(--diya-color-text); background: var(--diya-color-hover); }
 .cm-foot-link[aria-current='page'] { color: var(--diya-color-text); background: var(--diya-color-selected); }
-.cm-foot-link:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 2px; }
-/* Under 900px the foot is a wide card below the page: the links sit at the chip's height. */
-.catalog-below .cm-foot-links { justify-content: flex-start; gap: 0 28px; }
+.cm-foot-link:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: -2px; }
+.cm-foot-link .site-soon { gap: 6px; padding: 2px 8px 2px 7px; border-radius: 6px; font-size: 13px; }
+.cm-foot-link .site-soon::before { width: 6px; height: 6px; box-shadow: 0 0 8px color-mix(in srgb, var(--site-dot) 60%, transparent); }
+/* On the Relight page the row takes the current tint; the tag steps back so it still shows. */
+.cm-foot-link[aria-current='page'] .site-soon { background: var(--diya-color-hover); }
 
 /* /ask and /changelog, inside the quiet page frame (waitlist/WaitlistPage). */
 .waitlist-page .cm-page a:not(.diya-button) { color: var(--diya-color-text); }

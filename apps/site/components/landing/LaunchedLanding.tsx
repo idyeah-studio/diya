@@ -188,8 +188,9 @@ export function LaunchedLanding() {
           <div className="ld-wrap">
             <div className="ld-pro-head">
               <div>
-                <p className="ld-eyebrow">
-                  <b>Relight</b> · coming to DIYA Pro
+                <p className="site-relight">
+                  <span className="site-relight-name">Relight</span>
+                  <span className="sr-only">,</span> <span className="site-soon">Coming to DIYA Pro</span>
                 </p>
                 <h2 id="pro-title">From a sketch to a screen you own.</h2>
               </div>

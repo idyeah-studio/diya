@@ -17,8 +17,9 @@ export function ProPage() {
         <article className="rl-page" aria-labelledby="relight-title">
           <header className="rl-head">
             <div>
-              <p className="rl-eyebrow">
-                <b>Relight</b> · coming to DIYA Pro
+              <p className="site-relight">
+                <span className="site-relight-name">Relight</span>
+                <span className="sr-only">,</span> <span className="site-soon">Coming to DIYA Pro</span>
               </p>
               <h2 id="relight-title">From a sketch to a screen you own.</h2>
             </div>
