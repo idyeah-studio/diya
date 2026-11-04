@@ -19,7 +19,9 @@
   border: 1px solid;
   border-radius: 24px;
   color: var(--diya-color-text);
-  font-family: Arial, Helvetica, sans-serif;
+  /* DIYA Sans by name, not --diya-font: picking a font here restyles the
+     preview, never the panel itself. */
+  font-family: 'DIYA Sans', 'DIYA Sans Fallback', Arial, Helvetica, sans-serif;
   font-size: 15px;
   line-height: 1.4;
 }
@@ -34,7 +36,7 @@
 }
 :where(html[data-catalog='true']) .customize-eyebrow {
   display: block;
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: 0.08em;
   margin-bottom: 6px;
   color: var(--diya-color-muted);
@@ -548,7 +550,7 @@
   display: block;
   padding: 10px 10px 4px;
   color: var(--diya-color-muted);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'DIYA Sans', 'DIYA Sans Fallback', Arial, Helvetica, sans-serif;
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;

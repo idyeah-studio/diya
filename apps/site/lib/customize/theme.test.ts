@@ -139,8 +139,17 @@ describe('one brand colour', () => {
     expect(contrast(pale['--diya-color-accent-ink'], '#FFFFFF')).toBeGreaterThanOrEqual(4.5)
   })
 
-  it('offers suggestions that all carry white text at AA', () => {
-    for (const swatch of BRAND_SUGGESTIONS) expect(contrast('#FFFFFF', swatch.hex), swatch.name).toBeGreaterThanOrEqual(4.5)
+  it('offers suggestions whose text reads at AA, with no contrast warning in either theme', () => {
+    // Neutral isn't a brand: choosing it clears the brand.
+    for (const swatch of BRAND_SUGGESTIONS.filter((swatch) => swatch.name !== 'Neutral')) {
+      const appearance = effectiveAppearance({ 'colors.light.accent': swatch.hex, 'colors.dark.accent': swatch.hex })
+      for (const theme of ['light', 'dark'] as const) {
+        const tokens = themeTokens(appearance, theme)
+        const text = tokens['--diya-color-accent-text'] ?? '#FAFAFA'
+        expect(contrast(text, swatch.hex), `${swatch.name} ${theme}`).toBeGreaterThanOrEqual(4.5)
+      }
+      expect(contrastIssues(appearance), swatch.name).toEqual([])
+    }
   })
 
   it('reads an old saved brand as the one brand, and drops the old periwinkle default', () => {

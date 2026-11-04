@@ -39,16 +39,20 @@ export const BRAND_DEFAULT: Readonly<Record<Theme, string>> = Object.freeze({ li
 export const BRAND_DEFAULT_NAME = 'Neutral (DIYA default)'
 
 /**
- * Starting points for a brand, each dark enough for white text at 4.5:1.
- * Neutral is DIYA's own default; choosing it clears the brand.
+ * Starting points for a brand, from the bright family Oriel uses. Each one
+ * passes the panel's own checks in both themes (3:1 against the page, its text
+ * at 4.5:1, picked white or dark for it), so a suggestion never starts with a
+ * warning: Ember is a touch deeper than Oriel's, and Violet stands in for a
+ * yellow no bright shade of which reaches 3:1 on white. Neutral is DIYA's own
+ * default; choosing it clears the brand.
  */
 export const BRAND_SUGGESTIONS = [
   { name: 'Neutral', hex: BRAND_DEFAULT.light },
-  { name: 'Ink blue', hex: '#1F4E7A' },
-  { name: 'Forest', hex: '#2F5D46' },
-  { name: 'Brass', hex: '#7D5F22' },
-  { name: 'Terracotta', hex: '#A3462A' },
-  { name: 'Plum', hex: '#6B3A5B' },
+  { name: 'Ocean', hex: '#0A7CFF' },
+  { name: 'Jade', hex: '#1FA855' },
+  { name: 'Ember', hex: '#F25C10' },
+  { name: 'Rose', hex: '#FF375F' },
+  { name: 'Violet', hex: '#9B51E0' },
 ] as const
 
 export const CORNERS_DEFAULT = 10
