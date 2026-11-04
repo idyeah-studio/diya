@@ -56,7 +56,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
+  height: 40px;
+}
+/* Dot specimens: on a round icon key, and beside a label. */
+:where(html[data-catalog='true']) .badge-on-icon {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  color: var(--diya-color-text);
+  background: var(--diya-color-hover);
+}
+:where(html[data-catalog='true']) .badge-on-icon .diya-badge {
+  position: absolute;
+  top: 8px;
+  right: 9px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px var(--diya-color-raised);
+}
+:where(html[data-catalog='true']) .badge-beside {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--diya-color-text);
 }
 :where(html[data-catalog='true']) .badge-count-specimen > span {
   color: var(--diya-color-muted);
