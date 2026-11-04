@@ -10,10 +10,11 @@
 :where(html[data-catalog='true']) .screens-intro h1,
 :where(html[data-catalog='true']) .screens-title h1 {
   margin: 0;
-  font-size: 38px;
-  font-weight: 400;
-  line-height: 1.15;
-  letter-spacing: -0.045em;
+  font-size: 34px;
+  font-weight: 560;
+  font-stretch: 108%;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
   color: var(--diya-color-text);
 }
 :where(html[data-catalog='true']) .screens-intro p,

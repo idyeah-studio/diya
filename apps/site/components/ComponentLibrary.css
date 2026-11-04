@@ -129,10 +129,14 @@
   margin: 0 10px;
   color: #737e82;
 }
+/* Page titles use the site's headline voice (the landing's section headings),
+   so the title outweighs the section headings under it. */
 :where(html[data-catalog='true']) .component-document-heading > h1 {
-  font-size: 38px;
-  font-weight: 400;
-  letter-spacing: -0.045em;
+  font-size: 34px;
+  font-weight: 560;
+  font-stretch: 108%;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
   margin: 15px 0;
 }
 :where(html[data-catalog='true']) .component-document-heading > p {
