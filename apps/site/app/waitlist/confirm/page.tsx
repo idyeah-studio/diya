@@ -21,7 +21,10 @@ export default async function WaitlistConfirm({ searchParams }: { searchParams: 
   const valid = typeof token === 'string' && token.length > 0 && token.length <= 200
   return (
     <WaitlistPage labelledBy="waitlist-confirm-heading" chrome={catalogIsOpen()}>
-      <p className="wp-eyebrow">Relight · coming to DIYA Pro</p>
+      <p className="site-relight">
+        <span className="site-relight-name">Relight</span>
+        <span className="sr-only">,</span> <span className="site-soon">Coming to DIYA Pro</span>
+      </p>
       <h1 id="waitlist-confirm-heading">{valid ? 'One click and you’re on the list.' : 'That link didn’t work.'}</h1>
       {valid ? (
         <>
