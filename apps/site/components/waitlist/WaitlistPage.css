@@ -1,8 +1,8 @@
 /* Confirmed, unsubscribe and privacy pages: one column, plain type, public tokens only. */
 /* With the site header and footer (from launch): the site's own ground, like every public page. */
 .waitlist-shell { min-height: 100vh; background: var(--site-ground); }
-html:has(.waitlist-shell) body { background: #141515; }
-html[data-theme='light']:has(.waitlist-shell) body { background: #f2f2ef; }
+html:has(.waitlist-shell), html:has(.waitlist-shell) body { background: #141515; }
+html[data-theme='light']:has(.waitlist-shell), html[data-theme='light']:has(.waitlist-shell) body { background: #f2f2ef; }
 .waitlist-shell .site-foot p { color: var(--diya-color-muted); }
 /* The site's focus ring, not the older globals' purple one. */
 :is(.waitlist-shell, .waitlist-page) :focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 3px; }

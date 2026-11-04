@@ -31,8 +31,9 @@
 .site-root .segmented input:focus-visible + span { outline-color: var(--diya-color-text); }
 .site-mono, .site-root code { font-family: var(--site-mono); }
 html:has(.site-root) { scroll-padding-top: 96px; }
-html:has(.site-root) body { background: #141515; }
-html[data-theme='light']:has(.site-root) body { background: #f2f2ef; }
+/* html takes the body's ground too, so Safari's overscroll shows the same color. */
+html:has(.site-root), html:has(.site-root) body { background: #141515; }
+html[data-theme='light']:has(.site-root), html[data-theme='light']:has(.site-root) body { background: #f2f2ef; }
 html:has(:is(.site-root, .waitlist-shell)) .skip-link { z-index: 70; background: var(--diya-color-accent, #e8e8e8); color: var(--diya-color-accent-text, #1c1c1c); border-radius: 999px; padding: 12px 18px; font-size: 15px; }
 /* The catalog's skip link ring, not the older globals' purple one. */
 html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2px solid #1c1c1c; outline-offset: 2px; }
