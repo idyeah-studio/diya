@@ -450,18 +450,24 @@
   --preview-inset:32px;
   padding:0 var(--preview-inset);
 }
+@media(max-width:560px) {
+  :root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) { --preview-inset:20px; }
+}
 :root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage > :is(.button-preview-controls,.input-preview-controls) {
   margin-inline:calc(-1 * var(--preview-inset,32px));
   padding-inline:var(--preview-inset,32px);
 }
 
-/* Specimens sit on the same raised material as the pattern examples. */
-:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section {
+/* Specimens sit on the same raised material as the pattern examples. Customize
+   wraps them in a display: contents scope, so both nestings are named. */
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section,
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope > section {
   position:relative;
   isolation:isolate;
   flex:1;
 }
-:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before {
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before,
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope > section::before {
   content:'';
   position:absolute;
   inset:0 calc(-1 * var(--preview-inset,32px));
@@ -471,15 +477,39 @@
   background:var(--material-raised);
 }
 @supports(backdrop-filter:blur(14px)) {
- :root[data-catalog='true'][data-glass='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before {
+ :root[data-catalog='true'][data-glass='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before,
+ :root[data-catalog='true'][data-glass='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope > section::before {
    background:color-mix(in srgb,var(--material-raised) 78%,transparent);
  }
 }
 @media(prefers-reduced-transparency:reduce) {
- :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before { background:var(--material-raised); }
+ :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before,
+ :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope > section::before { background:var(--material-raised); }
 }
 @media(forced-colors:active) {
- :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before { background:Canvas; }
+ :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before,
+ :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope > section::before { background:Canvas; }
+}
+
+/* On a phone the component or pattern comes first and its options follow, so
+   the first screen shows what the page is about. The divider and the canvas's rounded
+   corners swap ends with them. */
+@media(max-width:560px) {
+  :root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage > :is(.button-preview-controls,.input-preview-controls) {
+    order:2;
+    border-bottom:0;
+    border-top:1px solid var(--diya-color-line);
+  }
+  :root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before,
+  :root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope > section::before {
+    border-radius:21px 21px 0 0;
+  }
+  :root[data-catalog='true'] body:has(.gallery-study) .pattern-stage { display:flex; flex-direction:column; }
+  :root[data-catalog='true'] body:has(.gallery-study) .pattern-stage > .pattern-controls {
+    order:2;
+    border-bottom:0;
+    border-top:1px solid var(--diya-color-line);
+  }
 }
 
 /* Patterns mirror component panels: recessed controls, a raised canvas below. */

@@ -213,6 +213,7 @@
 :where(html[data-catalog='true']) .button-mini-switch span {
   display: block;
   padding: 7px 12px;
+  white-space: nowrap;
   border-radius: 999px;
   font-size: var(--diya-text-caption, 13px);
   color: var(--diya-color-muted);
@@ -224,6 +225,13 @@
 :where(html[data-catalog='true']) .button-mini-switch input:focus-visible + span {
   outline: 2px solid var(--diya-color-text);
   outline-offset: 3px;
+}
+/* On a phone a segment label never breaks inside its pill: the pills tighten,
+   and on the narrowest screens the group scrolls, with its ring drawn inset. */
+@media (max-width: 560px) {
+  :where(html[data-catalog='true']) .button-mini-switch { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  :where(html[data-catalog='true']) .button-mini-switch span { padding-inline: 10px; }
+  :where(html[data-catalog='true']) .button-mini-switch input:focus-visible + span { outline-offset: -2px; }
 }
 :where(html[data-catalog='true']) .button-specimens > section {
   display: block;
