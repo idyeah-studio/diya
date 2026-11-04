@@ -10,7 +10,7 @@
   /* A third column: same top, inset and radius as the left sidebar card,
      clear of the site header and its appearance control. */
   top: 104px;
-  right: 24px;
+  right: 4vw;
   bottom: 24px;
   width: 360px;
   display: flex;
@@ -729,7 +729,7 @@
 @media (min-width: 1360px) {
   /* Make room beside the stage rather than covering it. */
   :root[data-catalog='true'][data-customize-open='true'] .gallery-study {
-    padding-right: 408px;
+    padding-right: calc(360px + 4vw + 24px);
   }
 }
 @media (max-width: 1359px) {

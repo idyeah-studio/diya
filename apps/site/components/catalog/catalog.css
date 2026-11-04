@@ -127,6 +127,10 @@
 }
 @media (max-width: 760px) {
   .catalog-below .catalog-foot { padding: 16px; }
+  /* Phone gutters are 16px, the header's own, so their edges line up. */
+  :root[data-catalog='true'] body:has(.gallery-study) .catalog-frame :is(.gallery-study, .component-library) { padding-left: 16px; padding-right: 16px; }
+  .catalog-below { padding-inline: 16px; }
+  .catalog-frame .site-foot { padding-inline: 16px; }
 }
 
 /* Phones: a page's actions sit under its title rather than squeezing it. */

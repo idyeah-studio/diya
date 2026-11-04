@@ -89,6 +89,19 @@ html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2p
   padding: 0 56px;
 }
 .site-top-home { justify-self: start; display: block; width: 92px; color: var(--diya-color-text); border-radius: 6px; }
+/* The header's edges follow the page under it. The catalog's content runs on a
+   4vw gutter (3vw under 1000px), not the landing's centered 1328px column, so
+   there the bar goes full width on the same gutter; on phones both use 16px.
+   The landing's tablet hero uses 40px, so its header does too. */
+@media (min-width: 761px) {
+  .catalog-frame .site-top-bar { max-width: none; padding-inline: 4vw; }
+}
+@media (min-width: 761px) and (max-width: 1000px) {
+  .catalog-frame .site-top-bar { padding-inline: 3vw; }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .site-landing-root .site-top-bar { padding-inline: 40px; }
+}
 /* Current and selected, one system for the site and the catalog, in DIYA's
    own tokens (the same split DIYA's components make):
    - Where you are (catalog sidebar, the Relight entry, the phone menu): a
