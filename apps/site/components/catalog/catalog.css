@@ -86,7 +86,8 @@
 .catalog-below { display: none; }
 @media (max-width: 900px) {
   :where(html[data-catalog='true']) .component-browser .catalog-foot { display: none; }
-  .catalog-below { display: block; position: relative; padding: 0 3vw 8px; }
+  /* After the page's layer, like the footer: z-index 1 keeps the fixed photo off it. */
+  .catalog-below { display: block; position: relative; z-index: 1; padding: 0 3vw 8px; }
   .catalog-below .catalog-foot {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
     align-items: center;
@@ -136,7 +137,9 @@
 
 /* The footer sits in the content column, beside the fixed sidebar, on the
    catalog's own ground rather than the landing's solid band. */
-.catalog-frame .site-foot { position: relative; padding: 72px 4vw 48px; background: transparent; }
+/* The page (main) is its own layer at z-index 1 with the photo fixed inside it;
+   the footer comes after it at the same level, so the photo can't cover it. */
+.catalog-frame .site-foot { position: relative; z-index: 1; padding: 72px 4vw 48px; background: transparent; }
 @media (min-width: 901px) {
   .catalog-frame .site-foot { margin-left: calc(4vw + 308px); padding-left: 0; }
 }
