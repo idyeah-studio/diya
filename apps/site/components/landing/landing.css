@@ -147,6 +147,8 @@
   background: var(--site-ground);
 }
 .ld-sheet-stage[data-glass='true'] .ld-cell { background: color-mix(in srgb, var(--diya-color-raised) 48%, transparent); backdrop-filter: blur(18px) saturate(1.1); }
+/* Light Glass over the photo's darker patch needs more white for muted text to keep 4.5:1. */
+.ld-sheet-provider[data-theme='light'] .ld-sheet-stage[data-glass='true'] .ld-cell { background: color-mix(in srgb, var(--diya-color-raised) 66%, transparent); }
 .ld-cell-name { justify-self: start; font-size: 13px; font-weight: 500; color: var(--diya-color-text); border-radius: 4px; }
 .ld-cell-name:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ld-cell-stage { display: grid; place-items: center; min-width: 0; padding-top: 16px; }
@@ -233,8 +235,16 @@
 .ld-glass-cards figure { margin: 0; min-width: 0; }
 .ld-glass-card { background: transparent; }
 .ld-glass-card .diya-card { max-width: none; box-shadow: var(--site-plate-shadow); }
-.ld-glass-cards figcaption { margin-top: 14px; font: 13px var(--site-mono); text-align: center; color: var(--diya-color-muted); }
-.ld-glass-cards figure + figure figcaption { color: var(--diya-color-text); }
+/* Both captions in the text color on a soft lift, so they hold over the photo at any width. */
+.ld-glass-cards figcaption {
+  width: fit-content;
+  margin: 14px auto 0;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font: 13px var(--site-mono);
+  color: var(--diya-color-text);
+  background: color-mix(in srgb, var(--diya-color-raised) 74%, transparent);
+}
 
 /* Relight, the DIYA Pro waitlist */
 .ld-pro { padding: 120px 56px 112px; background: var(--site-ground-2); }
@@ -391,6 +401,11 @@
   .ld-promise li { font-size: 30px; }
 }
 
+/* Below 960px three columns leave Tabs and Breadcrumbs too narrow: two. */
+@media (max-width: 959px) {
+  .ld-sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 /* Phone */
 @media (max-width: 760px) {
   .ld-hero { padding: 0 16px; }
@@ -482,7 +497,8 @@
   .ld-screens-list a:hover .ld-screens-picture img { transform: none; }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .ld-sheet-stage[data-glass='true'] .ld-cell { background: var(--diya-color-raised); backdrop-filter: none; }
+  .ld-sheet-stage[data-glass='true'] .ld-cell,
+  .ld-sheet-provider[data-theme='light'] .ld-sheet-stage[data-glass='true'] .ld-cell { background: var(--diya-color-raised); backdrop-filter: none; }
 }
 @media (forced-colors: active) {
   .ld-photo, .ld-sheet-photo { display: none; }
