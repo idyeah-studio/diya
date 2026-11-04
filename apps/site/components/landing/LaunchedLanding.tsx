@@ -304,8 +304,9 @@ function ProStages() {
           Made of <code>SideNavigation</code> · <code>Metric</code> · <code>Table</code> · <code>Tag</code>
         </p>
         <p className="ld-made-of ld-real">
-          <a href={ORIEL_SCREENS.invoices.href}>
-            This screen is real. Open Oriel <span aria-hidden="true">→</span>
+          <a href={ORIEL_SCREENS.invoices.href} target="_blank" rel="noopener">
+            This screen is real. Open Oriel <span aria-hidden="true">↗</span>
+            <span className="sr-only">, in a new tab</span>
           </a>
         </p>
       </li>

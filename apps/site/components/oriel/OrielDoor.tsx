@@ -17,8 +17,9 @@ export function OrielDoor({ path }: { path: string }) {
   return (
     <aside className="oriel-door" aria-label="This pattern in a real app">
       <p>
-        <a href={screen.href}>
-          See it in a real screen: Oriel’s {screen.name} <span aria-hidden="true">→</span>
+        <a href={screen.href} target="_blank" rel="noopener">
+          See it in a real screen: Oriel’s {screen.name} <span aria-hidden="true">↗</span>
+          <span className="sr-only">, in a new tab</span>
         </a>
       </p>
     </aside>

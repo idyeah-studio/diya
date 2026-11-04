@@ -1,3 +1,4 @@
+import { ArrowUpRight } from 'lucide-react'
 import { GitHubIcon } from '../site/links'
 import { ORIEL_SCREENS, ORIEL_SOURCE_URL, ORIEL_URL } from '../oriel/links'
 
@@ -23,8 +24,10 @@ export function OrielBand() {
             Invoices are just the example. The same pieces build a booking tool, a CRM, or your settings page.
           </p>
           <div className="ld-oriel-actions">
-            <a className="diya-button" data-variant="solid" data-size="large" data-shape="pill" href={ORIEL_URL}>
+            <a className="diya-button" data-variant="solid" data-size="large" data-shape="pill" href={ORIEL_URL} target="_blank" rel="noopener">
               Open Oriel
+              <ArrowUpRight size={16} strokeWidth={1.6} aria-hidden="true" />
+              <span className="sr-only">, in a new tab</span>
             </a>
             <a className="ld-oriel-source" href={ORIEL_SOURCE_URL}>
               <GitHubIcon size={15} />
@@ -35,11 +38,12 @@ export function OrielBand() {
         <ol className="ld-oriel-screens" aria-label="Oriel’s screens">
           {Object.values(ORIEL_SCREENS).map((screen) => (
             <li key={screen.name}>
-              <a href={screen.href}>
+              <a href={screen.href} target="_blank" rel="noopener">
                 <span className="ld-oriel-name">{screen.name}</span>
                 <span className="ld-oriel-shows">{screen.shows}</span>
+                <span className="sr-only">, in a new tab</span>
                 <span className="ld-index-go" aria-hidden="true">
-                  →
+                  ↗
                 </span>
               </a>
             </li>
