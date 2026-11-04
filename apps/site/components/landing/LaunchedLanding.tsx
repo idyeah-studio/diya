@@ -305,7 +305,7 @@ function ProStages() {
         </p>
         <p className="ld-made-of ld-real">
           <a href={ORIEL_SCREENS.invoices.href} target="_blank" rel="noopener">
-            This screen is real. Open Oriel <span aria-hidden="true">↗</span>
+            This screen is real. Open Oriel <span aria-hidden="true">→</span>
             <span className="sr-only">, in a new tab</span>
           </a>
         </p>

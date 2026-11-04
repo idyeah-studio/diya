@@ -1,4 +1,3 @@
-import { ArrowUpRight } from 'lucide-react'
 import { GitHubIcon } from '../site/links'
 import { ORIEL_SCREENS, ORIEL_SOURCE_URL, ORIEL_URL } from '../oriel/links'
 
@@ -26,7 +25,6 @@ export function OrielBand() {
           <div className="ld-oriel-actions">
             <a className="diya-button" data-variant="solid" data-size="large" data-shape="pill" href={ORIEL_URL} target="_blank" rel="noopener">
               Open Oriel
-              <ArrowUpRight size={16} strokeWidth={1.6} aria-hidden="true" />
               <span className="sr-only">, in a new tab</span>
             </a>
             <a className="ld-oriel-source" href={ORIEL_SOURCE_URL}>
@@ -43,7 +41,7 @@ export function OrielBand() {
                 <span className="ld-oriel-shows">{screen.shows}</span>
                 <span className="sr-only">, in a new tab</span>
                 <span className="ld-index-go" aria-hidden="true">
-                  ↗
+                  →
                 </span>
               </a>
             </li>

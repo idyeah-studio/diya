@@ -6,7 +6,7 @@ import {
   Avatar, Button, Card, Choice, Drawer, List, PageHeader, Progress, SideNavigation, SiteHeader, Stack, Switch, Tag, TextInput, TextLink, Toast, useDiyaAppearance,
 } from '@idyeah/diya'
 import {
-  ArrowUpRight, BookOpen, Circle, CircleCheck, CircleDashed, FileText, FolderKanban, House, Inbox, ListChecks, LucideProvider, MessageCircle, Plus, Settings, Users,
+  BookOpen, Circle, CircleCheck, CircleDashed, FileText, FolderKanban, House, Inbox, LayoutTemplate, ListChecks, LucideProvider, MessageCircle, Plus, Settings, Users,
 } from 'lucide-react'
 
 // Your product, who is signed in, and what today holds.
@@ -206,7 +206,7 @@ export default function GettingStartedScreen() {
               <Card title="Need a hand?" headingLevel={2} description="A person answers, usually within the hour." footer={<Button variant="outline" size="small" href="/support"><MessageCircle /> Message support</Button>}>
                 <Stack gap={3}>
                   <TextLink href="/guides/getting-started" leadingIcon={<BookOpen />}>The five-minute guide</TextLink>
-                  <TextLink href="/templates" leadingIcon={<ArrowUpRight />}>Browse more templates</TextLink>
+                  <TextLink href="/templates" leadingIcon={<LayoutTemplate />}>Browse more templates</TextLink>
                   {hidden && <LinkButton icon={<ListChecks />} onClick={show}>Show the setup checklist</LinkButton>}
                 </Stack>
               </Card>

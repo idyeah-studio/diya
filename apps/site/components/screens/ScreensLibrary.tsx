@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { ArrowLeft, ArrowUpRight } from 'lucide-react'
+import { AppWindow, ArrowLeft } from 'lucide-react'
 import { Button, Tag } from '@idyeah/diya'
 import { useAppearance } from '../../app/Appearance'
 import { CatalogBrowser } from '../catalog/CatalogBrowser'
@@ -167,7 +167,7 @@ function ScreenDocument({ screen, source, builtWith }: { screen: ScreenEntry; so
               </Button>
             )}
             <a className="diya-button screens-open" data-variant="quiet" data-size="small" data-shape="pill" href={frameHref(screen, theme, glass)} target="_blank" rel="noopener">
-              <ArrowUpRight size={16} strokeWidth={1.6} aria-hidden="true" />
+              <AppWindow size={16} strokeWidth={1.6} aria-hidden="true" />
               Open full page
               <span className="screens-sr">, in a new tab</span>
             </a>

@@ -6,7 +6,7 @@ import {
   Avatar, Breadcrumbs, Button, Card, ContentState, Dialog, List, Menu, Metric, Progress, Select, Table, Tabs, Tag, TextArea, TextLink, Toast,
   type ListItem, type Tone,
 } from '@idyeah/diya'
-import { ChevronLeft, CircleCheck, Copy, Download, Ellipsis, ExternalLink, Headset, LucideProvider, Mail, Pencil, Receipt, Trash, UserPlus, UserRound } from 'lucide-react'
+import { ChevronLeft, CircleCheck, Copy, CreditCard, Download, Ellipsis, Headset, LucideProvider, Mail, Pencil, Receipt, Trash, UserPlus, UserRound } from 'lucide-react'
 
 // The customer this page shows. In your app, load it by the id in the URL.
 const CUSTOMER = {
@@ -157,7 +157,7 @@ export default function RecordDetailScreen() {
                   <Button variant="outline" href={`mailto:${c.contact.email}`}><Mail /> Email {first(c.contact.name)}</Button>
                   <Menu label={`More actions for ${c.name}`} trigger={<Button variant="outline" iconOnly aria-label={`More actions for ${c.name}`}><Ellipsis /></Button>} items={[
                     { id: 'copy', label: 'Copy customer ID', icon: <Copy />, onSelect: copyId },
-                    { id: 'billing', label: 'Open in billing system', icon: <ExternalLink />, href: `/billing/customers/${c.ref}` },
+                    { id: 'billing', label: 'Open in billing system', icon: <CreditCard />, href: `/billing/customers/${c.ref}` },
                     { id: 'export', label: 'Export history', icon: <Download />, onSelect: () => notify('Export on its way', `We’ll email ${c.id}-history.csv to you in a minute.`) },
                     { id: 'delete', label: 'Delete customer', icon: <Trash />, destructive: true, separatorBefore: true, onSelect: () => setDeleting(true) },
                   ]} />
