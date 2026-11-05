@@ -91,8 +91,14 @@ describe.each(stores)('Waitlist store contract: %s', (_, make) => {
     expect(await store.confirm('nope', at(2), 200)).toEqual({ status: 'invalid' })
     expect(await store.confirm('u1', at(2), 200)).toEqual({ status: 'invalid' })
     expect(await store.confirm('h-old', at(2), 200)).toEqual({ status: 'expired' })
-    expect(await store.confirm('h1', at(2), 200)).toEqual({ status: 'confirmed', founding: true, already: false })
-    expect(await store.confirm('h1', at(3), 200)).toEqual({ status: 'confirmed', founding: true, already: true })
+    // Only the first confirmation names the address, so it's welcomed once.
+    expect(await store.confirm('h1', at(2), 200)).toEqual({
+      status: 'confirmed',
+      founding: true,
+      already: false,
+      welcome: { signupId: String(id), email: 'a@x.dev' },
+    })
+    expect(await store.confirm('h1', at(3), 200)).toEqual({ status: 'confirmed', founding: true, already: true, welcome: null })
   })
 
   it('gives founding status by confirmation order, not signup order', async () => {

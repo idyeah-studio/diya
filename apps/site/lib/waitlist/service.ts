@@ -13,7 +13,7 @@ import {
   type Source,
 } from './config'
 import { emailProblem, normalizeEmail } from './email-address'
-import { alreadyOnListEmail, confirmationEmail, type EmailLinks } from './emails'
+import { alreadyOnListEmail, confirmationEmail, welcomeEmail, type EmailLinks } from './emails'
 import type { WaitlistSender } from './sender'
 import type { ConfirmResult, Signup, WaitlistStore } from './store'
 import { formTokenAge, hashToken, keyedHash, randomToken } from './tokens'
@@ -163,7 +163,28 @@ export async function confirm(deps: WaitlistDeps, token: string): Promise<Confir
   if (!token || token.length > 200) return { status: 'invalid' }
   const now = deps.now?.() ?? new Date()
   await deps.store.purgeUnconfirmed(new Date(now.getTime() - UNCONFIRMED_RETENTION_MS))
-  return deps.store.confirm(hashToken(token), now, FOUNDING_LIMIT)
+  const result = await deps.store.confirm(hashToken(token), now, FOUNDING_LIMIT)
+  if (result.status !== 'confirmed') return result
+  if (result.welcome) await welcome(deps, result.welcome, result.founding, now)
+  return { status: 'confirmed', founding: result.founding, already: result.already }
+}
+
+/**
+ * The welcome after a first confirmation, the person's record of founding
+ * status. Only a first confirmation sends it, so it can't outnumber the
+ * confirmation emails already counted against the send cap, and it stands
+ * apart from the day's one email. A failed send never undoes the confirmation.
+ */
+async function welcome(deps: WaitlistDeps, to: { signupId: string; email: string }, founding: boolean, now: Date) {
+  try {
+    const unsubscribe = randomToken()
+    await deps.store.addToken(to.signupId, 'unsubscribe', hashToken(unsubscribe), null, now)
+    const message = welcomeEmail({ founding, links: emailLinks(deps.siteUrl, unsubscribe) })
+    await deps.sender.send({ ...message, to: to.email })
+  } catch (error) {
+    // Never the address: only the error's own message, which carries none.
+    console.error('[waitlist] could not send the welcome', error instanceof Error ? error.message : 'unknown error')
+  }
 }
 
 export async function unsubscribe(deps: WaitlistDeps, token: string) {

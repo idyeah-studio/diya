@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { POSTAL_ADDRESS_IN_TRANSACTIONAL, postalAddress } from './config'
 import { emailProblem, maskEmail, suggestEmail } from './email-address'
-import { alreadyOnListEmail, confirmationEmail } from './emails'
+import { alreadyOnListEmail, confirmationEmail, welcomeEmail } from './emails'
 import { PostmarkSender } from './sender'
 import { emailLinks } from './service'
 
@@ -35,6 +35,11 @@ describe('Postmark sender', () => {
       { Name: 'List-Unsubscribe', Value: '<https://diya13.ai/api/waitlist/unsubscribe?token=tok>, <mailto:diya@idyeah.studio?subject=Leave%20the%20DIYA%20Pro%20list>' },
       { Name: 'List-Unsubscribe-Post', Value: 'List-Unsubscribe=One-Click' },
     ])
+    // The wordmark goes as inline pictures the HTML names by cid.
+    expect(body.Attachments.map((a: Record<string, string>) => [a.Name, a.ContentType, a.ContentID])).toEqual([
+      ['diya-light.png', 'image/png', 'cid:diya-light'],
+      ['diya-dark.png', 'image/png', 'cid:diya-dark'],
+    ])
   })
 
   it('throws when Postmark refuses the message', async () => {
@@ -52,8 +57,41 @@ describe('Emails', () => {
     expect(email.text).toContain('Vishal\nIDYeah Studio')
     expect(email.html.match(/Confirm my email/g)).toHaveLength(1)
     expect(email.html).toContain('font-family:-apple-system')
-    expect(email.html).not.toMatch(/<img|<script/i)
+    expect(email.html).not.toMatch(/<script/i)
     expect(email.text).toContain('Leave the list: https://diya13.ai/waitlist/unsubscribe?token=tok')
+  })
+
+  it('opening any of them loads nothing: the wordmark rides inside, and nothing else is a picture', () => {
+    for (const email of [
+      confirmationEmail({ confirmUrl: 'https://diya13.ai/waitlist/confirm?token=c', choice: null, links }),
+      alreadyOnListEmail({ choice: null, links }),
+      welcomeEmail({ founding: true, links }),
+    ]) {
+      const sources = [...email.html.matchAll(/<img[^>]*\ssrc="([^"]*)"/g)].map((m) => m[1])
+      expect(sources).toEqual(['cid:diya-light', 'cid:diya-dark'])
+      expect(email.html).not.toMatch(/url\(|@import|<link/i)
+      expect(email.attachments!.map((a) => [a.contentId, a.contentType])).toEqual([
+        ['diya-light', 'image/png'],
+        ['diya-dark', 'image/png'],
+      ])
+      // Real PNGs, not placeholders.
+      for (const a of email.attachments!) expect([...a.content.slice(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47])
+      expect(email.html).toContain('Coming to DIYA Pro')
+    }
+  })
+
+  it('the welcome is the founding record, or says the founding spots are taken', () => {
+    const founding = welcomeEmail({ founding: true, links })
+    expect(founding.subject).toBe('You’re in: a founding spot on the Relight list')
+    expect(founding.tag).toBe('waitlist-welcome')
+    expect(founding.text).toContain('one of the first 200, so you’re founding')
+    expect(founding.text).toContain('Keep this email. It’s your record of it.')
+    expect(founding.text).toContain('Leave the list: https://diya13.ai/waitlist/unsubscribe?token=tok')
+    expect(founding.headers[1]).toEqual({ name: 'List-Unsubscribe-Post', value: 'List-Unsubscribe=One-Click' })
+    const listed = welcomeEmail({ founding: false, links })
+    expect(listed.subject).toBe('You’re in: you’re on the Relight list')
+    expect(listed.text).toContain('The 200 founding spots are taken')
+    expect(listed.text).not.toContain('founding price')
   })
 
   it('escapes everything it puts into HTML', () => {
@@ -73,6 +111,7 @@ describe('Emails', () => {
     for (const email of [
       confirmationEmail({ confirmUrl: 'https://diya13.ai/waitlist/confirm?token=c', choice: null, links }),
       alreadyOnListEmail({ choice: null, links }),
+      welcomeEmail({ founding: true, links }),
     ]) {
       expect(email.text).toContain('Questions about your data: diya@idyeah.studio')
       expect(email.html).toContain('<a href="mailto:diya@idyeah.studio"')
@@ -93,6 +132,7 @@ describe('Emails', () => {
         confirmationEmail({ confirmUrl: 'https://diya13.ai/waitlist/confirm?token=c', choice: null, links, postalAddress: false }),
         alreadyOnListEmail({ choice: null, links }),
         alreadyOnListEmail({ choice: null, links, postalAddress: false }),
+        welcomeEmail({ founding: false, links }),
       ]) {
         expect(off.text).not.toContain(ADDRESS)
         expect(off.html).not.toContain(ADDRESS)

@@ -1,4 +1,4 @@
-import type { ConfirmResult, Signup, SignupInput, TokenPurpose, WaitlistStore } from './store'
+import type { Signup, SignupInput, StoreConfirmResult, TokenPurpose, WaitlistStore } from './store'
 import { ATTEMPT_RETENTION_MS } from './config'
 
 export type Attempt = { keyHash: string; at: Date }
@@ -75,12 +75,12 @@ export class MemoryWaitlistStore implements WaitlistStore {
     this.tokens.set(tokenHash, { signupId, purpose, expiresAt, usedAt: null })
   }
 
-  async confirm(tokenHash: string, now: Date, foundingLimit: number): Promise<ConfirmResult> {
+  async confirm(tokenHash: string, now: Date, foundingLimit: number): Promise<StoreConfirmResult> {
     const token = this.tokens.get(tokenHash)
     const signup = token?.purpose === 'confirm' ? this.signups.get(token.signupId) : undefined
     if (!token || !signup || signup.unsubscribedAt) return { status: 'invalid' }
     if (token.usedAt) {
-      return signup.confirmedAt ? { status: 'confirmed', founding: signup.founding, already: true } : { status: 'invalid' }
+      return signup.confirmedAt ? { status: 'confirmed', founding: signup.founding, already: true, welcome: null } : { status: 'invalid' }
     }
     if (token.expiresAt && token.expiresAt.getTime() < now.getTime()) return { status: 'expired' }
     token.usedAt = now
@@ -91,7 +91,7 @@ export class MemoryWaitlistStore implements WaitlistStore {
       signup.confirmedAt = now
     }
     signup.updatedAt = now
-    return { status: 'confirmed', founding: signup.founding, already }
+    return { status: 'confirmed', founding: signup.founding, already, welcome: already ? null : { signupId: signup.id, email: signup.email } }
   }
 
   async purgeUnconfirmed(before: Date) {

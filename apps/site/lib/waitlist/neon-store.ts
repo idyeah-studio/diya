@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless'
 import { ATTEMPT_RETENTION_MS, type Choice, type Source } from './config'
-import type { ConfirmResult, Signup, SignupInput, TokenPurpose, WaitlistStore } from './store'
+import type { Signup, SignupInput, StoreConfirmResult, TokenPurpose, WaitlistStore } from './store'
 
 type Row = Record<string, unknown>
 type Statement = [text: string, params: unknown[]]
@@ -120,7 +120,7 @@ export class NeonWaitlistStore implements WaitlistStore {
     )
   }
 
-  async confirm(tokenHash: string, now: Date, foundingLimit: number): Promise<ConfirmResult> {
+  async confirm(tokenHash: string, now: Date, foundingLimit: number): Promise<StoreConfirmResult> {
     const [found] = await this.db.query(
       `select t.signup_id, t.expires_at, t.used_at, w.confirmed_at, w.unsubscribed_at, w.founding
        from diya_waitlist_tokens t join diya_waitlist w on w.id = t.signup_id
@@ -131,13 +131,13 @@ export class NeonWaitlistStore implements WaitlistStore {
     if (!found || found.unsubscribed_at != null) return { status: 'invalid' }
     const already = found.confirmed_at != null
     if (found.used_at != null) {
-      return already ? { status: 'confirmed', founding: found.founding === true, already: true } : { status: 'invalid' }
+      return already ? { status: 'confirmed', founding: found.founding === true, already: true, welcome: null } : { status: 'invalid' }
     }
     const expires = date(found.expires_at)
     if (expires && expires.getTime() < now.getTime()) return { status: 'expired' }
     const results = await this.db.transaction([
       [`select pg_advisory_xact_lock($1)`, [FOUNDING_LOCK]],
-      [`update diya_waitlist_tokens set used_at = $2 where token_hash = $1 and used_at is null`, [tokenHash, now]],
+      [`update diya_waitlist_tokens set used_at = $2 where token_hash = $1 and used_at is null returning token_hash`, [tokenHash, now]],
       [
         // Inside SET, columns still hold their old values, so founding is decided
         // only on the first confirmation and the count sees every earlier one.
@@ -146,13 +146,21 @@ export class NeonWaitlistStore implements WaitlistStore {
            confirmed_at = coalesce(confirmed_at, $2),
            updated_at = $2
          where id = $1 and unsubscribed_at is null
-         returning founding`,
+         returning founding, email`,
         [found.signup_id, now, foundingLimit],
       ],
     ])
     const [row] = results[2]
     if (!row) return { status: 'invalid' }
-    return { status: 'confirmed', founding: row.founding === true, already }
+    // A second click racing the first finds the token already used: only the
+    // request that used it confirmed anything, so only that one welcomes.
+    const first = !already && results[1].length > 0
+    return {
+      status: 'confirmed',
+      founding: row.founding === true,
+      already: !first,
+      welcome: first ? { signupId: String(found.signup_id), email: String(row.email) } : null,
+    }
   }
 
   async purgeUnconfirmed(before: Date) {

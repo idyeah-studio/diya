@@ -31,6 +31,11 @@ export type ConfirmResult =
   | { status: 'confirmed'; founding: boolean; already: boolean }
   | { status: 'expired' | 'invalid' }
 
+/** The store's answer. The call that makes an address's first confirmation also names it, so it can be welcomed once. */
+export type StoreConfirmResult =
+  | { status: 'confirmed'; founding: boolean; already: boolean; welcome: { signupId: string; email: string } | null }
+  | { status: 'expired' | 'invalid' }
+
 /**
  * Where the list lives. The Neon implementation is production; the memory
  * one backs tests and local development. Both keep the same rules.
@@ -49,7 +54,7 @@ export interface WaitlistStore {
   releaseEmailSlot(signupId: string, claimedAt: Date): Promise<void>
   addToken(signupId: string, purpose: TokenPurpose, tokenHash: string, expiresAt: Date | null, now: Date): Promise<void>
   /** Confirms by a confirm-token hash; founding goes to the first `foundingLimit` confirmations. People who left stay off. */
-  confirm(tokenHash: string, now: Date, foundingLimit: number): Promise<ConfirmResult>
+  confirm(tokenHash: string, now: Date, foundingLimit: number): Promise<StoreConfirmResult>
   /**
    * Deletes addresses that never confirmed and whose last confirmation email
    * (or signup, if none went out) is older than `before`. People who left stay,
