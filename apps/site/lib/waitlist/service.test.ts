@@ -253,7 +253,7 @@ describe('The welcome', () => {
     const welcomes = t.sender.sent.filter((m) => m.tag === 'waitlist-welcome')
     expect(welcomes).toHaveLength(1)
     expect(welcomes[0]).toMatchObject({ to: 'a@x.dev', subject: 'Your founding ticket for Relight' })
-    expect(welcomes[0].text).toContain('Keep this email. It’s your ticket.')
+    expect(welcomes[0].text).toContain('Keep this email: it’s your ticket.')
   })
 
   it('tells the first person past the founding limit that the spots are taken', async () => {

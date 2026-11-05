@@ -1,5 +1,5 @@
 import { CONTACT_EMAIL, POSTAL_ADDRESS_IN_TRANSACTIONAL, postalAddress as configuredPostalAddress, SENDER_ORG, type Choice } from './config'
-import { FOUNDING_ART_JPG, RELIGHT_ART_JPG } from './email-art'
+import { DIYA_DARK_PNG, DIYA_LIGHT_PNG, FOUNDING_DARK_PNG, FOUNDING_LIGHT_PNG, RELIGHT_DARK_PNG, RELIGHT_LIGHT_PNG } from './email-art'
 
 // CAN-SPAM (FTC, "CAN-SPAM Act: A Compliance Guide for Business"). The emails
 // here are transactional or relationship messages: each answers the person's
@@ -91,75 +91,98 @@ function footerText(links: EmailLinks, postalAddress: boolean) {
 
 const FONT = `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`
 
-const jpg = (name: string, base64: string): EmailAttachment => ({
-  name: `${name}.jpg`,
-  contentType: 'image/jpeg',
+const png = (name: string, base64: string): EmailAttachment => ({
+  name: `${name}.png`,
+  contentType: 'image/png',
   content: Uint8Array.from(Buffer.from(base64, 'base64')),
   contentId: name,
 })
 
 /**
- * The picture at the top: the arch photo, the wordmark and a glass card with a
- * drawing. It rides inside the email (cid:), so opening one loads nothing from
- * anywhere, and it carries no words a phone would shrink below 13px.
+ * The wordmark and the corner drawings, each with a Dark twin. They ride
+ * inside the email (cid:), so opening one loads nothing from anywhere.
  */
-const ART = {
-  relight: { file: jpg('relight', RELIGHT_ART_JPG), alt: 'DIYA. A sketch of a screen turning into a finished one.' },
-  founding: { file: jpg('founding', FOUNDING_ART_JPG), alt: 'DIYA. A founding ticket: 1 of the first 200.' },
+const WORDMARK = { light: png('diya-light', DIYA_LIGHT_PNG), dark: png('diya-dark', DIYA_DARK_PNG) }
+const DRAWINGS = {
+  relight: { light: png('relight-light', RELIGHT_LIGHT_PNG), dark: png('relight-dark', RELIGHT_DARK_PNG) },
+  founding: { light: png('founding-light', FOUNDING_LIGHT_PNG), dark: png('founding-dark', FOUNDING_DARK_PNG) },
 }
-type Art = (typeof ART)[keyof typeof ART]
+type Drawing = (typeof DRAWINGS)[keyof typeof DRAWINGS]
+const pictures = (drawing: Drawing) => [WORDMARK.light, WORDMARK.dark, drawing.light, drawing.dark]
 
-// The site's Dark, for mail apps that follow the reader's setting. Others keep
-// the Light inline styles. The picture reads the same on either.
-const DARK = `@media (prefers-color-scheme: dark) {
-  .page { background:#141515 !important; color:#f1f3f2 !important; }
+// The site's Dark, for mail apps that follow the reader's setting: the page,
+// the card and its parts, and each picture's Dark twin. Others keep Light.
+const STYLE = `@media (prefers-color-scheme: dark) {
+  .page { background:#0f1010 !important; color:#f1f3f2 !important; }
+  .card { background:#1b1c1c !important; border-color:#2b2d2d !important; }
   .page a, .ink { color:#f1f3f2 !important; }
   .muted { color:#bec8cb !important; }
-  .rule { border-top-color:#373838 !important; }
-  .chip, .code { background:#2e2f2f !important; color:#f1f3f2 !important; }
+  .box { background:#242626 !important; border-color:#333636 !important; }
+  .chip { background:#2e2f2f !important; color:#f1f3f2 !important; }
   .page a.button { background:#f1f3f2 !important; color:#141515 !important; }
-}`
+  .on-light { display:none !important; }
+  .on-dark { display:block !important; }
+}
+@media (max-width: 480px) { .card { padding:28px 22px !important; } }`
 
-/** The picture, then Relight with the site's "Coming to DIYA Pro" tag, in live text so it never shrinks. */
-function header(siteUrl: string, art: Art) {
+/** A picture and its Dark twin: mail apps that follow the reader's setting show one, the rest show Light. */
+function themed(pair: { light: EmailAttachment; dark: EmailAttachment }, width: number, height: number, alt: string) {
+  const img = (file: EmailAttachment, cls: string, display: string, text: string) =>
+    `<img class="${cls}" src="cid:${file.contentId}" width="${width}" height="${height}" alt="${text}" style="display:${display};border:0;outline:none;">`
+  return img(pair.light, 'on-light', 'block', alt) + `<!--[if !mso]><!-->${img(pair.dark, 'on-dark', 'none', '')}<!--<![endif]-->`
+}
+
+/** The card's top: wordmark and drawing, Relight with its tag, then the headline. */
+function top(siteUrl: string, drawing: Drawing, headline: string) {
   return (
-    `<p style="margin:0 0 28px;"><a href="${escape(siteUrl)}" style="display:block;">` +
-    `<img src="cid:${art.file.contentId}" width="512" alt="${escape(art.alt)}" style="display:block;width:100%;max-width:512px;height:auto;border:0;border-radius:16px;"></a></p>` +
-    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;border-collapse:collapse;"><tr>` +
-    `<td class="ink" style="padding:0 12px 0 0;vertical-align:middle;font-size:24px;line-height:1.1;font-weight:600;letter-spacing:-0.025em;color:#202627;">Relight</td>` +
-    `<td style="vertical-align:middle;"><span class="chip" style="display:inline-block;padding:4px 10px 4px 9px;border-radius:7px;background:#eef0f0;color:#202627;font-size:14px;font-weight:500;line-height:1.3;white-space:nowrap;">` +
-    `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8503a;margin-right:8px;vertical-align:1px;"></span>Coming to DIYA Pro</span></td>` +
-    `</tr></table>`
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr>` +
+    `<td style="vertical-align:top;"><a href="${escape(siteUrl)}" style="display:inline-block;">${themed(WORDMARK, 92, 30, 'DIYA')}</a></td>` +
+    `<td align="right" style="vertical-align:top;">${themed(drawing, 150, 65, '')}</td>` +
+    `</tr></table>` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 0;border-collapse:collapse;"><tr>` +
+    `<td class="ink" style="padding:0 10px 0 0;vertical-align:middle;font-size:17px;font-weight:600;letter-spacing:-0.01em;color:#202627;">Relight</td>` +
+    `<td style="vertical-align:middle;"><span class="chip" style="display:inline-block;padding:3px 9px 3px 8px;border-radius:7px;background:#eef0f0;color:#202627;font-size:13px;font-weight:500;line-height:1.3;white-space:nowrap;">` +
+    `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#e8503a;margin-right:7px;vertical-align:1px;"></span>Coming to DIYA Pro</span></td>` +
+    `</tr></table>` +
+    `<h1 class="ink" style="margin:14px 0 22px;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-0.03em;color:#202627;">${escape(headline)}</h1>`
   )
 }
 
-function page(preheader: string, art: Art, body: string, links: EmailLinks, postalAddress: boolean) {
+function page(email: { preheader: string; drawing: Drawing; headline: string; body: string }, links: EmailLinks, postalAddress: boolean) {
   const small = `margin:0 0 6px;font-size:13px;line-height:1.5;color:#495659;`
   return `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><title>DIYA</title>
-<style>${DARK}</style></head>
-<body class="page" style="margin:0;padding:0;background:#ffffff;color:#202627;font-family:${FONT};font-size:17px;line-height:1.55;">
-<div style="display:none;max-height:0;overflow:hidden;">${escape(preheader)}</div>
-<div class="page" style="background:#ffffff;color:#202627;">
-<div style="max-width:560px;margin:0 auto;padding:32px 24px;">
-${header(links.siteUrl, art)}
-${body}
-<hr class="rule" style="border:0;border-top:1px solid #e3e6e6;margin:40px 0 20px;">
+<style>${STYLE}</style></head>
+<body class="page" style="margin:0;padding:0;background:#f2f2ef;color:#2f3637;font-family:${FONT};font-size:16px;line-height:1.6;">
+<div style="display:none;max-height:0;overflow:hidden;">${escape(email.preheader)}</div>
+<div class="page" style="background:#f2f2ef;color:#2f3637;">
+<div style="max-width:560px;margin:0 auto;padding:28px 12px 32px;">
+<div class="card" style="background:#ffffff;border:1px solid #e4e4df;border-radius:20px;padding:34px 32px;">
+${top(links.siteUrl, email.drawing, email.headline)}
+${email.body}
+</div>
+<div style="padding:22px 20px 0;">
 <p class="muted" style="${small}">You’re getting this because this address was entered to join the DIYA Pro waitlist at ${escape(host(links.siteUrl))}.</p>
 <p class="muted" style="${small}"><a href="${escape(links.unsubscribePageUrl)}" style="color:#202627;">Leave the list</a> · <a href="${escape(links.siteUrl)}/privacy" style="color:#202627;">Privacy</a> · Questions about your data: <a href="mailto:${escape(CONTACT_EMAIL)}" style="color:#202627;">${escape(CONTACT_EMAIL)}</a></p>
 <p class="muted" style="${small}margin:0;">${escape(senderLine(postalAddress))}</p>
+</div>
 </div>
 </div>
 </body>
 </html>`
 }
 
-const p = (text: string) => `<p style="margin:0 0 18px;">${text}</p>`
-const quiet = (text: string) => `<p class="muted" style="margin:0 0 18px;color:#495659;">${text}</p>`
+const p = (text: string) => `<p style="margin:0 0 16px;">${text}</p>`
+const quiet = (text: string) => `<p class="muted" style="margin:0 0 16px;color:#495659;">${text}</p>`
+/** The one fact worth keeping, in a tinted box. */
+const box = (text: string) =>
+  `<div class="box" style="margin:6px 0 22px;padding:16px 20px;border-radius:14px;background:#f4f5f3;border:1px solid #e6e8e6;">${text}</div>`
 
-const SIGNATURE_TEXT = '— Vishal'
-const SIGNATURE_HTML = `<p style="margin:28px 0 0;">— Vishal</p>`
+const SIGNATURE_TEXT = 'Vishal\nIDYeah Studio'
+const SIGNATURE_HTML =
+  `<p class="ink" style="margin:28px 0 0;font-size:18px;font-weight:600;color:#202627;">Vishal</p>` +
+  `<p class="muted" style="margin:0;font-size:15px;color:#495659;">IDYeah Studio</p>`
 
 /** One line pointing at the free library, with an open door for replies. */
 function libraryLine(siteUrl: string) {
@@ -179,24 +202,27 @@ export function confirmationEmail(input: {
 }): ComposedEmail {
   const { confirmUrl, choice, links, postalAddress = POSTAL_ADDRESS_IN_TRANSACTIONAL } = input
   const pick = pickLine(choice)
-  const founding = 'The first 200 to confirm get early access and the founding price for a year. No card needed.'
+  const offer = 'The first 200 to confirm get early access and the founding price for a year. No card needed.'
   const ignore = 'Didn’t sign up? Just ignore this.'
   const text = [
     'Hi,',
-    'One click and you’re on the list:',
+    'One click confirms it’s you:',
     `Confirm my email: ${confirmUrl}`,
-    founding,
+    offer,
     ...(pick ? [pick] : []),
     ignore,
     SIGNATURE_TEXT,
     '--',
     footerText(links, postalAddress),
   ].join('\n\n')
-  const button = `<p style="margin:0 0 28px;"><a class="button" href="${escape(confirmUrl)}" style="display:inline-block;padding:13px 24px;border-radius:999px;background:#262626;color:#fafafa;font-weight:600;text-decoration:none;">Confirm my email</a></p>`
+  const button = `<p style="margin:4px 0 24px;"><a class="button" href="${escape(confirmUrl)}" style="display:inline-block;padding:13px 24px;border-radius:999px;background:#262626;color:#fafafa;font-weight:600;text-decoration:none;">Confirm my email</a></p>`
   const html = page(
-    'One click, then it’s quiet until Relight is ready.',
-    ART.relight,
-    p('Hi,') + p('One click and you’re on the list:') + button + p(founding) + (pick ? p(escape(pick)) : '') + quiet(ignore) + SIGNATURE_HTML,
+    {
+      preheader: 'One click, then it’s quiet until Relight is ready.',
+      drawing: DRAWINGS.relight,
+      headline: 'Almost in.',
+      body: p('Hi,') + p('One click confirms it’s you:') + button + box(offer) + (pick ? p(escape(pick)) : '') + quiet(ignore) + SIGNATURE_HTML,
+    },
     links,
     postalAddress,
   )
@@ -206,7 +232,7 @@ export function confirmationEmail(input: {
     html,
     headers: unsubscribeHeaders(links),
     tag: 'waitlist-confirm',
-    attachments: [ART.relight.file],
+    attachments: pictures(DRAWINGS.relight),
   }
 }
 
@@ -218,20 +244,22 @@ export function welcomeEmail(input: {
   postalAddress?: boolean
 }): ComposedEmail {
   const { founding, links, postalAddress = POSTAL_ADDRESS_IN_TRANSACTIONAL } = input
-  const lines = founding
-    ? [
-        'You’re in, and you’re one of the first 200. That’s early access and the founding price for a year.',
-        'Keep this email. It’s your ticket.',
-        'Now it goes quiet until Relight is ready. Promise.',
-      ]
-    : ['You’re in. The 200 founding spots went fast, but you’ll hear the moment Relight is ready.']
   const library = libraryLine(links.siteUrl)
-  const art = founding ? ART.founding : ART.relight
+  const drawing = founding ? DRAWINGS.founding : DRAWINGS.relight
+  const first = 'You’re one of the first 200 to confirm.'
+  const ticket = 'Early access and the founding price for a year. Keep this email: it’s your ticket.'
+  const quietNow = 'Now it goes quiet until Relight is ready. Promise.'
+  const later = 'The 200 founding spots went fast, but you’ll hear the moment Relight is ready.'
+  const lines = founding ? [first, ticket, quietNow] : [later]
   const text = ['Hi,', ...lines, library.text, SIGNATURE_TEXT, '--', footerText(links, postalAddress)].join('\n\n')
+  const body = founding ? p('Hi,') + p(escape(first)) + box(escape(ticket)) + p(escape(quietNow)) : p('Hi,') + p(escape(later))
   const html = page(
-    founding ? 'One of the first 200. Keep this one.' : 'Confirmed. You’ll hear when Relight is ready.',
-    art,
-    p('Hi,') + lines.map((line) => p(escape(line))).join('') + library.html + SIGNATURE_HTML,
+    {
+      preheader: founding ? 'One of the first 200. Keep this one.' : 'Confirmed. You’ll hear when Relight is ready.',
+      drawing,
+      headline: founding ? 'You’re founding.' : 'You’re on the list.',
+      body: body + library.html + SIGNATURE_HTML,
+    },
     links,
     postalAddress,
   )
@@ -241,7 +269,7 @@ export function welcomeEmail(input: {
     html,
     headers: unsubscribeHeaders(links),
     tag: 'waitlist-welcome',
-    attachments: [art.file],
+    attachments: pictures(drawing),
   }
 }
 
@@ -257,9 +285,12 @@ export function alreadyOnListEmail(input: {
   const news = 'Good news: you’re already on the list. Nothing to do.'
   const text = ['Hi,', news, ...(pick ? [pick] : []), SIGNATURE_TEXT, '--', footerText(links, postalAddress)].join('\n\n')
   const html = page(
-    'Nothing to do. You’re already on it.',
-    ART.relight,
-    p('Hi,') + p(escape(news)) + (pick ? p(escape(pick)) : '') + SIGNATURE_HTML,
+    {
+      preheader: 'Nothing to do. You’re already on it.',
+      drawing: DRAWINGS.relight,
+      headline: 'Already in.',
+      body: p('Hi,') + p(escape(news)) + (pick ? p(escape(pick)) : '') + SIGNATURE_HTML,
+    },
     links,
     postalAddress,
   )
@@ -269,6 +300,6 @@ export function alreadyOnListEmail(input: {
     html,
     headers: unsubscribeHeaders(links),
     tag: 'waitlist-already',
-    attachments: [ART.relight.file],
+    attachments: pictures(DRAWINGS.relight),
   }
 }
