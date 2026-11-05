@@ -5,11 +5,12 @@
   </picture>
 </h1>
 
-**A library for your next app.** 29 components and 13 patterns for React. Free, MIT, yours to own.
+**A library for your next app.** 30 components and 13 patterns for React. Free, MIT, yours to own.
 
 [Catalog](https://diya13.ai/explore) ·
 [Components](https://diya13.ai/explore?area=components) ·
 [Patterns](https://diya13.ai/explore?area=patterns) ·
+[Screens](https://diya13.ai/explore?area=screens) ·
 [Changelog](https://github.com/idyeah-studio/diya/blob/main/CHANGELOG.md)
 
 ## Start a new app
@@ -89,6 +90,8 @@ and the [pattern guide](https://github.com/idyeah-studio/diya/blob/main/packages
 Your editor shows the full prop types.
 
 Want to see a whole screen first? **[Oriel](https://oriel.diya13.ai)** is a small invoicing app made only from DIYA. Its source is in [`examples/oriel`](https://github.com/idyeah-studio/diya/tree/main/examples/oriel).
+
+Want a whole page to start from? **[Screens](https://diya13.ai/explore?area=screens)** are 34 pages, from sign-in to checkout, each one file you copy into your app.
 
 ## Use it with an AI editor
 
@@ -280,9 +283,13 @@ to `--diya-space-8` for your own CSS.
 Everything in `styles.css` sits in a CSS cascade layer named `diya`. Rules
 outside a layer beat every layered rule, so your own CSS, and any `className`
 or `style` you pass to a component, wins over DIYA's without `!important`.
-DIYA's base styles also reach only its own elements: your headings, paragraphs
-and links inside the provider keep the styles you give them. To give your own
-articles DIYA's type, wrap them in `Prose`.
+DIYA's base styles reach its own elements and what sits inside them. Your
+headings, paragraphs, links and buttons placed straight in the provider keep the
+styles you give them. Inside a DIYA component or layout, such as Stack, Card or
+Drawer, plain ones start the way DIYA's own do: links in the text color with no
+underline, buttons with no border or fill, paragraphs muted, and no margins. Your
+CSS still wins, so give them a class, or use `TextLink` and `Button`. To give
+your own articles DIYA's type, wrap them in `Prose`.
 
 One thing to watch: a global reset of your own, such as
 `button { background: none; border: 0 }` or `* { margin: 0; padding: 0 }`,
@@ -340,8 +347,9 @@ TextLink take it:
 ```
 
 DIYA's classes, attributes and handlers merge into your child, and the ref
-reaches it. TextLink with `asChild` needs no provider, so it renders in a
-Server Component.
+reaches it. TextLink never uses `linkComponent`: with `href` it's a plain
+`<a>`, so for client-side routing give it your router's link with `asChild`.
+Either way it needs no provider, so it renders in a Server Component.
 
 ## Forms
 
@@ -517,7 +525,7 @@ header edges, are worked out once per provider from these tokens.
 | Type scale | `--diya-text-caption`, `--diya-text-body`, `--diya-text-large`, `--diya-text-title`, `--diya-text-heading`, `--diya-text-display`, `--diya-text-hero` |
 | Line height | `--diya-leading-tight`, `--diya-leading-body` |
 | Space | `--diya-space-1` to `--diya-space-8`: 4, 8, 12, 16, 24, 32, 48 and 64px |
-| Shape and depth | `--diya-corner-scale`; `--diya-radius-control`, the one corner every control shares; `--diya-radius-surface`, the one corner every in-page surface shares; `--diya-shadow-raised` for cards, dialogs, toasts and floating menus; `--diya-elevation` scales popup and table shadows (`0` removes them) |
+| Shape and depth | `--diya-corner-scale`; `--diya-radius-control`, the one corner every control shares; `--diya-radius-surface`, the one corner every in-page surface shares; `--diya-shadow-raised` for cards, dialogs, drawers, toasts, menus and popups; `--diya-elevation` scales table, tooltip and floating chat shadows (`0` removes them). For a flat look, set `--diya-shadow-raised: none` as well |
 
 ```tsx
 <DiyaProvider
@@ -555,9 +563,11 @@ major version:
 - peer dependency ranges.
 
 Not covered, so don't build on them: `.diya-*` class names, DOM structure,
-anything named `--diya-internal-*`, file paths inside `dist`, and anything
-marked `"stability": "experimental"` in `api.json`. In 1.0 that's Chatbot and
-the charts (`DataViz` and `Chart`).
+the `data-*` attributes components set on their own elements (the provider's
+`data-theme` is covered), anything named `--diya-internal-*`, file paths inside
+`dist`, and anything marked `"stability": "experimental"` in `api.json`, with
+its own messages and types. In 1.0 that's Chatbot and the charts (`DataViz`
+and `Chart`).
 
 ## License and fonts
 

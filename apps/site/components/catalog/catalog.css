@@ -39,6 +39,13 @@
 :root[data-catalog='true'] body .catalog-frame .site-top .glass-row input:checked + .switch-track { border-color: var(--diya-color-accent); }
 /* The panel's material lives with the header (site.css), the same on every page. */
 
+/* The page title takes focus after a catalog navigation (TitleFocus); it isn't a
+   control, so it shows no ring. */
+.catalog-frame main h1:focus { outline: none; }
+
+/* A screen still to come (a poster) carries Relight's "Soon" tag in the list and in search. */
+:where(html[data-catalog='true']) .atomic-navigation-item:has(.site-soon) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
 /* Sidebar foot: the install command and the Relight entry, pinned under the list. */
 .catalog-foot { display: grid; gap: 10px; min-width: 0; }
 :where(html[data-catalog='true']) .component-browser .catalog-foot {
@@ -86,7 +93,8 @@
 .catalog-below { display: none; }
 @media (max-width: 900px) {
   :where(html[data-catalog='true']) .component-browser .catalog-foot { display: none; }
-  .catalog-below { display: block; position: relative; padding: 0 3vw 8px; }
+  /* After the page's layer, like the footer: z-index 1 keeps the fixed photo off it. */
+  .catalog-below { display: block; position: relative; z-index: 1; padding: 0 3vw 8px; }
   .catalog-below .catalog-foot {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
     align-items: center;
@@ -119,6 +127,10 @@
 }
 @media (max-width: 760px) {
   .catalog-below .catalog-foot { padding: 16px; }
+  /* Phone gutters are 16px, the header's own, so their edges line up. */
+  :root[data-catalog='true'] body:has(.gallery-study) .catalog-frame :is(.gallery-study, .component-library) { padding-left: 16px; padding-right: 16px; }
+  .catalog-below { padding-inline: 16px; }
+  .catalog-frame .site-foot { padding-inline: 16px; }
 }
 
 /* Phones: a page's actions sit under its title rather than squeezing it. */
@@ -136,7 +148,9 @@
 
 /* The footer sits in the content column, beside the fixed sidebar, on the
    catalog's own ground rather than the landing's solid band. */
-.catalog-frame .site-foot { position: relative; padding: 72px 4vw 48px; background: transparent; }
+/* The page (main) is its own layer at z-index 1 with the photo fixed inside it;
+   the footer comes after it at the same level, so the photo can't cover it. */
+.catalog-frame .site-foot { position: relative; z-index: 1; padding: 72px 4vw 48px; background: transparent; }
 @media (min-width: 901px) {
   .catalog-frame .site-foot { margin-left: calc(4vw + 308px); padding-left: 0; }
 }
@@ -333,7 +347,6 @@
     border-color: var(--diya-color-line);
   }
 }
-.diya-root.catalog-provider[data-glass='true'] .diya-tabs[data-variant='pill'] .diya-tab-list:not(.customize-scope *) { border-radius: 0; }
 @media (prefers-reduced-transparency: reduce) {
   .diya-root.catalog-provider[data-glass='true'],
   .diya-root.catalog-provider[data-glass='true'][data-theme='light'] {

@@ -31,8 +31,9 @@
 .site-root .segmented input:focus-visible + span { outline-color: var(--diya-color-text); }
 .site-mono, .site-root code { font-family: var(--site-mono); }
 html:has(.site-root) { scroll-padding-top: 96px; }
-html:has(.site-root) body { background: #141515; }
-html[data-theme='light']:has(.site-root) body { background: #f2f2ef; }
+/* html takes the body's ground too, so Safari's overscroll shows the same color. */
+html:has(.site-root), html:has(.site-root) body { background: #141515; }
+html[data-theme='light']:has(.site-root), html[data-theme='light']:has(.site-root) body { background: #f2f2ef; }
 html:has(:is(.site-root, .waitlist-shell)) .skip-link { z-index: 70; background: var(--diya-color-accent, #e8e8e8); color: var(--diya-color-accent-text, #1c1c1c); border-radius: 999px; padding: 12px 18px; font-size: 15px; }
 /* The catalog's skip link ring, not the older globals' purple one. */
 html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2px solid #1c1c1c; outline-offset: 2px; }
@@ -89,11 +90,26 @@ html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2p
   padding: 0 56px;
 }
 .site-top-home { justify-self: start; display: block; width: 92px; color: var(--diya-color-text); border-radius: 6px; }
+/* The header's edges follow the page under it. The catalog's content runs on a
+   4vw gutter (3vw under 1000px), not the landing's centered 1328px column, so
+   there the bar goes full width on the same gutter; on phones both use 16px.
+   The landing's tablet hero uses 40px, so its header does too. */
+@media (min-width: 761px) {
+  .catalog-frame .site-top-bar { max-width: none; padding-inline: 4vw; }
+}
+@media (min-width: 761px) and (max-width: 1000px) {
+  .catalog-frame .site-top-bar { padding-inline: 3vw; }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .site-landing-root .site-top-bar { padding-inline: 40px; }
+}
 /* Current and selected, one system for the site and the catalog, in DIYA's
    own tokens (the same split DIYA's components make):
-   - Where you are (header nav, catalog sidebar, the Relight entry, the phone
-     menu): a --diya-color-selected tint, text in --diya-color-text, regular
-     weight, as SideNavigation and SiteHeader do it.
+   - Where you are (catalog sidebar, the Relight entry, the phone menu): a
+     --diya-color-selected tint, text in --diya-color-text, regular weight, as
+     SideNavigation and SiteHeader do it. The header nav is a track over the
+     photo, where a tint reads too faint, so its current area is a raised
+     thumb instead.
    - A value you chose (segmented controls in the playgrounds and Appearance,
      pill tabs, swatches, switches, checkboxes): a solid --diya-color-accent
      fill with --diya-color-accent-text, the same height as its siblings.
@@ -122,7 +138,49 @@ html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2p
   white-space: nowrap;
 }
 .site-top-nav a:hover { color: var(--diya-color-text); background: var(--diya-color-hover); }
-.site-top-nav a[aria-current] { color: var(--diya-color-text); background: var(--diya-color-selected); }
+.site-top-nav a[aria-current] {
+  color: var(--diya-color-text);
+  background: #ffffff45;
+  box-shadow: inset 0 .5px 0 #ffffff4d, 0 1px 3px #00000073;
+}
+.diya-root[data-theme='light'] .site-top-nav { background: color-mix(in srgb, var(--diya-color-text) 6%, #ffffffb3); }
+.diya-root[data-theme='light'] .site-top-nav a[aria-current] {
+  background: var(--diya-color-raised);
+  box-shadow: 0 1px 2px #0000001f, 0 0 0 .5px #0000000f;
+}
+/* Relight, named like a product, with the tag that says it's still coming:
+   the landing, the Relight page and the catalog sidebar. The dot is the
+   mark's own. */
+.site-relight { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 22px; }
+.site-relight-name { font-size: 26px; font-weight: 560; font-stretch: 108%; line-height: 1.1; letter-spacing: -.025em; color: var(--diya-color-text); }
+.site-soon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 9px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0;
+  white-space: nowrap;
+  color: var(--diya-color-text);
+  background: var(--diya-color-selected);
+}
+.site-soon::before {
+  content: '';
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--site-dot);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--site-dot) 18%, transparent), 0 0 10px color-mix(in srgb, var(--site-dot) 55%, transparent);
+}
+/* The small tag, in a 38px sidebar row; on the current row it steps back to the
+   hover tint so it still shows against the selected one. */
+.site-soon[data-size='small'] { gap: 6px; padding: 2px 8px 2px 7px; border-radius: 6px; font-size: 13px; }
+.site-soon[data-size='small']::before { width: 6px; height: 6px; box-shadow: 0 0 8px color-mix(in srgb, var(--site-dot) 60%, transparent); }
+[aria-current='page'] > .site-soon { background: var(--diya-color-hover); }
 .site-top-end { justify-self: end; display: flex; align-items: center; gap: 10px; min-width: 0; }
 .site-top-button {
   display: inline-flex;
@@ -441,6 +499,8 @@ a.site-menu-row:hover, button.site-menu-row:hover { background: var(--diya-color
   .site-top-nav, .site-chip, .site-top-button, .site-top .appearance-popover > summary, .site-top-menu-button { backdrop-filter: none; }
 }
 @media (forced-colors: active) {
+  .site-soon { border: 1px solid CanvasText; }
+  .site-soon::before { forced-color-adjust: none; background: CanvasText; box-shadow: none; }
   .site-top-nav, .site-top-button, .site-chip, .site-chip-key, .site-menu { border: 1px solid CanvasText; }
   .site-top-nav a[aria-current] { outline: 2px solid CanvasText; }
   /* The D dot keeps its place in forced colors, in the text color. */

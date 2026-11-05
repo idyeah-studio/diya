@@ -25,8 +25,8 @@ export type TextAreaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'v
   /** Lets people drag the textarea taller; defaults to true. */
   resizable?: boolean
 }
-/** A multi-line labelled text field with optional helper text, error and character count. */
-export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea({ label, hideLabel, helperText, error, size = 'medium', value, defaultValue, onValueChange, onChange, showCount, resizable = true, id, maxLength, className, style, 'aria-invalid': ariaInvalid, 'aria-describedby': describedBy, ...props }, ref) {
+/** A multi-line labeled text field with optional helper text, error and character count. */
+export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea({ label, hideLabel = false, helperText, error, size = 'medium', value, defaultValue, onValueChange, onChange, showCount, resizable = true, id, maxLength, className, style, 'aria-invalid': ariaInvalid, 'aria-describedby': describedBy, ...props }, ref) {
   const generatedId = useId()
   const inputId = id ?? generatedId
   const description = error || helperText

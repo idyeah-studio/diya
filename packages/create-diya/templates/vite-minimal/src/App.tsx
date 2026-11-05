@@ -27,10 +27,10 @@ export function App() {
             Save the file and the browser follows. Stack and Inline handle the spacing, so most screens need
             no CSS of your own.
           </Card>
-          <Card title="Borrow a pattern" description="Thirteen finished screens.">
-            Sign-in, settings, a data table with filters. Each one has a Get code button that copies a
-            complete file.{' '}
-            <TextLink href="https://diya13.ai/explore?area=patterns">See them all</TextLink>
+          <Card title="Borrow a screen" description="Whole pages, one file each.">
+            Sign in, settings, a table with filters. Each one has a Get code button that copies the
+            file.{' '}
+            <TextLink href="https://diya13.ai/explore?area=screens">See them all</TextLink>
           </Card>
           <Card title="Bring your agent" description="AGENTS.md is already here.">
             It points Claude Code, Cursor and Codex at DIYA&rsquo;s docs, so they use the real props

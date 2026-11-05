@@ -157,8 +157,8 @@ export function AlertLibrary() {
       <AtomicSidebar current="alert" />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>Alert</h1>
           <LibraryActions id="alert" />
-          <h2>Alert</h2>
         </header>
         <div className="component-preview-stage input-specimens">
           <div className="input-preview-controls">

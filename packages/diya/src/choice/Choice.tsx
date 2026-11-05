@@ -73,7 +73,7 @@ export type ChoiceMultipleProps = ChoiceBase & {
 /** Radios by default (one string); `multiple` gives checkboxes and an array. */
 export type ChoiceProps = ChoiceSingleProps | ChoiceMultipleProps
 const sameList = (a: string[], b: string[]) => a.length === b.length && a.every((value, index) => value === b[index])
-/** A labelled group of radios for one choice, or checkboxes for several with `multiple`. The ref reaches the inputs: a callback ref gets each one, an object ref the first. */
+/** A labeled group of radios for one choice, or checkboxes for several with `multiple`. The ref reaches the inputs: a callback ref gets each one, an object ref the first. */
 export const Choice = forwardRef<HTMLInputElement, ChoiceProps>(function Choice(props, ref) {
   const id = useId()
   const t = useDiyaMessages('choice', choiceMessages)
@@ -81,8 +81,8 @@ export const Choice = forwardRef<HTMLInputElement, ChoiceProps>(function Choice(
     label,
     options,
     size = 'medium',
-    hideLabel,
-    disabled,
+    hideLabel = false,
+    disabled = false,
     helperText,
     error,
     name = id,

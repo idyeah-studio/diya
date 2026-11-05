@@ -52,7 +52,7 @@ body:has(.gallery-study) .site-footer {
   inset: 0;
   background:
     linear-gradient(180deg, #0006 0%, #0004 42%, #090b0dc9 100%),
-    url('/images/concept-architecture.png') center 48% / cover;
+    url('/images/concept-architecture.webp') center 48% / cover;
 }
 :where(html[data-catalog='true']) .gallery-study-intro {
   text-align: center;
@@ -426,7 +426,7 @@ body:has(.gallery-study) .site-footer {
 :where(html[data-catalog='true']) .gallery-grid-study .gallery-study-backdrop {
   background-image:
     linear-gradient(180deg, #0006, #111315ad 48%, #101214e6),
-    url('/images/concept-architecture.png');
+    url('/images/concept-architecture.webp');
 }
 :where(html[data-catalog='true']) .gallery-discovery {
   display: flex;

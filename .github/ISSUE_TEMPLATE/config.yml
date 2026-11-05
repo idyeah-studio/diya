@@ -3,6 +3,9 @@ contact_links:
   - name: Report a security problem
     url: https://github.com/idyeah-studio/diya/security/advisories/new
     about: Please report vulnerabilities privately, not in a public issue.
+  - name: Ask for a component
+    url: https://diya13.ai/ask
+    about: New components, props and patterns are requested and voted on in one place.
   - name: Documentation
     url: https://diya13.ai
     about: Component and pattern guides.

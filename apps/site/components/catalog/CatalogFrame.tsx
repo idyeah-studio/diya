@@ -6,6 +6,7 @@ import { OrielDoor } from '../oriel/OrielDoor'
 import { ReferencePanel } from '../reference/ReferencePanel'
 import { CatalogHead } from './CatalogHead'
 import { SidebarFoot } from './SidebarFoot'
+import { TitleFocus } from './TitleFocus'
 import './catalog.css'
 
 /**
@@ -29,6 +30,7 @@ export function CatalogFrame({
     <div className="catalog-frame" data-area={area}>
       <CatalogHead title={title} path={path} />
       <SiteHeader current={current} />
+      <TitleFocus path={path} />
       {children}
       <ReferencePanel path={path} />
       <OrielDoor path={path} />

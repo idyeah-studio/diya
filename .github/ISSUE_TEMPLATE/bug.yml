@@ -54,4 +54,4 @@ body:
     id: accessibility
     attributes:
       label: Assistive technology
-      description: If this is about keyboard or screen reader behaviour, which tool and version.
+      description: If this is about keyboard or screen reader behavior, which tool and version.

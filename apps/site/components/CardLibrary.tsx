@@ -48,8 +48,8 @@ export function CardLibrary() {
       <PatternSidebar current="card" />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>Card</h1>
           <LibraryActions id="card" />
-          <h2>Card</h2>
         </header>
         <section className="pattern-stage" aria-label="Card playground">
           <div className="pattern-controls">
@@ -80,7 +80,7 @@ export function CardLibrary() {
               media={
                 options.Image && (
                   <img
-                    src="/images/concept-architecture.png"
+                    src="/images/concept-architecture.webp"
                     alt="Sculptural concrete architecture"
                   />
                 )

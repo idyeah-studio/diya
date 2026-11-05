@@ -7,7 +7,6 @@ import { ORIEL_SCREENS } from '../oriel/links'
 import {
   CreateChip,
   GlassCards,
-  HeroPlates,
   InstallLine,
   LaunchMoment,
   PartsSheet,
@@ -77,15 +76,14 @@ export function LaunchedLanding() {
               <div className="ld-launch-slot" data-launch-line-slot="" />
               <h1 id="hero-title">A library for your next app.</h1>
               <p className="ld-lede">
-                <b>29 components, 13 patterns and {readyScreens.length} screens for React.</b> Free, MIT, yours to own.
+                <b>30 components, 13 patterns and {readyScreens.length} screens for React.</b> Free, MIT, yours to own.
               </p>
               <div className="ld-actions">
                 <CreateChip />
-                <Link className="diya-button ld-explore" data-variant="solid" data-size="large" data-shape="pill" href="/explore?area=components">
+                <Link className="diya-button ld-explore" data-variant="solid" data-size="medium" data-shape="pill" href="/explore?area=components">
                   Explore the library
                 </Link>
               </div>
-              <InstallLine />
               <ul className="ld-meta">
                 <li>
                   <a href={GITHUB_URL}>
@@ -94,11 +92,9 @@ export function LaunchedLanding() {
                   </a>
                 </li>
                 <li>MIT license</li>
-                <li>React 18 and 19</li>
-                <li>Light, Dark and Glass</li>
+                <li>React 18.3 and 19</li>
               </ul>
             </div>
-            <HeroPlates />
           </div>
         </section>
 
@@ -107,6 +103,7 @@ export function LaunchedLanding() {
             <div className="ld-section-head">
               <h2 id="package-title">What’s in the package</h2>
               <p>One install. Nothing held back for later.</p>
+              <InstallLine />
             </div>
             <PartsSheet />
             <div className="ld-patterns">
@@ -121,7 +118,6 @@ export function LaunchedLanding() {
                   <li key={id}>
                     <Link href={`/explore?area=patterns&pattern=${id}`}>
                       <span>{name}</span>
-                      <i aria-hidden="true" />
                       <span className="ld-index-go" aria-hidden="true">→</span>
                     </Link>
                   </li>
@@ -192,8 +188,9 @@ export function LaunchedLanding() {
           <div className="ld-wrap">
             <div className="ld-pro-head">
               <div>
-                <p className="ld-eyebrow">
-                  <b>Relight</b> · coming to DIYA Pro
+                <p className="site-relight">
+                  <span className="site-relight-name">Relight</span>
+                  <span className="sr-only">,</span> <span className="site-soon">Coming to DIYA Pro</span>
                 </p>
                 <h2 id="pro-title">From a sketch to a screen you own.</h2>
               </div>
@@ -307,8 +304,9 @@ function ProStages() {
           Made of <code>SideNavigation</code> · <code>Metric</code> · <code>Table</code> · <code>Tag</code>
         </p>
         <p className="ld-made-of ld-real">
-          <a href={ORIEL_SCREENS.invoices.href}>
+          <a href={ORIEL_SCREENS.invoices.href} target="_blank" rel="noopener">
             This screen is real. Open Oriel <span aria-hidden="true">→</span>
+            <span className="sr-only">, in a new tab</span>
           </a>
         </p>
       </li>

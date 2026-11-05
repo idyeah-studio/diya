@@ -63,10 +63,10 @@ export function ButtonLibrary() {
       <AtomicSidebar current="button" />
       <div className="component-document">
         <header className="component-document-heading">
-          <LibraryActions id="button" extra={extra} options={raw} />
-          <h2 id="button-heading" tabIndex={-1}>
+          <h1 id="button-heading" tabIndex={-1}>
             Button
-          </h2>
+          </h1>
+          <LibraryActions id="button" extra={extra} options={raw} />
         </header>
         <div className="component-preview-stage button-specimens">
           <div className="button-preview-controls">

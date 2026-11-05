@@ -78,6 +78,13 @@ export function catalogArea(area: string | null | undefined): CatalogArea {
   return area === 'components' || area === 'screens' || area === 'skills' || area === 'pro' ? area : 'patterns'
 }
 
+/** api.json ids whose catalog page goes by another name, or shows them on a sibling's page. */
+const apiIdPages: Record<string, string> = {
+  'text-link': '/explore?area=components&component=link',
+  toast: '/explore?area=components&component=alert',
+  'content-state': '/explore?pattern=empty-state',
+}
+
 /**
  * Explicit areas take precedence over stale selectors from another area.
  * `env` decides which screens are listed: screens still being built open
@@ -100,6 +107,9 @@ export function resolveCatalogRoute(
     const screen = typeof params.screen === 'string' ? screenById(params.screen) : undefined
     return screen && screenIsListed(screen, screensPreview(env)) ? { area, id: screen.id } : { redirect: '/explore?area=screens' }
   }
+
+  const apiId = area === 'components' ? params.component : params.pattern
+  if (typeof apiId === 'string' && Object.hasOwn(apiIdPages, apiId)) return { redirect: apiIdPages[apiId] }
 
   if (area === 'components') {
     if (params.component === 'dialog') return { redirect: '/explore?pattern=dialog' }

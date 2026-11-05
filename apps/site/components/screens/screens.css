@@ -7,13 +7,14 @@
 :where(html[data-catalog='true']) .screens-intro {
   margin: 8px 0 8px;
 }
-:where(html[data-catalog='true']) .screens-intro h2,
-:where(html[data-catalog='true']) .screens-title h2 {
+:where(html[data-catalog='true']) .screens-intro h1,
+:where(html[data-catalog='true']) .screens-title h1 {
   margin: 0;
-  font-size: 38px;
-  font-weight: 400;
-  line-height: 1.15;
-  letter-spacing: -0.045em;
+  font-size: 34px;
+  font-weight: 560;
+  font-stretch: 108%;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
   color: var(--diya-color-text);
 }
 :where(html[data-catalog='true']) .screens-intro p,
@@ -416,8 +417,8 @@
   :where(html[data-catalog='true']) .screens-back { display: none; }
 }
 @media (max-width: 560px) {
-  :where(html[data-catalog='true']) .screens-intro h2,
-  :where(html[data-catalog='true']) .screens-title h2 { font-size: 30px; }
+  :where(html[data-catalog='true']) .screens-intro h1,
+  :where(html[data-catalog='true']) .screens-title h1 { font-size: 30px; }
   :where(html[data-catalog='true']) .screens-heading { grid-template-columns: minmax(0, 1fr); }
   :where(html[data-catalog='true']) .screens-actions { justify-content: flex-start; margin: 12px 0 0 -10px; }
   :where(html[data-catalog='true']) .screens-stage { padding: 14px; }

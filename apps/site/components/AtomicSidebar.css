@@ -1,6 +1,6 @@
 :where(html[data-catalog='true']) .component-browser.atomic-browser { display: flex; flex-direction: column; overflow: hidden; }
 :where(html[data-catalog='true']) .atomic-browser .component-browser-heading { flex-shrink: 0; padding-bottom: 22px; }
-:where(html[data-catalog='true']) .atomic-browser .component-browser-heading h1 { margin-bottom: 18px; }
+:where(html[data-catalog='true']) .atomic-browser .component-browser-heading .catalog-browser-name { margin-bottom: 18px; }
 :where(html[data-catalog='true']) .atomic-browser .atomic-navigation { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--diya-color-line) transparent; gap: 24px; padding: 2px 0 8px; }
 :where(html[data-catalog='true']) .atomic-group h2 { margin: 0 0 8px; padding-left: 0; color: var(--diya-color-muted); font-size: 13px; font-weight: 500; letter-spacing: .04em; }
 :where(html[data-catalog='true']) .atomic-browser .atomic-navigation-item { font-size: 13px; padding-block: 9px; border-radius: 6px; }
@@ -61,7 +61,7 @@
     background: color-mix(in srgb, var(--diya-color-surface) 86%, transparent) !important;
     backdrop-filter: blur(28px) saturate(1.1) !important;
   }
-  html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] .component-browser-heading h1 { margin: 0; font-size: 20px; }
+  html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] .component-browser-heading .catalog-browser-name { margin: 0; font-size: 20px; }
   html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] .component-browser-heading { padding-bottom: 16px; }
   html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] .catalog-browser-title { margin-bottom: 14px; }
   html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] .atomic-navigation-item { font-size: 15px; padding-block: 12px; }

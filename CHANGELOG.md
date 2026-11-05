@@ -10,7 +10,7 @@ First public release, under the MIT License.
 
 ### Added
 
-- 29 React components and 13 patterns. `Chart` and `DataViz` are exported from
+- 30 React components and 13 patterns. `Chart` and `DataViz` are exported from
   `@idyeah/diya/charts` and render with the optional `echarts` peer dependency;
   everything else is exported from `@idyeah/diya`.
 - `DiyaProvider` with Light, Dark and Glass appearances, brand color, font,
@@ -18,7 +18,7 @@ First public release, under the MIT License.
 - `@idyeah/diya/styles.css`, with public `--diya-*` theme tokens and the DIYA
   Sans font (SIL Open Font License 1.1).
 - `@idyeah/diya/api.json`, a machine-readable map of exports, props and tokens.
-- api.json names the uncontrolled default (`defaultValue`, Switch `defaultChecked`) for every field that has one: Text Input, Text Area, Select, Combobox, Date Picker, Choice, Switch, Slider and Search.
+- api.json names the uncontrolled default (`defaultValue`, Switch `defaultChecked`) for every field that has one: Text Input, Text Area, Select, Combobox, Date Picker, Calendar, Choice, Switch, Slider and Search.
 - Support for React 18.3 and React 19, including Next.js App Router: the root
   entry has no `'use client'` directive, so `defaultMessages` and types can be
   imported in Server Components, and each interactive component carries its own
@@ -160,6 +160,10 @@ First public release, under the MIT License.
 - `bench/`: the bundle-size measurement, rerunnable with
   `node bench/measure.mjs`. One Button with `DiyaProvider` adds 2.3 KB of
   gzipped JavaScript to a Vite build.
+- Charts use DIYA's Vivid palette (bright blue, orange, pink, green, violet,
+  teal, indigo, red) with a fine gradient: bars soften toward their base,
+  donut segments catch a highlight, and one or two lines glow into the plot.
+  Legend dots stay solid, and every chart keeps its data table.
 
 ### Renamed since the preview
 
@@ -199,9 +203,9 @@ are no aliases for the old names; TypeScript reports each one.
 | Card, Dialog | `divider` | `divided` |
 | Card | `menu` | `actions` |
 | Card | `tag` | `tags` |
-| Button | `shape: 'rectangle'` | `shape: 'rounded'`, now the default |
+| Button | `shape: 'rectangle'` | `shape: 'rounded'`; the default is now `'pill'` |
 | ContentState | `role: 'status' \| 'alert'` | `urgent` (`true` announces it as an alert) |
-| Badge | `type` | `variant` (`'indicator' \| 'count'`) |
+| Badge | `type` | `variant` (`'count' \| 'dot'`) |
 | Badge | `maximum` | `max` |
 | Badge, Tag | `color` | `tone` |
 | Slider | `labels` | `showValues` |
@@ -247,7 +251,8 @@ Drawer `side` (`'left' | 'right'`), and Chart and DataViz `type` and
 
 - `DiyaProvider`: `theme` is `'system'` and the provider paints its surface.
   DIYA's own accent is a neutral ink: `#262626` with `#FAFAFA` text in Light,
-  `#E8E8E8` with `#1C1C1C` text in Dark. The grays are neutral in both themes.
+  `#E8E8E8` with `#1C1C1C` text in Dark. The grays keep a slight cool cast in
+  both themes.
 - Switch is a native checkbox with `role="switch"`; its ref is the input.
 - Search is `rounded` by default, like the other fields.
 - `--diya-text-caption` is 14px (was 13px), so small print reads more easily.
@@ -308,9 +313,5 @@ change in any release. The README lists the public tokens.
   new, with `kind: "layout"`.
 - Chatbot and Data Viz (`DataViz`, `Chart`) are `experimental`: outside semver
   until their API settles.
-- Charts use DIYA's Vivid palette (bright blue, orange, pink, green, violet,
-  teal, indigo, red) with a fine gradient: bars soften toward their base,
-  donut segments catch a highlight, and one or two lines glow into the plot.
-  Legend dots stay solid, and every chart keeps its data table.
 
 [1.0.0]: https://github.com/idyeah-studio/diya/releases/tag/v1.0.0

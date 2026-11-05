@@ -37,7 +37,7 @@ export type TextInputProps = Omit<
   /** Called with the new text on every edit and when cleared. */
   onValueChange?: (value: string) => void
 }
-/** A single-line labelled text field with optional helper text, error, icon and clear button. */
+/** A single-line labeled text field with optional helper text, error, icon and clear button. */
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function TextInput({
   label,
   hideLabel = false,

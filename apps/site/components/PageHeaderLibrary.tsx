@@ -75,8 +75,8 @@ export function PageHeaderLibrary() {
       <PatternSidebar current="page-header" />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>Page Header</h1>
           <LibraryActions id="page-header" />
-          <h2>Page Header</h2>
         </header>
         <section className="pattern-stage" aria-label="Page Header playground">
           <div className="pattern-controls">

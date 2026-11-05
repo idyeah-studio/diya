@@ -87,7 +87,7 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
     }
   }, [open])
 
-  const link = (target: CatalogListArea, item: { id: string; title: string }) => (
+  const link = (target: CatalogListArea, item: { id: string; title: string; soon?: boolean }) => (
     <Link
       key={`${target}-${item.id}`}
       href={catalogHref(target, item.id)}
@@ -96,6 +96,14 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
       onClick={() => setOpen(false)}
     >
       {item.title}
+      {item.soon && (
+        <>
+          <span className="sr-only">,</span>{' '}
+          <span className="site-soon" data-size="small">
+            Soon
+          </span>
+        </>
+      )}
     </Link>
   )
 
@@ -127,7 +135,7 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
       >
         <div className="component-browser-heading">
           <div className="catalog-browser-title">
-            <h1 id={sheetTitle}>{words[area].title}</h1>
+            <div id={sheetTitle} className="catalog-browser-name">{words[area].title}</div>
             <button type="button" className="catalog-sheet-close" aria-label="Close" onClick={() => {
               setOpen(false)
               opener.current?.focus()

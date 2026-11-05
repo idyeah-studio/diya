@@ -34,8 +34,8 @@ export function SelectLibrary() {
       <div className="gallery-study-backdrop" aria-hidden="true" />
       <AtomicSidebar current="select" />
       <div className="component-document">
-        <header className="component-document-heading"><LibraryActions id="select" />
-          <h2>Select</h2>
+        <header className="component-document-heading">          <h1>Select</h1>
+<LibraryActions id="select" />
         </header>
         <div className="component-preview-stage input-specimens">
           <div className="input-preview-controls">

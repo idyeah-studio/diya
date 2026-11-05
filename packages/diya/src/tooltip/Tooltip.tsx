@@ -1,9 +1,9 @@
 'use client'
-import { Children, cloneElement, forwardRef, isValidElement, useEffect, useId, useMemo, useRef, useState, type HTMLAttributes, type ReactElement, type ReactNode, type Ref } from 'react'
+import { cloneElement, forwardRef, isValidElement, useEffect, useId, useMemo, useRef, useState, type HTMLAttributes, type ReactElement, type ReactNode, type Ref } from 'react'
 import { createPortal } from 'react-dom'
 import { useDiyaPortal } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
-import { composeRefs, renderSlot } from '../internal/slot.js'
+import { composeRefs, onlyChild, renderSlot } from '../internal/slot.js'
 export type TooltipProps = Omit<HTMLAttributes<HTMLSpanElement>, 'content' | 'children'> & {
   /** Visible text in the bubble, shown on hover, focus or tap; also read as the trigger's description. */
   content: string
@@ -91,7 +91,7 @@ export const Tooltip = forwardRef<HTMLButtonElement, TooltipProps>(function Tool
       portal
     )
   if (label === undefined) {
-    const child = Children.only(children)
+    const child = onlyChild(children)
     if (!isValidElement(child)) return null
     const own = child as ReactElement<{ 'aria-describedby'?: string }>
     const described = cx(own.props['aria-describedby'], open ? id : undefined) || undefined

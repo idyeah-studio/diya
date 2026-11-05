@@ -37,9 +37,11 @@ function typeString(type, at) {
 }
 
 // The declared type, without the `| undefined` that optional properties pick up.
+// A prop React's DOM types also declare reads from the component's own declaration.
 function propType(symbol) {
-  const declaration = declarationOf(symbol)
-  if (symbol.declarations?.length === 1 && declaration?.type) {
+  const declared = symbol.declarations?.filter(node => !fromReact(node))
+  const declaration = declared?.length === 1 ? declared[0] : declarationOf(symbol)
+  if ((symbol.declarations?.length === 1 || declared?.length === 1) && declaration?.type) {
     const type = checker.getTypeFromTypeNode(declaration.type)
     return { type, text: typeString(type, declaration), node: declaration.type }
   }
@@ -192,7 +194,7 @@ function sourceDefaults(name, declarationFile, components) {
       if (ts.isObjectBindingPattern(declaration.name) && from && ts.isIdentifier(from) && (props.has(from.text) || rests.has(from.text))) bind(declaration.name)
     }
   }
-  // Rest props spread onto another DIYA component inherit its defaults; onto a DOM tag, they name the element.
+  // Rest props spread onto another DIYA component inherit its defaults and its element; onto a DOM tag, they name the element.
   const visit = node => {
     if (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) {
       const attributes = node.attributes.properties
@@ -201,8 +203,9 @@ function sourceDefaults(name, declarationFile, components) {
       if (spread && /^[a-z]/.test(tag)) result.element ??= tag
       if (spread && components.has(tag) && tag !== name) {
         const explicit = new Set(attributes.filter(ts.isJsxAttribute).map(attr => attr.name.getText(source)))
-        const inherited = sourceDefaults(tag, components.get(tag), components).defaults
-        for (const [prop, value] of Object.entries(inherited)) if (!named.has(prop) && !explicit.has(prop) && !Object.hasOwn(result.defaults, prop)) result.defaults[prop] = value
+        const base = sourceDefaults(tag, components.get(tag), components)
+        result.element ??= base.element
+        for (const [prop, value] of Object.entries(base.defaults)) if (!named.has(prop) && !explicit.has(prop) && !Object.hasOwn(result.defaults, prop)) result.defaults[prop] = value
       }
     }
     ts.forEachChild(node, visit)
@@ -256,7 +259,8 @@ function describeComponent(name, entry, target, componentFiles, propsTypes) {
   if (!param) return component
   const propsType = checker.getTypeOfSymbolAtLocation(param, declaration)
   const { defaults, element } = sourceDefaults(name, declaration.getSourceFile().fileName, componentFiles)
-  const own = type => type.getProperties().filter(symbol => !fromReact(declarationOf(symbol)))
+  // A prop is the component's own when its props type declares it, even if React's DOM types declare it too (Tag's required `children`).
+  const own = type => type.getProperties().filter(symbol => !fromReact(declarationOf(symbol)) || symbol.declarations?.some(node => !fromReact(node)))
   const branches = propsType.isUnion() ? propsType.types.filter(type => type.getProperties().length) : []
   if (branches.length > 1) {
     const perBranch = branches.map(type => new Map(own(type).map(symbol => [symbol.name, symbol])))
@@ -283,11 +287,12 @@ function describeComponent(name, entry, target, componentFiles, propsTypes) {
       }
       const literals = perBranch.map(map => literalOf(map.get(discriminant)).value)
       const kinds = new Set(literals.map(value => typeof value))
-      const first = perBranch[0].get(discriminant)
+      // Each branch documents its own mode, so the switch describes them all.
+      const described = [...new Set(perBranch.map(map => docs(map.get(discriminant))).filter(Boolean))].join(' ')
       component.props[discriminant] = {
         type: kinds.size === 1 && kinds.has('boolean') ? 'boolean' : literals.map(value => JSON.stringify(value)).join(' | '),
         required: perBranch.every(map => !isOptional(map.get(discriminant))),
-        ...(docs(first) ? { description: docs(first) } : {}),
+        ...(described ? { description: described } : {}),
         ...(kinds.has('boolean') ? {} : { values: literals }),
       }
       component.modes = perBranch.map((map, index) => {

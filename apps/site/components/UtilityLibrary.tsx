@@ -47,8 +47,8 @@ export function UtilityLibrary({ component }: { component: UtilityAtom }) {
       <AtomicSidebar current={component} />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>{title}</h1>
           <LibraryActions id={component} />
-          <h2>{title}</h2>
         </header>
         <div className="component-preview-stage input-specimens">
           <div className="input-preview-controls">

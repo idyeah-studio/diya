@@ -75,7 +75,7 @@ describe('the Screens gallery', () => {
       </Shell>
     )
     const main = page()
-    expect(within(main).getByRole('heading', { level: 2 }).textContent).toBe('Whole pages, ready to paste')
+    expect(within(main).getByRole('heading', { level: 1 }).textContent).toBe('Whole pages, ready to paste')
     expect(within(main).getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)).toEqual([...CATEGORIES, 'Don’t see your screen?'])
     for (const category of CATEGORIES) {
       const section = within(main).getByRole('region', { name: category })
@@ -149,7 +149,7 @@ describe('one screen', () => {
     const user = userEvent.setup()
     renderScreen(screenById('dashboard')!)
     const main = page()
-    expect(within(main).getByRole('heading', { level: 2 }).textContent).toBe('Analytics dashboard')
+    expect(within(main).getByRole('heading', { level: 1 }).textContent).toBe('Analytics dashboard')
     expect(within(main).getByRole('link', { name: 'All screens' }).getAttribute('href')).toBe('/explore?area=screens')
     const open = within(main).getByRole('link', { name: /Open full page/ })
     expect(open.getAttribute('href')).toBe('/screens-frame?screen=dashboard&theme=light&glass=0')
@@ -216,7 +216,7 @@ describe('one screen', () => {
   it('shows a poster with what it waits on and the request link, and no code', () => {
     renderScreen(screenById('board')!)
     const main = page()
-    expect(within(main).getByRole('heading', { level: 2 }).textContent).toBe('Board')
+    expect(within(main).getByRole('heading', { level: 1 }).textContent).toBe('Board')
     expect(main.textContent).toContain('Coming soon')
     expect(within(main).getByRole('heading', { name: 'Waiting on drag and drop', level: 3 })).toBeTruthy()
     expect(within(main).getByRole('link', { name: 'Want this one? Tell me' }).getAttribute('href')).toBe('/explore?area=screens&want=board#request')

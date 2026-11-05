@@ -40,6 +40,6 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
         // A switch toggles with Enter as well as Space.
         if (event.key === 'Enter' && !event.defaultPrevented && !disabled) { event.preventDefault(); event.currentTarget.click() }
       }} />
-    <div><label htmlFor={inputId} className={hideLabel ? 'diya-sr-only' : 'diya-switch-label'}>{label}</label>{description && <p id={`${inputId}-description`} className="diya-switch-description" data-invalid={error ? true : undefined}>{description}</p>}</div>
+    <div><label htmlFor={inputId} className={hideLabel ? 'diya-sr-only' : 'diya-switch-label'}>{label}</label>{description && <p id={`${inputId}-description`} className="diya-switch-description" data-invalid={error ? true : undefined}>{error && <span aria-hidden="true">!</span>}{description}</p>}</div>
   </div>
 })

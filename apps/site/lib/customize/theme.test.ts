@@ -3,7 +3,7 @@ import { BRAND_SUGGESTIONS, DEFAULT_APPEARANCE, effectiveAppearance, fonts, type
 import { contrast } from './color'
 import { contrastIssues } from './contrast'
 import { parseState } from './store'
-import { NEAR_BLACK, themeTokens } from './tokens'
+import { appearanceCss, NEAR_BLACK, themeTokens } from './tokens'
 import { buttonProps, contrastFix, fontFamilyValue, providerProps, providerSnippet, themeFile, themeSummary, webFont } from './theme'
 
 describe('the theme file', () => {
@@ -17,12 +17,21 @@ describe('the theme file', () => {
     const css = themeFile(effectiveAppearance({ 'colors.light.accent': '#8A3D1F', 'colors.dark.accent': '#F0B48A', corners: 16, elevation: 'lifted' }))
     expect(css).toContain(".diya-root {\n  --diya-corner-scale: 1.6;\n  --diya-elevation: 1.6;\n}")
     expect(css).toContain('@media (forced-colors: none) {')
-    expect(css).toMatch(/\.diya-root\[data-theme='light'\] \{\n    --diya-color-accent: #8A3D1F;\n    --diya-color-accent-text: #FAFAFA;/)
-    expect(css).toMatch(/\.diya-root\[data-theme='dark'\] \{\n    --diya-color-accent: #F0B48A;/)
+    expect(css).toMatch(/\.diya-root\[data-theme='light'\] \{\n    --diya-shadow-raised: /)
+    expect(css).toMatch(/\.diya-root\[data-theme='dark'\] \{\n    --diya-shadow-raised: /)
     for (const [, name] of css.matchAll(/(--[\w-]+):/g)) expect(name).toMatch(/^--diya-(color|corner-scale|elevation|shadow-raised)/)
     /* theme="system", the provider's default, gets the same tokens through the OS setting. */
-    expect(css).toMatch(/@media \(forced-colors: none\) and \(prefers-color-scheme: light\) \{\n  \.diya-root\[data-theme='system'\] \{\n    --diya-color-accent: #8A3D1F;/)
-    expect(css).toMatch(/@media \(forced-colors: none\) and \(prefers-color-scheme: dark\) \{\n  \.diya-root\[data-theme='system'\] \{\n    --diya-color-accent: #F0B48A;/)
+    expect(css).toMatch(/@media \(forced-colors: none\) and \(prefers-color-scheme: light\) \{\n  \.diya-root\[data-theme='system'\] \{\n    --diya-shadow-raised: /)
+    expect(css).toMatch(/@media \(forced-colors: none\) and \(prefers-color-scheme: dark\) \{\n  \.diya-root\[data-theme='system'\] \{\n    --diya-shadow-raised: /)
+  })
+
+  it("leaves the brand to brandColor, so the file can't outrank it or a nested provider", () => {
+    const appearance = effectiveAppearance({ 'colors.light.accent': '#8A3D1F', 'colors.dark.accent': '#F0B48A' })
+    const css = themeFile(appearance)
+    expect(css).toContain("Brand: #8A3D1F in Light, #F0B48A in Dark, set with DiyaProvider's brandColor.")
+    expect(css).not.toMatch(/--diya-color-accent/)
+    /* Customize's own preview has no provider prop to lean on, so it still paints the accent. */
+    expect(appearanceCss(appearance, '.diya-root.preview')).toMatch(/--diya-color-accent: #8A3D1F;/)
   })
 })
 
@@ -130,8 +139,17 @@ describe('one brand colour', () => {
     expect(contrast(pale['--diya-color-accent-ink'], '#FFFFFF')).toBeGreaterThanOrEqual(4.5)
   })
 
-  it('offers suggestions that all carry white text at AA', () => {
-    for (const swatch of BRAND_SUGGESTIONS) expect(contrast('#FFFFFF', swatch.hex), swatch.name).toBeGreaterThanOrEqual(4.5)
+  it('offers suggestions whose text reads at AA, with no contrast warning in either theme', () => {
+    // Neutral isn't a brand: choosing it clears the brand.
+    for (const swatch of BRAND_SUGGESTIONS.filter((swatch) => swatch.name !== 'Neutral')) {
+      const appearance = effectiveAppearance({ 'colors.light.accent': swatch.hex, 'colors.dark.accent': swatch.hex })
+      for (const theme of ['light', 'dark'] as const) {
+        const tokens = themeTokens(appearance, theme)
+        const text = tokens['--diya-color-accent-text'] ?? '#FAFAFA'
+        expect(contrast(text, swatch.hex), `${swatch.name} ${theme}`).toBeGreaterThanOrEqual(4.5)
+      }
+      expect(contrastIssues(appearance), swatch.name).toEqual([])
+    }
   })
 
   it('reads an old saved brand as the one brand, and drops the old periwinkle default', () => {

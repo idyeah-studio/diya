@@ -146,7 +146,8 @@
   padding: 6px 8px 6px 16px;
   border-bottom: 1px solid color-mix(in srgb, var(--diya-color-line) 60%, transparent);
 }
-/* On a narrow screen the keys drop below the label rather than squeezing it. */
+/* When a long label meets the keys, the keys drop below it rather than squeezing
+   it; on a phone the label wraps beside them instead (see the end of the file). */
 .diya-root .code-well-label {
   flex: 1 1 auto;
   min-width: min(100%, 22ch);
@@ -291,6 +292,12 @@
 }
 .diya-root .code-well[data-wrap] .code-well-label {
   min-width: 0;
+}
+/* On a phone every bar keeps one row: the label wraps beside Copy and Download,
+   so the first install step doesn't break apart. */
+@media (max-width: 520px) {
+  .diya-root .code-well-bar { flex-wrap: nowrap; }
+  .diya-root .code-well-label { min-width: 0; }
 }
 
 @media (max-width: 520px) {

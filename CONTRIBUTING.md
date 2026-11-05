@@ -1,8 +1,9 @@
 # Contributing to DIYA
 
 Thanks for helping. Bug reports, fixes, accessibility improvements and docs
-corrections are all welcome. For a new component, prop or pattern, please open a
-feature request first so we can agree on the shape before you write the code.
+corrections are all welcome. For a new component, prop or pattern, please ask for
+it first at [diya13.ai/ask](https://diya13.ai/ask), so we can agree on the shape
+before you write the code.
 
 By taking part you agree to the [Code of Conduct](CODE_OF_CONDUCT.md). Security
 problems go through private reporting; see [SECURITY.md](SECURITY.md).

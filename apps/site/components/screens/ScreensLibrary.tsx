@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { ArrowLeft, ArrowUpRight } from 'lucide-react'
+import { AppWindow, ArrowLeft } from 'lucide-react'
 import { Button, Tag } from '@idyeah/diya'
 import { useAppearance } from '../../app/Appearance'
 import { CatalogBrowser } from '../catalog/CatalogBrowser'
@@ -57,7 +57,7 @@ function ScreensGallery({ requestsOpen, want, launched }: { requestsOpen: boolea
   return (
     <>
       <header className="screens-intro">
-        <h2>Whole pages, ready to paste</h2>
+        <h1>Whole pages, ready to paste</h1>
         <p>Each one is a single file built from DIYA, with sample data and its states already working. Paste it into Next.js or Vite and it runs.</p>
       </header>
       {CATEGORIES.map((category, index) => {
@@ -154,7 +154,7 @@ function ScreenDocument({ screen, source, builtWith }: { screen: ScreenEntry; so
           All screens
         </Link>
         <div className="screens-title">
-          <h2>{screen.name}</h2>
+          <h1>{screen.name}</h1>
           {poster && <Tag size="small">Coming soon</Tag>}
           {screen.status === 'building' && <Tag size="small">In progress</Tag>}
         </div>
@@ -167,7 +167,7 @@ function ScreenDocument({ screen, source, builtWith }: { screen: ScreenEntry; so
               </Button>
             )}
             <a className="diya-button screens-open" data-variant="quiet" data-size="small" data-shape="pill" href={frameHref(screen, theme, glass)} target="_blank" rel="noopener">
-              <ArrowUpRight size={16} strokeWidth={1.6} aria-hidden="true" />
+              <AppWindow size={16} strokeWidth={1.6} aria-hidden="true" />
               Open full page
               <span className="screens-sr">, in a new tab</span>
             </a>

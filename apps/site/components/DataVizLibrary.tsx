@@ -123,8 +123,8 @@ export function DataVizLibrary() {
       <PatternSidebar current="data-viz" />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>Data Viz</h1>
           <LibraryActions id="data-viz" />
-          <h2>Data Viz</h2>
         </header>
         <section className="pattern-stage" aria-label="Data Viz playground">
           <div className="pattern-controls data-viz-controls">

@@ -37,7 +37,7 @@ describe('catalog sidebar foot', () => {
     expect(within(links).getByRole('link', { name: 'Ask for a component' }).getAttribute('href')).toBe('/ask')
     const entry = proEntry()
     expect(entry.getAttribute('href')).toBe('/explore?area=pro')
-    expect(entry.textContent).toBe('Relight, the DIYA Pro waitlist')
+    expect(entry.textContent).toBe('Relight, the DIYA Pro waitlist, Soon')
     expect(entry.hasAttribute('aria-current')).toBe(false)
   })
 

@@ -116,12 +116,13 @@
 }
 .rl-eyebrow { margin: 0 0 14px; font-size: 15px; line-height: 1.4; color: var(--diya-color-muted); }
 .rl-eyebrow b { font-weight: 500; color: var(--diya-color-text); }
-:where(html[data-catalog='true']) .rl-head h2 {
+:where(html[data-catalog='true']) .rl-head h1 {
   margin: 0;
-  font-size: 38px;
-  font-weight: 400;
-  line-height: 1.15;
-  letter-spacing: -0.045em;
+  font-size: 34px;
+  font-weight: 560;
+  font-stretch: 108%;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
   text-wrap: balance;
   color: var(--diya-color-text);
 }
@@ -167,7 +168,7 @@
   }
 }
 @media (max-width: 700px) {
-  :where(html[data-catalog='true']) .rl-head h2 { font-size: 30px; }
+  :where(html[data-catalog='true']) .rl-head h1 { font-size: 30px; }
   .rl-page { gap: 40px; }
   .rl-join { padding: 20px; }
 }

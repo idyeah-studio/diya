@@ -44,7 +44,8 @@ describe('the Oriel band on the launched landing', () => {
   it('leads with the approved line and opens Oriel, its source and each screen', () => {
     render(<OrielBand />)
     const band = screen.getByRole('region', { name: 'Don’t take the catalog’s word for it. Here’s a whole app.' })
-    expect(within(band).getByRole('link', { name: 'Open Oriel' }).getAttribute('href')).toBe(ORIEL_URL)
+    const open = within(band).getByRole('link', { name: /^Open Oriel ?, in a new tab$/ })
+    expect(open.getAttribute('href')).toBe(ORIEL_URL)
     expect(within(band).getByRole('link', { name: 'Read the source' }).getAttribute('href')).toBe(
       'https://github.com/idyeah-studio/diya/tree/main/examples/oriel',
     )
@@ -55,6 +56,12 @@ describe('the Oriel band on the launched landing', () => {
       `${ORIEL_URL}/customers`,
       `${ORIEL_URL}/settings`,
     ])
+    // Oriel always opens in a new tab, and says so to screen readers.
+    for (const link of [open, ...screens]) {
+      expect(link.getAttribute('target')).toBe('_blank')
+      expect(link.getAttribute('rel')).toBe('noopener')
+      expect(link.textContent).toContain(', in a new tab')
+    }
     expect(band.textContent).not.toMatch(/colour/)
     expect(band.querySelectorAll('[title]')).toHaveLength(0)
   })
@@ -96,8 +103,9 @@ describe('the hero leads with create-diya', () => {
 describe('the catalog door to Oriel', () => {
   it('sits under each pattern Oriel uses and links to its screen', () => {
     const { container, unmount } = render(<OrielDoor path="/explore?area=patterns&pattern=table" />)
-    const link = within(container).getByRole('link', { name: 'See it in a real screen: Oriel’s Invoices' })
+    const link = within(container).getByRole('link', { name: /^See it in a real screen: Oriel’s Invoices ?, in a new tab$/ })
     expect(link.getAttribute('href')).toBe(ORIEL_SCREENS.invoices.href)
+    expect(link.getAttribute('target')).toBe('_blank')
     unmount()
     for (const pattern of Object.keys(ORIEL_SCREEN_FOR_PATTERN)) expect(patternIds as readonly string[]).toContain(pattern)
   })

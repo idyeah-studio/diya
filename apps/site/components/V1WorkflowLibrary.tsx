@@ -41,8 +41,8 @@ export function V1WorkflowLibrary({ pattern }: { pattern: WorkflowPattern }) {
       <PatternSidebar current={pattern} />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>{title}</h1>
           <LibraryActions id={pattern} />
-          <h2>{title}</h2>
         </header>
         <section className="pattern-stage" aria-label={`${title} playground`}>
           <div className="pattern-controls">

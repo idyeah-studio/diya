@@ -45,7 +45,7 @@ export type SelectProps = Omit<
   /** Called with the chosen option's value, like every other DIYA field. The native `onChange` still works. */
   onValueChange?: (value: string) => void
 }
-/** A labelled native dropdown for choosing one option; pair `value` with `onValueChange`. */
+/** A labeled native dropdown for choosing one option; pair `value` with `onValueChange`. */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select({
   label,
   hideLabel = false,

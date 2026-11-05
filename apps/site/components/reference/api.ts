@@ -11,7 +11,9 @@ export type ApiProp = {
   default?: unknown
   values?: string[]
 }
-export type ApiComponent = { description: string; entry: string; extendsDom?: string; props: Record<string, ApiProp>; propsType?: string }
+/** Props that depend on a switch such as `multiple` or `range`: one entry per setting. */
+export type ApiMode = { when: Record<string, unknown>; default?: boolean; props: Record<string, ApiProp> }
+export type ApiComponent = { description: string; entry: string; extendsDom?: string; props: Record<string, ApiProp>; propsType?: string; modes?: ApiMode[] }
 type ApiItem = {
   title: string
   kind: string
@@ -82,6 +84,8 @@ export type ItemReference = {
   variants: string[]
   extendsDom?: string
   props: [string, ApiProp][]
+  /** The props each mode adds, such as `value` when `multiple={true}`; `when` reads as code. */
+  modes: { when: string; isDefault: boolean; props: [string, ApiProp][] }[]
 }
 
 /**
@@ -98,6 +102,7 @@ export function itemReference(id: ItemId): ItemReference | null {
   const component = API.components[exportName]
   if (!item || !component) return null
   const required = (a: [string, ApiProp], b: [string, ApiProp]) => Number(b[1].required) - Number(a[1].required)
+  const sorted = (props: Record<string, ApiProp>) => Object.entries(props).sort((a, b) => required(a, b) || a[0].localeCompare(b[0]))
   return {
     id,
     title: customizeItems[id].title,
@@ -109,7 +114,13 @@ export function itemReference(id: ItemId): ItemReference | null {
     since: item.since,
     variants: item.exports.map((e) => e.name).filter((name) => name !== exportName),
     extendsDom: component.extendsDom,
-    props: Object.entries(component.props).sort((a, b) => required(a, b) || a[0].localeCompare(b[0])),
+    props: sorted(component.props),
+    modes: (component.modes ?? []).map((mode) => ({
+      when: Object.entries(mode.when).map(([key, value]) => `${key}={${JSON.stringify(value)}}`).join(' '),
+      isDefault: mode.default === true,
+      // A mode can rule a prop out (`never`); that prop simply isn't listed.
+      props: sorted(mode.props).filter(([, prop]) => prop.type !== 'never'),
+    })),
   }
 }
 

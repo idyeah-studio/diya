@@ -27,8 +27,8 @@ export function TextInputLibrary() {
       <div className="gallery-study-backdrop" aria-hidden="true" />
       <AtomicSidebar current="text-input" />
       <div className="component-document">
-        <header className="component-document-heading"><LibraryActions id="text-input" />
-          <h2>Text Input</h2>
+        <header className="component-document-heading">          <h1>Text Input</h1>
+<LibraryActions id="text-input" />
         </header>
         <div className="component-preview-stage input-specimens">
           <div className="input-preview-controls">

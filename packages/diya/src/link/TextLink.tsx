@@ -1,6 +1,6 @@
-import { Children, cloneElement, forwardRef, isValidElement, type AnchorHTMLAttributes, type ReactElement, type ReactNode } from 'react'
+import { cloneElement, forwardRef, isValidElement, type AnchorHTMLAttributes, type ReactElement, type ReactNode } from 'react'
 import { cx } from '../internal/cx.js'
-import { renderSlot } from '../internal/slot.js'
+import { onlyChild, renderSlot } from '../internal/slot.js'
 /** Native anchor attributes (href, target, rel…) pass through to the link. */
 export type TextLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   /** Decorative icon before the text; hidden from assistive tech. */
@@ -16,7 +16,7 @@ export type TextLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
 export const TextLink = forwardRef<HTMLAnchorElement, TextLinkProps>(function TextLink({ children, leadingIcon, trailingIcon, inline = false, asChild = false, className, ...props }, ref) {
   const icons = (inner: ReactNode) => <>{leadingIcon && <span aria-hidden="true">{leadingIcon}</span>}{inner}{trailingIcon && <span aria-hidden="true">{trailingIcon}</span>}</>
   if (asChild) {
-    const child = Children.only(children)
+    const child = onlyChild(children)
     if (!isValidElement(child)) return null
     const own = child as ReactElement<{ children?: ReactNode }>
     const filled = leadingIcon || trailingIcon ? cloneElement(own, undefined, icons(own.props.children)) : own

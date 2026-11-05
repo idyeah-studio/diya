@@ -4,6 +4,9 @@
 :where(html[data-catalog='true']) .catalog-workflow-stack { display:grid; gap:20px; width:100%; max-width:640px; margin:auto; }
 :where(html[data-catalog='true']) .catalog-workflow-stack > p { min-height:20px; margin:0; font-size:13px; color:var(--diya-color-muted); }
 :where(html[data-catalog='true']) .catalog-workflow-stack > button { justify-self:start; }
+/* Drawer opens from one button: it sits in the middle of its stage, with the status under it. */
+:where(html[data-catalog='true']) .drawer-pattern-launch { min-height:240px; align-content:center; justify-items:center; text-align:center; }
+:where(html[data-catalog='true']) .drawer-pattern-launch > button { justify-self:center; }
 :where(html[data-catalog='true']) .catalog-form-columns { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:20px; }
 :where(html[data-catalog='true']) .catalog-review-list { display:grid; gap:16px; margin:0; }
 :where(html[data-catalog='true']) .catalog-review-list div { display:grid; grid-template-columns:100px 1fr; gap:16px; }

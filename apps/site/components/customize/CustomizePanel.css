@@ -10,7 +10,7 @@
   /* A third column: same top, inset and radius as the left sidebar card,
      clear of the site header and its appearance control. */
   top: 104px;
-  right: 24px;
+  right: 4vw;
   bottom: 24px;
   width: 360px;
   display: flex;
@@ -19,7 +19,9 @@
   border: 1px solid;
   border-radius: 24px;
   color: var(--diya-color-text);
-  font-family: Arial, Helvetica, sans-serif;
+  /* DIYA Sans by name, not --diya-font: picking a font here restyles the
+     preview, never the panel itself. */
+  font-family: 'DIYA Sans', 'DIYA Sans Fallback', Arial, Helvetica, sans-serif;
   font-size: 15px;
   line-height: 1.4;
 }
@@ -34,7 +36,7 @@
 }
 :where(html[data-catalog='true']) .customize-eyebrow {
   display: block;
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: 0.08em;
   margin-bottom: 6px;
   color: var(--diya-color-muted);
@@ -62,8 +64,9 @@
   overscroll-behavior: contain;
   padding: 12px 26px 24px;
   scroll-padding-block: 20px 44px;
-  /* Content fades into the footer instead of showing through it. */
-  mask-image: linear-gradient(to bottom, transparent, #000 14px, #000 calc(100% - 28px), transparent);
+  /* Content fades into the footer instead of showing through it. The top stays sharp,
+     so the intro line reads in full before anything scrolls. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
   display: grid;
   align-content: start;
   gap: 32px;
@@ -547,7 +550,7 @@
   display: block;
   padding: 10px 10px 4px;
   color: var(--diya-color-muted);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'DIYA Sans', 'DIYA Sans Fallback', Arial, Helvetica, sans-serif;
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -726,7 +729,7 @@
 @media (min-width: 1360px) {
   /* Make room beside the stage rather than covering it. */
   :root[data-catalog='true'][data-customize-open='true'] .gallery-study {
-    padding-right: 408px;
+    padding-right: calc(360px + 4vw + 24px);
   }
 }
 @media (max-width: 1359px) {

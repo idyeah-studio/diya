@@ -1961,7 +1961,7 @@ function chatbot(p: Playground): Snippet {
       messages: v(
         'messages',
         "import('@idyeah/diya').ChatMessage[]",
-        "[\n  { id: '1', role: 'assistant', text: 'Hi! Ask me about your projects.' },\n]"
+        "[\n  { id: '1', role: 'assistant', text: 'Hi. Ask me about your projects.' },\n]"
       ),
       value: v('draft', 'string'),
       onValueChange: v('setDraft', STRING_SETTER),

@@ -123,7 +123,13 @@ describe('editing', () => {
     const brand = within(panel).getByRole('group', { name: /^Brand/ })
     expect((within(brand).getByRole('radio', { name: 'Neutral, DIYA’s default' }) as HTMLInputElement).checked).toBe(true)
     expect(within(panel).queryByRole('group', { name: 'Use this in Dark too?' })).toBeNull()
-    await user.click(within(brand).getByRole('radio', { name: 'Ink blue, #1F4E7A' }))
+    /* The suggestions are bright: each reads on Dark as it is, so no question. */
+    await user.click(within(brand).getByRole('radio', { name: 'Ocean, #0A7CFF' }))
+    expect(getSnapshot().brand).toEqual({ 'colors.light.accent': '#0A7CFF', 'colors.dark.accent': '#0A7CFF' })
+    expect(within(panel).queryByRole('group', { name: 'Use this in Dark too?' })).toBeNull()
+    const hex = within(panel).getByRole('textbox', { name: 'Brand hex' })
+    await user.clear(hex)
+    await user.type(hex, '#1F4E7A')
     expect(getSnapshot().brand?.['colors.light.accent']).toBe('#1F4E7A')
     expect(within(panel).getByText(/Text on it: white in Light, near-black in Dark/)).toBeTruthy()
     /* This blue is hard to see on Dark, so Dark starts on the lighter suggestion. */

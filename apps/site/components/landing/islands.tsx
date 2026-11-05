@@ -9,7 +9,6 @@ export const SiteHeader = dynamic(() => import('../site/SiteHeader').then((m) =>
 export const InstallChip = dynamic(() => import('../site/InstallChip').then((m) => m.InstallChip))
 export const CreateChip = dynamic(() => import('./CreateChip').then((m) => m.CreateChip))
 export const InstallLine = dynamic(() => import('./CreateChip').then((m) => m.InstallLine))
-export const HeroPlates = dynamic(() => import('./HeroPlates').then((m) => m.HeroPlates))
 export const PartsSheet = dynamic(() => import('./PartsSheet').then((m) => m.PartsSheet))
 export const GlassCards = dynamic(() => import('./GlassBand').then((m) => m.GlassCards))
 export const ProScreen = dynamic(() => import('./ProScreen').then((m) => m.ProScreen))

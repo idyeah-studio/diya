@@ -1,8 +1,8 @@
 'use client'
-import { Children, cloneElement, forwardRef, isValidElement, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type ReactElement, type ReactNode, type Ref } from 'react'
+import { cloneElement, forwardRef, isValidElement, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from '../internal/cx.js'
 import { useDiyaLinkComponent } from '../internal/link.js'
-import { renderSlot } from '../internal/slot.js'
+import { onlyChild, renderSlot } from '../internal/slot.js'
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   /** 'solid' for the main action, 'outline' for secondary ones, 'quiet' for low-emphasis ones, 'destructive' for an action that deletes or can't be undone. Defaults to 'solid'. */
@@ -48,7 +48,7 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     {!(iconOnly && loading) && inner}
   </>
   if (asChild) {
-    const child = Children.only(children)
+    const child = onlyChild(children)
     if (!isValidElement(child)) return null
     const own = child as ReactElement<{ children?: ReactNode }>
     const filled = loading ? cloneElement(own, undefined, content(own.props.children)) : own

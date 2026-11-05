@@ -69,7 +69,10 @@ export default async function WaitlistUnsubscribe({ searchParams }: { searchPara
   }
   return (
     <WaitlistPage labelledBy="waitlist-unsubscribe-heading" chrome={catalogIsOpen()}>
-      <p className="wp-eyebrow">Relight · coming to DIYA Pro</p>
+      <p className="site-relight">
+        <span className="site-relight-name">Relight</span>
+        <span className="sr-only">,</span> <span className="site-soon">Coming to DIYA Pro</span>
+      </p>
       <h1 id="waitlist-unsubscribe-heading">{title}</h1>
       {body}
       <div className="wp-actions">

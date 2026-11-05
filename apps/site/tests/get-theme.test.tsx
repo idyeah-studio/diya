@@ -56,20 +56,35 @@ describe('Get theme, ready', () => {
     setBrandValue('colors.light.accent', '#8A3D1F')
     setBrandValue('colors.dark.accent', '#F0B48A')
     setBrandValue('translucent', true)
+    setBrandValue('corners', 16)
     const user = userEvent.setup()
     render(<Preview />)
     const { drawer } = await openGetTheme(user)
     await waitFor(() => expect(document.activeElement).toBe(within(drawer).getByRole('heading', { name: 'Get theme', level: 3 })))
     const file = within(drawer).getByRole('textbox', { name: 'Theme file' })
     expect(file.textContent).toContain("Import it after '@idyeah/diya/styles.css'. Public tokens only.")
-    expect(file.textContent).toContain('--diya-color-accent: #8A3D1F;')
+    expect(file.textContent).toContain('--diya-corner-scale: 1.6;')
+    /* The brand travels as brandColor; accent tokens in the file would outrank it. */
+    expect(file.textContent).not.toContain('--diya-color-accent')
     expect(within(drawer).getByRole('textbox', { name: 'Styles imports' }).textContent).toBe("import '@idyeah/diya/styles.css'\nimport './diya-theme.css'")
-    expect(file.textContent).toContain('Brand: #8A3D1F in Light, #F0B48A in Dark.')
+    expect(file.textContent).toContain("Brand: #8A3D1F in Light, #F0B48A in Dark, set with DiyaProvider's brandColor.")
     expect(within(drawer).getByRole('textbox', { name: 'Provider props' }).textContent).toBe(
       "<DiyaProvider\n  brandColor={{ light: '#8A3D1F', dark: '#F0B48A' }}\n  glass\n>"
     )
     expect(within(drawer).queryByRole('heading', { name: /Load / })).toBeNull()
     expect(drawer.textContent).not.toMatch(/Pro\b|preview only|ZIP|Internal/)
+  })
+
+  it('skips the file when only provider props changed', async () => {
+    setBrandValue('colors.light.accent', '#8A3D1F')
+    setBrandValue('colors.dark.accent', '#F0B48A')
+    const user = userEvent.setup()
+    render(<Preview />)
+    const { drawer } = await openGetTheme(user)
+    expect(within(drawer).queryByRole('textbox', { name: 'Theme file' })).toBeNull()
+    expect(within(drawer).queryByRole('heading', { name: /Import it/ })).toBeNull()
+    expect(within(drawer).getByRole('heading', { name: 'Step 1: Pass these to DiyaProvider' })).toBeTruthy()
+    expect(within(drawer).getByRole('textbox', { name: 'Provider props' }).textContent).toBe("<DiyaProvider\n  brandColor={{ light: '#8A3D1F', dark: '#F0B48A' }}\n>")
   })
 
   it('downloads a real diya-theme.css and announces it', async () => {
@@ -96,7 +111,8 @@ describe('Get theme, ready', () => {
     const user = userEvent.setup()
     render(<Preview />)
     const { drawer } = await openGetTheme(user)
-    expect(within(drawer).getByRole('heading', { name: 'Step 4: Load Manrope' })).toBeTruthy()
+    /* Only provider props changed, so there's no theme file to save: the font is step 2. */
+    expect(within(drawer).getByRole('heading', { name: 'Step 2: Load Manrope' })).toBeTruthy()
     expect(within(drawer).getByRole('textbox', { name: 'Font install command' }).textContent).toBe('pnpm add @fontsource-variable/manrope')
     expect(within(drawer).getByRole('textbox', { name: 'Font import' }).textContent).toBe("import '@fontsource-variable/manrope'")
     expect(within(drawer).getByRole('textbox', { name: 'Provider props' }).textContent).toContain(`fontFamily="'Manrope Variable', sans-serif"`)
@@ -133,10 +149,11 @@ describe('Get theme, when a color pair is too faint', () => {
       await user.click(fix)
       if (!within(drawer).queryAllByRole('button', { name: /^Use #/ }).length) break
     }
-    await waitFor(() => expect(within(drawer).getByRole('textbox', { name: 'Theme file' })).toBeTruthy())
+    /* Only the brand changed, so the first step is the provider prop. */
+    await waitFor(() => expect(within(drawer).getByRole('textbox', { name: 'Provider props' })).toBeTruthy())
     expect(contrastIssues(effectiveAppearance(getSnapshot().brand))).toEqual([])
-    await waitFor(() => expect(document.activeElement).toBe(within(drawer).getByRole('heading', { name: 'Step 1: Save the theme file' })))
-    await waitFor(() => expect(within(drawer).getByText('All pairs read well. Your theme file is ready.')).toBeTruthy())
+    await waitFor(() => expect(document.activeElement).toBe(within(drawer).getByRole('heading', { name: 'Step 1: Pass these to DiyaProvider' })))
+    await waitFor(() => expect(within(drawer).getByText('All pairs read well. Your theme is ready.')).toBeTruthy())
   })
 
   it('Adjust in Customize closes the drawer and focuses that setting', async () => {

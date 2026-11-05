@@ -4,6 +4,7 @@ import { CustomizationScope } from './customize/CustomizationScope'
 import { useState } from 'react'
 import { AtomicSidebar } from './AtomicSidebar'
 import { Badge, type Tone } from '@idyeah/diya'
+import { Bell } from 'lucide-react'
 import './GalleryStudy.css'
 import './ComponentLibrary.css'
 import './ButtonLibrary.css'
@@ -31,8 +32,8 @@ export function BadgeLibrary() {
       <div className="gallery-study-backdrop" aria-hidden="true" />
       <AtomicSidebar current="badge" />
       <div className="component-document">
-        <header className="component-document-heading"><LibraryActions id="badge" />
-          <h2>Badge</h2>
+        <header className="component-document-heading">          <h1>Badge</h1>
+<LibraryActions id="badge" />
         </header>
         <div className="component-preview-stage input-specimens">
           <div className="button-preview-controls">
@@ -95,7 +96,33 @@ export function BadgeLibrary() {
           </div>
           <CustomizationScope id="badge"><section className="badge-example" aria-label="Badge preview">
             {variant === 'dot' ? (
-              <Badge variant="dot" size={size} tone={tone} label={statusLabels[tone]} />
+              /* The dot as it's used: on an icon, beside a label, and on its own. */
+              <div className="badge-count-examples">
+                <div className="badge-count-specimen">
+                  <div>
+                    <span className="badge-on-icon">
+                      <Bell size={20} strokeWidth={1.6} aria-hidden="true" />
+                      <Badge variant="dot" size={size} tone={tone} label={statusLabels[tone]} />
+                    </span>
+                  </div>
+                  <span>On an icon</span>
+                </div>
+                <div className="badge-count-specimen">
+                  <div>
+                    <span className="badge-beside">
+                      Deploys
+                      <Badge variant="dot" size={size} tone={tone} label={statusLabels[tone]} />
+                    </span>
+                  </div>
+                  <span>Beside a label</span>
+                </div>
+                <div className="badge-count-specimen">
+                  <div>
+                    <Badge variant="dot" size={size} tone={tone} label={statusLabels[tone]} />
+                  </div>
+                  <span>On its own</span>
+                </div>
+              </div>
             ) : (
               <div className="badge-count-examples">
                 {[

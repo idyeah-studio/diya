@@ -12,6 +12,6 @@ export type PopoverProps = FloatingTriggerProps & {
   children: ReactNode | ((close: () => void) => ReactNode)
 }
 /** A button that opens a small panel of interactive content beside it; `className`, `style`, other attributes and the ref go to the trigger. */
-export const Popover = forwardRef<HTMLButtonElement, PopoverProps>(function Popover({ label, placement = 'bottom', disabled, children, ...props }, ref) {
+export const Popover = forwardRef<HTMLButtonElement, PopoverProps>(function Popover({ label, placement = 'bottom', disabled = false, children, ...props }, ref) {
   return <FloatingSurface {...props} ref={ref} label={label} placement={placement} disabled={disabled}>{children}</FloatingSurface>
 })

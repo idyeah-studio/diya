@@ -8,7 +8,7 @@
 :where(html[data-catalog='true']) .component-library .gallery-study-backdrop {
   position: fixed;
   background-image:
-    linear-gradient(110deg, #10121488, #101214ba), url('/images/concept-architecture.png');
+    linear-gradient(110deg, #10121488, #101214ba), url('/images/concept-architecture.webp');
 }
 :where(html[data-catalog='true']) .component-browser {
   position: sticky;
@@ -32,7 +32,7 @@
   font-size: var(--diya-text-caption, 13px);
   letter-spacing: 0.15em;
 }
-:where(html[data-catalog='true']) .component-browser h1 {
+:where(html[data-catalog='true']) .component-browser .catalog-browser-name {
   font-size: 20px;
   font-weight: 400;
   letter-spacing: -0.03em;
@@ -129,10 +129,14 @@
   margin: 0 10px;
   color: #737e82;
 }
-:where(html[data-catalog='true']) .component-document-heading > h2 {
-  font-size: 38px;
-  font-weight: 400;
-  letter-spacing: -0.045em;
+/* Page titles use the site's headline voice (the landing's section headings),
+   so the title outweighs the section headings under it. */
+:where(html[data-catalog='true']) .component-document-heading > h1 {
+  font-size: 34px;
+  font-weight: 560;
+  font-stretch: 108%;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
   margin: 15px 0;
 }
 :where(html[data-catalog='true']) .component-document-heading > p {
@@ -287,7 +291,7 @@
     top: 0;
     max-height: 310px;
   }
-  :where(html[data-catalog='true']) .component-document-heading > h2 {
+  :where(html[data-catalog='true']) .component-document-heading > h1 {
     font-size: 30px;
   }
 }

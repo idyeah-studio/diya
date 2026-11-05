@@ -82,6 +82,8 @@ export function GetThemeDrawer({
   const summary = themeSummary(appearance)
   const css = themeFile(appearance)
   const props = providerProps(appearance)
+  /* A file with no tokens (only the brand, font or glass changed) has nothing to import. */
+  const fileSteps = /--diya-/.test(css) || props.length === 0
   const font = webFont(appearance.font)
   const button = buttonProps(state.items.button?.options ?? {})
 
@@ -109,7 +111,7 @@ export function GetThemeDrawer({
     setBrandValue(result.path, result.value)
     const left = contrastIssues(effectiveAppearance({ ...(state.brand ?? {}), [result.path]: result.value })).length
     pendingFocus.current = left ? 'blocked' : 'ready'
-    say(left ? `Fixed. ${left === 1 ? 'One pair' : `${left} pairs`} left.` : 'All pairs read well. Your theme file is ready.')
+    say(left ? `Fixed. ${left === 1 ? 'One pair' : `${left} pairs`} left.` : 'All pairs read well. Your theme is ready.')
   }
   const adjust = (issue: ContrastIssue) => {
     const path = issue.paths.find((p) => Object.hasOwn(state.brand ?? {}, p)) ?? issue.path
@@ -235,38 +237,42 @@ export function GetThemeDrawer({
           </section>
         ) : (
           <>
-            <Step n={++n} title="Save the theme file" titleId={`${uid}-file`} titleRef={firstStep}>
-              <CodeBlock
-                code={css}
-                language="css"
-                label={`${THEME_FILENAME} · ${css.split('\n').length} lines`}
-                name="theme file"
-                collapseAfter={10}
-                actions={
-                  <Button
-                    variant="outline"
-                    size="small"
-                    shape="pill"
-                    className="code-key"
-                    aria-label={`Download ${THEME_FILENAME}`}
-                    onClick={() => {
-                      downloadThemeFile(css)
-                      say(`${THEME_FILENAME} is downloading.`)
-                    }}
-                  >
-                    <DownloadIcon />
-                    Download
-                  </Button>
-                }
-              />
-              <p>Public tokens only: the names DIYA promises not to rename in 1.x.</p>
-            </Step>
-            <Step n={++n} title="Import it after DIYA’s styles" titleId={`${uid}-import`}>
-              <CodeBlock code={`import '@idyeah/diya/styles.css'\nimport './${THEME_FILENAME}'`} language="tsx" label="Root layout or entry" name="styles imports" />
-              <p>Order matters. The theme goes second so it wins.</p>
-            </Step>
+            {fileSteps && (
+              <>
+                <Step n={++n} title="Save the theme file" titleId={`${uid}-file`} titleRef={firstStep}>
+                  <CodeBlock
+                    code={css}
+                    language="css"
+                    label={`${THEME_FILENAME} · ${css.split('\n').length} lines`}
+                    name="theme file"
+                    collapseAfter={10}
+                    actions={
+                      <Button
+                        variant="outline"
+                        size="small"
+                        shape="pill"
+                        className="code-key"
+                        aria-label={`Download ${THEME_FILENAME}`}
+                        onClick={() => {
+                          downloadThemeFile(css)
+                          say(`${THEME_FILENAME} is downloading.`)
+                        }}
+                      >
+                        <DownloadIcon />
+                        Download
+                      </Button>
+                    }
+                  />
+                  <p>Public tokens only: the names DIYA promises not to rename in 1.x.</p>
+                </Step>
+                <Step n={++n} title="Import it after DIYA’s styles" titleId={`${uid}-import`}>
+                  <CodeBlock code={`import '@idyeah/diya/styles.css'\nimport './${THEME_FILENAME}'`} language="tsx" label="Root layout or entry" name="styles imports" />
+                  <p>Order matters. The theme goes second so it wins.</p>
+                </Step>
+              </>
+            )}
             {props.length > 0 && (
-              <Step n={++n} title="Pass these to DiyaProvider" titleId={`${uid}-props`}>
+              <Step n={++n} title="Pass these to DiyaProvider" titleId={`${uid}-props`} titleRef={fileSteps ? undefined : firstStep}>
                 <CodeBlock code={providerSnippet(props)} language="tsx" label="Provider props" name="provider props" />
                 <p>
                   Only the props you changed. They carry what CSS can’t: {changed.length < 2 ? changed[0] : `${changed.slice(0, -1).join(', ')} and ${changed[changed.length - 1]}`}.

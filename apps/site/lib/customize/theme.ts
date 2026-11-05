@@ -23,16 +23,20 @@ import { appearanceCss } from './tokens'
 
 export const THEME_FILENAME = 'diya-theme.css'
 
-/** The stylesheet, public tokens only, to import after '@idyeah/diya/styles.css'. */
+/**
+ * The stylesheet, public tokens only, to import after '@idyeah/diya/styles.css'.
+ * The brand stays with DiyaProvider's brandColor: pinned accent tokens here would
+ * outrank it, and a nested provider could no longer give a region its own brand.
+ */
 export function themeFile(appearance: Appearance): string {
-  const css = appearanceCss(appearance, '.diya-root')
+  const css = appearanceCss(appearance, '.diya-root', { accent: false })
   const brand = brandSet(appearance)
-    ? `Brand: ${brandLabel(appearance)}. DiyaProvider's brandColor sets the same --diya-color-accent tokens.`
+    ? `Brand: ${brandLabel(appearance)}, set with DiyaProvider's brandColor.`
     : `Brand: ${BRAND_DEFAULT_NAME}.`
   return `/* ${THEME_FILENAME}, made in the DIYA catalog.
    Import it after '@idyeah/diya/styles.css'. Public tokens only.
    ${brand} */
-${css ? '\n' + css : "\n/* No color, corner or elevation changes: DIYA's defaults apply. */\n"}`
+${css ? '\n' + css : brandSet(appearance) ? "\n/* No other color, corner or elevation changes: DIYA's defaults apply. */\n" : "\n/* No color, corner or elevation changes: DIYA's defaults apply. */\n"}`
 }
 
 /** The brand as the summary names it: one hex, a Light · Dark pair, or the neutral default. */

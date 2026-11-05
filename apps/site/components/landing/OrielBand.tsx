@@ -16,15 +16,16 @@ export function OrielBand() {
           </p>
           <h2 id="oriel-title">Don’t take the catalog’s word for it. Here’s a whole app.</h2>
           <p className="ld-oriel-lede">
-            Oriel is a small invoicing app made only from DIYA: four screens, no Tailwind, and one small stylesheet
-            for its layout. Click anything; it starts fresh when you reload.
+            Oriel is a small invoicing app made only from DIYA: four screens, no Tailwind, and about 300 lines of its
+            own CSS. Click anything; the invoices start fresh when you reload.
           </p>
           <p className="ld-oriel-lede">
             Invoices are just the example. The same pieces build a booking tool, a CRM, or your settings page.
           </p>
           <div className="ld-oriel-actions">
-            <a className="diya-button" data-variant="solid" data-size="large" data-shape="pill" href={ORIEL_URL}>
+            <a className="diya-button" data-variant="solid" data-size="large" data-shape="pill" href={ORIEL_URL} target="_blank" rel="noopener">
               Open Oriel
+              <span className="sr-only">, in a new tab</span>
             </a>
             <a className="ld-oriel-source" href={ORIEL_SOURCE_URL}>
               <GitHubIcon size={15} />
@@ -35,9 +36,10 @@ export function OrielBand() {
         <ol className="ld-oriel-screens" aria-label="Oriel’s screens">
           {Object.values(ORIEL_SCREENS).map((screen) => (
             <li key={screen.name}>
-              <a href={screen.href}>
+              <a href={screen.href} target="_blank" rel="noopener">
                 <span className="ld-oriel-name">{screen.name}</span>
                 <span className="ld-oriel-shows">{screen.shows}</span>
+                <span className="sr-only">, in a new tab</span>
                 <span className="ld-index-go" aria-hidden="true">
                   →
                 </span>

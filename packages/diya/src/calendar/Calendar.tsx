@@ -3,7 +3,7 @@ import { forwardRef, useId, useMemo, useRef, useState, type HTMLAttributes } fro
 import { useDiyaLocale, useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { calendarMessages } from './messages.js'
-import { iso, monthOf, useClientLayoutEffect, useMonthGrid, type DateRange } from './month.js'
+import { iso, monthOf, useClientLayoutEffect, useMonthGrid, useToday, type DateRange } from './month.js'
 
 declare module '../messages.js' {
   interface DiyaMessages {
@@ -59,7 +59,7 @@ export type CalendarProps = CalendarSingleProps | CalendarRangeProps
 const toMonth = (date: Date) => iso(date).slice(0, 7)
 const fromMonth = (text: string | undefined) => text && /^\d{4}-(0[1-9]|1[0-2])$/.test(text) ? new Date(Number(text.slice(0, 4)), Number(text.slice(5)) - 1, 1) : undefined
 
-/** A labelled month calendar that stays on the page; picks one ISO date, or a start and end date with `range`. */
+/** A labeled month calendar that stays on the page; picks one ISO date, or a start and end date with `range`. */
 export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calendar(props, ref) {
   const {
     label, hideLabel = false, size = 'medium', min, max, isDateUnavailable, disabled = false, month: monthProp, onMonthChange, className,
@@ -76,8 +76,11 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
   // A start without an end means the next day chosen ends the range.
   const choosingEnd = range && !!value.start && !value.end
 
-  const [ownMonth, setOwnMonth] = useState(() => monthOf(value.start, min, max))
-  const shownKey = fromMonth(monthProp) ? monthProp! : toMonth(ownMonth)
+  // With no date to show, the server and the first browser render both open on the UTC month, so
+  // they agree whatever the reader's time zone; the reader's own month follows once the page is live.
+  const today = useToday()
+  const [ownMonth, setOwnMonth] = useState<Date | null>(() => value.start ? monthOf(value.start, min, max) : null)
+  const shownKey = fromMonth(monthProp) ? monthProp! : toMonth(ownMonth ?? monthOf(today || new Date().toISOString().slice(0, 10), min, max))
   const month = useMemo(() => fromMonth(shownKey)!, [shownKey])
   function changeMonth(next: Date) {
     if (monthProp === undefined) setOwnMonth(next)

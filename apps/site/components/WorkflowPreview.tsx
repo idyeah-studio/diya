@@ -432,7 +432,7 @@ export function WorkflowPreview(p: Props) {
     )
   if (p.pattern === 'drawer')
     return (
-      <div className="catalog-workflow-stack">
+      <div className="catalog-workflow-stack drawer-pattern-launch">
         <Button onClick={() => drawerChange(true)}>
           Open drawer
         </Button>

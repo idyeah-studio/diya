@@ -135,8 +135,8 @@ export function SiteHeaderLibrary() {
       <PatternSidebar current="site-header" />
       <div className="component-document">
         <header className="component-document-heading">
+          <h1>Site Header</h1>
           <LibraryActions id="site-header" />
-          <h2>Site Header</h2>
         </header>
         <section className="pattern-stage" aria-label="Site Header playground">
           <div className="pattern-controls">

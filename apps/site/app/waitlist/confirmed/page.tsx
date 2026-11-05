@@ -56,7 +56,10 @@ export default async function WaitlistConfirmed({ searchParams }: { searchParams
   const confirmed = status === 'founding' || status === 'listed'
   return (
     <WaitlistPage labelledBy="waitlist-confirmed-heading" chrome={catalogIsOpen()}>
-      <p className="wp-eyebrow">Relight · coming to DIYA Pro</p>
+      <p className="site-relight">
+        <span className="site-relight-name">Relight</span>
+        <span className="sr-only">,</span> <span className="site-soon">Coming to DIYA Pro</span>
+      </p>
       <h1 id="waitlist-confirmed-heading">{content.title}</h1>
       {content.body.map((line, index) => (
         <p key={line} className={index === 0 ? 'wp-lede' : 'wp-muted'}>
