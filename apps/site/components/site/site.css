@@ -144,12 +144,19 @@ html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2p
   color: var(--diya-color-text);
 }
 /* The header's keys wear the nav pill's material, so they stay legible
-   (4.5:1 or better) over a photograph while the header is clear. */
+   (4.5:1 or better) over a photograph while the header is clear, and its
+   edge, so the bar reads as one set on every page and in every theme. */
 .site-top-button,
 .site-top-appearance .appearance-popover > summary,
 .site-top-menu-button {
   background: color-mix(in srgb, var(--diya-color-raised) 55%, transparent);
   backdrop-filter: blur(16px);
+}
+.site-top .site-top-button,
+.site-top .site-top-appearance .appearance-popover > summary,
+.site-top .site-top-menu-button {
+  border-color: var(--diya-internal-edge);
+  border-top-color: var(--diya-internal-highlight);
 }
 .site-top-button:hover,
 .site-top-appearance .appearance-popover > summary:hover,

@@ -225,6 +225,7 @@ export default function OnboardingScreen() {
               className="onboarding-wizard"
               label="Set up your workspace"
               headingLevel={1}
+              showStepCount={false}
               steps={steps}
               activeStep={active}
               onStepChange={changeStep}
@@ -299,6 +300,7 @@ const css = `
 .onboarding-product { font-size: var(--diya-text-large); font-weight: 600; letter-spacing: -0.01em; }
 .onboarding-main { flex: 1; display: grid; align-content: start; justify-items: center; padding: var(--diya-space-6) var(--diya-space-4) var(--diya-space-8); }
 .onboarding-wizard { padding: var(--diya-space-6); }
+.onboarding .onboarding-main .onboarding-wizard h1 { font-size: var(--diya-text-heading); letter-spacing: -0.02em; text-wrap: balance; }
 .onboarding-fields { display: grid; gap: var(--diya-space-5); }
 .onboarding-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: var(--diya-space-5) var(--diya-space-6); }
 .onboarding-invite { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--diya-space-3); align-items: start; }
@@ -321,7 +323,7 @@ const css = `
 .onboarding-summary { max-width: none; }
 .onboarding-wide { width: 100%; }
 @media (max-width: 600px) {
-  .onboarding-bar { padding: var(--diya-space-4) var(--diya-space-5); }
+  .onboarding-bar { padding: var(--diya-space-4); }
   .onboarding-main { display: flex; flex-direction: column; padding: 0; }
   .onboarding-wizard,
   .onboarding-done {
@@ -329,8 +331,8 @@ const css = `
     flex: 1;
     margin: 0;
     align-content: start;
-    padding: var(--diya-space-5) max(var(--diya-space-5), env(safe-area-inset-right)) max(var(--diya-space-6), env(safe-area-inset-bottom))
-      max(var(--diya-space-5), env(safe-area-inset-left));
+    padding: var(--diya-space-5) max(var(--diya-space-4), env(safe-area-inset-right)) max(var(--diya-space-6), env(safe-area-inset-bottom))
+      max(var(--diya-space-4), env(safe-area-inset-left));
     border-width: 1px 0 0;
     border-radius: 0;
     box-shadow: none;

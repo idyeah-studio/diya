@@ -18,12 +18,12 @@ import {
 } from './islands'
 import { LandingStyles } from './LandingStyles'
 import { OrielBand } from './OrielBand'
-import { screens } from '../screens/screens-data'
+import { screens, thumbnailSrc } from '../screens/screens-data'
 import { LAUNCH_PENDING_SCRIPT } from './launch-signal'
 
-// The screens the landing names, in gallery order; the count follows the registry.
+// The screens the landing shows, in gallery order; the count follows the registry.
 const readyScreens = screens.filter((screen) => screen.status === 'ready')
-const FEATURED = ['dashboard', 'sign-in', 'settings', 'checkout', 'ai', 'pricing']
+const FEATURED = ['dashboard', 'pricing', 'listing']
 const featuredScreens = readyScreens.filter((screen) => FEATURED.includes(screen.id))
 
 const patterns = [
@@ -128,31 +128,36 @@ export function LaunchedLanding() {
                 ))}
               </ol>
             </div>
-            <div className="ld-patterns">
+            <div className="ld-patterns ld-screens">
               <div className="ld-sub-head">
                 <div>
                   <h3>{readyScreens.length} screens.</h3>
                   <p>Whole pages, ready to paste: one file each, with sample data and every state already working.</p>
                 </div>
+                <Link className="ld-screens-all" href="/explore?area=screens">
+                  All {readyScreens.length} screens
+                  <span className="ld-index-go" aria-hidden="true">→</span>
+                </Link>
               </div>
-              <ol className="ld-index">
+              <ul className="ld-screens-list">
                 {featuredScreens.map(({ id, name }) => (
                   <li key={id}>
                     <Link href={`/explore?area=screens&screen=${id}`}>
-                      <span>{name}</span>
-                      <i aria-hidden="true" />
-                      <span className="ld-index-go" aria-hidden="true">→</span>
+                      <span className="ld-screens-picture">
+                        {(['light', 'dark'] as const).map((theme) => (
+                          // Decorative: the screen's name follows. html[data-theme] shows one.
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={theme} src={thumbnailSrc(id, theme)} data-theme-image={theme} alt="" width={896} height={560} loading="lazy" decoding="async" />
+                        ))}
+                      </span>
+                      <span className="ld-screens-name">
+                        {name}
+                        <span className="ld-index-go" aria-hidden="true">→</span>
+                      </span>
                     </Link>
                   </li>
                 ))}
-                <li>
-                  <Link href="/explore?area=screens">
-                    <span>All {readyScreens.length} screens</span>
-                    <i aria-hidden="true" />
-                    <span className="ld-index-go" aria-hidden="true">→</span>
-                  </Link>
-                </li>
-              </ol>
+              </ul>
             </div>
             <dl className="ld-specs">
               {specs.map(([title, body]) => (

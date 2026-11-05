@@ -3,11 +3,11 @@
 // Next.js: save as app/profile/page.tsx. Vite: save as src/Profile.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
-  Avatar, Button, Combobox, Drawer, List, Progress, Select, Tabs, Tag, TextArea, TextInput, Toast, useDiyaAppearance,
+  Avatar, Button, Combobox, Drawer, List, Progress, Select, Tabs, Tag, TextArea, TextInput, Toast,
   type ListItem,
 } from '@idyeah/diya'
 import {
-  CalendarDays, Clock, FileText, GitPullRequestArrow, LucideProvider, Mail, MapPin, MessageCircle, MessageSquare, Pencil,
+  CalendarDays, ChevronLeft, Clock, FileText, GitPullRequestArrow, LucideProvider, Mail, MapPin, MessageCircle, MessageSquare, Pencil,
   Plus, Send, UserPlus, Users,
 } from 'lucide-react'
 
@@ -29,9 +29,9 @@ const PERSON: Person = {
 }
 const DETAILS = { team: 'Design Systems', manager: 'Folake Adeyemi', email: 'aiko.tanaka@example.com', joined: 'March 2022' }
 const PROJECTS = [
-  { id: 'tokens', name: 'Tokens 2.0', role: 'Lead', due: 'Due Dec 12', progress: 68 },
-  { id: 'checkout', name: 'Checkout redesign', role: 'Design review', due: 'Due Nov 20', progress: 40 },
-  { id: 'audit', name: 'Accessibility audit, Q4', role: 'Contributor', due: 'Due Dec 3', progress: 85 },
+  { id: 'tokens', name: 'Tokens 2.0', role: 'Lead', due: 'Due in 5 weeks', progress: 68 },
+  { id: 'checkout', name: 'Checkout redesign', role: 'Design review', due: 'Due next week', progress: 40 },
+  { id: 'audit', name: 'Accessibility audit', role: 'Contributor', due: 'Due in 3 weeks', progress: 85 },
 ]
 const TIME_ZONES = [
   { value: 'Asia/Tokyo', label: 'Japan (GMT+9)' },
@@ -59,9 +59,9 @@ async function getActivity(): Promise<Activity[]> {
   return [
     { id: 'a1', kind: 'publish', text: 'Published the new color ramps', where: 'Tokens 2.0', when: '2 hours ago' },
     { id: 'a2', kind: 'comment', text: '“Can the order summary stay pinned on phones?”', where: 'Checkout redesign', when: 'Yesterday' },
-    { id: 'a3', kind: 'review', text: 'Approved 6 component changes', where: 'Design system library', when: 'Oct 27' },
-    { id: 'a4', kind: 'share', text: 'Shared “Motion guidelines, first draft”', where: 'Design Systems', when: 'Oct 24' },
-    { id: 'a5', kind: 'join', text: 'Joined Accessibility audit, Q4', where: 'Invited by Folake Adeyemi', when: 'Oct 20' },
+    { id: 'a3', kind: 'review', text: 'Approved 6 component changes', where: 'Design system library', when: '3 days ago' },
+    { id: 'a4', kind: 'share', text: 'Shared “Motion guidelines, first draft”', where: 'Design Systems', when: 'Last week' },
+    { id: 'a5', kind: 'join', text: 'Joined Accessibility audit', where: 'Invited by Folake Adeyemi', when: '2 weeks ago' },
   ]
 }
 async function getTeam(): Promise<Teammate[]> {
@@ -80,11 +80,10 @@ async function saveProfile(person: Person) {
 }
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-const localTime = (timeZone: string, now: Date) => now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone })
+const localTime = (timeZone: string, now: Date | undefined) => !now ? '' : now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone })
 const ICONS = { publish: Send, comment: MessageSquare, review: GitPullRequestArrow, join: UserPlus, share: FileText }
 
 export default function ProfileScreen() {
-  const { glass } = useDiyaAppearance()
   const [person, setPerson] = useState(PERSON)
   const [tab, setTab] = useState('overview')
   const [activity, setActivity] = useState<Activity[]>()
@@ -161,16 +160,14 @@ export default function ProfileScreen() {
 
   return (
     <LucideProvider size={18} strokeWidth={1.6}>
-      <div className="profile" data-glass={glass || undefined}>
+      <div className="profile">
         <style>{css}</style>
-        <header className="profile-band">
-          <div className="profile-bar">
-            <a className="profile-brand" href="/">
-              <span className="profile-mark" aria-hidden="true">{PRODUCT[0]}</span>
-              {PRODUCT}
-            </a>
-            <a className="profile-link profile-back" href="/people">All people</a>
-          </div>
+        <header className="profile-bar">
+          <a className="profile-brand" href="/">
+            <span className="profile-mark" aria-hidden="true">{PRODUCT[0]}</span>
+            {PRODUCT}
+          </a>
+          <a className="profile-link profile-back" href="/people"><ChevronLeft className="profile-back-icon" /> All people</a>
         </header>
 
         <main className="profile-main">
@@ -184,15 +181,13 @@ export default function ProfileScreen() {
               <p className="profile-role">{person.role} · {DETAILS.team}</p>
               <p className="profile-meta">
                 <span><MapPin /> {person.location}</span>
-                <span><Clock /> {localTime(person.timeZone, now)} for {first}</span>
+                {/* The clock starts after the page loads, so the server and the browser render the same thing. */}
+                <span className="profile-clock" data-pending={!now || undefined}><Clock /> {localTime(person.timeZone, now) || '12:00 PM'} for {first}</span>
               </p>
             </div>
             <div className="profile-actions">
               {isOwnProfile ? (
-                <>
-                  <Button onClick={() => setEditing(true)}><Pencil /> Edit profile</Button>
-                  <Button variant="outline" href="/messages/me"><MessageCircle /> Message</Button>
-                </>
+                <Button variant="outline" onClick={() => setEditing(true)}><Pencil /> Edit profile</Button>
               ) : (
                 <Button href="/messages/aiko-tanaka"><MessageCircle /> Message {first}</Button>
               )}
@@ -308,8 +303,9 @@ function Skeleton({ label }: { label: string }) {
 }
 
 function useNow() {
-  const [now, setNow] = useState(() => new Date())
+  const [now, setNow] = useState<Date>()
   useEffect(() => {
+    setNow(new Date())
     const tick = setInterval(() => setNow(new Date()), 30_000)
     return () => clearInterval(tick)
   }, [])
@@ -318,20 +314,8 @@ function useNow() {
 
 const css = `
 .profile { min-height: 100dvh; color: var(--diya-color-text); --profile-gutter: var(--diya-space-7); }
-.profile-band {
-  height: 200px;
-  background:
-    radial-gradient(60% 120% at 18% 0%, color-mix(in srgb, var(--diya-color-surface) 70%, transparent), transparent 70%),
-    radial-gradient(50% 140% at 92% 100%, color-mix(in srgb, var(--diya-color-text) 7%, transparent), transparent 70%),
-    linear-gradient(120deg, color-mix(in srgb, var(--diya-color-text) 7%, var(--diya-color-surface)), color-mix(in srgb, var(--diya-color-text) 3%, var(--diya-color-surface)));
-}
-.profile[data-glass] .profile-band {
-  background: color-mix(in srgb, var(--diya-color-surface) 46%, transparent);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
-}
 .profile-bar, .profile-main { width: 100%; max-width: 1120px; margin: 0 auto; padding-inline: var(--profile-gutter); }
-.profile-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-4); padding-block: var(--diya-space-5); }
+.profile-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-4); min-height: 56px; padding-block: var(--diya-space-5); }
 .profile-brand { display: inline-flex; align-items: center; gap: 10px; border-radius: 8px; color: inherit; font-size: var(--diya-text-large); font-weight: 600; letter-spacing: -0.01em; text-decoration: none; }
 .profile-mark {
   display: grid; place-items: center; width: 28px; height: 28px; border-radius: calc(8px * var(--diya-corner-scale, 1));
@@ -340,20 +324,22 @@ const css = `
 .profile-link { border-radius: 4px; color: inherit; text-decoration: none; }
 .profile-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .profile-brand:focus-visible, .profile-link:focus-visible, .profile-project-name:focus-visible, .profile-empty:focus-visible { outline: 2px solid var(--diya-color-accent); outline-offset: 3px; }
-.profile-back { color: var(--diya-color-muted); font-size: var(--diya-text-body); }
+.profile-back { display: inline-flex; align-items: center; gap: 2px; color: var(--diya-color-muted); font-size: var(--diya-text-body); }
+.profile-back-icon { display: none; }
 
-.profile-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--diya-space-5); margin-top: -64px; }
-.profile-avatar.profile-avatar { width: 128px; height: 128px; font-size: 44px; font-weight: 450; letter-spacing: -0.02em; box-shadow: 0 0 0 5px var(--diya-color-surface); }
-.profile[data-glass] .profile-avatar { box-shadow: 0 0 0 5px color-mix(in srgb, var(--diya-color-surface) 70%, transparent); }
-.profile-identity { display: grid; grid-column: 1 / -1; gap: var(--diya-space-2); min-width: 0; }
+.profile-head { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; align-items: center; gap: var(--diya-space-5) var(--diya-space-6); margin-top: var(--diya-space-8); }
+.profile-avatar.profile-avatar { width: 96px; height: 96px; font-size: 34px; font-weight: 450; letter-spacing: -0.02em; }
+.profile-identity { display: grid; gap: var(--diya-space-2); min-width: 0; }
 .profile-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--diya-space-1) var(--diya-space-3); margin: 0; font-size: var(--diya-text-display); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.025em; }
 .profile-pronouns { color: var(--diya-color-muted); font-size: var(--diya-text-body); font-weight: 400; letter-spacing: 0; }
 .profile-role { margin: 0; font-size: var(--diya-text-large); }
 .profile-meta { display: flex; flex-wrap: wrap; gap: var(--diya-space-2) var(--diya-space-5); margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); }
 .profile-meta span { display: inline-flex; align-items: center; gap: 6px; }
-.profile-actions { display: flex; flex-wrap: wrap; gap: var(--diya-space-3); grid-row: 1; grid-column: 2; }
+.profile-clock[data-pending] { visibility: hidden; }
+.profile-actions { display: flex; flex-wrap: wrap; gap: var(--diya-space-3); }
 
 .profile-tabs { margin-top: var(--diya-space-7); padding-bottom: var(--diya-space-8); }
+.profile-tabs [role='tablist'] { width: 100%; }
 .profile-overview { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--diya-space-8); padding-top: var(--diya-space-6); }
 .profile-column { display: grid; gap: var(--diya-space-7); align-content: start; }
 .profile-section, .profile-panel { display: grid; gap: var(--diya-space-4); align-content: start; }
@@ -379,7 +365,7 @@ const css = `
 .profile-facts { display: grid; gap: var(--diya-space-4); margin: 0; }
 .profile-facts div { display: grid; gap: 4px; }
 .profile-facts dt { display: inline-flex; align-items: center; gap: 8px; color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
-.profile-facts dd { margin: 0 0 0 26px; font-size: var(--diya-text-body); overflow-wrap: anywhere; }
+.profile-facts dd { margin: 0 0 0 26px; font-size: var(--diya-text-body); font-weight: 500; overflow-wrap: anywhere; }
 
 .profile-list.profile-list { max-width: none; }
 .profile-activity-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: color-mix(in srgb, var(--diya-color-text) 6%, transparent); color: var(--diya-color-muted); }
@@ -398,20 +384,19 @@ const css = `
 .profile-pair-wide { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
 .profile-drawer-actions { display: flex; justify-content: flex-end; gap: var(--diya-space-3); width: 100%; }
 
-@media (prefers-reduced-transparency: reduce) {
-  .profile[data-glass] .profile-band { background: var(--diya-color-raised); backdrop-filter: none; -webkit-backdrop-filter: none; }
-}
 @media (max-width: 900px) {
   .profile { --profile-gutter: var(--diya-space-5); }
   .profile-overview { grid-template-columns: minmax(0, 1fr); gap: var(--diya-space-7); }
 }
 @media (max-width: 520px) {
   .profile { --profile-gutter: var(--diya-space-4); }
-  .profile-band { height: 168px; }
-  .profile-head { margin-top: -52px; gap: var(--diya-space-4); }
-  .profile-avatar.profile-avatar { width: 104px; height: 104px; font-size: 36px; }
+  .profile-bar { padding-block: 0; }
+  .profile-brand { display: none; }
+  .profile-back { margin-left: -6px; color: var(--diya-color-text); }
+  .profile-back-icon { display: block; }
+  .profile-head { grid-template-columns: minmax(0, 1fr); gap: var(--diya-space-4); margin-top: var(--diya-space-5); }
+  .profile-avatar.profile-avatar { width: 80px; height: 80px; font-size: 28px; }
   .profile-name { font-size: 28px; }
-  .profile-actions { grid-row: 3; grid-column: 1 / -1; }
   .profile-actions > * { flex: 1; }
   .profile-tabs { margin-top: var(--diya-space-6); }
   .profile-project { grid-template-columns: minmax(0, 1fr); gap: var(--diya-space-3); }

@@ -155,7 +155,7 @@ export default function GettingStartedScreen() {
           <PageHeader
             surface={false}
             headingLevel={1}
-            title={<span ref={heading} tabIndex={-1} className="getting-started-focus">Good morning, {ME.first}</span>}
+            title={<span ref={heading} tabIndex={-1} className="getting-started-focus getting-started-title">Good morning, {ME.first}</span>}
             description={`${TODAY}. ${finished ? `${WORKSPACE} is all set up.` : `${WORKSPACE} is brand new, so start here.`}`}
             actions={<Button href="/docs/new"><Plus /> New doc</Button>}
           />
@@ -331,9 +331,6 @@ const css = `
   border-right: 1px solid var(--diya-color-line);
 }
 .getting-started[data-glass] .getting-started-side {
-  top: 12px; height: calc(100dvh - 24px); margin: 12px 0 12px 12px; overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--diya-color-text) 10%, transparent);
-  border-radius: calc(18px * var(--diya-corner-scale, 1));
   background: color-mix(in srgb, var(--diya-color-raised) 62%, transparent);
   backdrop-filter: blur(28px) saturate(1.15);
 }
@@ -352,6 +349,7 @@ const css = `
 .getting-started-main { display: grid; align-content: start; gap: var(--diya-space-6); width: 100%; max-width: 1200px; padding: var(--diya-space-7) var(--diya-space-7) var(--diya-space-8); }
 .getting-started-main:focus,
 .getting-started-focus:focus { outline: none; }
+.getting-started-title { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
 .getting-started-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--diya-space-5); align-items: start; }
 .getting-started-column { display: grid; gap: var(--diya-space-5); min-width: 0; }
 .getting-started-checklist .getting-started-progress { width: 100%; }

@@ -1,15 +1,16 @@
 'use client'
 // Resource table: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/orders/page.tsx. Vite: save as src/ResourceTable.tsx and render it inside your DiyaProvider.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import {
-  Button, Choice, ContentState, Dialog, Drawer, Inline, List, Metric, PageHeader, Select, Stack, Table, Tag, TextArea, TextInput, TextLink, Toast,
+  Avatar, Button, Choice, ContentState, Dialog, Drawer, Inline, List, Menu, Metric, PageHeader, Select, Stack, Table, Tag, TextArea, TextInput, TextLink, Toast,
   type TableColumn, type Tone,
 } from '@idyeah/diya'
 import { CloudAlert, LucideProvider, Pencil, Plus, ShoppingBag } from 'lucide-react'
 
 // Your shop, its products and customers. Replace with your own.
 const SHOP = 'Tidewell Coffee'
+const ME = { name: 'Rosa Delgado' }
 const NOW = '2026-11-06T07:12'
 const PRODUCTS = {
   mt: { name: 'Morning Tide blend, 340 g', price: 18 },
@@ -21,7 +22,7 @@ const PRODUCTS = {
   sub: { name: 'Subscription, 2 bags a month', price: 34 },
 }
 const CITIES: Record<string, string> = {
-  'Amara Okafor': 'Portland, OR', 'Diego Hernández': 'Austin, TX', 'Mei Tanaka': 'Seattle, WA', 'Priya Raman': 'Chicago, IL',
+  'Amara Okafor': 'Portland, OR', 'Diego Hernández': 'Austin, TX', 'Mei Tanaka': 'Seattle, WA', 'Pilar Ramos': 'Chicago, IL',
   'Jonas Lindqvist': 'Minneapolis, MN', 'Fatima Al-Sayed': 'Brooklyn, NY', 'Kwame Mensah': 'Atlanta, GA', 'Sofia Rossi': 'Boston, MA',
   'Liam O’Connor': 'Denver, CO', 'Hana Kim': 'Oakland, CA', 'Mateo Silva': 'Miami, FL', 'Aisha Bello': 'Raleigh, NC',
   'Noah Goldberg': 'Philadelphia, PA', 'Leilani Kahale': 'Honolulu, HI', 'Ravi Patel': 'Columbus, OH', 'Ingrid Berg': 'Burlington, VT',
@@ -29,7 +30,7 @@ const CITIES: Record<string, string> = {
 // Order number, placed, customer, items and how many, payment, fulfillment.
 const ORDERS: [number, string, string, Partial<Record<Product, number>>, Payment, Fulfillment][] = [
   [1052, '2026-11-05T16:48', 'Amara Okafor', { mt: 2 }, 'Paid', 'Unfulfilled'], [1051, '2026-11-05T11:02', 'Diego Hernández', { kit: 1, gu: 1 }, 'Paid', 'Unfulfilled'],
-  [1050, '2026-11-05T08:15', 'Mei Tanaka', { sub: 1 }, 'Paid', 'Unfulfilled'], [1049, '2026-11-04T19:37', 'Priya Raman', { nh: 1 }, 'Paid', 'Unfulfilled'],
+  [1050, '2026-11-05T08:15', 'Mei Tanaka', { sub: 1 }, 'Paid', 'Unfulfilled'], [1049, '2026-11-04T19:37', 'Pilar Ramos', { nh: 1 }, 'Paid', 'Unfulfilled'],
   [1048, '2026-11-04T09:41', 'Jonas Lindqvist', { mt: 1, mug: 2 }, 'Pending', 'Unfulfilled'], [1047, '2026-11-03T14:20', 'Fatima Al-Sayed', { gu: 2 }, 'Paid', 'Shipped'],
   [1046, '2026-11-03T07:55', 'Kwame Mensah', { hu: 1, mt: 1 }, 'Paid', 'Shipped'], [1045, '2026-11-02T18:10', 'Sofia Rossi', { sub: 1 }, 'Paid', 'Shipped'],
   [1044, '2026-11-01T10:26', 'Liam O’Connor', { kit: 1 }, 'Paid', 'Shipped'], [1043, '2026-10-31T15:03', 'Hana Kim', { mt: 3 }, 'Paid', 'Delivered'],
@@ -37,7 +38,7 @@ const ORDERS: [number, string, string, Partial<Record<Product, number>>, Payment
   [1040, '2026-10-28T20:30', 'Noah Goldberg', { mug: 1 }, 'Paid', 'Delivered'], [1039, '2026-10-27T13:58', 'Leilani Kahale', { sub: 1 }, 'Paid', 'Delivered'],
   [1038, '2026-10-26T08:44', 'Ravi Patel', { mt: 2, nh: 1 }, 'Paid', 'Delivered'], [1037, '2026-10-24T17:21', 'Ingrid Berg', { kit: 1, mt: 1 }, 'Paid', 'Delivered'],
   [1036, '2026-10-23T11:39', 'Amara Okafor', { gu: 1 }, 'Paid', 'Delivered'], [1035, '2026-10-22T09:05', 'Diego Hernández', { mt: 6 }, 'Pending', 'Delivered'],
-  [1034, '2026-10-20T15:50', 'Mei Tanaka', { hu: 2 }, 'Paid', 'Delivered'], [1033, '2026-10-19T10:18', 'Priya Raman', { sub: 1 }, 'Paid', 'Delivered'],
+  [1034, '2026-10-20T15:50', 'Mei Tanaka', { hu: 2 }, 'Paid', 'Delivered'], [1033, '2026-10-19T10:18', 'Pilar Ramos', { sub: 1 }, 'Paid', 'Delivered'],
   [1032, '2026-10-17T19:02', 'Kwame Mensah', { mt: 1, mug: 1 }, 'Paid', 'Delivered'], [1031, '2026-10-16T12:33', 'Fatima Al-Sayed', { nh: 1 }, 'Paid', 'Delivered'],
   [1030, '2026-10-15T08:27', 'Sofia Rossi', { kit: 1, gu: 1 }, 'Paid', 'Delivered'], [1029, '2026-10-13T16:14', 'Jonas Lindqvist', { mt: 2 }, 'Paid', 'Delivered'],
   [1028, '2026-10-12T09:49', 'Hana Kim', { sub: 1 }, 'Paid', 'Delivered'], [1027, '2026-10-10T14:06', 'Liam O’Connor', { gu: 1 }, 'Refunded', 'Delivered'],
@@ -102,6 +103,7 @@ const api = {
 }
 
 const money = (amount: number) => amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 const placedAt = (iso: string) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 const subtotal = (order: Pick<Order, 'lines'>) => order.lines.reduce((sum, line) => sum + PRODUCTS[line.product].price * line.qty, 0)
 const shipping = (order: Pick<Order, 'lines'>) => (subtotal(order) >= 50 ? 0 : 6)
@@ -121,6 +123,8 @@ export default function ResourceTableScreen() {
   const [creating, setCreating] = useState(false)
   const [toArchive, setToArchive] = useState<string[]>([])
   const [notice, setNotice] = useState<Notice>()
+  const [selecting, setSelecting] = useState(false)
+  const narrow = useNarrow()
 
   useEffect(() => {
     let current = true
@@ -151,15 +155,32 @@ export default function ResourceTableScreen() {
     setNotice({ title: `Exported ${plural(rows.length, 'order')}`, text: `${CSV_NAME} is in your downloads.` })
   }
 
+  const openButton = (o: Order) => (
+    <TextLink asChild>
+      <button type="button" className="resource-table-open" onClick={() => setOpenId(o.id)}>#{o.number}</button>
+    </TextLink>
+  )
+  // On a phone each order is one stacked row: number and total, then who, when and where it's at.
+  const phoneColumns: TableColumn<Order>[] = [{
+    key: 'number', label: 'Order', sortValue: (o) => o.number,
+    render: (o) => (
+      <span className="resource-table-stack">
+        <span className="resource-table-stack-line">
+          <span className="resource-table-stack-start">
+            {openButton(o)}
+            {o.payment !== 'Paid' && <Tag label="Payment" tone={toneOf[o.payment]} size="small">{o.payment}</Tag>}
+          </span>
+          <span className="resource-table-figure resource-table-strong">{money(total(o))}</span>
+        </span>
+        <span className="resource-table-stack-line">
+          <span className="resource-table-muted">{o.name} · {day(o.placed)}</span>
+          <span className="resource-table-pill"><Tag label="Fulfillment" tone={toneOf[o.fulfillment]} leading="dot" size="small">{o.fulfillment}</Tag></span>
+        </span>
+      </span>
+    ),
+  }]
   const columns: TableColumn<Order>[] = [
-    {
-      key: 'number', label: 'Order', width: 112, sortValue: (o) => o.number,
-      render: (o) => (
-        <TextLink asChild>
-          <button type="button" className="resource-table-open" onClick={() => setOpenId(o.id)}>#{o.number}</button>
-        </TextLink>
-      ),
-    },
+    { key: 'number', label: 'Order', width: 112, sortValue: (o) => o.number, render: openButton },
     { key: 'placed', label: 'Placed', width: 168, sortValue: (o) => o.placed, render: (o) => <span className="resource-table-muted">{placedAt(o.placed)}</span> },
     { key: 'customer', label: 'Customer', width: 200, sortValue: (o) => o.name, render: (o) => o.name },
     { key: 'items', label: 'Items', width: 96, numeric: true, sortValue: itemCount, render: (o) => itemCount(o) },
@@ -170,123 +191,150 @@ export default function ResourceTableScreen() {
 
   return (
     <LucideProvider size={18} strokeWidth={1.6}>
-      <main className="resource-table">
+      <div className="resource-table">
         <style>{css}</style>
-        <PageHeader
-          surface={false}
-          headingLevel={1}
-          title="Orders"
-          description={status === 'loading' ? 'Counting orders…' : status === 'error' ? `Every order ${phrase}` : `${plural(orders.length, 'order')} ${phrase}`}
-          actions={
-            <Inline gap={3}>
-              <Select className="resource-table-period" label="Period" hideLabel options={PERIODS.map(({ value, label }) => ({ value, label }))} value={period}
-                onValueChange={(value) => setPeriod(value as Period)} />
-              <Button onClick={() => setCreating(true)}><Plus /> New order</Button>
-            </Inline>
-          }
-        />
+        <header className="resource-table-bar">
+          <span className="resource-table-brand"><span className="resource-table-logo" aria-hidden="true">{SHOP[0]}</span>{SHOP}</span>
+          <Menu label="Account" items={[{ id: 'settings', label: 'Shop settings', href: '/settings' }, { id: 'sign-out', label: 'Sign out', href: '/sign-out' }]}
+            trigger={<button type="button" className="resource-table-account" aria-label={`${ME.name}: account`}><Avatar name={ME.name} size="small" /></button>} />
+        </header>
+        <main className="resource-table-main">
+          <PageHeader
+            surface={false}
+            headingLevel={1}
+            title={<span className="resource-table-title">Orders</span>}
+            description={status === 'loading' ? 'Counting orders…' : status === 'error' ? `Every order ${phrase}` : `${plural(orders.length, 'order')} ${phrase}`}
+            actions={
+              <Inline gap={3}>
+                <Select className="resource-table-period" label="Period" hideLabel options={PERIODS.map(({ value, label }) => ({ value, label }))} value={period}
+                  onValueChange={(value) => setPeriod(value as Period)} />
+                <Button onClick={() => setCreating(true)}><Plus /> New order</Button>
+              </Inline>
+            }
+          />
 
-        {status === 'error' ? (
-          <ContentState
-            headingLevel={2}
-            urgent
-            className="resource-table-state"
-            icon={<CloudAlert />}
-            title="Orders didn’t load"
-            description="All time is a lot of coffee, and the request ran out of time. Your orders are safe; give it another go."
-            action={{ label: 'Try again', onClick: () => setAttempt(attempt + 1) }}
-          />
-        ) : status === 'ready' && orders.length === 0 ? (
-          <ContentState
-            headingLevel={2}
-            className="resource-table-state"
-            icon={<ShoppingBag />}
-            title={period === 'today' ? 'No orders yet today' : 'No orders yet'}
-            description={`${period === 'today' ? 'It’s 7:12 in the morning. ' : ''}Orders land here the moment someone checks out. Selling by phone or at the counter? Add it by hand.`}
-            action={{ label: 'New order', onClick: () => setCreating(true) }}
-          />
-        ) : (
-          <>
-            <Figures orders={orders} loading={status === 'loading'} />
-            {/* Search, filters, sort and paging run in the browser on the rows you
-                pass, which suits a few thousand orders. Beyond that, keep the query,
-                filters, sort and page in state, send them to your API, and pass back
-                one page of rows with pagination={false} and DIYA's Pagination. */}
-            <Table
-              label="Orders"
-              showTitle={false}
-              rows={orders}
-              columns={columns}
-              density="compact"
-              loading={status === 'loading'}
-              loadingLabel="Loading orders…"
-              defaultPageSize={25}
-              pageSizeOptions={[25, 50, 100]}
-              rowLabel={(o) => `Order ${o.number}, ${o.name}`}
-              searchText={(o) => `#${o.number} ${o.number} ${o.name} ${o.email} ${o.city} ${o.lines.map((line) => PRODUCTS[line.product].name).join(' ')}`}
-              filterOptions={[
-                { key: 'payment', label: 'Payment', options: ['Paid', 'Pending', 'Refunded'], getValue: (o) => o.payment },
-                { key: 'fulfillment', label: 'Fulfillment', options: ['Unfulfilled', 'Shipped', 'Delivered'], getValue: (o) => o.fulfillment },
-              ]}
-              onRowOpen={(o) => setOpenId(o.id)}
-              openLabel="Open order"
-              bulkActions={[
-                { label: 'Export', onAction: exportCsv },
-                { label: 'Archive', onAction: setToArchive },
-              ]}
+          {status === 'error' ? (
+            <ContentState
+              headingLevel={2}
+              urgent
+              className="resource-table-state"
+              icon={<CloudAlert />}
+              title="Orders didn’t load"
+              description="All time is a lot of coffee, and the request ran out of time. Your orders are safe; give it another go."
+              action={{ label: 'Try again', onClick: () => setAttempt(attempt + 1) }}
             />
-          </>
-        )}
+          ) : status === 'ready' && orders.length === 0 ? (
+            <ContentState
+              headingLevel={2}
+              className="resource-table-state"
+              icon={<ShoppingBag />}
+              title={period === 'today' ? 'No orders yet today' : 'No orders yet'}
+              description={`${period === 'today' ? 'It’s 7:12 in the morning. ' : ''}Orders land here the moment someone checks out. Selling by phone or at the counter? Add it by hand.`}
+              action={{ label: 'New order', onClick: () => setCreating(true) }}
+            />
+          ) : (
+            <>
+              <Figures orders={orders} loading={status === 'loading'} />
+              {narrow && (
+                <div className="resource-table-select">
+                  <h2 className="resource-table-select-title">All orders</h2>
+                  <Button variant="quiet" size="small" aria-pressed={selecting} onClick={() => setSelecting(!selecting)}>{selecting ? 'Done' : 'Select'}</Button>
+                </div>
+              )}
+              {/* Search, filters, sort and paging run in the browser on the rows you
+                  pass, which suits a few thousand orders. Beyond that, keep the query,
+                  filters, sort and page in state, send them to your API, and pass back
+                  one page of rows with pagination={false} and DIYA's Pagination. */}
+              <Table
+                label="Orders"
+                showTitle={false}
+                rows={orders}
+                columns={narrow ? phoneColumns : columns}
+                selectable={!narrow || selecting}
+                density="compact"
+                loading={status === 'loading'}
+                loadingLabel="Loading orders…"
+                defaultPageSize={25}
+                pageSizeOptions={[25, 50, 100]}
+                rowLabel={(o) => `Order ${o.number}, ${o.name}`}
+                searchText={(o) => `#${o.number} ${o.number} ${o.name} ${o.email} ${o.city} ${o.lines.map((line) => PRODUCTS[line.product].name).join(' ')}`}
+                filterOptions={[
+                  { key: 'payment', label: 'Payment', options: ['Paid', 'Pending', 'Refunded'], getValue: (o) => o.payment },
+                  { key: 'fulfillment', label: 'Fulfillment', options: ['Unfulfilled', 'Shipped', 'Delivered'], getValue: (o) => o.fulfillment },
+                ]}
+                onRowOpen={(o) => setOpenId(o.id)}
+                openLabel="Open order"
+                bulkActions={[
+                  { label: 'Export', onAction: exportCsv },
+                  { label: 'Archive', onAction: setToArchive },
+                ]}
+              />
+            </>
+          )}
 
-        <OrderDrawer
-          order={open}
-          onClose={() => setOpenId(undefined)}
-          onSaved={(saved) => {
-            setOrders(orders.map((order) => (order.id === saved.id ? saved : order)))
-            setNotice({ title: `Order #${saved.number} saved`, text: saved.fulfillment === 'Shipped' ? `${saved.name.split(' ')[0]} gets the tracking link by email.` : 'Your changes are in.' })
-          }}
-        />
-        <NewOrderDialog
-          open={creating}
-          onClose={() => setCreating(false)}
-          onCreated={(order) => {
-            setOrders([order, ...orders])
-            setNotice({ title: `Order #${order.number} created`, text: `It’s at the top of the list, and ${order.name.split(' ')[0]} gets ${order.payment === 'Paid' ? 'a receipt' : 'a payment link'} by email.` })
-          }}
-        />
-        <Dialog
-          open={toArchive.length > 0}
-          onOpenChange={(next) => !next && setToArchive([])}
-          size="small"
-          headingLevel={2}
-          title={archiving.length === 1 ? `Archive order #${archiving[0].number}?` : `Archive ${archiving.length} orders?`}
-          description="Archived orders leave this list but stay in your reports and your customers’ history."
-          confirmLabel={archiving.length === 1 ? 'Archive order' : `Archive ${archiving.length} orders`}
-          dismissLabel="Keep them"
-          onConfirm={async () => {
-            await api.archive(toArchive)
-            setOrders(orders.filter((order) => !toArchive.includes(order.id)))
-            setNotice({ title: `Archived ${plural(toArchive.length, 'order')}`, text: 'They’re out of the way, and still in your reports.' })
-            setToArchive([])
-          }}
-        >
-          <List label="Orders to archive" size="small"
-            items={archiving.map((o) => ({ id: o.id, label: `#${o.number} · ${o.name}`, trailing: money(total(o)) }))} />
-        </Dialog>
-        {notice && (
-          <Toast key={notice.title} tone="success" title={notice.title} onDismiss={() => setNotice(undefined)}>{notice.text}</Toast>
-        )}
-      </main>
+          <OrderDrawer
+            order={open}
+            onClose={() => setOpenId(undefined)}
+            onSaved={(saved) => {
+              setOrders(orders.map((order) => (order.id === saved.id ? saved : order)))
+              setNotice({ title: `Order #${saved.number} saved`, text: saved.fulfillment === 'Shipped' ? `${saved.name.split(' ')[0]} gets the tracking link by email.` : 'Your changes are in.' })
+            }}
+          />
+          <NewOrderDialog
+            open={creating}
+            onClose={() => setCreating(false)}
+            onCreated={(order) => {
+              setOrders([order, ...orders])
+              setNotice({ title: `Order #${order.number} created`, text: `It’s at the top of the list, and ${order.name.split(' ')[0]} gets ${order.payment === 'Paid' ? 'a receipt' : 'a payment link'} by email.` })
+            }}
+          />
+          <Dialog
+            open={toArchive.length > 0}
+            onOpenChange={(next) => !next && setToArchive([])}
+            size="small"
+            headingLevel={2}
+            title={archiving.length === 1 ? `Archive order #${archiving[0].number}?` : `Archive ${archiving.length} orders?`}
+            description="Archived orders leave this list but stay in your reports and your customers’ history."
+            confirmLabel={archiving.length === 1 ? 'Archive order' : `Archive ${archiving.length} orders`}
+            dismissLabel="Keep them"
+            onConfirm={async () => {
+              await api.archive(toArchive)
+              setOrders(orders.filter((order) => !toArchive.includes(order.id)))
+              setNotice({ title: `Archived ${plural(toArchive.length, 'order')}`, text: 'They’re out of the way, and still in your reports.' })
+              setToArchive([])
+            }}
+          >
+            <List label="Orders to archive" size="small"
+              items={archiving.map((o) => ({ id: o.id, label: `#${o.number} · ${o.name}`, trailing: money(total(o)) }))} />
+          </Dialog>
+          {notice && (
+            <Toast key={notice.title} tone="success" title={notice.title} onDismiss={() => setNotice(undefined)}>{notice.text}</Toast>
+          )}
+        </main>
+      </div>
     </LucideProvider>
   )
 }
 
+const PHONE = '(max-width: 640px)'
+function useNarrow() {
+  return useSyncExternalStore(
+    (change) => {
+      const query = window.matchMedia(PHONE)
+      query.addEventListener('change', change)
+      return () => query.removeEventListener('change', change)
+    },
+    () => window.matchMedia(PHONE).matches,
+    () => false,
+  )
+}
+
 function Figures({ orders, loading }: { orders: Order[]; loading: boolean }) {
-  const paid = orders.filter((o) => o.payment !== 'Refunded')
-  const sales = paid.reduce((sum, o) => sum + total(o), 0)
+  // Sales counts every order, refunds included, so orders × average order = sales.
+  const sales = orders.reduce((sum, o) => sum + total(o), 0)
   const figures = [
     { label: 'Sales', value: money(sales) },
-    { label: 'Average order', value: money(paid.length ? sales / paid.length : 0) },
+    { label: 'Average order', value: money(orders.length ? sales / orders.length : 0) },
     { label: 'To ship', value: String(orders.filter((o) => o.fulfillment === 'Unfulfilled').length) },
     { label: 'Refunded', value: money(orders.filter((o) => o.payment === 'Refunded').reduce((sum, o) => sum + total(o), 0)) },
   ]
@@ -458,29 +506,38 @@ function NewOrderDialog({ open, onClose, onCreated }: { open: boolean; onClose: 
 }
 
 const css = `
-.resource-table {
-  min-height: 100dvh;
+.resource-table { min-height: 100dvh; color: var(--diya-color-text); }
+.resource-table-bar { display: none; }
+.resource-table-brand { display: inline-flex; align-items: center; gap: 10px; font-size: var(--diya-text-large); font-weight: 600; letter-spacing: -0.01em; }
+.resource-table-logo {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: calc(8px * var(--diya-corner-scale, 1));
+  background: var(--diya-color-accent); color: var(--diya-color-accent-text); font-size: var(--diya-text-body); font-weight: 650; line-height: 1;
+}
+.resource-table-account { display: grid; padding: 4px; margin-right: -4px; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.resource-table-account:focus-visible { outline: 2px solid var(--diya-color-accent); outline-offset: 2px; }
+.resource-table-main {
   box-sizing: border-box;
-  max-width: 1440px;
-  margin: 0 auto;
+  max-width: calc(1200px + 2 * var(--diya-space-7));
   padding: var(--diya-space-7) var(--diya-space-7) var(--diya-space-8);
   display: flex;
   flex-direction: column;
-  gap: var(--diya-space-6);
-  color: var(--diya-color-text);
+  gap: var(--diya-space-7);
 }
+.resource-table-title { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
 .resource-table-period { width: 168px; }
-.resource-table-figures {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  padding-block: var(--diya-space-5);
-  border-block: 1px solid var(--diya-color-line);
-}
+.resource-table-figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .resource-table-figure-cell { padding-inline: var(--diya-space-5); }
 .resource-table-figure-cell:first-child { padding-inline-start: 0; }
 .resource-table-figure-cell + .resource-table-figure-cell { border-inline-start: 1px solid var(--diya-color-line); }
 .resource-table-figures[aria-busy='true'] { color: var(--diya-color-muted); }
-.resource-table-state { margin-block: var(--diya-space-7); }
+.resource-table-state { margin-block: var(--diya-space-5); }
+.resource-table-select { display: flex; align-items: center; justify-content: space-between; margin-bottom: calc(-1 * var(--diya-space-4)); }
+.resource-table-select-title { margin: 0; font-size: var(--diya-text-large); font-weight: 600; }
+.resource-table-pill { flex: none; white-space: nowrap; }
+.resource-table-stack { display: grid; gap: var(--diya-space-1); padding-block: var(--diya-space-1); }
+.resource-table-stack-line { display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-3); min-width: 0; }
+.resource-table-stack-start { display: inline-flex; align-items: center; gap: var(--diya-space-2); }
+.resource-table-stack-line > .resource-table-muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--diya-text-caption); }
 .resource-table-open {
   padding: 0;
   border: 0;
@@ -504,13 +561,19 @@ const css = `
 .resource-table-pair { display: grid; grid-template-columns: minmax(0, 1fr) 112px; gap: var(--diya-space-4); }
 .resource-table-total { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); }
 @media (max-width: 960px) {
-  .resource-table { padding: var(--diya-space-6) var(--diya-space-5) var(--diya-space-7); }
-  .resource-table-period { width: 168px; }
-.resource-table-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--diya-space-5); }
+  .resource-table-main { padding: var(--diya-space-6) var(--diya-space-5) var(--diya-space-7); gap: var(--diya-space-6); }
+  .resource-table-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--diya-space-5); }
   .resource-table-figure-cell:nth-child(3) { padding-inline-start: 0; border-inline-start: 0; }
 }
+@media (max-width: 720px) {
+  .resource-table-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-3); position: sticky; top: 0; z-index: 10;
+    height: 56px; box-sizing: border-box; padding: 0 var(--diya-space-4); border-bottom: 1px solid var(--diya-color-line);
+    background: color-mix(in srgb, var(--diya-color-surface) 82%, transparent); backdrop-filter: blur(20px) saturate(1.4);
+  }
+}
 @media (max-width: 520px) {
-  .resource-table { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); gap: var(--diya-space-5); }
+  .resource-table-main { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); gap: var(--diya-space-6); }
   .resource-table-figure-cell { padding-inline: var(--diya-space-4); }
   .resource-table-pair { grid-template-columns: minmax(0, 1fr); }
 }

@@ -3,7 +3,7 @@
 // Next.js: save as app/inbox/page.tsx. Vite: save as src/Inbox.tsx and render it inside your DiyaProvider.
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { Alert, Avatar, Button, ContentState, Drawer, List, Menu, SideNavigation, Tag, TextArea, Toast, Tooltip, useDiyaAppearance } from '@idyeah/diya'
-import { Archive, ArrowLeft, FileImage, FileText, FolderInput, Hourglass, Inbox, LucideProvider, Mail, MailDot, PanelLeft, Paperclip, Send, ShieldAlert } from 'lucide-react'
+import { Archive, ArrowLeft, FileImage, FileText, FolderInput, Hourglass, Inbox, LucideProvider, Mail, MailDot, PanelRight, Paperclip, Send, ShieldAlert } from 'lucide-react'
 
 // Your help desk, who's signed in, and the conversations in each folder.
 const PRODUCT = 'Portico'
@@ -23,43 +23,43 @@ const FOLDERS: { id: FolderId; label: string; icon: ReactNode; empty: [string, s
 
 const CONVERSATIONS: Conversation[] = [
   { id: 'priya', folder: 'inbox', name: 'Priya Natarajan', email: 'priya@example.com', subject: 'Charged twice for October', when: '9:41 AM', unread: false, notes: [
-    { from: 'Priya Natarajan', time: 'Nov 12, 9:41 AM', body: 'Hi there,\n\nOur card was charged $49 twice on October 31 for the Studio plan. I’ve attached the statement. Could you refund the extra charge?\n\nThanks,\nPriya', files: [{ name: 'card-statement.png', size: '214 KB' }] },
+    { from: 'Priya Natarajan', time: 'Today, 9:41 AM', body: 'Hi there,\n\nOur card was charged $49 twice on October 31 for the Studio plan. I’ve attached the statement. Could you refund the extra charge?\n\nThanks,\nPriya', files: [{ name: 'card-statement.png', size: '214 KB' }] },
   ] },
   { id: 'tomas', folder: 'inbox', name: 'Tomás Herrera', email: 'tomas@example.com', subject: 'Calendar sync stopped on Monday', when: '8:15 AM', unread: true, notes: [
-    { from: 'Tomás Herrera', time: 'Nov 11, 4:02 PM', body: 'Since Monday, new bookings don’t show up in my phone’s calendar. The old ones are still there. Did something change?' },
-    { from: ME, time: 'Nov 11, 5:20 PM', body: 'Sorry about that, Tomás. Could you send a screenshot of Settings, then Calendar? It shows whether the connection is still active.' },
-    { from: 'Tomás Herrera', time: 'Nov 12, 8:15 AM', body: 'Here you go. It says the connection expired on November 9.', files: [{ name: 'calendar-settings.png', size: '388 KB' }] },
+    { from: 'Tomás Herrera', time: 'Yesterday, 4:02 PM', body: 'Since Monday, new bookings don’t show up in my phone’s calendar. The old ones are still there. Did something change?' },
+    { from: ME, time: 'Yesterday, 5:20 PM', body: 'Sorry about that, Tomás. Could you send a screenshot of Settings, then Calendar? It shows whether the connection is still active.' },
+    { from: 'Tomás Herrera', time: 'Today, 8:15 AM', body: 'Here you go. It says the connection expired three days ago.', files: [{ name: 'calendar-settings.png', size: '388 KB' }] },
   ] },
   { id: 'amara', folder: 'inbox', name: 'Amara Okafor', email: 'amara@example.com', subject: 'Adding a second location', when: 'Yesterday', unread: true, notes: [
-    { from: 'Amara Okafor', time: 'Nov 11, 2:47 PM', body: 'We’re opening a second studio in January. Can one account handle both, with separate schedules and staff? And does it change what we pay?' },
+    { from: 'Amara Okafor', time: 'Yesterday, 2:47 PM', body: 'We’re opening a second studio in January. Can one account handle both, with separate schedules and staff? And does it change what we pay?' },
   ] },
-  { id: 'kenji', folder: 'inbox', name: 'Kenji Watanabe', email: 'kenji@example.com', subject: 'Exporting bookings to a spreadsheet', when: 'Tue', unread: true, notes: [
-    { from: 'Kenji Watanabe', time: 'Nov 9, 10:12 AM', body: 'Is there a way to get all of October’s bookings into a spreadsheet for our accountant?' },
-    { from: ME, time: 'Nov 9, 11:30 AM', body: 'There is. Go to Bookings, set the dates to October, then choose Export. You’ll get a CSV file that opens in any spreadsheet app.' },
-    { from: 'Kenji Watanabe', time: 'Nov 10, 9:05 AM', body: 'Perfect, that worked. Attaching it in case anyone else asks what it looks like.', files: [{ name: 'bookings-october.csv', size: '56 KB' }] },
+  { id: 'kenji', folder: 'inbox', name: 'Kenji Watanabe', email: 'kenji@example.com', subject: 'Exporting bookings to a spreadsheet', when: '2 days ago', unread: true, notes: [
+    { from: 'Kenji Watanabe', time: '3 days ago, 10:12 AM', body: 'Is there a way to get all of October’s bookings into a spreadsheet for our accountant?' },
+    { from: ME, time: '3 days ago, 11:30 AM', body: 'There is. Go to Bookings, set the dates to October, then choose Export. You’ll get a CSV file that opens in any spreadsheet app.' },
+    { from: 'Kenji Watanabe', time: '2 days ago, 9:05 AM', body: 'Perfect, that worked. Attaching it in case anyone else asks what it looks like.', files: [{ name: 'bookings-october.csv', size: '56 KB' }] },
   ] },
-  { id: 'leila', folder: 'inbox', name: 'Leila Haddad', email: 'leila@example.com', subject: 'Thank you from the front desk', when: 'Mon', unread: false, notes: [
-    { from: 'Leila Haddad', time: 'Nov 9, 8:30 AM', body: 'Just a note to say the new waitlist saved our Saturday. Three cancellations, three spots filled before we even noticed. The front desk says thank you!' },
+  { id: 'leila', folder: 'inbox', name: 'Leila Haddad', email: 'leila@example.com', subject: 'Thank you from the front desk', when: '3 days ago', unread: false, notes: [
+    { from: 'Leila Haddad', time: '3 days ago, 8:30 AM', body: 'Just a note to say the new waitlist saved our Saturday. Three cancellations, three spots filled before we even noticed. The front desk says thank you!' },
   ] },
-  { id: 'sven', folder: 'inbox', name: 'Sven Lindqvist', email: 'sven@example.com', subject: 'VAT number on invoices', when: 'Nov 5', unread: false, notes: [
-    { from: 'Sven Lindqvist', time: 'Nov 5, 3:18 PM', body: 'Our accountant needs our VAT number on each invoice. Can you add it, starting with October’s? It’s attached for reference.', files: [{ name: 'invoice-2026-10.pdf', size: '92 KB' }] },
-    { from: ME, time: 'Nov 5, 4:02 PM', body: 'Done for every invoice from now on: there’s a VAT number field under Billing, then Details. I’ve also sent you a corrected October invoice.' },
+  { id: 'sven', folder: 'inbox', name: 'Sven Lindqvist', email: 'sven@example.com', subject: 'VAT number on invoices', when: 'Last week', unread: false, notes: [
+    { from: 'Sven Lindqvist', time: 'A week ago, 3:18 PM', body: 'Our accountant needs our VAT number on each invoice. Can you add it, starting with October’s? It’s attached for reference.', files: [{ name: 'invoice-2026-10.pdf', size: '92 KB' }] },
+    { from: ME, time: 'A week ago, 4:02 PM', body: 'Done for every invoice from now on: there’s a VAT number field under Billing, then Details. I’ve also sent you a corrected October invoice.' },
   ] },
-  { id: 'grace', folder: 'waiting', name: 'Grace Liu', email: 'grace@example.com', subject: 'Moving over from our old booking app', when: 'Nov 6', unread: false, notes: [
-    { from: 'Grace Liu', time: 'Nov 6, 1:10 PM', body: `We’d like to switch to ${PRODUCT}, but we have three years of client history. Can you bring it over?` },
-    { from: ME, time: 'Nov 6, 2:45 PM', body: 'We can. Export your clients as a CSV from your current app and reply with it attached. We’ll import it within a day.' },
+  { id: 'grace', folder: 'waiting', name: 'Grace Liu', email: 'grace@example.com', subject: 'Moving over from our old booking app', when: '6 days ago', unread: false, notes: [
+    { from: 'Grace Liu', time: '6 days ago, 1:10 PM', body: `We’d like to switch to ${PRODUCT}, but we have three years of client history. Can you bring it over?` },
+    { from: ME, time: '6 days ago, 2:45 PM', body: 'We can. Export your clients as a CSV from your current app and reply with it attached. We’ll import it within a day.' },
   ] },
-  { id: 'omar', folder: 'waiting', name: 'Omar Farouk', email: 'omar@example.com', subject: 'Refund for unused months', when: 'Nov 3', unread: false, notes: [
-    { from: 'Omar Farouk', time: 'Nov 3, 11:20 AM', body: 'We closed the studio in September but were billed through October. Can we get those months back?' },
-    { from: ME, time: 'Nov 3, 12:05 PM', body: 'I’m sorry to hear about the studio, Omar. What was the last day you took bookings? I’ll refund everything after it.' },
+  { id: 'omar', folder: 'waiting', name: 'Omar Farouk', email: 'omar@example.com', subject: 'Refund for unused months', when: 'Last week', unread: false, notes: [
+    { from: 'Omar Farouk', time: '9 days ago, 11:20 AM', body: 'We closed the studio in September but were billed through October. Can we get those months back?' },
+    { from: ME, time: '9 days ago, 12:05 PM', body: 'I’m sorry to hear about the studio, Omar. What was the last day you took bookings? I’ll refund everything after it.' },
   ] },
-  { id: 'mateo', folder: 'archive', name: 'Mateo Rossi', email: 'mateo@example.com', subject: 'Password reset email never came', when: 'Oct 22', unread: false, notes: [
-    { from: 'Mateo Rossi', time: 'Oct 22, 9:00 AM', body: 'I asked for a password reset three times. Nothing, not even in spam.' },
-    { from: ME, time: 'Oct 22, 9:40 AM', body: 'Your address had a typo on our side, Mateo. Fixed it and sent a fresh link. Sorry for the runaround!' },
+  { id: 'mateo', folder: 'archive', name: 'Mateo Rossi', email: 'mateo@example.com', subject: 'Password reset email never came', when: '3 weeks ago', unread: false, notes: [
+    { from: 'Mateo Rossi', time: '3 weeks ago, 9:00 AM', body: 'I asked for a password reset three times. Nothing, not even in spam.' },
+    { from: ME, time: '3 weeks ago, 9:40 AM', body: 'Your address had a typo on our side, Mateo. Fixed it and sent a fresh link. Sorry for the runaround!' },
   ] },
-  { id: 'hana', folder: 'archive', name: 'Hana Kim', email: 'hana@example.com', subject: 'Booking two classes at once', when: 'Oct 19', unread: false, notes: [
-    { from: 'Hana Kim', time: 'Oct 19, 6:15 PM', body: 'Can my clients book a class and the open studio right after it in one go?' },
-    { from: ME, time: 'Oct 20, 9:10 AM', body: 'Yes: turn on Bundles under Services, then pair the two. Clients see them as one booking.' },
+  { id: 'hana', folder: 'archive', name: 'Hana Kim', email: 'hana@example.com', subject: 'Booking two classes at once', when: '3 weeks ago', unread: false, notes: [
+    { from: 'Hana Kim', time: '3 weeks ago, 6:15 PM', body: 'Can my clients book a class and the open studio right after it in one go?' },
+    { from: ME, time: '3 weeks ago, 9:10 AM', body: 'Yes: turn on Bundles under Services, then pair the two. Clients see them as one booking.' },
   ] },
 ]
 
@@ -199,9 +199,12 @@ export default function InboxScreen() {
         <main className="inbox-main" aria-labelledby={`${hint}-title`}>
           <div className="inbox-list">
             <header className="inbox-list-head">
-              <Button variant="quiet" className="inbox-phone-only inbox-nudge" onClick={() => setFoldersOpen(true)}>
-                <PanelLeft /> Folders
-              </Button>
+              <div className="inbox-phone-bar">
+                <Brand />
+                <Button variant="quiet" className="inbox-folders" onClick={() => setFoldersOpen(true)}>
+                  Folders <PanelRight />
+                </Button>
+              </div>
               <div className="inbox-list-titles">
                 <h1 ref={listTitle} id={`${hint}-title`} tabIndex={-1} className="inbox-title">{place.label}</h1>
                 {shown.length > 0 && (
@@ -291,7 +294,7 @@ export default function InboxScreen() {
           </section>
         </main>
 
-        <Drawer className="inbox-drawer" open={foldersOpen} onOpenChange={setFoldersOpen} onClose={settled} side="left" title="Folders">
+        <Drawer className="inbox-drawer" open={foldersOpen} onOpenChange={setFoldersOpen} onClose={settled} side="right" title="Folders">
           <SideNavigation className="inbox-nav inbox-nav-sheet" label="Folders" showGroups={false} groups={groups} value={folder} onValueChange={goTo} />
         </Drawer>
         {toast && <Toast key={toast.id} tone="success" duration={4000} onDismiss={() => setToast(undefined)}>{toast.text}</Toast>}
@@ -396,7 +399,7 @@ const css = `
 .inbox-list { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-right: 1px solid var(--diya-color-line); }
 .inbox-list-head { display: flex; align-items: center; gap: var(--diya-space-2); padding: var(--diya-space-5) var(--diya-space-5) var(--diya-space-3); }
 .inbox-list-titles { display: grid; gap: var(--diya-space-1); min-width: 0; }
-.inbox-title { margin: 0; font-size: var(--diya-text-heading); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
+.inbox-title { margin: 0; font-size: 28px; font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; }
 .inbox-title:focus,
 .inbox-subject-title:focus { outline: none; }
 .inbox-muted { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-caption); }
@@ -412,7 +415,8 @@ const css = `
 .inbox-read { width: 100%; max-width: 720px; margin-inline: auto; }
 .inbox-toolbar { display: flex; align-items: center; gap: var(--diya-space-1); min-height: 56px; }
 .inbox-toolbar-gap { flex: 1; }
-.inbox-phone-only { display: none; }
+.inbox-phone-only,
+.inbox-phone-bar { display: none; }
 .inbox-subject { display: grid; gap: var(--diya-space-2); padding: var(--diya-space-4) 0 var(--diya-space-6); border-bottom: 1px solid var(--diya-color-line); }
 .inbox-subject-title { margin: 0; font-size: var(--diya-text-heading); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.02em; text-wrap: balance; }
 .inbox-thread { margin: 0; padding: 0; list-style: none; }
@@ -441,8 +445,10 @@ const css = `
   .inbox-side, .inbox-hint, .inbox-hint-inline { display: none; }
   .inbox-phone-only { display: inline-flex; }
   .inbox-list { border-right: 0; }
-  .inbox-list-head { flex-direction: column; align-items: flex-start; padding: var(--diya-space-2) var(--diya-space-4) var(--diya-space-3); }
+  .inbox-list-head { flex-direction: column; align-items: stretch; gap: var(--diya-space-3); padding: 0 var(--diya-space-4) var(--diya-space-3); }
+  .inbox-phone-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-3); height: 56px; }
   .inbox-nudge { margin-left: calc(var(--diya-space-4) * -1); }
+  .inbox-folders { margin-right: calc(var(--diya-space-3) * -1); }
   .inbox-scroll { padding-inline: var(--diya-space-2); }
   .inbox[data-view='list'] .inbox-reader,
   .inbox[data-view='detail'] .inbox-list { display: none; }

@@ -1,5 +1,5 @@
 /**
- * Every Screen the catalog lists: 33 whole pages and 3 posters for pages
+ * Every Screen the catalog lists: 34 whole pages and 2 posters for pages
  * that wait on a DIYA piece. The order here is the gallery's and the
  * sidebar's: categories in CATEGORIES order, each screen in its category's
  * order, posters last in theirs.
@@ -144,7 +144,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'RecordDetail',
     charts: false,
     status: 'ready',
-    tryThis: 'Switch tabs to load each one, filter Activity by Support for the empty state, edit and save the notes, or delete the customer and undo it.',
+    tryThis: 'Switch tabs to load each one, filter Activity by Support for the empty state, edit and save the notes, or delete the customer from the … menu and undo it.',
     keywords: 'detail record project customer order ticket overview',
   },
   {
@@ -170,7 +170,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'SearchResults',
     charts: false,
     status: 'ready',
-    tryThis: 'Pick a recent search, type “onbaording” for a suggestion, “zebra” for tips, then filter by team; on a phone, filters move to a drawer.',
+    tryThis: 'It opens on a search for “brand”. Clear it for recent searches, type “onbaording” for a suggestion or “zebra” for tips, then filter by team; on a phone, filters move to a drawer.',
     keywords: 'find query filters results directory global search',
   },
   {
@@ -199,14 +199,14 @@ export const screens: readonly ScreenEntry[] = [
     component: 'ResourceTable',
     charts: false,
     status: 'ready',
-    tryThis: 'Pick Today for an empty shop, All time for a timeout with Try again, search “zzz”, select rows to export or archive, or open #1048 and mark it shipped.',
+    tryThis: 'Pick Today for an empty shop, All time for a timeout with Try again, search “zzz”, select rows to export or archive (on a phone, tap Select first), or open #1048 and mark it shipped.',
     keywords: 'table orders products admin data grid crud bulk export',
   },
   {
     id: 'file-manager',
     name: 'File manager',
     category: 'Data & documents',
-    description: 'Folders and files in a grid or a list, with uploads, sharing and a storage meter.',
+    description: 'Folders and files in a grid or a list, with image previews, uploads, moves and a storage meter.',
     layout: 'Browse with grid or list',
     route: 'files',
     component: 'FileManager',
@@ -373,7 +373,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'DocsArticle',
     charts: false,
     status: 'ready',
-    tryThis: 'Switch the code sample between Node.js and Python, scroll to watch On this page follow along, then answer “Was this helpful?” both ways.',
+    tryThis: 'Switch the code sample between Node.js and Python, scroll to watch On this page follow along, then answer “Was this page helpful?” both ways.',
     keywords: 'docs documentation article blog guide reading',
   },
   {
@@ -494,7 +494,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'Checkout',
     charts: false,
     status: 'ready',
-    tryThis: 'Pay with empty fields for the error summary. Apply DIYA10, then any other code. Use declined@example.com to have the card declined; any other email places the order.',
+    tryThis: 'Pay with empty fields for the error summary. Apply DIYA10 for 10% off, or any other code to see it turned down. Use declined@example.com to have the card declined; any other email places the order.',
     keywords: 'checkout cart payment order shipping ecommerce',
   },
   {
@@ -507,7 +507,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'Booking',
     charts: false,
     status: 'ready',
-    tryThis: 'Choose 45 minutes and pick Friday, November 13 for a day with no times, take the first time on Thursday, November 12 (someone just got it), or book any other to see the confirmation.',
+    tryThis: 'Take the first time on offer (someone just got it), or choose 45 minutes to find that day has no times left. Book any other time for the confirmation, then reschedule or cancel from there.',
     keywords: 'booking appointment calendar schedule demo meeting',
   },
   {
@@ -520,7 +520,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'Agenda',
     charts: false,
     status: 'ready',
-    tryThis: 'Step to Tuesday, November 17 for an empty day, open Hannah Becker to check her in or move her to 5:00 PM (Rafael is busy), or add a new booking.',
+    tryThis: 'Press Next day three times for an empty day, open Hannah Becker to check her in or move her to 5:00 PM (Rafael is busy), or add a new booking.',
     keywords: 'agenda bookings appointments schedule calendar staff',
   },
 
@@ -548,7 +548,7 @@ export const screens: readonly ScreenEntry[] = [
     component: 'ErrorPages',
     charts: false,
     status: 'ready',
-    tryThis: 'Move between the pages, copy the error ID on the server error, request access on the no-access page, or send a new link on the expired one.',
+    tryThis: 'Switch pages with the Demo control at the bottom, copy the error ID on the server error, request access on the no-access page, or send a new link on the expired one.',
     keywords: 'error 404 500 403 not found maintenance offline expired',
   },
 ]

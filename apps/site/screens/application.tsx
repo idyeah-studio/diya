@@ -1,15 +1,14 @@
 'use client'
 // Application form: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/apply/page.tsx. Vite: save as src/Application.tsx and render it inside your DiyaProvider.
-import { useEffect, useId, useRef, useState, type ReactNode, type Ref } from 'react'
-import { Alert, Button, Choice, Dialog, FileUpload, Select, TextArea, TextInput, TextLink, useDiyaAppearance } from '@idyeah/diya'
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode, type Ref } from 'react'
+import { Alert, Button, Choice, Dialog, FileUpload, Select, TextArea, TextInput, TextLink } from '@idyeah/diya'
 import { ArrowLeft, Check, CircleCheck, LucideProvider, Plus, X } from 'lucide-react'
 
 // The studio, the role, and where the draft is kept on this device.
 const STUDIO = 'Harbor & Finch'
 const ROLE = { title: 'Senior Product Designer', where: 'Remote in the US, or our Portland studio', type: 'Full time', pay: '$165,000 to $195,000' }
 const DRAFT_KEY = 'application-draft-senior-product-designer'
-const YEARS = Array.from({ length: 27 }, (_, i) => String(2026 - i)).map((year) => ({ value: year, label: year }))
 const HEARD = ['A friend or colleague', 'LinkedIn', 'Our newsletter', 'A design community', 'A conference talk', 'Somewhere else'].map((label) => ({ value: label, label }))
 const RATING = [
   { value: '1', label: '1, I’d rather not' }, { value: '2', label: '2' }, { value: '3', label: '3, It’s fine' },
@@ -35,8 +34,20 @@ type Draft = {
 }
 type View = 'form' | 'review' | 'sent'
 type Section = 'about' | 'experience' | 'portfolio' | 'resume' | 'questions'
-const position = (): Position => ({ id: Math.random().toString(36).slice(2, 8), company: '', title: '', from: '', to: 'now' })
+// Ids count up (p1, p2…), so the server and the browser agree on them.
+const position = (others: Position[] = []): Position => {
+  const top = Math.max(0, ...others.map((p) => Number(p.id.slice(1)) || 0))
+  return { id: `p${top + 1}`, company: '', title: '', from: '', to: 'now' }
+}
 const EMPTY: Draft = { first: '', last: '', email: '', phone: '', city: '', positions: [position()], portfolio: '', linkedin: '', other: '', heard: '', rating: '', essay: '', keep: [] }
+
+// The last 27 years, newest first, read from the reader's clock. The server can't know it, so it lists none until the page loads.
+const subscribeNever = () => () => {}
+const thisYear = () => new Date().getFullYear()
+function useYears() {
+  const year = useSyncExternalStore(subscribeNever, thisYear, () => 0)
+  return year ? Array.from({ length: 27 }, (_, i) => String(year - i)).map((value) => ({ value, label: value })) : []
+}
 const SECTIONS: { id: Section; title: string }[] = [
   { id: 'about', title: 'About you' }, { id: 'experience', title: 'Experience' }, { id: 'portfolio', title: 'Portfolio' },
   { id: 'resume', title: 'Résumé' }, { id: 'questions', title: 'A few questions' },
@@ -74,7 +85,6 @@ function focusField(id: string) {
 }
 
 export default function ApplicationScreen() {
-  const { glass } = useDiyaAppearance()
   const [draft, setDraft] = useState(EMPTY)
   const [resume, setResume] = useState<File>()
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -87,7 +97,9 @@ export default function ApplicationScreen() {
   const touched = useRef(false)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const summaryRef = useRef<HTMLDivElement>(null)
-  const [focusNext, setFocusNext] = useState<{ to: 'title' | 'summary' | Section }>()
+  const years = useYears()
+  // Moves focus once the part it points at has rendered: the title, the error summary, a section, a field, or the add button.
+  const [focusNext, setFocusNext] = useState<{ to: 'title' | 'summary' | 'add' | Section | `field:${string}` }>()
 
   // Loads a saved draft once, in the browser. Storage can be missing or full, so every use is guarded.
   useEffect(() => {
@@ -123,6 +135,8 @@ export default function ApplicationScreen() {
     if (!focusNext) return
     if (focusNext.to === 'title') titleRef.current?.focus()
     else if (focusNext.to === 'summary') summaryRef.current?.focus()
+    else if (focusNext.to === 'add') document.getElementById('application-add')?.focus()
+    else if (focusNext.to.startsWith('field:')) focusField(focusNext.to.slice(6))
     else {
       const heading = document.getElementById(`application-section-${focusNext.to}`)
       heading?.focus()
@@ -177,7 +191,7 @@ export default function ApplicationScreen() {
 
   return (
     <LucideProvider size={18} strokeWidth={1.6}>
-      <div className="application" data-glass={glass || undefined}>
+      <div className="application">
         <style>{css}</style>
         <header className="application-bar">
           <a className="application-brand" href="/careers"><span className="application-mark" aria-hidden="true">H</span>{STUDIO}</a>
@@ -246,7 +260,7 @@ export default function ApplicationScreen() {
                       <legend className="application-h3 application-legend">Position {i + 1}</legend>
                       {draft.positions.length > 1 && (
                         <Button variant="quiet" size="small" className="application-remove" aria-label={`Remove position ${i + 1}`}
-                          onClick={() => { set('positions', draft.positions.filter((other) => other.id !== p.id)); setTimeout(() => document.getElementById('application-add')?.focus()) }}>
+                          onClick={() => { set('positions', draft.positions.filter((other) => other.id !== p.id)); setFocusNext({ to: 'add' }) }}>
                           <X /> Remove
                         </Button>
                       )}
@@ -258,9 +272,9 @@ export default function ApplicationScreen() {
                             error={errors[`${p.id}-title`] || undefined} onValueChange={(v) => setPosition(p.id, 'title', v)} />
                         </div>
                         <div className="application-pair">
-                          <Select className="application-full" id={`application-${p.id}-from`} label="Started" placeholder="Year" options={YEARS} value={p.from}
+                          <Select className="application-full" id={`application-${p.id}-from`} label="Started" placeholder="Year" options={years} value={p.from}
                             error={errors[`${p.id}-from`] || undefined} onValueChange={(v) => setPosition(p.id, 'from', v)} />
-                          <Select className="application-full" id={`application-${p.id}-to`} label="Ended" options={[{ value: 'now', label: 'I still work here' }, ...YEARS]} value={p.to}
+                          <Select className="application-full" id={`application-${p.id}-to`} label="Ended" options={[{ value: 'now', label: 'I still work here' }, ...years]} value={p.to}
                             error={errors[`${p.id}-to`] || undefined} onValueChange={(v) => setPosition(p.id, 'to', v)} />
                         </div>
                       </div>
@@ -268,7 +282,7 @@ export default function ApplicationScreen() {
                   ))}
                   {draft.positions.length < 6 && (
                     <Button id="application-add" variant="outline" className="application-start"
-                      onClick={() => { const next = position(); set('positions', [...draft.positions, next]); setTimeout(() => focusField(`${next.id}-company`)) }}>
+                      onClick={() => { const next = position(draft.positions); set('positions', [...draft.positions, next]); setFocusNext({ to: `field:${next.id}-company` }) }}>
                       <Plus /> Add another position
                     </Button>
                   )}
@@ -352,8 +366,12 @@ function Review({ titleRef, draft: d, resume, onEdit, onSent }: ReviewProps) {
     setBusy(false)
     if (ok) return onSent()
     setFailed(true)
-    setTimeout(() => alertRef.current?.focus())
   }
+
+  // The alert only exists once it renders, so focus moves to it afterward.
+  useEffect(() => {
+    if (failed) alertRef.current?.focus()
+  }, [failed])
 
   return (
     <div className="application-review">
@@ -392,7 +410,7 @@ const css = `
 .application-bar {
   position: sticky; top: 0; z-index: 10;
   display: flex; align-items: center; justify-content: space-between; gap: var(--diya-space-4);
-  padding: var(--diya-space-3) var(--diya-space-6);
+  padding: var(--diya-space-3) var(--diya-space-7);
   border-bottom: 1px solid var(--diya-color-line);
   background: color-mix(in srgb, var(--diya-color-surface) 82%, transparent);
   backdrop-filter: blur(20px) saturate(1.2);
@@ -406,16 +424,7 @@ const css = `
   font-size: var(--diya-text-body); font-weight: 650; line-height: 1;
 }
 .application-saved { display: inline-flex; align-items: center; gap: var(--diya-space-2); color: var(--diya-color-muted); font-size: var(--diya-text-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.application-main { display: grid; gap: var(--diya-space-6); width: 100%; max-width: 688px; margin: 0 auto; padding: var(--diya-space-7) var(--diya-space-5) var(--diya-space-8); }
-.application[data-glass] .application-main {
-  max-width: 760px;
-  margin-block: var(--diya-space-6);
-  padding-inline: var(--diya-space-7);
-  border: 1px solid var(--diya-color-line);
-  border-radius: calc(24px * var(--diya-corner-scale, 1));
-  background: color-mix(in srgb, var(--diya-color-raised) 66%, transparent);
-  backdrop-filter: blur(28px) saturate(1.15);
-}
+.application-main { display: grid; gap: var(--diya-space-7); width: 100%; max-width: calc(720px + 2 * var(--diya-space-7)); margin: 0 auto; padding: var(--diya-space-7) var(--diya-space-7) var(--diya-space-8); }
 .application-intro { display: grid; justify-items: start; gap: var(--diya-space-3); }
 .application-title { margin: var(--diya-space-2) 0 0; font-size: var(--diya-text-display); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.03em; text-wrap: balance; }
 .application-title:focus,
@@ -426,7 +435,7 @@ const css = `
 .application-muted { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-caption); line-height: var(--diya-leading-body); }
 .application-problems { display: grid; gap: var(--diya-space-1); margin: var(--diya-space-2) 0 0; padding-inline-start: 1.2em; }
 .application-form { display: grid; gap: var(--diya-space-7); }
-.application-section { display: grid; gap: var(--diya-space-5); padding-top: var(--diya-space-6); border-top: 1px solid var(--diya-color-line); }
+.application-section { display: grid; gap: var(--diya-space-5); }
 .application-head { display: grid; gap: var(--diya-space-1); }
 .application-h2 { margin: 0; font-size: var(--diya-text-title); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.015em; scroll-margin-top: 96px; }
 .application-h3 { margin: 0 0 var(--diya-space-1); padding: 0; font-size: var(--diya-text-body); font-weight: 600; }
@@ -438,16 +447,18 @@ const css = `
 .application-start { justify-self: start; }
 .application-full { width: 100%; max-width: none; margin-inline: 0; }
 .application-error { margin: calc(-1 * var(--diya-space-2)) 0 0; color: var(--diya-color-error); font-size: var(--diya-text-caption); }
-.application-submit { display: flex; flex-wrap: wrap; align-items: center; gap: var(--diya-space-4); padding-top: var(--diya-space-6); border-top: 1px solid var(--diya-color-line); }
+.application-submit { display: flex; flex-wrap: wrap; align-items: center; gap: var(--diya-space-4); }
 .application-submit .application-muted { flex: 1 1 260px; }
-.application-review { display: grid; gap: var(--diya-space-6); }
+.application-review { display: grid; gap: var(--diya-space-7); }
 .application-summary { display: grid; gap: var(--diya-space-3); }
 .application-summary-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--diya-space-4); }
 .application-link { padding: 0; border: 0; background: none; font: inherit; font-size: var(--diya-text-body); cursor: pointer; }
 .application-facts { display: grid; margin: 0; font-size: var(--diya-text-body); line-height: var(--diya-leading-body); }
 .application-facts div { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: var(--diya-space-4); padding-block: var(--diya-space-3); border-top: 1px solid var(--diya-color-line); }
 .application-facts dt { color: var(--diya-color-muted); }
-.application-facts dd { margin: 0; overflow-wrap: anywhere; }
+.application-facts dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.application-facts dd .application-muted { font-weight: 400; }
+.application-quote { font-weight: 400; }
 .application-quote { white-space: pre-line; }
 .application-done { display: grid; justify-items: start; gap: var(--diya-space-4); padding-top: var(--diya-space-7); }
 .application-done-icon { color: var(--diya-color-success); }
@@ -456,15 +467,14 @@ const css = `
 .application-next li::marker { color: var(--diya-color-muted); font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-transparency: reduce) {
   .application-bar { background: var(--diya-color-surface); backdrop-filter: none; }
-  .application[data-glass] .application-main { background: var(--diya-color-raised); backdrop-filter: none; }
 }
 @media (max-width: 800px) {
-  .application[data-glass] .application-main { max-width: none; margin: 0; padding-inline: var(--diya-space-5); border: 0; border-radius: 0; }
+  .application-bar { padding-inline: var(--diya-space-5); }
+  .application-main { padding-inline: var(--diya-space-5); }
 }
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .application-bar { padding-inline: var(--diya-space-4); }
-  .application-main,
-  .application[data-glass] .application-main { padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); }
+  .application-main { gap: var(--diya-space-6); padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); }
   .application-title { font-size: var(--diya-text-heading); }
   .application-lede { font-size: var(--diya-text-body); }
   .application-pair { grid-template-columns: minmax(0, 1fr); }

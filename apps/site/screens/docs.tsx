@@ -386,10 +386,12 @@ const css = `
   color: var(--diya-color-muted); font-size: var(--diya-text-caption); line-height: 1.4; text-decoration: none;
 }
 .docs-contents-sub .docs-contents-link { padding-inline-start: var(--diya-space-6); }
+/* Glass shows a photo behind the page, so the index reads in a stronger gray there. */
+[data-glass='true'] .docs-contents-link { color: color-mix(in srgb, var(--diya-color-text) 82%, transparent); }
 .docs-contents-link:hover { color: var(--diya-color-text); background: var(--diya-color-hover); }
 .docs-contents-link[aria-current] { color: var(--diya-color-text); background: var(--diya-color-selected); font-weight: 500; }
 .docs-contents-link:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: -2px; }
-.docs-feedback { display: grid; gap: var(--diya-space-5); padding-top: var(--diya-space-6); border-top: 1px solid var(--diya-color-line); }
+.docs-feedback { display: grid; gap: var(--diya-space-5); }
 .docs-feedback-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--diya-space-3); }
 .docs-feedback-title { margin: 0; font-size: var(--diya-text-large); font-weight: 600; }
 .docs-feedback-actions { display: flex; flex-wrap: wrap; gap: var(--diya-space-2); }

@@ -12,6 +12,16 @@ export const VIEWPORTS: Record<Device, { width: number; height: number }> = {
 }
 
 const SOURCE = 'diya-screens'
+/** The phone preview's height on a wide stage, and the stage width that counts as wide. */
+export const PHONE_MAX_HEIGHT = 640
+const PHONE_FIT_FROM = 520
+/** Room above and below the stage's frame: the fixed header, the controls row and the stage's padding. */
+const PHONE_CHROME = 260
+
+/** Tall enough to read, short enough that the whole phone fits the window once the stage is in view. */
+export function phoneHeight(windowHeight: number) {
+  return windowHeight ? Math.max(420, Math.min(PHONE_MAX_HEIGHT, windowHeight - PHONE_CHROME)) : PHONE_MAX_HEIGHT
+}
 
 /*
  * A screen at a real viewport: the frame is 1440×900 (or 390×844) CSS
@@ -25,10 +35,14 @@ export function ScreenStage({ screen, device }: { screen: Pick<ScreenEntry, 'id'
   const box = useRef<HTMLDivElement>(null)
   const frame = useRef<HTMLIFrameElement>(null)
   const [room, setRoom] = useState(0)
+  const [windowHeight, setWindowHeight] = useState(0)
   // The address the frame first loads with; later changes travel as messages.
   const [src] = useState(() => frameHref(screen, theme, glass))
   const viewport = VIEWPORTS[device]
-  const scale = room ? Math.min(1, room / viewport.width) : 0
+  // A phone on a wide stage stays about as tall as the desktop preview, so it
+  // doesn't run off the bottom of the window; on a narrow one it fills the width.
+  const tallest = device === 'phone' && room >= PHONE_FIT_FROM ? phoneHeight(windowHeight) / viewport.height : 1
+  const scale = room ? Math.min(1, room / viewport.width, tallest) : 0
 
   useLayoutEffect(() => {
     const node = box.current
@@ -36,12 +50,17 @@ export function ScreenStage({ screen, device }: { screen: Pick<ScreenEntry, 'id'
     const measure = () => {
       const style = getComputedStyle(node)
       setRoom(Math.floor(node.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)))
+      setWindowHeight(window.innerHeight)
     }
     measure()
-    if (typeof ResizeObserver !== 'function') return
+    window.addEventListener('resize', measure)
+    if (typeof ResizeObserver !== 'function') return () => window.removeEventListener('resize', measure)
     const observer = new ResizeObserver(measure)
     observer.observe(node)
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
   }, [])
 
   const send = useCallback(() => {

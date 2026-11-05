@@ -1,7 +1,7 @@
 'use client'
 // Book a time: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/book/page.tsx. Vite: save as src/Booking.tsx and render it inside your DiyaProvider.
-import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode, type Ref } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode, type Ref } from 'react'
 import { Alert, Avatar, Button, Calendar, Choice, ContentState, Dialog, Select, Tag, TextArea, TextInput, Toast, useDiyaAppearance } from '@idyeah/diya'
 import { ArrowLeft, CalendarDays, CalendarPlus, CalendarX2, CircleCheck, Clock, Globe, LucideProvider, Phone, Video } from 'lucide-react'
 
@@ -14,37 +14,34 @@ const MEETING = {
   file: 'larkspur-intro-call.ics',
 }
 const HOST_ZONE = 'America/New_York'
-const FIRST_DAY = '2026-11-10'
-const LAST_DAY = '2026-12-18'
+const WEEKS_OPEN = 6
 const HOURS = { open: 9 * 60, close: 17 * 60, step: 30 }
 const LENGTHS = ['15', '30', '45']
-// Busy host time on weekdays, as "9:00-10:30". A day that's busy 9 to 5 is fully booked.
-const BUSY: Record<string, string> = {
-  '2026-11-10': '9:00-17:00',
-  '2026-11-11': '9:00-11:00 13:00-14:30',
-  '2026-11-12': '9:00-10:00 12:00-13:00 15:30-17:00',
-  '2026-11-13': '9:00-10:00 10:30-12:00 12:30-14:00 14:30-16:00 16:30-17:00',
-  '2026-11-16': '11:00-12:00 14:00-15:00',
-  '2026-11-17': '9:00-12:30',
-  '2026-11-18': '9:00-17:00',
-  '2026-11-19': '13:00-17:00',
-  '2026-11-24': '9:00-17:00',
-  '2026-11-25': '9:00-17:00',
-  '2026-11-26': '9:00-17:00',
-  '2026-11-27': '9:00-17:00',
-}
+// Busy host time on each weekday, counted from the first bookable weekday, as "9:00-10:30".
+// A day that's busy 9 to 5 is fully booked. Your calendar brings real dates; these count from today, so the demo never goes stale.
+const BUSY = [
+  '9:00-17:00',
+  '9:00-10:00 10:30-12:00 12:30-14:00 14:30-16:00 16:30-17:00',
+  '9:00-11:00 13:00-14:30',
+  '9:00-10:00 12:00-13:00 15:30-17:00',
+  '11:00-12:00 14:00-15:00',
+  '9:00-12:30',
+  '9:00-17:00',
+  '13:00-17:00',
+  '', '',
+  '9:00-17:00', '9:00-17:00', '9:00-17:00', '9:00-17:00',
+]
 const ZONES = [
   ['America/Los_Angeles', 'Pacific Time'], ['America/Denver', 'Mountain Time'], ['America/Chicago', 'Central Time'],
   ['America/New_York', 'Eastern Time'], ['Europe/London', 'London'], ['Europe/Berlin', 'Central Europe'],
   ['Asia/Kolkata', 'India'], ['Asia/Tokyo', 'Japan'], ['Australia/Sydney', 'Sydney'],
 ]
 
-// Replace with your API call. The stub waits a moment, then says the first
-// time on Thursday, November 12 (10:00 AM in New York) was just taken.
-// Every other booking, move and cancellation goes through.
+// Replace with your API call. The stub waits a moment, then says the first time
+// on offer was just taken. Every other booking, move and cancellation goes through.
 async function api(route: '/bookings' | '/bookings/cancel', body: { start?: number }) {
   await new Promise((resolve) => setTimeout(resolve, 900))
-  return !(route === '/bookings' && body.start === moment('2026-11-12', 10 * 60, HOST_ZONE))
+  return !(route === '/bookings' && body.start === takenSlot(windowFrom(todayIso())))
 }
 
 type Step = 'pick' | 'details' | 'booked' | 'canceled'
@@ -71,21 +68,49 @@ function moment(day: string, minutes: number, zone: string) {
 }
 const dayIn = (zone: string, at: number) => { const p = wall(zone, at); return `${p.year}-${p.month}-${p.day}` }
 const noon = (day: string) => Date.parse(`${day}T12:00:00Z`)
-const nextDay = (day: string) => new Date(noon(day) + 86400000).toISOString().slice(0, 10)
+const shift = (day: string, by: number) => new Date(noon(day) + by * 86400000).toISOString().slice(0, 10)
+const nextDay = (day: string) => shift(day, 1)
+const weekend = (day: string) => [0, 6].includes(new Date(noon(day)).getUTCDay())
 const longDay = (day: string) => format('UTC', { weekday: 'long', month: 'long', day: 'numeric' }).format(noon(day))
 const weekday = (day: string) => format('UTC', { weekday: 'long' }).format(noon(day))
 const clock = (zone: string, at: number) => format(zone, { hour: 'numeric', minute: '2-digit' }).format(at)
 const span = (zone: string, at: number, length: number) => format(zone, { hour: 'numeric', minute: '2-digit' }).formatRange(at, at + length * 60000)
 const zoneName = (zone: string) => ZONES.find(([value]) => value === zone)?.[1] ?? zone.split('/').pop()!.replace(/_/g, ' ')
-const gmt = (zone: string) => (format(zone, { timeZoneName: 'shortOffset' }).formatToParts(noon(FIRST_DAY)).find((p) => p.type === 'timeZoneName')?.value ?? '').replace('-', '−')
+// "GMT−5", worked out from the zone's wall clock, so every browser and server writes it the same way.
+function gmt(zone: string, day: string) {
+  const at = noon(day)
+  const p = wall(zone, at)
+  const offset = Math.round((Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute) - at) / 60000)
+  const hours = Math.floor(Math.abs(offset) / 60), minutes = Math.abs(offset) % 60
+  return offset === 0 ? 'GMT' : `GMT${offset < 0 ? '−' : '+'}${hours}${minutes ? `:${String(minutes).padStart(2, '0')}` : ''}`
+}
 const toMinutes = (time: string) => { const [h, m] = time.split(':').map(Number); return h * 60 + m }
 
+// The bookable days: every weekday from tomorrow for WEEKS_OPEN weeks, each with its busy times.
+type Window = { first: string; last: string; busy: Map<string, string> }
+function windowFrom(today: string): Window {
+  const first = nextDay(today)
+  const last = shift(today, WEEKS_OPEN * 7)
+  const busy = new Map<string, string>()
+  for (let day = first; day <= last; day = nextDay(day)) if (!weekend(day)) busy.set(day, BUSY[busy.size] ?? '')
+  return { first, last, busy }
+}
+// The demo's "just taken" time: 10:00 in New York on the first day with openings.
+const takenSlot = (w: Window) => moment([...w.busy.keys()][1], 10 * 60, HOST_ZONE)
+
+// Today's date in the reader's browser. The server can't know it, so it renders '' and the page fills in once it loads.
+const subscribeNever = () => () => {}
+function todayIso() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+const useToday = () => useSyncExternalStore(subscribeNever, todayIso, () => '')
+
 // Every open start time for a call of this length, grouped by the visitor's day.
-function openings(length: number, taken: number[], zone: string) {
+function openings(w: Window | undefined, length: number, taken: number[], zone: string) {
   const days = new Map<string, number[]>()
-  for (let day = FIRST_DAY; day <= LAST_DAY; day = nextDay(day)) {
-    if ([0, 6].includes(new Date(noon(day)).getUTCDay())) continue
-    const busy = (BUSY[day] ?? '').split(' ').filter(Boolean).map((range) => range.split('-').map(toMinutes))
+  for (const [day, hours] of w?.busy ?? []) {
+    const busy = hours.split(' ').filter(Boolean).map((range) => range.split('-').map(toMinutes))
     for (let start = HOURS.open; start + length <= HOURS.close; start += HOURS.step) {
       if (busy.some(([from, to]) => start < to && start + length > from)) continue
       const at = moment(day, start, HOST_ZONE)
@@ -115,6 +140,8 @@ export default function BookingScreen() {
   const [notice, setNotice] = useState<{ id: number; text: string }>()
   const titleRef = useRef<HTMLHeadingElement>(null)
   const shown = useRef(step)
+  const today = useToday()
+  const w = useMemo(() => (today ? windowFrom(today) : undefined), [today])
 
   useEffect(() => {
     // The server can't know the visitor's time zone, so it's picked up after the first render.
@@ -127,10 +154,11 @@ export default function BookingScreen() {
   }, [step])
 
   // A day is open when the shortest call still fits.
-  const open = useMemo(() => openings(Number(LENGTHS[0]), taken, zone), [taken, zone])
-  const times = useMemo(() => openings(Number(length), taken, zone), [length, taken, zone])
-  const picked = open.has(day) ? day : [...open.keys()].sort()[0] ?? FIRST_DAY
-  const zones = (ZONES.some(([value]) => value === zone) ? ZONES : [...ZONES, [zone, zoneName(zone)]]).map(([value, name]) => ({ value, label: `${name} (${gmt(value)})` }))
+  const open = useMemo(() => openings(w, Number(LENGTHS[0]), taken, zone), [w, taken, zone])
+  const times = useMemo(() => openings(w, Number(length), taken, zone), [w, length, taken, zone])
+  const picked = open.has(day) ? day : [...open.keys()].sort()[0] ?? w?.first ?? ''
+  const zones = (ZONES.some(([value]) => value === zone) ? ZONES : [...ZONES, [zone, zoneName(zone)]])
+    .map(([value, name]) => ({ value, label: picked ? `${name} (${gmt(value, picked)})` : name }))
 
   function choose(at: number) {
     setSlot(at)
@@ -213,10 +241,12 @@ export default function BookingScreen() {
               )}
             </header>
 
-            {step === 'pick' ? (
+            {step === 'pick' && !w ? (
+              <p className="book-muted book-finding">Finding open times…</p>
+            ) : step === 'pick' && w ? (
               <>
                 <section className="book-pick" aria-label="Day and time zone">
-                  <Calendar label="Pick a day" size="large" value={picked} onValueChange={setDay} min={FIRST_DAY} max={LAST_DAY}
+                  <Calendar label="Pick a day" size="large" value={picked} onValueChange={setDay} min={w.first} max={w.last}
                     isDateUnavailable={(date) => !open.has(date)} />
                   <Select className="book-zone" label="Time zone" leadingIcon={<Globe />} options={zones} value={zone} onValueChange={setZone} />
                 </section>
@@ -280,8 +310,9 @@ function DetailsForm({ titleRef, details, setDetails, where, moving, slot, zone,
   const [taken, setTaken] = useState(false)
   const fields = { name: useRef<HTMLInputElement>(null), email: useRef<HTMLInputElement>(null), phone: useRef<HTMLInputElement>(null), guest: useRef<HTMLInputElement>(null) }
   const alertRef = useRef<HTMLDivElement>(null)
-  const [focusNext, setFocusNext] = useState<{ node: HTMLElement | null }>()
-  useEffect(() => focusNext?.node?.focus(), [focusNext])
+  // Moves focus once the part it points at has rendered (the alert isn't there until it shows).
+  const [focusNext, setFocusNext] = useState<{ node: () => HTMLElement | null }>()
+  useEffect(() => focusNext?.node()?.focus(), [focusNext])
 
   const edit = (key: keyof Details, value: string) => {
     setDetails({ ...details, [key]: value })
@@ -313,14 +344,14 @@ function DetailsForm({ titleRef, details, setDetails, where, moving, slot, zone,
     setErrors(found)
     setTaken(false)
     const first = (['name', 'email', 'phone', 'guest'] as const).find((key) => found[key])
-    if (first) return setFocusNext({ node: fields[first].current })
+    if (first) return setFocusNext({ node: () => fields[first].current })
     setBusy(true)
     const ok = await api('/bookings', { start: slot })
     setBusy(false)
     if (ok) return onBooked(guest ? [...details.guests, guest] : details.guests)
     setTaken(true)
     onTaken()
-    setFocusNext({ node: alertRef.current })
+    setFocusNext({ node: () => alertRef.current })
   }
 
   return (
@@ -457,6 +488,7 @@ const css = `
 .book-slot,
 .book-wide { width: 100%; }
 .book-slot { font-variant-numeric: tabular-nums; }
+.book-finding { grid-column: span 2; padding-block: var(--diya-space-8); text-align: center; }
 .book-empty { max-width: none; margin: 0; padding: var(--diya-space-6) 0; border: 0; background: none; }
 .book-field { width: 100%; max-width: none; }
 .book-form { grid-column: span 2; display: grid; gap: var(--diya-space-5); width: 100%; max-width: 520px; }
@@ -476,7 +508,8 @@ const css = `
 .book-facts div { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--diya-space-4); padding-block: var(--diya-space-3); border-top: 1px solid var(--diya-color-line); }
 .book-facts div:last-child { border-bottom: 1px solid var(--diya-color-line); }
 .book-facts dt { color: var(--diya-color-muted); }
-.book-facts dd { display: grid; margin: 0; overflow-wrap: anywhere; }
+.book-facts dd { display: grid; margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.book-facts dd .book-muted { font-weight: 400; }
 .book-actions { display: flex; flex-wrap: wrap; gap: var(--diya-space-3); margin-top: var(--diya-space-2); }
 @media (prefers-reduced-transparency: reduce) {
   .book[data-glass] .book-panel { background: var(--diya-color-raised); backdrop-filter: none; }
@@ -489,13 +522,14 @@ const css = `
 }
 @media (max-width: 760px) {
   .book { align-content: start; padding: var(--diya-space-5) var(--diya-space-4) var(--diya-space-7); }
-  .book-grid { grid-template-columns: minmax(0, 1fr); gap: var(--diya-space-6); padding: var(--diya-space-6) var(--diya-space-5); }
-  .book-form { grid-column: auto; }
+  .book-grid { grid-template-columns: minmax(0, 1fr); gap: var(--diya-space-6); padding: var(--diya-space-6) var(--diya-space-4); }
+  .book-form,
+  .book-finding { grid-column: auto; }
   .book-choices,
   .book-meta { grid-template-columns: minmax(0, 1fr); }
   .book-zone { max-width: none; }
   .book-grid[data-step='details'] .book-about { display: none; }
-  .book-done { padding: var(--diya-space-6) var(--diya-space-5); }
+  .book-done { padding: var(--diya-space-6) var(--diya-space-4); }
   .book-done .book-title { font-size: var(--diya-text-heading); }
 }
 @media (max-width: 520px) {

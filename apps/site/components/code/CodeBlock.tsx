@@ -34,6 +34,7 @@ export function CodeBlock({
   collapseAfter,
   actions,
   onCopied,
+  wrap = false,
 }: {
   code: string
   language: CodeLanguage
@@ -46,6 +47,8 @@ export function CodeBlock({
   /** Buttons shown before Copy. */
   actions?: ReactNode
   onCopied?: () => void
+  /** Wrap long lines instead of scrolling them, and let the label wrap beside Copy: for one-line commands in a narrow drawer. */
+  wrap?: boolean
 }) {
   const [copied, setCopied] = useState(false),
     [failed, setFailed] = useState(false),
@@ -122,7 +125,7 @@ export function CodeBlock({
   }
 
   return (
-    <div className="code-well" data-folded={folded || undefined}>
+    <div className="code-well" data-folded={folded || undefined} data-wrap={wrap || undefined}>
       <div className="code-well-bar">
         <span className="code-well-label">{label}</span>
         <span className="code-well-actions">

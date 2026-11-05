@@ -280,6 +280,19 @@
   border: 0;
 }
 
+/* A wrapping well (a one-line command): the command breaks at its spaces
+   rather than hiding its end, and the label wraps beside Copy. */
+.diya-root .code-well[data-wrap] pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.diya-root .code-well[data-wrap] .code-well-bar {
+  flex-wrap: nowrap;
+}
+.diya-root .code-well[data-wrap] .code-well-label {
+  min-width: 0;
+}
+
 @media (max-width: 520px) {
   .diya-root .code-step {
     grid-template-columns: 22px minmax(0, 1fr);

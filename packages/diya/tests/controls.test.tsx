@@ -23,7 +23,7 @@ describe('portable field contracts', () => {
     expect(new FormData(input.form!).get('project')).toBe('Launch')
     expect(input.required).toBe(true)
     expect(document.getElementById(input.getAttribute('aria-describedby')!)?.textContent).toBe('A customer-defined name')
-    await user.click(screen.getByRole('button', { name: 'Clear project' }))
+    await user.click(screen.getByRole('button', { name: 'Clear Project' }))
     expect(input.value).toBe('')
     expect(changes).toHaveBeenLastCalledWith('')
     expect(document.activeElement).toBe(input)
@@ -128,6 +128,13 @@ describe('portable field contracts', () => {
     }
   })
 
+  it('names the clear button with the label as written, so names keep their case', async () => {
+    const user = userEvent.setup()
+    render(<DiyaProvider><Search label="Search Fieldbook" defaultValue="" clearable /></DiyaProvider>)
+    await user.type(screen.getByRole('searchbox', { name: 'Search Fieldbook' }), 'tide')
+    expect(screen.getByRole('button', { name: 'Clear Search Fieldbook' })).toBeTruthy()
+  })
+
   it('clears controlled Search values and restores focus', async () => {
     const user = userEvent.setup()
     function Example() {
@@ -137,7 +144,7 @@ describe('portable field contracts', () => {
     render(<Example />)
     const search = screen.getByRole('searchbox', { name: 'Search projects' }) as HTMLInputElement
     await user.type(search, 'Website')
-    await user.click(screen.getByRole('button', { name: 'Clear search projects' }))
+    await user.click(screen.getByRole('button', { name: 'Clear Search projects' }))
     expect(search.value).toBe('')
     expect(document.activeElement).toBe(search)
   })

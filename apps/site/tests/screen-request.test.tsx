@@ -57,10 +57,10 @@ afterEach(() => {
   Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => true })
 })
 
-async function mount(props: { open?: boolean; want?: string | null } = {}) {
+async function mount(props: { open?: boolean; want?: string | null; launched?: boolean } = {}) {
   const view = render(
     <AppearanceProvider initialTheme="light" initialGlass={false}>
-      <ScreenRequest open={props.open ?? true} want={props.want ?? null} />
+      <ScreenRequest open={props.open ?? true} want={props.want ?? null} launched={props.launched} />
     </AppearanceProvider>,
   )
   await settle()
@@ -389,10 +389,19 @@ describe('After sending', () => {
 })
 
 describe('Closed', () => {
-  it('keeps the heading and says when requests open, without asking the server', async () => {
-    const { container } = await mount({ open: false })
+  it('before the launch, keeps the heading and says when requests open, without asking the server', async () => {
+    const { container } = await mount({ open: false, launched: false })
     expect(screen.getByRole('heading', { level: 3 }).textContent).toBe(COPY.heading)
     expect(container.textContent).toContain(COPY.closed)
+    expect(container.querySelector('form')).toBeNull()
+    expect(gets).toBe(0)
+  })
+
+  it('after the launch, says requests are paused and where to write instead', async () => {
+    const { container } = await mount({ open: false })
+    expect(container.textContent).not.toContain(COPY.closed)
+    expect(container.textContent).toBe(`${COPY.heading}Requests are paused right now. Write to diya@idyeah.studio instead.`)
+    expect(screen.getByRole('link', { name: 'diya@idyeah.studio' }).getAttribute('href')).toBe('mailto:diya@idyeah.studio')
     expect(container.querySelector('form')).toBeNull()
     expect(gets).toBe(0)
   })
@@ -400,7 +409,7 @@ describe('Closed', () => {
   it('closes when the server says it isn’t taking requests', async () => {
     status = { status: 200, body: { open: false } }
     const { container } = await mount()
-    expect(container.textContent).toContain(COPY.closed)
+    expect(container.textContent).toContain(COPY.paused)
     expect(container.querySelector('form')).toBeNull()
   })
 })

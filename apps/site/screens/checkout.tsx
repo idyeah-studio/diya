@@ -1,7 +1,7 @@
 'use client'
 // Checkout: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/checkout/page.tsx. Vite: save as src/Checkout.tsx and render it inside your DiyaProvider.
-import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { Accordion, Alert, Button, Choice, Select, SiteHeader, Switch, Tag, TextInput, TextLink } from '@idyeah/diya'
 import { ArrowLeft, CircleCheck, CreditCard, Lock, LucideProvider } from 'lucide-react'
 
@@ -15,10 +15,11 @@ const ITEMS = [
   { id: 'halden', name: 'Halden mug', detail: 'Chalk', price: 28, quantity: 2, shape: 'mug', glaze: '#ece7de' },
   { id: 'tove', name: 'Tove serving bowl', detail: 'Sage', price: 58, quantity: 1, shape: 'bowl', glaze: '#b2baa3' },
 ] as const
+// How long each speed takes, in business days. The arrival dates count from today.
 const DELIVERY = [
-  { value: 'standard', label: 'Standard, free', description: '3 to 5 business days. Arrives by Thursday, November 5.', price: 0, arrives: 'By Thursday, November 5' },
-  { value: 'express', label: 'Express, $18', description: '2 business days. Arrives by Monday, November 2.', price: 18, arrives: 'By Monday, November 2' },
-  { value: 'overnight', label: 'Next day, $32', description: 'Order by 2 p.m. Arrives Friday, October 30.', price: 32, arrives: 'Friday, October 30' },
+  { value: 'standard', label: 'Standard, free', description: '3 to 5 business days.', price: 0, days: 5, by: true },
+  { value: 'express', label: 'Express, $18', description: '2 business days.', price: 18, days: 2, by: true },
+  { value: 'overnight', label: 'Next day, $32', description: 'Order by 2 p.m.', price: 32, days: 1, by: false },
 ]
 const STATES = 'Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|District of Columbia|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming'
   .split('|').map((name) => ({ value: name, label: name }))
@@ -49,6 +50,24 @@ const PROBLEMS: Record<Field, (value: string) => string | undefined> = {
   city: (v) => (v.trim() ? undefined : 'Enter your city.'),
   state: (v) => (v ? undefined : 'Choose your state.'),
   zip: (v) => (/^\d{5}(-\d{4})?$/.test(v.trim()) ? undefined : 'Enter a 5-digit ZIP code.'),
+}
+
+// Today's date in the shopper's browser. The server can't know it, so it renders '' and the dates fill in once the page loads.
+const subscribeNever = () => () => {}
+function todayIso() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+const useToday = () => useSyncExternalStore(subscribeNever, todayIso, () => '')
+
+// The weekday a parcel lands, a number of business days after today: "Thursday, November 5".
+function arrival(today: string, businessDays: number) {
+  const day = new Date(`${today}T12:00:00Z`)
+  for (let left = businessDays; left > 0; ) {
+    day.setUTCDate(day.getUTCDate() + 1)
+    if (day.getUTCDay() % 6 !== 0) left--
+  }
+  return new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(day)
 }
 
 const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
@@ -83,7 +102,14 @@ export default function CheckoutScreen() {
     setFocusNext(undefined)
   }, [focusNext])
 
+  const today = useToday()
   const method = DELIVERY.find((d) => d.value === delivery)!
+  const arrives = (d: (typeof DELIVERY)[number]) => (today ? `${d.by ? 'By ' : ''}${arrival(today, d.days)}` : '')
+  const speeds = DELIVERY.map((d) => ({
+    value: d.value,
+    label: d.label,
+    description: today ? `${d.description} Arrives ${d.by ? 'by ' : ''}${arrival(today, d.days)}.` : d.description,
+  }))
   const totals = totalsFor(promo, method.price)
   const listed = (Object.keys(PROBLEMS) as Field[]).filter((field) => errors[field])
 
@@ -138,7 +164,7 @@ export default function CheckoutScreen() {
               email tracking the moment your pieces leave the studio.
             </p>
             <dl className="checkout-facts">
-              <div><dt>Arriving</dt><dd>{method.arrives}</dd></div>
+              <div><dt>Arriving</dt><dd>{arrives(method) || method.description}</dd></div>
               <div><dt>Shipping to</dt><dd>{details.address.trim()}{details.apartment.trim() && `, ${details.apartment.trim()}`}, {details.city.trim()}, {details.state} {details.zip.trim()}</dd></div>
               <div><dt>Paid</dt><dd>{money(totals.total)}</dd></div>
             </dl>
@@ -190,7 +216,7 @@ export default function CheckoutScreen() {
                 </Section>
 
                 <Section title="Delivery">
-                  <Choice label="Delivery speed" hideLabel options={DELIVERY} value={delivery} onValueChange={setDelivery} />
+                  <Choice label="Delivery speed" hideLabel options={speeds} value={delivery} onValueChange={setDelivery} />
                 </Section>
 
                 <Section title="Payment" lede="Your card details go straight to our payment provider. We never see or store them.">
@@ -242,11 +268,16 @@ function Summary({ totals, promo, onPromo }: { totals: ReturnType<typeof totalsF
   const [error, setError] = useState<string>()
   const [busy, setBusy] = useState(false)
   const field = useRef<HTMLInputElement>(null)
+  const [refocus, setRefocus] = useState(0)
+
+  // The field comes back once the code is gone; put the cursor in it after it renders.
+  useEffect(() => {
+    if (refocus) field.current?.focus()
+  }, [refocus])
 
   function remove() {
     onPromo(null)
-    // The field comes back once the code is gone; put the cursor in it.
-    setTimeout(() => field.current?.focus())
+    setRefocus((n) => n + 1)
   }
 
   async function apply(event: FormEvent) {
@@ -331,7 +362,7 @@ const css = `
 .checkout { min-height: 100dvh; color: var(--diya-color-text); }
 .checkout-brand { font-size: var(--diya-text-title); font-weight: 650; letter-spacing: -0.03em; }
 .checkout-secure { display: inline-flex; align-items: center; gap: var(--diya-space-2); color: var(--diya-color-muted); font-size: var(--diya-text-body); white-space: nowrap; }
-.checkout-main { max-width: 1120px; margin: 0 auto; padding: var(--diya-space-7) var(--diya-space-6) var(--diya-space-8); }
+.checkout-main { max-width: calc(1056px + 2 * var(--diya-space-7)); margin: 0 auto; padding: var(--diya-space-7) var(--diya-space-7) var(--diya-space-8); }
 .checkout-intro { display: grid; justify-items: start; gap: var(--diya-space-4); margin-bottom: var(--diya-space-7); }
 .checkout-title { margin: 0; font-size: var(--diya-text-display); font-weight: 600; line-height: var(--diya-leading-tight); letter-spacing: -0.03em; text-wrap: balance; }
 .checkout-title:focus { outline: none; }
@@ -392,6 +423,7 @@ const css = `
 .checkout-totals dt { color: var(--diya-color-muted); }
 .checkout-totals dd,
 .checkout-facts dd { margin: 0; font-variant-numeric: tabular-nums; text-align: end; }
+.checkout-facts dd { font-weight: 500; }
 .checkout-total { margin-top: var(--diya-space-2); font-size: var(--diya-text-large); font-weight: 600; }
 .checkout-totals .checkout-total dt { color: var(--diya-color-text); }
 .checkout-done { display: grid; justify-items: start; gap: var(--diya-space-5); max-width: 640px; }
@@ -411,13 +443,15 @@ const css = `
   .checkout-phone-summary .checkout-summary { padding-block: var(--diya-space-3); }
   .checkout-lede { font-size: var(--diya-text-body); }
 }
+@media (max-width: 640px) {
+  .checkout-main { padding-inline: var(--diya-space-4); }
+}
 @media (max-width: 560px) {
   .checkout-trio { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .checkout-trio > :first-child { grid-column: 1 / -1; }
   .checkout-secure { font-size: var(--diya-text-caption); }
 }
 @media (max-width: 380px) {
-  .checkout-main { padding-inline: var(--diya-space-4); }
   .checkout-pair,
   .checkout-trio { grid-template-columns: minmax(0, 1fr); }
 }
