@@ -7,6 +7,7 @@ import { isLaunched, launchNow } from '../lib/launch'
 import { catalogIsOpen } from '../lib/catalog-route'
 import { SITE } from '../lib/site'
 import { SiteAnalytics } from '../components/site/SiteAnalytics'
+import { screens } from '../components/screens/screens-data'
 
 const title = 'DIYA — Components and patterns. In code.'
 const description = 'A library for your next app. Thoughtfully built UI components and patterns, ready to work together. Coming soon.'
@@ -42,25 +43,29 @@ const metadata: Metadata = {
   icons,
 }
 
+// Counted, not typed, so the descriptions stay true as Screens grow. The share
+// card rounds instead ("30+ screens"), since a picture is slow to remake.
+const readyScreens = screens.filter((screen) => screen.status === 'ready').length
+
 // From the launch moment: the copy deck's title, description and social card,
 // with a new image file name (so LinkedIn and X don't reuse the cached
 // "Coming soon" card). The favicon stays the same.
 const launchedImage = {
-  url: '/social-preview-v6.jpg',
+  url: '/social-preview-v7.jpg',
   type: 'image/jpeg',
   width: 1200,
   height: 630,
-  alt: 'DIYA: a library for your next app. 30 components and 13 patterns for React. Free, MIT, yours to own. npm install @idyeah/diya.',
+  alt: 'DIYA: a library for your next app. 40+ components and patterns, and 30+ screens, for React. Free, MIT, yours to own. npm install @idyeah/diya.',
 }
 const launchedSocial = {
   title: 'DIYA — a library for your next app',
-  description: '30 components, 13 patterns and 34 screens for React. Free, MIT, yours to own.',
+  description: `30 components, 13 patterns and ${readyScreens} screens for React. Free, MIT, yours to own.`,
 }
 const launchedMetadata: Metadata = {
   ...metadata,
   title: 'DIYA — React components and patterns, free under MIT',
   description:
-    '30 components, 13 patterns and 34 screens for React, with Light, Dark and Glass. Free, MIT, yours to own. npm install @idyeah/diya',
+    `30 components, 13 patterns and ${readyScreens} screens for React, with Light, Dark and Glass. Free, MIT, yours to own. npm install @idyeah/diya`,
   openGraph: { ...launchedSocial, type: 'website', siteName: 'DIYA', url: '/', images: [launchedImage] },
   twitter: { card: 'summary_large_image', ...launchedSocial, images: [launchedImage] },
   icons,

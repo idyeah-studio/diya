@@ -91,7 +91,7 @@ Your editor shows the full prop types.
 
 Want to see a whole screen first? **[Oriel](https://oriel.diya13.ai)** is a small invoicing app made only from DIYA. Its source is in [`examples/oriel`](https://github.com/idyeah-studio/diya/tree/main/examples/oriel).
 
-Want a whole page to start from? **[Screens](https://diya13.ai/explore?area=screens)** are 34 pages, from sign-in to checkout, each one file you copy into your app.
+Want a whole page to start from? **[Screens](https://diya13.ai/explore?area=screens)** are whole pages, from sign-in to checkout, each one file you copy into your app.
 
 ## Use it with an AI editor
 

@@ -170,7 +170,7 @@ test('the launched page names the launch card in og:image and twitter:image', ()
   const card = `${SITE}${LAUNCHED_CARD}`
   const og = (content) => ({ property: 'og:image', content })
   const tw = (content) => ({ name: 'twitter:image', content })
-  assert.equal(LAUNCHED_CARD, '/social-preview-v6.jpg')
+  assert.equal(LAUNCHED_CARD, '/social-preview-v7.jpg')
   assert.deepEqual(launchedCardContract([og(card), tw(card)]), { ogImage: card, twitterImage: card })
   assert.throws(() => launchedCardContract([og(`${SITE}/social-preview-v3.jpg`), tw(card)]), /og:image/)
   assert.throws(() => launchedCardContract([og(card), tw(`${SITE}/brand/social-preview-v1.jpg`)]), /twitter:image/)
