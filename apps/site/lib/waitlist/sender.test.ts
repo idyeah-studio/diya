@@ -39,8 +39,8 @@ describe('Postmark sender', () => {
     expect(body.Attachments.map((a: Record<string, string>) => [a.Name, a.ContentType, a.ContentID])).toEqual([
       ['diya-light.png', 'image/png', 'cid:diya-light'],
       ['diya-dark.png', 'image/png', 'cid:diya-dark'],
-      ['relight-light.png', 'image/png', 'cid:relight-light'],
-      ['relight-dark.png', 'image/png', 'cid:relight-dark'],
+      ['relight-hero-light.png', 'image/png', 'cid:relight-hero-light'],
+      ['relight-hero-dark.png', 'image/png', 'cid:relight-hero-dark'],
     ])
   })
 
@@ -65,25 +65,27 @@ describe('Emails', () => {
   })
 
   it('opening any of them loads nothing: every picture rides inside, with a Dark twin', () => {
-    for (const [email, drawing, headline] of [
+    for (const [email, hero, headline] of [
       [confirmationEmail({ confirmUrl: 'https://diya13.ai/waitlist/confirm?token=c', choice: null, links }), 'relight', 'Almost in.'],
-      [alreadyOnListEmail({ choice: null, links }), 'relight', 'Already in.'],
+      [alreadyOnListEmail({ choice: null, links }), null, 'Already in.'],
       [welcomeEmail({ founding: false, links }), 'relight', 'You’re on the list.'],
-      [welcomeEmail({ founding: true, links }), 'founding', 'You’re founding.'],
+      [welcomeEmail({ founding: true, links }), 'founding', 'Your founding spot is saved.'],
     ] as const) {
-      const ids = ['diya-light', 'diya-dark', `${drawing}-light`, `${drawing}-dark`]
+      const ids = ['diya-light', 'diya-dark', ...(hero ? [`${hero}-hero-light`, `${hero}-hero-dark`] : [])]
       const sources = [...email.html.matchAll(/<img[^>]*\ssrc="([^"]*)"/g)].map((m) => m[1])
       expect(sources).toEqual(ids.map((id) => `cid:${id}`))
       expect(email.html).not.toMatch(/url\(|@import|<link/i)
       expect(email.attachments!.map((a) => a.contentId)).toEqual(ids)
       // Real PNGs, not placeholders.
       for (const a of email.attachments!) expect([...a.content.slice(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47])
-      // The wordmark is named for readers who block pictures; the drawing is decoration.
+      // Pictures are named for readers who block them; each Dark twin stays silent.
       expect(email.html).toContain('alt="DIYA"')
-      // Relight's name, its tag and the headline are live text.
+      if (hero) expect(email.html).toMatch(hero === 'founding' ? /alt="A founding ticket: 1 of the first 200\."/ : /alt="A rough sketch of a screen/)
+      // Relight's name, its tag and the headline are live text, and the headline comes before the drawing.
       expect(email.html).toContain('>Relight</td>')
       expect(email.html).toContain('Coming to DIYA Pro')
       expect(email.html).toContain(`>${headline}</h1>`)
+      if (hero) expect(email.html.indexOf('</h1>')).toBeLessThan(email.html.indexOf(`cid:${hero}-hero-light`))
     }
   })
 
@@ -91,7 +93,7 @@ describe('Emails', () => {
     const founding = welcomeEmail({ founding: true, links })
     expect(founding.subject).toBe('Your founding ticket for Relight')
     expect(founding.tag).toBe('waitlist-welcome')
-    expect(founding.text).toContain('You’re one of the first 200 to confirm.')
+    expect(founding.text).toContain('One of the first 200 means early access and the founding price for a year.')
     expect(founding.text).toContain('Keep this email: it’s your ticket.')
     expect(founding.text).toContain('Leave the list: https://diya13.ai/waitlist/unsubscribe?token=tok')
     expect(founding.headers[1]).toEqual({ name: 'List-Unsubscribe-Post', value: 'List-Unsubscribe=One-Click' })

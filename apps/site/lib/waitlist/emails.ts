@@ -1,5 +1,12 @@
 import { CONTACT_EMAIL, POSTAL_ADDRESS_IN_TRANSACTIONAL, postalAddress as configuredPostalAddress, SENDER_ORG, type Choice } from './config'
-import { DIYA_DARK_PNG, DIYA_LIGHT_PNG, FOUNDING_DARK_PNG, FOUNDING_LIGHT_PNG, RELIGHT_DARK_PNG, RELIGHT_LIGHT_PNG } from './email-art'
+import {
+  DIYA_DARK_PNG,
+  DIYA_LIGHT_PNG,
+  FOUNDING_HERO_DARK_PNG,
+  FOUNDING_HERO_LIGHT_PNG,
+  RELIGHT_HERO_DARK_PNG,
+  RELIGHT_HERO_LIGHT_PNG,
+} from './email-art'
 
 // CAN-SPAM (FTC, "CAN-SPAM Act: A Compliance Guide for Business"). The emails
 // here are transactional or relationship messages: each answers the person's
@@ -99,16 +106,24 @@ const png = (name: string, base64: string): EmailAttachment => ({
 })
 
 /**
- * The wordmark and the corner drawings, each with a Dark twin. They ride
- * inside the email (cid:), so opening one loads nothing from anywhere.
+ * The wordmark and the two drawings, each with a Dark twin. They ride inside
+ * the email (cid:), so opening one loads nothing from anywhere.
  */
 const WORDMARK = { light: png('diya-light', DIYA_LIGHT_PNG), dark: png('diya-dark', DIYA_DARK_PNG) }
-const DRAWINGS = {
-  relight: { light: png('relight-light', RELIGHT_LIGHT_PNG), dark: png('relight-dark', RELIGHT_DARK_PNG) },
-  founding: { light: png('founding-light', FOUNDING_LIGHT_PNG), dark: png('founding-dark', FOUNDING_DARK_PNG) },
+const HEROES = {
+  relight: {
+    light: png('relight-hero-light', RELIGHT_HERO_LIGHT_PNG),
+    dark: png('relight-hero-dark', RELIGHT_HERO_DARK_PNG),
+    alt: 'A rough sketch of a screen becoming a finished one: what Relight does.',
+  },
+  founding: {
+    light: png('founding-hero-light', FOUNDING_HERO_LIGHT_PNG),
+    dark: png('founding-hero-dark', FOUNDING_HERO_DARK_PNG),
+    alt: 'A founding ticket: 1 of the first 200.',
+  },
 }
-type Drawing = (typeof DRAWINGS)[keyof typeof DRAWINGS]
-const pictures = (drawing: Drawing) => [WORDMARK.light, WORDMARK.dark, drawing.light, drawing.dark]
+type Hero = (typeof HEROES)[keyof typeof HEROES]
+const pictures = (hero: Hero | null) => [WORDMARK.light, WORDMARK.dark, ...(hero ? [hero.light, hero.dark] : [])]
 
 // The site's Dark, for mail apps that follow the reader's setting: the page,
 // the card and its parts, and each picture's Dark twin. Others keep Light.
@@ -118,6 +133,7 @@ const STYLE = `@media (prefers-color-scheme: dark) {
   .page a, .ink { color:#f1f3f2 !important; }
   .muted { color:#bec8cb !important; }
   .box { background:#242626 !important; border-color:#333636 !important; }
+  .art { background:#242626 !important; }
   .chip { background:#2e2f2f !important; color:#f1f3f2 !important; }
   .page a.button { background:#f1f3f2 !important; color:#141515 !important; }
   .on-light { display:none !important; }
@@ -125,30 +141,36 @@ const STYLE = `@media (prefers-color-scheme: dark) {
 }
 @media (max-width: 480px) { .card { padding:28px 22px !important; } }`
 
-/** A picture and its Dark twin: mail apps that follow the reader's setting show one, the rest show Light. */
+/**
+ * A picture and its Dark twin: mail apps that follow the reader's setting show
+ * one, the rest show Light. It shrinks to fit a phone, never past `width`.
+ */
 function themed(pair: { light: EmailAttachment; dark: EmailAttachment }, width: number, height: number, alt: string) {
   const img = (file: EmailAttachment, cls: string, display: string, text: string) =>
-    `<img class="${cls}" src="cid:${file.contentId}" width="${width}" height="${height}" alt="${text}" style="display:${display};border:0;outline:none;">`
+    `<img class="${cls}" src="cid:${file.contentId}" width="${width}" height="${height}" alt="${escape(text)}" style="display:${display};width:100%;max-width:${width}px;height:auto;margin:0 auto;border:0;outline:none;">`
   return img(pair.light, 'on-light', 'block', alt) + `<!--[if !mso]><!-->${img(pair.dark, 'on-dark', 'none', '')}<!--<![endif]-->`
 }
 
-/** The card's top: wordmark and drawing, Relight with its tag, then the headline. */
-function top(siteUrl: string, drawing: Drawing, headline: string) {
+/**
+ * The card's top: the wordmark, Relight with its tag, the headline, and then
+ * the drawing, so the words lead even where pictures are blocked.
+ */
+function top(siteUrl: string, headline: string, hero: Hero | null) {
   return (
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr>` +
-    `<td style="vertical-align:top;"><a href="${escape(siteUrl)}" style="display:inline-block;">${themed(WORDMARK, 92, 30, 'DIYA')}</a></td>` +
-    `<td align="right" style="vertical-align:top;">${themed(drawing, 150, 65, '')}</td>` +
-    `</tr></table>` +
-    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 0;border-collapse:collapse;"><tr>` +
+    `<p style="margin:0;"><a href="${escape(siteUrl)}" style="display:inline-block;width:92px;">${themed(WORDMARK, 92, 30, 'DIYA')}</a></p>` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:30px 0 0;border-collapse:collapse;"><tr>` +
     `<td class="ink" style="padding:0 10px 0 0;vertical-align:middle;font-size:17px;font-weight:600;letter-spacing:-0.01em;color:#202627;">Relight</td>` +
     `<td style="vertical-align:middle;"><span class="chip" style="display:inline-block;padding:3px 9px 3px 8px;border-radius:7px;background:#eef0f0;color:#202627;font-size:13px;font-weight:500;line-height:1.3;white-space:nowrap;">` +
     `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#e8503a;margin-right:7px;vertical-align:1px;"></span>Coming to DIYA Pro</span></td>` +
     `</tr></table>` +
-    `<h1 class="ink" style="margin:14px 0 22px;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-0.03em;color:#202627;">${escape(headline)}</h1>`
+    `<h1 class="ink" style="margin:14px 0 22px;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-0.03em;color:#202627;">${escape(headline)}</h1>` +
+    (hero
+      ? `<div class="art" style="margin:0 0 26px;padding:22px 18px;border-radius:16px;background:#f4f5f3;text-align:center;">${themed(hero, 420, 182, hero.alt)}</div>`
+      : '')
   )
 }
 
-function page(email: { preheader: string; drawing: Drawing; headline: string; body: string }, links: EmailLinks, postalAddress: boolean) {
+function page(email: { preheader: string; headline: string; hero: Hero | null; body: string }, links: EmailLinks, postalAddress: boolean) {
   const small = `margin:0 0 6px;font-size:13px;line-height:1.5;color:#495659;`
   return `<!doctype html>
 <html lang="en">
@@ -159,7 +181,7 @@ function page(email: { preheader: string; drawing: Drawing; headline: string; bo
 <div class="page" style="background:#f2f2ef;color:#2f3637;">
 <div style="max-width:560px;margin:0 auto;padding:28px 12px 32px;">
 <div class="card" style="background:#ffffff;border:1px solid #e4e4df;border-radius:20px;padding:34px 32px;">
-${top(links.siteUrl, email.drawing, email.headline)}
+${top(links.siteUrl, email.headline, email.hero)}
 ${email.body}
 </div>
 <div style="padding:22px 20px 0;">
@@ -219,8 +241,8 @@ export function confirmationEmail(input: {
   const html = page(
     {
       preheader: 'One click, then it’s quiet until Relight is ready.',
-      drawing: DRAWINGS.relight,
       headline: 'Almost in.',
+      hero: HEROES.relight,
       body: p('Hi,') + p('One click confirms it’s you:') + button + box(offer) + (pick ? p(escape(pick)) : '') + quiet(ignore) + SIGNATURE_HTML,
     },
     links,
@@ -232,7 +254,7 @@ export function confirmationEmail(input: {
     html,
     headers: unsubscribeHeaders(links),
     tag: 'waitlist-confirm',
-    attachments: pictures(DRAWINGS.relight),
+    attachments: pictures(HEROES.relight),
   }
 }
 
@@ -245,19 +267,18 @@ export function welcomeEmail(input: {
 }): ComposedEmail {
   const { founding, links, postalAddress = POSTAL_ADDRESS_IN_TRANSACTIONAL } = input
   const library = libraryLine(links.siteUrl)
-  const drawing = founding ? DRAWINGS.founding : DRAWINGS.relight
-  const first = 'You’re one of the first 200 to confirm.'
-  const ticket = 'Early access and the founding price for a year. Keep this email: it’s your ticket.'
+  const hero = founding ? HEROES.founding : HEROES.relight
+  const ticket = 'One of the first 200 means early access and the founding price for a year. Keep this email: it’s your ticket.'
   const quietNow = 'Now it goes quiet until Relight is ready. Promise.'
   const later = 'The 200 founding spots went fast, but you’ll hear the moment Relight is ready.'
-  const lines = founding ? [first, ticket, quietNow] : [later]
+  const lines = founding ? [ticket, quietNow] : [later]
   const text = ['Hi,', ...lines, library.text, SIGNATURE_TEXT, '--', footerText(links, postalAddress)].join('\n\n')
-  const body = founding ? p('Hi,') + p(escape(first)) + box(escape(ticket)) + p(escape(quietNow)) : p('Hi,') + p(escape(later))
+  const body = founding ? p('Hi,') + box(escape(ticket)) + p(escape(quietNow)) : p('Hi,') + p(escape(later))
   const html = page(
     {
       preheader: founding ? 'One of the first 200. Keep this one.' : 'Confirmed. You’ll hear when Relight is ready.',
-      drawing,
-      headline: founding ? 'You’re founding.' : 'You’re on the list.',
+      headline: founding ? 'Your founding spot is saved.' : 'You’re on the list.',
+      hero,
       body: body + library.html + SIGNATURE_HTML,
     },
     links,
@@ -269,7 +290,7 @@ export function welcomeEmail(input: {
     html,
     headers: unsubscribeHeaders(links),
     tag: 'waitlist-welcome',
-    attachments: pictures(drawing),
+    attachments: pictures(hero),
   }
 }
 
@@ -287,8 +308,8 @@ export function alreadyOnListEmail(input: {
   const html = page(
     {
       preheader: 'Nothing to do. You’re already on it.',
-      drawing: DRAWINGS.relight,
       headline: 'Already in.',
+      hero: null,
       body: p('Hi,') + p(escape(news)) + (pick ? p(escape(pick)) : '') + SIGNATURE_HTML,
     },
     links,
@@ -300,6 +321,6 @@ export function alreadyOnListEmail(input: {
     html,
     headers: unsubscribeHeaders(links),
     tag: 'waitlist-already',
-    attachments: pictures(DRAWINGS.relight),
+    attachments: pictures(null),
   }
 }
