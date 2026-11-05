@@ -80,7 +80,7 @@ describe('Emails', () => {
       for (const a of email.attachments!) expect([...a.content.slice(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47])
       // Pictures are named for readers who block them; each Dark twin stays silent.
       expect(email.html).toContain('alt="DIYA"')
-      if (hero) expect(email.html).toMatch(hero === 'founding' ? /alt="A founding ticket: 1 of the first 200\."/ : /alt="A rough sketch of a screen/)
+      if (hero) expect(email.html).toMatch(hero === 'founding' ? /alt="A founding ticket: one in 200\."/ : /alt="A rough sketch of a screen/)
       // Relight's name, its tag and the headline are live text, and the headline comes before the drawing.
       expect(email.html).toContain('>Relight</td>')
       expect(email.html).toContain('Coming to DIYA Pro')

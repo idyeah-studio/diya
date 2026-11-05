@@ -119,7 +119,7 @@ const HEROES = {
   founding: {
     light: png('founding-hero-light', FOUNDING_HERO_LIGHT_PNG),
     dark: png('founding-hero-dark', FOUNDING_HERO_DARK_PNG),
-    alt: 'A founding ticket: 1 of the first 200.',
+    alt: 'A founding ticket: one in 200.',
   },
 }
 type Hero = (typeof HEROES)[keyof typeof HEROES]
