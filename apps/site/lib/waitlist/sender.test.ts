@@ -35,10 +35,9 @@ describe('Postmark sender', () => {
       { Name: 'List-Unsubscribe', Value: '<https://diya13.ai/api/waitlist/unsubscribe?token=tok>, <mailto:diya@idyeah.studio?subject=Leave%20the%20DIYA%20Pro%20list>' },
       { Name: 'List-Unsubscribe-Post', Value: 'List-Unsubscribe=One-Click' },
     ])
-    // The wordmark goes as inline pictures the HTML names by cid.
+    // The picture goes inline, named by cid in the HTML.
     expect(body.Attachments.map((a: Record<string, string>) => [a.Name, a.ContentType, a.ContentID])).toEqual([
-      ['diya-light.png', 'image/png', 'cid:diya-light'],
-      ['diya-dark.png', 'image/png', 'cid:diya-dark'],
+      ['relight.jpg', 'image/jpeg', 'cid:relight'],
     ])
   })
 
@@ -52,58 +51,59 @@ describe('Emails', () => {
   it('the confirmation is short, from Vishal, with one button and the full footer', () => {
     const email = confirmationEmail({ confirmUrl: 'https://diya13.ai/waitlist/confirm?token=c', choice: 'admin-table', links })
     expect(email.text.startsWith('Hi,')).toBe(true)
-    expect(email.text).toContain('You picked Admin table')
-    expect(email.text).toContain('I’d rather be late than show you something half-done.')
-    expect(email.text).toContain('Vishal\nIDYeah Studio')
+    expect(email.text).toContain('First thing you’d rebuild: an admin table. Noted.')
+    expect(email.text).toContain('The first 200 to confirm get early access')
+    expect(email.text).toContain('\n\n— Vishal\n\n')
     expect(email.html.match(/Confirm my email/g)).toHaveLength(1)
     expect(email.html).toContain('font-family:-apple-system')
     expect(email.html).not.toMatch(/<script/i)
     expect(email.text).toContain('Leave the list: https://diya13.ai/waitlist/unsubscribe?token=tok')
   })
 
-  it('opening any of them loads nothing: the wordmark rides inside, and nothing else is a picture', () => {
-    for (const email of [
-      confirmationEmail({ confirmUrl: 'https://diya13.ai/waitlist/confirm?token=c', choice: null, links }),
-      alreadyOnListEmail({ choice: null, links }),
-      welcomeEmail({ founding: true, links }),
-    ]) {
-      const sources = [...email.html.matchAll(/<img[^>]*\ssrc="([^"]*)"/g)].map((m) => m[1])
-      expect(sources).toEqual(['cid:diya-light', 'cid:diya-dark'])
+  it('opening any of them loads nothing: the one picture rides inside, with words for when pictures are off', () => {
+    for (const [email, art] of [
+      [confirmationEmail({ confirmUrl: 'https://diya13.ai/waitlist/confirm?token=c', choice: null, links }), 'relight'],
+      [alreadyOnListEmail({ choice: null, links }), 'relight'],
+      [welcomeEmail({ founding: false, links }), 'relight'],
+      [welcomeEmail({ founding: true, links }), 'founding'],
+    ] as const) {
+      const images = [...email.html.matchAll(/<img[^>]*\ssrc="([^"]*)"[^>]*\salt="([^"]+)"/g)].map((m) => m[1])
+      expect(images).toEqual([`cid:${art}`])
       expect(email.html).not.toMatch(/url\(|@import|<link/i)
-      expect(email.attachments!.map((a) => [a.contentId, a.contentType])).toEqual([
-        ['diya-light', 'image/png'],
-        ['diya-dark', 'image/png'],
-      ])
-      // Real PNGs, not placeholders.
-      for (const a of email.attachments!) expect([...a.content.slice(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47])
+      expect(email.attachments!.map((a) => [a.contentId, a.contentType])).toEqual([[art, 'image/jpeg']])
+      // A real JPEG, not a placeholder.
+      expect([...email.attachments![0].content.slice(0, 3)]).toEqual([0xff, 0xd8, 0xff])
+      // Relight's name and tag stay live text, so they never shrink with the picture.
+      expect(email.html).toContain('>Relight</td>')
       expect(email.html).toContain('Coming to DIYA Pro')
     }
   })
 
   it('the welcome is the founding record, or says the founding spots are taken', () => {
     const founding = welcomeEmail({ founding: true, links })
-    expect(founding.subject).toBe('You’re in: a founding spot on the Relight list')
+    expect(founding.subject).toBe('Your founding ticket for Relight')
     expect(founding.tag).toBe('waitlist-welcome')
-    expect(founding.text).toContain('one of the first 200, so you’re founding')
-    expect(founding.text).toContain('Keep this email. It’s your record of it.')
+    expect(founding.text).toContain('you’re one of the first 200')
+    expect(founding.text).toContain('Keep this email. It’s your ticket.')
     expect(founding.text).toContain('Leave the list: https://diya13.ai/waitlist/unsubscribe?token=tok')
     expect(founding.headers[1]).toEqual({ name: 'List-Unsubscribe-Post', value: 'List-Unsubscribe=One-Click' })
     const listed = welcomeEmail({ founding: false, links })
-    expect(listed.subject).toBe('You’re in: you’re on the Relight list')
-    expect(listed.text).toContain('The 200 founding spots are taken')
+    expect(listed.subject).toBe('You’re on the Relight list')
+    expect(listed.text).toContain('The 200 founding spots went fast')
     expect(listed.text).not.toContain('founding price')
   })
 
   it('escapes everything it puts into HTML', () => {
     const email = confirmationEmail({ confirmUrl: 'https://diya13.ai/x?a=1&b="2"', choice: null, links })
     expect(email.html).toContain('https://diya13.ai/x?a=1&amp;b=&quot;2&quot;')
-    expect(email.text).not.toContain('You picked')
+    expect(email.text).not.toContain('First thing you’d rebuild')
   })
 
   it('the already-on-the-list email says nothing changes', () => {
     const email = alreadyOnListEmail({ choice: 'other', links })
     expect(email.subject).toBe('You’re already on the Relight list')
-    expect(email.text).toContain('I’ve noted something else')
+    expect(email.text).toContain('Good news: you’re already on the list.')
+    expect(email.text).toContain('First thing you’d rebuild: something of your own. Noted.')
     expect(email.text.endsWith('IDYeah Studio LLC')).toBe(true)
   })
 

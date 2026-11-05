@@ -88,7 +88,7 @@ describe('Joining the waitlist', () => {
     t.advance(DAY + MINUTE)
     await t.joinAs('maya@studio.co', { choice: 'landing' })
     expect(t.sender.sent.map((m) => m.tag)).toEqual(['waitlist-confirm', 'waitlist-confirm'])
-    expect(t.sender.sent[1].text).toContain('You picked Landing')
+    expect(t.sender.sent[1].text).toContain('First thing you’d rebuild: a landing page.')
     expect(t.store.byEmail('maya@studio.co')!.choice).toBe('landing')
   })
 
@@ -100,7 +100,7 @@ describe('Joining the waitlist', () => {
     await t.joinAs('maya@studio.co', { choice: 'landing' })
     await t.joinAs('maya@studio.co')
     expect(t.sender.sent.map((m) => m.tag)).toEqual(['waitlist-confirm', 'waitlist-welcome', 'waitlist-already'])
-    expect(t.sender.sent[2].text).toContain('I’ve noted Landing')
+    expect(t.sender.sent[2].text).toContain('First thing you’d rebuild: a landing page.')
   })
 
   it('every email carries one-click unsubscribe headers and a privacy link, and no postal address by default', async () => {
@@ -252,8 +252,8 @@ describe('The welcome', () => {
     await confirm(t.deps, link)
     const welcomes = t.sender.sent.filter((m) => m.tag === 'waitlist-welcome')
     expect(welcomes).toHaveLength(1)
-    expect(welcomes[0]).toMatchObject({ to: 'a@x.dev', subject: 'You’re in: a founding spot on the Relight list' })
-    expect(welcomes[0].text).toContain('Keep this email. It’s your record of it.')
+    expect(welcomes[0]).toMatchObject({ to: 'a@x.dev', subject: 'Your founding ticket for Relight' })
+    expect(welcomes[0].text).toContain('Keep this email. It’s your ticket.')
   })
 
   it('tells the first person past the founding limit that the spots are taken', async () => {
@@ -268,8 +268,8 @@ describe('The welcome', () => {
     await t.joinAs('late@x.dev')
     await confirm(t.deps, confirmLink(t, 'late@x.dev'))
     const welcome = t.sender.sent.find((m) => m.tag === 'waitlist-welcome')!
-    expect(welcome.subject).toBe('You’re in: you’re on the Relight list')
-    expect(welcome.text).toContain('The 200 founding spots are taken')
+    expect(welcome.subject).toBe('You’re on the Relight list')
+    expect(welcome.text).toContain('The 200 founding spots went fast')
     expect(welcome.text).not.toContain('Keep this email')
   })
 
