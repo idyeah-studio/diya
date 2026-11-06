@@ -6,6 +6,7 @@ import './globals.css'
 import { isLaunched, launchNow } from '../lib/launch'
 import { catalogIsOpen } from '../lib/catalog-route'
 import { SITE } from '../lib/site'
+import { SiteAnalytics } from '../components/site/SiteAnalytics'
 
 const title = 'DIYA — Components and patterns. In code.'
 const description = 'A library for your next app. Thoughtfully built UI components and patterns, ready to work together. Coming soon.'
@@ -100,6 +101,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             </div>
           </header>{children}</>}
         </AppearanceProvider>
+        <SiteAnalytics />
       </body>
     </html>
   )

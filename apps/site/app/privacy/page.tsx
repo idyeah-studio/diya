@@ -125,8 +125,8 @@ export default async function Privacy() {
       <h2 id="who-helps">Who helps us</h2>
       <ul>
         <li>
-          <strong>Vercel</strong> hosts this site. Like any web host, it sees your IP address and browser details when
-          you load a page and keeps short-lived request logs.
+          <strong>Vercel</strong> hosts this site and counts its visits. Like any web host, it sees your IP address and
+          browser details when you load a page and keeps short-lived request logs.
         </li>
         <li>
           <strong>Neon</strong> runs the database that holds the waitlist and screen requests.
@@ -227,7 +227,11 @@ export default async function Privacy() {
       </p>
 
       <h2 id="this-site">On this site</h2>
-      <p>No analytics, no ad trackers, no third-party cookies. Your browser keeps a few small things for you:</p>
+      <p>
+        We count visits with Vercel Web Analytics: no cookies, nothing that follows you to other sites, and we only see
+        totals, like which pages were read and where visitors came from. No ad trackers, no third-party cookies. Your
+        browser keeps a few small things for you:
+      </p>
       <ul>
         <li>
           Two cookies, <code>diya-theme</code> and <code>diya-glass</code>, that remember your appearance settings for a

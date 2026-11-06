@@ -24,9 +24,9 @@ export const FOUNDING_LIMIT = 200
  * each signup and each screen request. Keep it equal to the privacy page's
  * "Last updated" date.
  */
-export const CONSENT_VERSION = '2026-10-29'
+export const CONSENT_VERSION = '2026-11-05'
 /** The privacy page's "Last updated" line; the date CONSENT_VERSION names. */
-export const PRIVACY_UPDATED = 'October 29, 2026'
+export const PRIVACY_UPDATED = 'November 5, 2026'
 
 /** The sender's legal name. Printed in every email footer and on the privacy page. */
 export const SENDER_ORG = 'IDYeah Studio LLC'
