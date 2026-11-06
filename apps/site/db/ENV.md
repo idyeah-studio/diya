@@ -14,6 +14,7 @@ After launch, when any of the six required variables is missing in production, t
 | `DIYA_WAITLIST_SECRET` | yes | Random key for the keyed hashes of IP addresses and emails in rate-limit records (the waitlist's and screen requests'), and for signing both forms' fill-time tokens. 32+ random bytes. Changing it only resets rate limits. | output of `openssl rand -hex 32` |
 | `DIYA_POSTAL_ADDRESS` | no | The sender's postal address for email footers: a USPS PO box or a registered private mailbox. Unset or blank means no address is printed anywhere. Keep it out of the repository; set it only in the deployment's environment. | `PO Box 100, Springfield, ST 00000` |
 | `DIYA_WAITLIST_REPLY_TO` | no | Reply-To, if replies should go somewhere other than DIYA's public alias. Defaults to `Vishal <diya@idyeah.studio>` (`DEFAULT_REPLY_TO` in `lib/waitlist/config.ts`). | `Vishal <diya@idyeah.studio>` |
+| `DIYA_WAITLIST_COPY_TO` | no | Where our copy of each waitlist email goes: the same email, composed with links that carry no token (so a click can't confirm or remove anyone), the address masked, `[Copy]` in front of the subject and no unsubscribe headers. Defaults to `CONTACT_EMAIL` (`diya@idyeah.studio`). It goes out on `POSTMARK_STREAM`, tagged `waitlist-copy`, and each copy counts as one more email in Postmark. | `Vishal <diya@idyeah.studio>` |
 
 ## Screen requests
 

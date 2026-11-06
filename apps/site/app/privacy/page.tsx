@@ -137,7 +137,8 @@ export default async function Privacy() {
           on a do-not-send list.
         </li>
         <li>
-          <strong>Microsoft 365</strong> holds our email, including the copy of each screen request that comes to us.
+          <strong>Microsoft 365</strong> holds our email, including the copy of each screen request that comes to us. It
+          also holds our copies of the waitlist emails, described under Our emails.
         </li>
       </ul>
       <p>
@@ -225,6 +226,10 @@ export default async function Privacy() {
         has a one-click way off the list. Apart from the one welcome after you confirm, we send any address at most one
         email a day. If a message fails to send,
         our logs record the error, never your address.
+      </p>
+      <p>
+        So we can see what went out, a copy of each one comes to our own inbox, with your address masked (like{' '}
+        <code>m•••@example.com</code>) and links that can’t confirm or remove anyone.
       </p>
 
       <h2 id="this-site">On this site</h2>

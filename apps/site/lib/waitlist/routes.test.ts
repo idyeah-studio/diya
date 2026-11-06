@@ -284,6 +284,11 @@ describe('Configuration', () => {
     expect(custom.replyTo).toBe('Help <help@example.com>')
   })
 
+  it('sends our copies to DIYA’s public alias unless DIYA_WAITLIST_COPY_TO says otherwise', () => {
+    expect(waitlistDeps({ ...full, NODE_ENV: 'production' })!.copyTo).toBe('diya@idyeah.studio')
+    expect(waitlistDeps({ ...full, DIYA_WAITLIST_COPY_TO: ' Me <me@example.com> ', NODE_ENV: 'production' })!.copyTo).toBe('Me <me@example.com>')
+  })
+
   it('falls back to the in-memory list and a logging sender in development', () => {
     const local = waitlistDeps({ NODE_ENV: 'development', DIYA_NOW: full.DIYA_NOW })!
     expect(local.store).toBeInstanceOf(MemoryWaitlistStore)

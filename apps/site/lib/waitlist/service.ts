@@ -12,8 +12,8 @@ import {
   type Choice,
   type Source,
 } from './config'
-import { emailProblem, normalizeEmail } from './email-address'
-import { alreadyOnListEmail, confirmationEmail, welcomeEmail, type EmailLinks } from './emails'
+import { emailProblem, maskEmail, normalizeEmail } from './email-address'
+import { alreadyOnListEmail, confirmationEmail, safeCopy, welcomeEmail, type ComposedEmail, type EmailLinks } from './emails'
 import type { WaitlistSender } from './sender'
 import type { ConfirmResult, Signup, WaitlistStore } from './store'
 import { formTokenAge, hashToken, keyedHash, randomToken } from './tokens'
@@ -28,6 +28,8 @@ export type WaitlistDeps = {
   secret: string
   /** Absolute origin for links in emails, without a trailing slash. */
   siteUrl: string
+  /** Where our safe copy of each email goes (safeCopy in emails.ts); none when unset. */
+  copyTo?: string | null
   now?: () => Date
 }
 
@@ -134,29 +136,48 @@ export async function join(deps: WaitlistDeps, request: JoinRequest, ip: string)
   if (!(await store.claimEmailSlot(signup.id, now, EMAIL_GAP_MS))) return { kind: 'accepted' }
   if (existing) await store.updatePick(signup.id, pick, now)
   const choice = request.choice ?? signup.choice
+  const compose = (links: EmailLinks, confirmUrl: string) =>
+    signup.confirmedAt ? alreadyOnListEmail({ choice, links }) : confirmationEmail({ confirmUrl, choice, links })
 
   try {
     const unsubscribe = randomToken()
     await store.addToken(signup.id, 'unsubscribe', hashToken(unsubscribe), null, now)
-    const links = emailLinks(deps.siteUrl, unsubscribe)
-    let message
-    if (signup.confirmedAt) {
-      message = alreadyOnListEmail({ choice, links })
-    } else {
+    let confirmUrl = ''
+    if (!signup.confirmedAt) {
       const confirm = randomToken()
       await store.addToken(signup.id, 'confirm', hashToken(confirm), new Date(now.getTime() + CONFIRM_TOKEN_TTL_MS), now)
       // A page with one button: opening the link (as mail scanners do) confirms nothing.
-      const confirmUrl = `${deps.siteUrl}/waitlist/confirm?token=${encodeURIComponent(confirm)}`
-      message = confirmationEmail({ confirmUrl, choice, links })
+      confirmUrl = `${deps.siteUrl}/waitlist/confirm?token=${encodeURIComponent(confirm)}`
     }
-    await deps.sender.send({ ...message, to: signup.email })
+    await deps.sender.send({ ...compose(emailLinks(deps.siteUrl, unsubscribe), confirmUrl), to: signup.email })
   } catch (error) {
     await store.releaseEmailSlot(signup.id, now).catch(() => {})
     // Never the address: only the error's own message, which carries none.
     console.error('[waitlist] could not send', error instanceof Error ? error.message : 'unknown error')
     return { kind: 'failed' }
   }
+  await sendCopy(deps, compose(inertLinks(deps.siteUrl), `${deps.siteUrl}/waitlist/confirm`), signup.email)
   return { kind: 'accepted' }
+}
+
+/** Links with no token: they open the right pages, but confirm and remove nobody. */
+function inertLinks(siteUrl: string): EmailLinks {
+  return { siteUrl, oneClickUrl: `${siteUrl}/api/waitlist/unsubscribe`, unsubscribePageUrl: `${siteUrl}/waitlist/unsubscribe` }
+}
+
+/**
+ * Our copy of an email that just went out, composed with inert links and the
+ * address masked, so a click in our inbox can't confirm or remove anyone.
+ * Copies follow the emails they copy one for one, so they need no cap of
+ * their own, and a failed copy never touches the real send.
+ */
+async function sendCopy(deps: WaitlistDeps, inert: ComposedEmail, to: string) {
+  if (!deps.copyTo) return
+  try {
+    await deps.sender.send({ ...safeCopy(inert, maskEmail(to)), to: deps.copyTo })
+  } catch (error) {
+    console.error('[waitlist] could not send our copy', error instanceof Error ? error.message : 'unknown error')
+  }
 }
 
 export async function confirm(deps: WaitlistDeps, token: string): Promise<ConfirmResult> {
@@ -184,7 +205,9 @@ async function welcome(deps: WaitlistDeps, to: { signupId: string; email: string
   } catch (error) {
     // Never the address: only the error's own message, which carries none.
     console.error('[waitlist] could not send the welcome', error instanceof Error ? error.message : 'unknown error')
+    return
   }
+  await sendCopy(deps, welcomeEmail({ founding, links: inertLinks(deps.siteUrl) }), to.email)
 }
 
 export async function unsubscribe(deps: WaitlistDeps, token: string) {

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { FOUNDING_LIMIT, RATE_LIMITS } from './config'
 import { emailProblem } from './email-address'
 import { MemoryWaitlistStore } from './memory-store'
-import { FakeSender } from './sender'
+import { FakeSender, type OutboundEmail } from './sender'
 import { confirm, join, parseJoinBody, unsubscribe, type JoinRequest, type WaitlistDeps } from './service'
 import { issueFormToken, keyedHash } from './tokens'
 
@@ -117,6 +117,49 @@ describe('Joining the waitlist', () => {
       expect(body).toContain('https://diya13.ai/waitlist/unsubscribe?token=')
     }
     vi.unstubAllEnvs()
+  })
+})
+
+describe('Our copy', () => {
+  it('follows each email that goes out with one safe copy: the address masked, no token, no unsubscribe headers', async () => {
+    const t = setup()
+    t.deps.copyTo = 'us@x.dev'
+    await t.joinAs('maya@studio.co', { choice: 'dashboard' })
+    await confirm(t.deps, tokenFrom(t.sender.sent[0].text, '/waitlist/confirm'))
+    expect(t.sender.sent.map((m) => [m.to, m.tag])).toEqual([
+      ['maya@studio.co', 'waitlist-confirm'],
+      ['us@x.dev', 'waitlist-copy'],
+      ['maya@studio.co', 'waitlist-welcome'],
+      ['us@x.dev', 'waitlist-copy'],
+    ])
+    const [confirmCopy, welcomeCopy] = t.sender.sent.filter((m) => m.tag === 'waitlist-copy')
+    expect(confirmCopy.subject).toBe('[Copy] Confirm your spot on the Relight list')
+    expect(welcomeCopy.subject).toBe('[Copy] Your founding ticket for Relight')
+    expect(confirmCopy.text).toContain('First thing you’d rebuild: a dashboard.')
+    for (const copy of [confirmCopy, welcomeCopy]) {
+      expect(copy.text.startsWith('Copy of what m•••@studio.co received.')).toBe(true)
+      expect(copy.html).toContain('Copy of what m•••@studio.co received.')
+      expect(copy.text + copy.html).not.toContain('token=')
+      expect(copy.text + copy.html).not.toContain('maya@studio.co')
+      expect(copy.headers).toEqual([])
+    }
+  })
+
+  it('a copy that fails never touches the real send, and logs no address', async () => {
+    const t = setup()
+    const sent: OutboundEmail[] = []
+    t.deps.copyTo = 'us@x.dev'
+    t.deps.sender = {
+      send: async (email) => {
+        if (email.tag === 'waitlist-copy') throw new Error('copy refused')
+        sent.push(email)
+      },
+    }
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    expect(await t.joinAs('maya@studio.co')).toEqual({ kind: 'accepted' })
+    expect(sent.map((m) => m.tag)).toEqual(['waitlist-confirm'])
+    expect(JSON.stringify(log.mock.calls)).not.toContain('maya@studio.co')
+    log.mockRestore()
   })
 })
 

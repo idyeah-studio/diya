@@ -34,7 +34,7 @@ export type ComposedEmail = {
   text: string
   html: string
   headers: EmailHeader[]
-  tag: 'waitlist-confirm' | 'waitlist-already' | 'waitlist-welcome' | 'screen-request'
+  tag: 'waitlist-confirm' | 'waitlist-already' | 'waitlist-welcome' | 'waitlist-copy' | 'screen-request'
   /** Overrides the sender's Reply-To for this one message. */
   replyTo?: string
   attachments?: EmailAttachment[]
@@ -322,5 +322,25 @@ export function alreadyOnListEmail(input: {
     headers: unsubscribeHeaders(links),
     tag: 'waitlist-already',
     attachments: pictures(null),
+  }
+}
+
+/**
+ * Our own copy of an email that went out. The caller composes it with inert
+ * links (no tokens), so nothing in it can confirm or remove anyone; this adds
+ * a banner naming the masked address, marks the subject, and drops the
+ * unsubscribe headers, which belong to the person, not to us.
+ */
+export function safeCopy(email: ComposedEmail, maskedTo: string): ComposedEmail {
+  const note = `Copy of what ${maskedTo} received. Its links won’t confirm or remove anyone.`
+  const banner = `<div style="padding:12px 16px;background:#202627;color:#f4f2ee;font-family:${FONT};font-size:14px;line-height:1.4;text-align:center;">${escape(note)}</div>`
+  const body = email.html.indexOf('>', email.html.indexOf('<body')) + 1
+  return {
+    ...email,
+    subject: `[Copy] ${email.subject}`,
+    text: `${note}\n\n${email.text}`,
+    html: email.html.slice(0, body) + banner + email.html.slice(body),
+    headers: [],
+    tag: 'waitlist-copy',
   }
 }
