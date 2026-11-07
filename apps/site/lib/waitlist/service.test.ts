@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { FOUNDING_LIMIT, RATE_LIMITS } from './config'
 import { emailProblem } from './email-address'
 import { MemoryWaitlistStore } from './memory-store'
-import { FakeSender } from './sender'
+import { FakeSender, type OutboundEmail } from './sender'
 import { confirm, join, parseJoinBody, unsubscribe, type JoinRequest, type WaitlistDeps } from './service'
 import { issueFormToken, keyedHash } from './tokens'
 
@@ -88,7 +88,7 @@ describe('Joining the waitlist', () => {
     t.advance(DAY + MINUTE)
     await t.joinAs('maya@studio.co', { choice: 'landing' })
     expect(t.sender.sent.map((m) => m.tag)).toEqual(['waitlist-confirm', 'waitlist-confirm'])
-    expect(t.sender.sent[1].text).toContain('You picked Landing')
+    expect(t.sender.sent[1].text).toContain('First thing you’d rebuild: a landing page.')
     expect(t.store.byEmail('maya@studio.co')!.choice).toBe('landing')
   })
 
@@ -99,8 +99,8 @@ describe('Joining the waitlist', () => {
     t.advance(DAY + MINUTE)
     await t.joinAs('maya@studio.co', { choice: 'landing' })
     await t.joinAs('maya@studio.co')
-    expect(t.sender.sent.map((m) => m.tag)).toEqual(['waitlist-confirm', 'waitlist-already'])
-    expect(t.sender.sent[1].text).toContain('I’ve noted Landing')
+    expect(t.sender.sent.map((m) => m.tag)).toEqual(['waitlist-confirm', 'waitlist-welcome', 'waitlist-already'])
+    expect(t.sender.sent[2].text).toContain('First thing you’d rebuild: a landing page.')
   })
 
   it('every email carries one-click unsubscribe headers and a privacy link, and no postal address by default', async () => {
@@ -120,6 +120,49 @@ describe('Joining the waitlist', () => {
   })
 })
 
+describe('Our copy', () => {
+  it('follows each email that goes out with one safe copy: the address masked, no token, no unsubscribe headers', async () => {
+    const t = setup()
+    t.deps.copyTo = 'us@x.dev'
+    await t.joinAs('maya@studio.co', { choice: 'dashboard' })
+    await confirm(t.deps, tokenFrom(t.sender.sent[0].text, '/waitlist/confirm'))
+    expect(t.sender.sent.map((m) => [m.to, m.tag])).toEqual([
+      ['maya@studio.co', 'waitlist-confirm'],
+      ['us@x.dev', 'waitlist-copy'],
+      ['maya@studio.co', 'waitlist-welcome'],
+      ['us@x.dev', 'waitlist-copy'],
+    ])
+    const [confirmCopy, welcomeCopy] = t.sender.sent.filter((m) => m.tag === 'waitlist-copy')
+    expect(confirmCopy.subject).toBe('[Copy] Confirm your spot on the Relight list')
+    expect(welcomeCopy.subject).toBe('[Copy] Your founding ticket for Relight')
+    expect(confirmCopy.text).toContain('First thing you’d rebuild: a dashboard.')
+    for (const copy of [confirmCopy, welcomeCopy]) {
+      expect(copy.text.startsWith('Copy of what m•••@studio.co received.')).toBe(true)
+      expect(copy.html).toContain('Copy of what m•••@studio.co received.')
+      expect(copy.text + copy.html).not.toContain('token=')
+      expect(copy.text + copy.html).not.toContain('maya@studio.co')
+      expect(copy.headers).toEqual([])
+    }
+  })
+
+  it('a copy that fails never touches the real send, and logs no address', async () => {
+    const t = setup()
+    const sent: OutboundEmail[] = []
+    t.deps.copyTo = 'us@x.dev'
+    t.deps.sender = {
+      send: async (email) => {
+        if (email.tag === 'waitlist-copy') throw new Error('copy refused')
+        sent.push(email)
+      },
+    }
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    expect(await t.joinAs('maya@studio.co')).toEqual({ kind: 'accepted' })
+    expect(sent.map((m) => m.tag)).toEqual(['waitlist-confirm'])
+    expect(JSON.stringify(log.mock.calls)).not.toContain('maya@studio.co')
+    log.mockRestore()
+  })
+})
+
 describe('People who left', () => {
   it('are never emailed again by a new join, confirmed or not, and nothing about them changes', async () => {
     for (const confirmFirst of [true, false]) {
@@ -132,7 +175,8 @@ describe('People who left', () => {
         t.advance(gap)
         expect(await t.joinAs('maya@studio.co', { choice: 'landing' })).toEqual({ kind: 'accepted' })
       }
-      expect(t.sender.sent).toHaveLength(1)
+      // The confirmation, and the welcome if they confirmed: nothing after leaving.
+      expect(t.sender.sent).toHaveLength(confirmFirst ? 2 : 1)
       expect(t.store.byEmail('maya@studio.co')).toEqual(left)
     }
   })
@@ -234,7 +278,60 @@ describe('Double opt-in and the first 200', () => {
     expect(await confirm(t.deps, '')).toEqual({ status: 'invalid' })
     await t.joinAs('b@x.dev', {}, '1.1.1.2')
     t.advance(8 * DAY)
-    expect(await confirm(t.deps, tokenFrom(t.sender.sent[1].text, '/waitlist/confirm'))).toEqual({ status: 'expired' })
+    const toB = t.sender.sent.find((m) => m.to === 'b@x.dev')!
+    expect(await confirm(t.deps, tokenFrom(toB.text, '/waitlist/confirm'))).toEqual({ status: 'expired' })
+  })
+})
+
+describe('The welcome', () => {
+  const confirmLink = (t: ReturnType<typeof setup>, to: string) =>
+    tokenFrom(t.sender.sent.find((m) => m.to === to && m.tag === 'waitlist-confirm')!.text, '/waitlist/confirm')
+
+  it('goes once, after the first confirmation, as the record of founding status', async () => {
+    const t = setup()
+    await t.joinAs('a@x.dev')
+    const link = confirmLink(t, 'a@x.dev')
+    await confirm(t.deps, link)
+    await confirm(t.deps, link)
+    const welcomes = t.sender.sent.filter((m) => m.tag === 'waitlist-welcome')
+    expect(welcomes).toHaveLength(1)
+    expect(welcomes[0]).toMatchObject({ to: 'a@x.dev', subject: 'Your founding ticket for Relight' })
+    expect(welcomes[0].text).toContain('Keep this email: it’s your ticket.')
+  })
+
+  it('tells the first person past the founding limit that the spots are taken', async () => {
+    const t = setup()
+    const joined = new Date(T0)
+    for (let i = 0; i < FOUNDING_LIMIT; i++) {
+      t.store.signups.set(`f${i}`, {
+        id: `f${i}`, email: `f${i}@x.dev`, choice: null, otherText: null, source: 'landing', consentVersion: 'x',
+        founding: true, createdAt: joined, updatedAt: joined, confirmedAt: joined, unsubscribedAt: null, lastEmailAt: joined,
+      })
+    }
+    await t.joinAs('late@x.dev')
+    await confirm(t.deps, confirmLink(t, 'late@x.dev'))
+    const welcome = t.sender.sent.find((m) => m.tag === 'waitlist-welcome')!
+    expect(welcome.subject).toBe('You’re on the Relight list')
+    expect(welcome.text).toContain('The 200 founding spots went fast')
+    expect(welcome.text).not.toContain('Keep this email')
+  })
+
+  it('carries its own way off the list, and a failed send never undoes the confirmation or logs the address', async () => {
+    const t = setup()
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await t.joinAs('a@x.dev')
+    t.sender.failNext = true
+    expect(await confirm(t.deps, confirmLink(t, 'a@x.dev'))).toEqual({ status: 'confirmed', founding: true, already: false })
+    expect(t.store.byEmail('a@x.dev')!.confirmedAt).not.toBeNull()
+    expect(JSON.stringify(log.mock.calls)).not.toContain('a@x.dev')
+    log.mockRestore()
+
+    await t.joinAs('b@x.dev', {}, '1.1.1.2')
+    await confirm(t.deps, confirmLink(t, 'b@x.dev'))
+    const welcome = t.sender.sent.find((m) => m.tag === 'waitlist-welcome')!
+    expect(welcome.to).toBe('b@x.dev')
+    expect(await unsubscribe(t.deps, tokenFrom(welcome.text, '/waitlist/unsubscribe'))).toBe(true)
+    expect(t.store.byEmail('b@x.dev')!.unsubscribedAt).not.toBeNull()
   })
 })
 

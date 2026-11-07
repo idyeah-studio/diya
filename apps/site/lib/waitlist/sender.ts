@@ -51,6 +51,7 @@ export class PostmarkSender implements WaitlistSender {
                 Name: a.name,
                 Content: Buffer.from(a.content).toString('base64'),
                 ContentType: a.contentType,
+                ...(a.contentId ? { ContentID: `cid:${a.contentId}` } : {}),
               })),
             }
           : {}),

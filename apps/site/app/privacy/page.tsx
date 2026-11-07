@@ -81,8 +81,8 @@ export default async function Privacy() {
       <h2 id="why">Why we keep it</h2>
       <ul>
         <li>
-          <strong>To run the list you asked to join:</strong> to confirm the address is yours, to tell you when Relight is
-          ready, and to honor the founding offer for the first 200. Your answer to the question helps decide what Relight
+          <strong>To run the list you asked to join:</strong> to confirm the address is yours, to welcome you once you do,
+          to tell you when Relight is ready, and to honor the founding offer for the first 200. Your answer to the question helps decide what Relight
           learns first. We rely on your consent for this (GDPR Article 6(1)(a)), given when you join and confirmed with
           the link in our first email.
         </li>
@@ -137,7 +137,8 @@ export default async function Privacy() {
           on a do-not-send list.
         </li>
         <li>
-          <strong>Microsoft 365</strong> holds our email, including the copy of each screen request that comes to us.
+          <strong>Microsoft 365</strong> holds our email, including the copy of each screen request that comes to us. It
+          also holds our copies of the waitlist emails, described under Our emails.
         </li>
       </ul>
       <p>
@@ -222,8 +223,13 @@ export default async function Privacy() {
       <p>
         No tracking pixels and no link tracking. We switch off open and click tracking on every message, so we can’t
         tell whether you opened an email or what you clicked, and every link goes straight where it says. Every message
-        has a one-click way off the list, and we send any address at most one email a day. If a message fails to send,
+        has a one-click way off the list. Apart from the one welcome after you confirm, we send any address at most one
+        email a day. If a message fails to send,
         our logs record the error, never your address.
+      </p>
+      <p>
+        So we can see what went out, a copy of each one comes to our own inbox, with your address masked (like{' '}
+        <code>m•••@example.com</code>) and links that can’t confirm or remove anyone.
       </p>
 
       <h2 id="this-site">On this site</h2>

@@ -1,4 +1,4 @@
-import { DEFAULT_REPLY_TO } from './config'
+import { CONTACT_EMAIL, DEFAULT_REPLY_TO } from './config'
 import { MemoryWaitlistStore } from './memory-store'
 import { waitlistIsOpen } from './open'
 import { neonRunner, NeonWaitlistStore } from './neon-store'
@@ -42,7 +42,7 @@ export function waitlistDeps(env: Env = process.env): WaitlistDeps | null {
   if (override !== undefined) return override
   if (!waitlistIsOpen(env)) return null
   if (missingEnv(env).length === 0) {
-    const key = [...REQUIRED_ENV, 'DIYA_WAITLIST_REPLY_TO'].map((name) => env[name]).join('\n')
+    const key = [...REQUIRED_ENV, 'DIYA_WAITLIST_REPLY_TO', 'DIYA_WAITLIST_COPY_TO'].map((name) => env[name]).join('\n')
     if (live?.key !== key) {
       const from = env.DIYA_WAITLIST_FROM!.trim()
       live = {
@@ -57,6 +57,7 @@ export function waitlistDeps(env: Env = process.env): WaitlistDeps | null {
           }),
           secret: env.DIYA_WAITLIST_SECRET!.trim(),
           siteUrl: env.DIYA_SITE_URL!.trim().replace(/\/+$/, ''),
+          copyTo: env.DIYA_WAITLIST_COPY_TO?.trim() || CONTACT_EMAIL,
         },
       }
     }

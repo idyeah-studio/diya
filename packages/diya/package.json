@@ -4,6 +4,21 @@
   "license": "MIT",
   "type": "module",
   "description": "React components and patterns: Light, Dark and Glass. MIT.",
+  "keywords": [
+    "react",
+    "react-components",
+    "components",
+    "ui",
+    "ui-components",
+    "component-library",
+    "design-system",
+    "dark-mode",
+    "glassmorphism",
+    "nextjs",
+    "vite",
+    "typescript",
+    "accessibility"
+  ],
   "sideEffects": [
     "**/*.css"
   ],

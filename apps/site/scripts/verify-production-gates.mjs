@@ -125,7 +125,7 @@ export function serverEnv(flag, env = process.env) {
 
 /* The launched page (served with DIYA_NOW past LAUNCH_AT) must name the
    launch card in both og:image and twitter:image, and the card must load. */
-export const LAUNCHED_CARD = '/social-preview-v6.jpg'
+export const LAUNCHED_CARD = '/social-preview-v7.jpg'
 
 /** og:image and twitter:image of a launched page; both must be the launch card. */
 export function launchedCardContract(metas) {
