@@ -1,4 +1,4 @@
-/* Relight waitlist (DIYA Pro). Lives inside its own DIYA provider, so every colour is a public token. */
+/* Relight waitlist (DIYA Pro). Lives inside its own DIYA provider, so every color is a public token. */
 .pro-waitlist {
   inline-size: 100%;
   min-inline-size: 0;
@@ -64,44 +64,33 @@
   opacity: 0;
   cursor: pointer;
 }
+/* Drawn like DIYA's pill Tabs: even padding, the label centered, the chosen
+   one filled. The thin outline stands in for the Tabs track, so an unchosen
+   pill still reads as something to press. Solid against outline is a change
+   in lightness as well as hue, so it never rests on color alone. */
 .pro-waitlist .rw-pill span {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
   min-block-size: 40px;
-  padding-inline: 12px 16px;
+  padding-inline: 18px;
   border: 1px solid var(--diya-color-line);
   border-radius: 999px;
-  color: var(--diya-color-text);
+  color: var(--diya-color-muted);
   font-size: var(--diya-text-body);
   font-weight: 500;
   line-height: 1.2;
+  white-space: nowrap;
   transition: background-color 0.15s, color 0.15s, border-color 0.15s;
-}
-/* Every pill keeps a slot for the tick, so picking one never reflows the row. */
-.pro-waitlist .rw-pill span::before {
-  content: '';
-  flex: none;
-  inline-size: 5px;
-  block-size: 10px;
-  margin-block-start: -3px;
-  margin-inline: 1px 2px;
-  border: solid currentColor;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-  visibility: hidden;
 }
 .pro-waitlist .rw-pill:hover span {
   background: var(--diya-color-hover);
+  color: var(--diya-color-text);
 }
-/* Checked is told by the tick as well as the fill, never by colour alone. */
 .pro-waitlist .rw-pill input:checked + span {
   border-color: var(--diya-color-accent);
   background: var(--diya-color-accent);
   color: var(--diya-color-accent-text);
-}
-.pro-waitlist .rw-pill input:checked + span::before {
-  visibility: visible;
 }
 .pro-waitlist .rw-pill input:focus-visible + span {
   outline: 2px solid var(--diya-color-text);
@@ -272,8 +261,5 @@
   .pro-waitlist .rw-pill input:checked + span {
     border-color: Highlight;
     outline: 1px solid Highlight;
-  }
-  .pro-waitlist .rw-pill input:checked + span::before {
-    border-color: CanvasText;
   }
 }
