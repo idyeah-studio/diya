@@ -130,6 +130,11 @@ function find(name: string) {
   )
 }
 
+/** The api.json id get_component answers for this name, or null when DIYA has no such export. Never the name itself. */
+export function componentIdFor(name: string): string | null {
+  return find(name)?.id ?? null
+}
+
 const quoteDefault = (value: unknown) => (typeof value === 'string' ? `'${value}'` : JSON.stringify(value))
 const propLine = ([name, prop]: [string, McpProp]) =>
   `- \`${name}${prop.required ? '' : '?'}: ${prop.type}${prop.default === undefined ? '' : ` = ${quoteDefault(prop.default)}`}\`${prop.description ? ` ${prop.description}` : ''}`

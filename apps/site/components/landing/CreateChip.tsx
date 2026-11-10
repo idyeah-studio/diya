@@ -8,6 +8,7 @@ import {
   usePackageManager,
   type PackageManager,
 } from '../site/package-manager'
+import { codeTaken } from '../../lib/code-taken'
 
 /**
  * The launched hero's lead command: start a new app with `create-diya`, in
@@ -18,7 +19,7 @@ import {
 export function CreateChip() {
   const manager = usePackageManager()
   const command = createCommand(manager)
-  const { state, message, copy, code } = useCopy(command, 'Command copied.')
+  const { state, message, copy, code } = useCopy(command, 'Command copied.', 'install/create-diya')
   const [, verb, pkg] = command.split(' ')
   return (
     <div className="site-chip" data-variant="hero" data-state={state} role="group" aria-label="Start a new app with DIYA">
@@ -52,7 +53,7 @@ export function CreateChip() {
 /** The line under the hero's actions, for people adding DIYA to an app they already have. */
 export function InstallLine() {
   const command = installCommand(usePackageManager())
-  const { state, message, copy, code } = useCopy(command, 'Install command copied.')
+  const { state, message, copy, code } = useCopy(command, 'Install command copied.', 'install/npm')
   return (
     <p className="ld-also">
       Adding it to an app you have?{' '}
@@ -69,7 +70,8 @@ export function InstallLine() {
 
 type CopyState = 'idle' | 'copied' | 'failed'
 
-function useCopy(text: string, copiedMessage: string) {
+/** `item` names the command for the Code taken count. */
+function useCopy(text: string, copiedMessage: string, item: string) {
   const [state, setState] = useState<CopyState>('idle')
   const [message, setMessage] = useState('')
   const code = useRef<HTMLElement>(null)
@@ -83,6 +85,7 @@ function useCopy(text: string, copiedMessage: string) {
       await navigator.clipboard.writeText(text)
       setState('copied')
       setMessage(copiedMessage)
+      codeTaken(item, 'copy')
       timer.current = window.setTimeout(() => {
         setState('idle')
         setMessage('')

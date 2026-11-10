@@ -129,7 +129,7 @@ export default async function Privacy() {
           browser details when you load a page and keeps short-lived request logs.
         </li>
         <li>
-          <strong>Neon</strong> runs the database that holds the waitlist and screen requests.
+          <strong>Neon</strong> runs the database that holds the waitlist, screen requests and the MCP counts.
         </li>
         <li>
           <strong>Postmark</strong> sends our emails, including the one that brings each screen request to us. It keeps a
@@ -235,8 +235,10 @@ export default async function Privacy() {
       <h2 id="this-site">On this site</h2>
       <p>
         We count visits with Vercel Web Analytics: no cookies, nothing that follows you to other sites, and we only see
-        totals, like which pages were read and where visitors came from. No ad trackers, no third-party cookies. Your
-        browser keeps a few small things for you:
+        totals, like which pages were read and where visitors came from. It also counts how often the code for each
+        component, pattern or screen is copied or downloaded, and how often an install command is copied: only which one
+        and how, never anything about you. No ad trackers, no third-party cookies. Your browser keeps a few small things
+        for you:
       </p>
       <ul>
         <li>
@@ -263,7 +265,8 @@ export default async function Privacy() {
       <p>
         If you connect your editor to DIYA’s MCP server, we count the words it searches for, such as “date range picker”,
         to learn what to build next: only those words, the day, whether DIYA had an answer and how many times they were
-        asked, kept for a year. No IP address, no account, nothing that says who asked.
+        asked. We also count which DIYA components it asks for, such as Date Picker, by day. Both counts are kept for a
+        year. No IP address, no account, nothing that says who asked.
       </p>
 
       <h2 id="children">Children</h2>

@@ -45,12 +45,14 @@ Each email ends with the query that marks the request answered. Run it after you
 
 ## Migrations
 
-Run each `*.sql` file in this folder once, in order, against the DIYA database (Neon SQL Editor, or `psql "$DIYA_DATABASE_URL" -f db/001_waitlist.sql`). The files are safe to re-run. `003_screen_requests.sql` must run before the gallery's form opens in production.
+Run each `*.sql` file in this folder once, in order, against the DIYA database (Neon SQL Editor, or `psql "$DIYA_DATABASE_URL" -f db/001_waitlist.sql`). The files are safe to re-run. `003_screen_requests.sql` must run before the gallery's form opens in production. `004_mcp_components.sql` must run before the MCP component counts can land; until it does, each count fails quietly and the agent still gets its answer.
 
 ## Day-to-day
 
 - Confirmed and still subscribed: `select count(*) from diya_waitlist where confirmed_at is not null and unsubscribed_at is null;`
 - Founding members, in order: `select email, confirmed_at from diya_waitlist where founding order by confirmed_at;`
+- What agents search the MCP server for, last 30 days: `select query, found, sum(count) as n from diya_mcp_searches where day > current_date - 30 group by query, found order by n desc limit 50;`
+- Which components they ask it for, last 30 days: `select component, sum(count) as n from diya_mcp_components where day > current_date - 30 group by component order by n desc;`
 - Delete someone on request (their tokens go with them): `delete from diya_waitlist where email = lower('person@example.com');`
 - The sender's legal name lives in `lib/waitlist/config.ts` (`SENDER_ORG`); the postal address comes only from `DIYA_POSTAL_ADDRESS`. DIYA's public contact (`CONTACT_EMAIL`, `diya@idyeah.studio`) lives there too; it is on the privacy page, the unsubscribe page, every email footer and the mailto in `List-Unsubscribe`, so someone has to read that inbox. A "please take me off" email to it counts as leaving the list: do it by hand within 10 business days (sooner is better), with `update diya_waitlist set unsubscribed_at = now(), choice = null, other_text = null, updated_at = now() where email = lower('person@example.com');`.
 - `POSTAL_ADDRESS_IN_TRANSACTIONAL` (default `false`) decides whether the confirmation and "already on the list" emails print the postal address. Those two answer the person's own request, so they are most likely transactional or relationship messages under CAN-SPAM, where the address isn't strictly required.

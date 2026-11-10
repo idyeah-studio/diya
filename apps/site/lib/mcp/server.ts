@@ -5,6 +5,7 @@ import type { Search } from './query-log'
 import {
   buildScreenPrompt,
   COMPONENT_SECTIONS,
+  componentIdFor,
   getComponent,
   getSetup,
   getTheme,
@@ -25,7 +26,10 @@ import { MCP_API } from './catalog'
 const text = (body: string) => ({ content: [{ type: 'text' as const, text: body }] })
 const readOnly = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
 
-export function createDiyaMcpServer({ onSearch }: { onSearch?: (search: Search) => void } = {}) {
+/** What the route counts: the words of each search, and the id of each component asked for. */
+export type McpCounters = { onSearch?: (search: Search) => void; onComponent?: (id: string) => void }
+
+export function createDiyaMcpServer({ onSearch, onComponent }: McpCounters = {}) {
   const server = new McpServer({ name: 'diya', title: 'DIYA', version: MCP_API.version }, { instructions: SERVER_INSTRUCTIONS })
 
   server.registerTool(
@@ -62,7 +66,12 @@ export function createDiyaMcpServer({ onSearch }: { onSearch?: (search: Search) 
       },
       annotations: readOnly,
     },
-    async ({ name, include }) => text(getComponent({ name, include }))
+    async ({ name, include }) => {
+      const answer = text(getComponent({ name, include }))
+      const id = componentIdFor(name)
+      if (id) onComponent?.(id)
+      return answer
+    }
   )
 
   server.registerTool(
@@ -160,7 +169,7 @@ function withHeaders(response: Response, headers: Record<string, string>) {
  * a stateless server has no stream to offer on GET and no session to end on
  * DELETE, so both answer 405, which MCP clients expect.
  */
-export async function handleMcpRequest(request: Request, { onSearch }: { onSearch?: (search: Search) => void } = {}) {
+export async function handleMcpRequest(request: Request, counters: McpCounters = {}) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS })
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed: send MCP messages with POST.' }, id: null }), {
@@ -168,7 +177,7 @@ export async function handleMcpRequest(request: Request, { onSearch }: { onSearc
       headers: { ...CORS, Allow: 'POST, OPTIONS', 'Content-Type': 'application/json' },
     })
   }
-  const server = createDiyaMcpServer({ onSearch })
+  const server = createDiyaMcpServer(counters)
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true })
   await server.connect(transport)
   try {

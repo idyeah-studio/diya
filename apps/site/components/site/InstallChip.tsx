@@ -7,6 +7,7 @@ import {
   usePackageManager,
   type PackageManager,
 } from './package-manager'
+import { codeTaken } from '../../lib/code-taken'
 
 /**
  * The install command, ready to copy, in the remembered package manager.
@@ -90,6 +91,7 @@ function useCopy(text: string) {
       await navigator.clipboard.writeText(text)
       setState('copied')
       setMessage('Install command copied.')
+      codeTaken('install/npm', 'copy')
       timer.current = window.setTimeout(() => {
         setState('idle')
         setMessage('')

@@ -71,7 +71,7 @@ export function ReferencePanel({ path }: { path: string }) {
             </p>
           </div>
           <div className="item-reference-tools">
-            <CopyForAi brief={itemBrief(id)} title={reference.title} />
+            <CopyForAi brief={itemBrief(id)} title={reference.title} id={id} />
             <ConnectEditor install={MCP_INSTALL} />
           </div>
         </header>

@@ -1,13 +1,23 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Button } from '@idyeah/diya'
+import { catalogItem, codeTaken } from '../../lib/code-taken'
 
 /**
  * Copies a Markdown brief for one item, written for an AI coding agent.
  * If the clipboard refuses, the brief opens in place, selected, with how
  * to copy it.
  */
-export function CopyForAi({ brief, title }: { brief: string; title: string }) {
+export function CopyForAi({
+  brief,
+  title,
+  id,
+}: {
+  brief: string
+  title: string
+  /** The catalog id, for the Code taken count. */
+  id?: string
+}) {
   const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle')
   useEffect(() => {
     if (state !== 'copied') return
@@ -25,6 +35,7 @@ export function CopyForAi({ brief, title }: { brief: string; title: string }) {
           try {
             await navigator.clipboard.writeText(brief)
             setState('copied')
+            if (id) codeTaken(catalogItem(id), 'copy')
           } catch {
             setState('failed')
           }

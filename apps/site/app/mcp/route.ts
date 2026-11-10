@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { after, connection } from 'next/server'
 import { catalogIsOpen } from '../../lib/catalog-route'
 import { handleMcpRequest } from '../../lib/mcp/server'
+import { componentLog, recordComponents } from '../../lib/mcp/component-log'
 import { recordSearches, searchLog, type Search } from '../../lib/mcp/query-log'
 
 /**
@@ -13,9 +14,14 @@ async function handle(request: Request) {
   await connection()
   if (!catalogIsOpen()) notFound()
   const searches: Search[] = []
-  const response = await handleMcpRequest(request, { onSearch: (search) => searches.push(search) })
+  const components: string[] = []
+  const response = await handleMcpRequest(request, {
+    onSearch: (search) => searches.push(search),
+    onComponent: (id) => components.push(id),
+  })
   // Counted after the answer has gone, so it never slows an agent down.
   if (searches.length) after(() => recordSearches(searchLog(), searches))
+  if (components.length) after(() => recordComponents(componentLog(), components))
   return response
 }
 

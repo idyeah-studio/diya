@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Button, Drawer } from '@idyeah/diya'
 import { effectiveAppearance } from '../../lib/customize/appearance'
 import { brandColorAttribute } from '../../lib/customize/theme'
+import { codeTaken } from '../../lib/code-taken'
 import { CodeBlock } from '../code/CodeBlock'
 import { CreateAppNote } from '../code/CreateAppNote'
 import { PackageManagerTabs } from '../code/PackageManagerTabs'
@@ -181,6 +182,7 @@ ${providerOpen.length <= 80 ? providerOpen : `<DiyaProvider\n${providerProps.map
             label={fileName}
             name={`${screen.name} screen file`}
             collapseAfter={16}
+            onCopied={() => codeTaken(`screen/${screen.id}`, 'copy')}
             actions={
               <Button
                 variant="quiet"
@@ -191,6 +193,7 @@ ${providerOpen.length <= 80 ? providerOpen : `<DiyaProvider\n${providerProps.map
                 onClick={() => {
                   download(fileName, source)
                   setAnnouncement(`${fileName} downloaded.`)
+                  codeTaken(`screen/${screen.id}`, 'download')
                 }}
               >
                 Download
