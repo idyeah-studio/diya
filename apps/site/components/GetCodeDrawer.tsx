@@ -2,6 +2,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Drawer, Tabs } from '@idyeah/diya'
 import { componentIds } from '../lib/catalog-route'
+import { catalogItem, codeTaken } from '../lib/code-taken'
 import { effectiveAppearance } from '../lib/customize/appearance'
 import { customizeItems, isItemId } from '../lib/customize/registry'
 import { brandColorAttribute } from '../lib/customize/theme'
@@ -237,7 +238,14 @@ export function Providers({ children }: { children: ReactNode }) {
                     label: 'Snippet',
                     content:
                       format === 'snippet' ? (
-                        <CodeBlock code={snippet.code} language="tsx" label={`${title}, as previewed`} name={`${title} example`} collapseAfter={10} />
+                        <CodeBlock
+                          code={snippet.code}
+                          language="tsx"
+                          label={`${title}, as previewed`}
+                          name={`${title} example`}
+                          collapseAfter={10}
+                          onCopied={() => codeTaken(catalogItem(id), 'copy')}
+                        />
                       ) : null,
                   },
                   {
@@ -246,7 +254,14 @@ export function Providers({ children }: { children: ReactNode }) {
                     content:
                       format === 'file' ? (
                         <>
-                          <CodeBlock code={snippet.file} language="tsx" label={snippet.fileName} name={`${title} complete file`} collapseAfter={14} />
+                          <CodeBlock
+                            code={snippet.file}
+                            language="tsx"
+                            label={snippet.fileName}
+                            name={`${title} complete file`}
+                            collapseAfter={14}
+                            onCopied={() => codeTaken(catalogItem(id), 'copy')}
+                          />
                           <p className="get-code-file-note">
                             Save it as <code>{snippet.fileName}</code>, then render <code>{`<${component} />`}</code> inside the provider from step 2. It compiles as pasted in Next.js (App Router) and Vite, with sample data and working state.
                           </p>

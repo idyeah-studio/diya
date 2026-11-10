@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
+import { MemoryComponentLog, setComponentLog } from './component-log'
 import { MemorySearchLog, setSearchLog } from './query-log'
 
 /*
@@ -52,6 +53,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllEnvs()
   setSearchLog(undefined)
+  setComponentLog(undefined)
 })
 
 describe('the /mcp route', () => {
@@ -117,6 +119,27 @@ describe('the /mcp route', () => {
       { query: 'date range', found: true, count: 1 },
       { query: 'carousel', found: false, count: 1 },
     ])
+    await client.close()
+  })
+
+  it('counts the components asked for after answering, by catalog id only', async () => {
+    const searches = new MemorySearchLog()
+    const components = new MemoryComponentLog()
+    setSearchLog(searches)
+    setComponentLog(components)
+    const client = await connect()
+    await client.callTool({ name: 'get_component', arguments: { name: 'Switch' } })
+    await client.callTool({ name: 'get_component', arguments: { name: 'text-link' } })
+    await client.callTool({ name: 'get_component', arguments: { name: 'switch' } })
+    await client.callTool({ name: 'get_component', arguments: { name: 'my secret widget' } })
+    await client.callTool({ name: 'search_components', arguments: { query: 'toggle' } })
+    expect(components.counts.size).toBe(0)
+    await Promise.all(afterWork.map((work) => work()))
+    expect([...components.counts.values()].map(({ component, count }) => [component, count])).toEqual([
+      ['switch', 2],
+      ['text-link', 1],
+    ])
+    expect([...searches.counts.values()].map(({ query }) => query)).toEqual(['toggle'])
     await client.close()
   })
 
