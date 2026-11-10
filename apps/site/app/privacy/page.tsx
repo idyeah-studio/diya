@@ -129,7 +129,7 @@ export default async function Privacy() {
           browser details when you load a page and keeps short-lived request logs.
         </li>
         <li>
-          <strong>Neon</strong> runs the database that holds the waitlist and screen requests.
+          <strong>Neon</strong> runs the database that holds the waitlist, screen requests and the MCP counts.
         </li>
         <li>
           <strong>Postmark</strong> sends our emails, including the one that brings each screen request to us. It keeps a
