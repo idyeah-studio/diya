@@ -38,21 +38,9 @@ html:has(:is(.site-root, .waitlist-shell)) .skip-link { z-index: 70; background:
 /* The catalog's skip link ring, not the older globals' purple one. */
 html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2px solid #1c1c1c; outline-offset: 2px; }
 
-/* The wordmark: ink strokes and A dot, a vermilion D dot in both themes.
-   The glow layer exists only during the launch moment, which fades it in
-   and out once as the mark lands. */
+/* The wordmark: ink strokes and A dot, a vermilion D dot in both themes. */
 .site-mark { display: block; width: 100%; height: auto; overflow: visible; }
 .site-mark-dot { fill: var(--site-dot); }
-.site-mark-glow {
-  fill: var(--site-dot);
-  opacity: 0;
-  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--site-dot) 75%, transparent))
-    drop-shadow(0 0 10px color-mix(in srgb, var(--site-dot) 45%, transparent));
-}
-.diya-root[data-theme='light'] .site-mark-glow {
-  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--site-dot) 60%, transparent))
-    drop-shadow(0 0 8px color-mix(in srgb, var(--site-dot) 30%, transparent));
-}
 
 /* Header */
 /* One header on every page: the same 72px bar (64px on phones), the same
@@ -505,7 +493,6 @@ a.site-menu-row:hover, button.site-menu-row:hover { background: var(--diya-color
   .site-top-nav a[aria-current] { outline: 2px solid CanvasText; }
   /* The D dot keeps its place in forced colors, in the text color. */
   .site-mark-dot { fill: CanvasText; }
-  .site-mark-glow { display: none; }
 }
 
 /* The shared Appearance panel, at the site's reading sizes. */

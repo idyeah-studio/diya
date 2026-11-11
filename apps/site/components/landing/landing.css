@@ -4,19 +4,13 @@
   --ld-wash: linear-gradient(180deg, #14151500 62%, #141515 100%),
     linear-gradient(90deg, #0d0e0ef2 0%, #0d0e0ec4 38%, #0d0e0e55 70%, #0d0e0e30);
   --ld-photo-filter: grayscale(1) brightness(.62) contrast(1.05);
-  --ld-veil: rgb(8 12 13 / 24%);
-  --ld-veil-deep: rgb(8 12 13 / 52%);
   outline: none;
 }
-.diya-root[data-theme='light'] .site-landing,
-.diya-root[data-theme='light'] .ld-moment {
+.diya-root[data-theme='light'] .site-landing {
   --ld-wash: linear-gradient(180deg, #f2f2ef00 62%, #f2f2ef 100%),
     linear-gradient(90deg, #f4f4f1f5 0%, #f4f4f1d6 40%, #f4f4f170 72%, #f4f4f140);
   --ld-photo-filter: grayscale(1) brightness(1.55) contrast(.78);
-  --ld-veil: rgb(239 241 240 / 26%);
-  --ld-veil-deep: rgb(239 241 240 / 55%);
 }
-.ld-moment { --ld-veil: rgb(8 12 13 / 24%); --ld-veil-deep: rgb(8 12 13 / 52%); }
 .site-landing h1, .site-landing h2, .site-landing h3 { color: var(--diya-color-text); }
 .site-landing code { font-family: var(--site-mono); }
 .ld-wrap { max-width: 1328px; margin: 0 auto; }
@@ -87,23 +81,6 @@
 .ld-meta li + li::before { content: ''; width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .6; }
 .ld-meta a { display: inline-flex; align-items: center; gap: 7px; color: var(--diya-color-text); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--diya-color-text) 35%, transparent); text-underline-offset: 4px; }
 .ld-meta a:hover { text-decoration-color: currentColor; }
-.ld-launch-slot:empty { display: none; }
-.ld-launch-line {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 22px;
-  font-size: 17px;
-  font-weight: 500;
-}
-.site-landing .ld-launch-line { color: var(--diya-color-text); }
-.ld-launch-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--site-dot);
-}
-
 /* Sections */
 .ld-section { padding: 112px 56px; }
 .ld-section-head { margin-bottom: 56px; }
@@ -368,22 +345,6 @@
 .ld-promise li::before { content: counter(promise, decimal-leading-zero); padding-top: .5em; font-size: 15px; font-weight: 400; letter-spacing: 0; color: var(--diya-color-muted); font-variant-numeric: proportional-nums; }
 .ld-promise code { font-size: .86em; letter-spacing: -.04em; overflow-wrap: anywhere; }
 
-/* The lighting (LaunchMoment) */
-.ld-moment {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  color: var(--diya-color-text);
-  background-color: var(--ld-veil);
-  backdrop-filter: blur(8px);
-  pointer-events: none;
-}
-.ld-moment-count { grid-area: 1 / 1; }
-.ld-moment-mark { position: absolute; left: calc(50% - 120px); top: calc(50% - 35px); width: 240px; opacity: 0; transform-origin: 0 0; }
-
 /* Tablet: one column. */
 @media (max-width: 1100px) {
   .ld-hero { padding: 0 40px; }
@@ -418,7 +379,6 @@
   .ld-hero-grid { padding: 92px 0 56px; gap: 36px; }
   .ld-hero h1 { font-size: clamp(34px, 9.8vw, 40px); line-height: 1.04; letter-spacing: -.03em; font-stretch: 104%; }
   .ld-lede { margin-top: 14px; font-size: 15px; }
-  .ld-launch-line { font-size: 15px; margin-bottom: 16px; }
   .ld-actions { margin-top: 24px; gap: 10px; }
   .ld-actions > .site-chip { width: 100%; height: 50px; }
   .ld-actions .site-chip-cmd { flex: 1; padding: 0 8px 0 12px; font-size: 15px; }
@@ -475,7 +435,6 @@
   .ld-join { margin-top: 48px; padding-top: 32px; }
   .ld-promise li { grid-template-columns: 36px minmax(0, 1fr); padding: 18px 0; font-size: 22px; }
   .ld-promise li::before { padding-top: .35em; font-size: 13px; }
-  .ld-moment-mark { left: calc(50% - 90px); top: calc(50% - 27px); width: 180px; }
 }
 @media (max-width: 400px) {
   .ld-actions .site-chip-key { padding: 0 14px; }
@@ -502,23 +461,7 @@
 }
 @media (forced-colors: active) {
   .ld-photo, .ld-sheet-photo { display: none; }
-  .ld-launch-dot { forced-color-adjust: none; background: CanvasText; }
   .ld-cell, .ld-ask, .ld-built, .ld-shot { border: 1px solid CanvasText; background: Canvas; }
   .ld-screens-picture { border: 1px solid CanvasText; }
   .ld-finish button[aria-pressed='true'] { outline: 2px solid CanvasText; }
 }
-
-/* A full page load that is the watched launch: veiled like the countdown
-   until LaunchMoment takes over (it removes the attribute). */
-html[data-launch-moment='pending'] .site-landing-root::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: rgb(8 12 13 / 52%);
-  backdrop-filter: blur(8px);
-  /* If the script never arrives, the page still shows. */
-  animation: ld-pending-out .3s ease 4s forwards;
-}
-@keyframes ld-pending-out { to { opacity: 0; visibility: hidden; } }
-html[data-theme='light'][data-launch-moment='pending'] .site-landing-root::after { background: rgb(239 241 240 / 55%); }

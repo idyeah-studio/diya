@@ -1,22 +1,17 @@
 /**
  * The DIYA wordmark. Strokes and the A dot follow `currentColor`; the dot
  * inside the D is vermilion in both themes (`--site-dot` in site.css, never
- * an SDK token; the `currentColor` fill is only a fallback). The launch
- * moment (LaunchMoment) alone adds a glow layer over that dot and brings it
- * up once, softly, as the mark lands in the header.
+ * an SDK token; the `currentColor` fill is only a fallback).
  *
  * <FlameMark className="site-top-mark" />           // named "DIYA"
  * <FlameMark decorative />                            // inside a link that names itself
- * <FlameMark decorative glow />                       // the launch moment only
  */
 export function FlameMark({
   className,
   decorative = false,
-  glow = false,
 }: {
   className?: string
   decorative?: boolean
-  glow?: boolean
 }) {
   return (
     <svg
@@ -33,7 +28,6 @@ export function FlameMark({
       </g>
       <circle cx="413" cy="110" r="19" fill="currentColor" />
       <circle className="site-mark-dot" cx="88" cy="48" r="19" fill="currentColor" />
-      {glow && <circle className="site-mark-glow" cx="88" cy="48" r="19" fill="currentColor" />}
     </svg>
   )
 }

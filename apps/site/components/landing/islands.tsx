@@ -15,4 +15,3 @@ export const ProScreen = dynamic(() => import('./ProScreen').then((m) => m.ProSc
 export const ProWaitlist = dynamic(() =>
   import('../waitlist/ProWaitlist').then((m) => m.ProWaitlist),
 )
-export const LaunchMoment = dynamic(() => import('./LaunchMoment').then((m) => m.LaunchMoment))

@@ -8,7 +8,6 @@ import {
   CreateChip,
   GlassCards,
   InstallLine,
-  LaunchMoment,
   PartsSheet,
   ProScreen,
   ProWaitlist,
@@ -18,7 +17,6 @@ import {
 import { LandingStyles } from './LandingStyles'
 import { OrielBand } from './OrielBand'
 import { screens, thumbnailSrc } from '../screens/screens-data'
-import { LAUNCH_PENDING_SCRIPT } from './launch-signal'
 
 // The screens the landing shows, in gallery order; the count follows the registry.
 const readyScreens = screens.filter((screen) => screen.status === 'ready')
@@ -64,8 +62,6 @@ const specs = [
 export function LaunchedLanding() {
   return (
     <SiteProvider className="site-landing-root">
-      {/* Before first paint: veil the page if this load is the watched launch (see LaunchMoment). */}
-      <script dangerouslySetInnerHTML={{ __html: LAUNCH_PENDING_SCRIPT }} />
       <LandingStyles />
       <SiteHeader heroId="hero" />
       <main id="content" className="site-landing" tabIndex={-1}>
@@ -73,7 +69,6 @@ export function LaunchedLanding() {
           <Backdrop priority position="62% 40%" />
           <div className="ld-hero-grid">
             <div className="ld-hero-copy">
-              <div className="ld-launch-slot" data-launch-line-slot="" />
               <h1 id="hero-title">A library for your next app.</h1>
               <p className="ld-lede">
                 <b>30 components, 13 patterns and {readyScreens.length} screens for React.</b> Free, MIT, yours to own.
@@ -239,7 +234,6 @@ export function LaunchedLanding() {
         </section>
       </main>
       <SiteFooter />
-      <LaunchMoment />
     </SiteProvider>
   )
 }
