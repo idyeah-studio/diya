@@ -1,5 +1,5 @@
 'use client'
-import { cloneElement, forwardRef, isValidElement, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type ReactElement, type ReactNode, type Ref } from 'react'
+import { cloneElement, forwardRef, isValidElement, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from '../internal/cx.js'
 import { useDiyaLinkComponent } from '../internal/link.js'
 import { onlyChild, renderSlot } from '../internal/slot.js'
@@ -33,6 +33,13 @@ function stopClick(event: MouseEvent) {
   event.stopPropagation()
 }
 
+// A press shrinks a Button to 0.98, but a wide one by at most about 2px a side: the floor for
+// this width goes on the element as it's pressed, by pointer or by Enter and Space.
+function pressFloor(event: { currentTarget: EventTarget }) {
+  const node = event.currentTarget as HTMLElement
+  if (node.offsetWidth > 0) node.style.setProperty('--diya-internal-button-press-floor', String(1 - 4 / node.offsetWidth))
+}
+
 // A loading button keeps focus but must not act: Enter and Space would activate it, so they stop here too.
 function stopActivation(event: KeyboardEvent) {
   if (event.key === 'Enter' || event.key === ' ') event.preventDefault()
@@ -42,7 +49,11 @@ function stopActivation(event: KeyboardEvent) {
 export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(function Button({ variant = 'solid', size = 'medium', shape = 'pill', iconOnly = false, loading = false, disabled, children, className, type = 'button', href, target, rel, download, asChild = false, ...props }, ref) {
   const Link = useDiyaLinkComponent()
   const inactive = !!disabled || loading
-  const shared = { className: cx('diya-button', className), 'data-variant': variant, 'data-size': size, 'data-shape': shape, 'data-icon-only': iconOnly || undefined, 'aria-busy': loading || undefined }
+  const shared = {
+    className: cx('diya-button', className), 'data-variant': variant, 'data-size': size, 'data-shape': shape, 'data-icon-only': iconOnly || undefined, 'aria-busy': loading || undefined,
+    onPointerDownCapture: (event: PointerEvent<HTMLElement>) => { pressFloor(event); props.onPointerDownCapture?.(event as never) },
+    onKeyDownCapture: (event: KeyboardEvent<HTMLElement>) => { pressFloor(event); props.onKeyDownCapture?.(event as never) },
+  }
   const content = (inner: ReactNode) => <>
     {loading && <span className="diya-button-progress" aria-hidden="true">···</span>}
     {!(iconOnly && loading) && inner}

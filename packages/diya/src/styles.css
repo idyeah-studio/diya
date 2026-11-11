@@ -258,12 +258,14 @@
 
 /* Destructive: the theme's own red, with the page surface as its text. */
 .diya-root .diya-button[data-variant='destructive'] {
+  --diya-internal-button-fill: var(--diya-color-destructive);
   background: var(--diya-color-destructive);
   color: var(--diya-color-raised);
 }
 
+/* Hover darkens the fill by 12%, as brightness(0.88) did, without a filter. */
 .diya-root .diya-button:not(:disabled, [aria-disabled='true']):hover {
-  filter: brightness(0.88);
+  background-color: color-mix(in srgb, var(--diya-internal-button-fill, var(--diya-color-accent)) 88%, #000);
 }
 
 .diya-root .diya-button[data-variant='outline']:not(:disabled, [aria-disabled='true']):hover,
@@ -3210,6 +3212,11 @@
 .diya-root[data-motion='off'] {
   --diya-internal-motion: 0;
 }
+/* A theme change lands everywhere in the same frame: transitions pause for that frame, so
+   controls don't trail the page. */
+.diya-root[data-theme-change] {
+  --diya-internal-motion: 0;
+}
 
 /* Floating panels (Menu, Popover, Tooltip, the Combobox list and the Date Picker calendar) grow
    from their trigger: they fade in, scale up from the trigger's side and drift 4px toward it.
@@ -3326,5 +3333,37 @@
 @starting-style {
   .diya-root :is(.diya-dialog, .diya-drawer-modal)[open]::backdrop {
     opacity: 0;
+  }
+}
+
+/* Hover and press. Colors ease over the fast duration; the focus ring never does. Menu items
+   and list options highlight at once, so a list never lags the pointer or the arrow keys. */
+.diya-root :is(.diya-button, .diya-tab, .diya-accordion-heading button, .diya-list-row, .diya-dialog-close, .diya-tooltip-trigger, .diya-combobox-toggle, .diya-date-trigger, .diya-site-nav :is(button, a)) {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: var(--diya-internal-duration-fast);
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root :is(.diya-text-field-control, .diya-select-control, .diya-combobox-control, .diya-textarea textarea) {
+  transition-property: background-color, border-color;
+  transition-duration: var(--diya-internal-duration-fast);
+  transition-timing-function: var(--diya-ease-move);
+}
+/* A Button press lands at once and eases back. It shrinks to 0.98, but never more than about
+   2px a side: Button writes the floor for its own width when it's pressed. */
+.diya-root .diya-button {
+  transition-property: background-color, border-color, color, box-shadow, scale;
+}
+.diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active {
+  scale: max(var(--diya-internal-motion-scale-press), var(--diya-internal-button-press-floor, 0));
+  transition-duration: 0s;
+}
+/* With nothing scaling, a pressed Solid or Destructive button darkens instead: its ring is
+   about 1:1 on its own fill. */
+.diya-root[data-motion='reduced'] .diya-button:is([data-variant='solid'], [data-variant='destructive']):not(:disabled, [aria-disabled='true']):active {
+  background-color: color-mix(in srgb, var(--diya-internal-button-fill, var(--diya-color-accent)) 76%, #000);
+}
+@media (prefers-reduced-motion: reduce) {
+  .diya-root[data-motion='system'] .diya-button:is([data-variant='solid'], [data-variant='destructive']):not(:disabled, [aria-disabled='true']):active {
+    background-color: color-mix(in srgb, var(--diya-internal-button-fill, var(--diya-color-accent)) 76%, #000);
   }
 }

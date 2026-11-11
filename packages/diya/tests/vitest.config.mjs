@@ -15,7 +15,7 @@ const react19 = {
 }
 // Behavior that differs between React versions: presence and the popups built on it, server
 // rendering and the provider.
-const onBoth = ['tests/presence.test.tsx', 'tests/ssr.test.ts', 'tests/t0-l1-provider.test.tsx', 'tests/popups.test.tsx', 'tests/popups-motion.test.tsx', 'tests/placement.test.tsx']
+const onBoth = ['tests/presence.test.tsx', 'tests/ssr.test.ts', 'tests/t0-l1-provider.test.tsx', 'tests/popups.test.tsx', 'tests/popups-motion.test.tsx', 'tests/placement.test.tsx', 'tests/motion-in-flow.test.tsx']
 
 export default defineConfig({
   plugins: [react()],
