@@ -93,7 +93,7 @@ Catalog: https://diya13.ai/explore?area=components&component=switch"
 `;
 
 exports[`what an agent reads, word for word > get_setup: next + tailwind 1`] = `
-"# Set up @idyeah/diya 1.0.0 in Next.js (App Router)
+"# Set up @idyeah/diya 1.0.1 in Next.js (App Router)
 
 ## 1. Install
 \`\`\`sh
@@ -147,11 +147,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 - Charts import from \`@idyeah/diya/charts\` and need \`echarts@6\` installed.
 - Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
 
-These notes describe 1.0.0. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
+These notes describe 1.0.1. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
 `;
 
 exports[`what an agent reads, word for word > get_setup: vite 1`] = `
-"# Set up @idyeah/diya 1.0.0 in Vite
+"# Set up @idyeah/diya 1.0.1 in Vite
 
 ## 1. Install
 \`\`\`sh
@@ -187,11 +187,11 @@ createRoot(document.getElementById('root')!).render(
 - Charts import from \`@idyeah/diya/charts\` and need \`echarts@6\` installed.
 - Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
 
-These notes describe 1.0.0. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
+These notes describe 1.0.1. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
 `;
 
 exports[`what an agent reads, word for word > get_theme: #1F4E7A + glass 1`] = `
-"# Theme for @idyeah/diya 1.0.0
+"# Theme for @idyeah/diya 1.0.1
 
 \`\`\`tsx
 <DiyaProvider brandColor="#1F4E7A" glass>
@@ -219,7 +219,7 @@ That's the whole theme. DIYA works out the rest, so don't set these tokens yours
 `;
 
 exports[`what an agent reads, word for word > get_theme: #F5C542 1`] = `
-"# Theme for @idyeah/diya 1.0.0
+"# Theme for @idyeah/diya 1.0.1
 
 \`\`\`tsx
 <DiyaProvider brandColor="#F5C542">
@@ -247,7 +247,7 @@ That's the whole theme. DIYA works out the rest, so don't set these tokens yours
 `;
 
 exports[`what an agent reads, word for word > list_tokens: space 1`] = `
-"# Public tokens · @idyeah/diya 1.0.0 · space
+"# Public tokens · @idyeah/diya 1.0.1 · space
 Set them on \`.diya-root\`, or in \`style\` on DiyaProvider. Values are Light / Dark.
 
 ## space
@@ -262,15 +262,15 @@ Set them on \`.diya-root\`, or in \`style\` on DiyaProvider. Values are Light / 
 `;
 
 exports[`what an agent reads, word for word > search: carousel 1`] = `
-"@idyeah/diya 1.0.0 · nothing for "carousel of testimonials"
+"@idyeah/diya 1.0.1 · nothing for "carousel of testimonials"
 
-No carousel in DIYA 1.0.0.
+No carousel in DIYA 1.0.1.
 
 Nothing in DIYA fits that yet. Build it from Stack and Inline, or ask for it: https://diya13.ai/ask"
 `;
 
 exports[`what an agent reads, word for word > search: toggle 1`] = `
-"@idyeah/diya 1.0.0 · 4 for "toggle for email notifications"
+"@idyeah/diya 1.0.1 · 4 for "toggle for email notifications"
 
 1. Switch · \`import { Switch } from '@idyeah/diya'\`
    For a setting that takes effect the moment it flips, like notifications.
