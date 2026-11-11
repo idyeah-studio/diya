@@ -174,12 +174,45 @@
   }
 }
 
-/* The reading below the card */
+/* The reading below the card sits on the catalog's raised sheet, as "Using …" does on every
+   component page, not on the photo; its text keeps a 680px measure. */
 :where(html[data-catalog='true']) .motion-sections {
   display: grid;
   gap: 48px;
+  margin: 32px 0 0;
+  padding: 36px 40px 40px;
+  border: 1px solid var(--diya-color-line);
+  border-radius: 24px;
+  background: var(--diya-color-raised);
+  color: var(--diya-color-text);
+  box-shadow: var(--diya-shadow-raised);
+}
+:where(html[data-catalog='true']) .motion-sections > section {
   max-width: 680px;
-  margin: 48px 0 0;
+}
+:root[data-glass='true'] .motion-sections {
+  background: var(--diya-color-glass);
+  border-color: var(--material-edge, var(--diya-color-line));
+  border-top-color: var(--material-highlight, var(--diya-color-line));
+  backdrop-filter: var(--material-blur, blur(18px));
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-glass='true'] .motion-sections {
+    background: var(--diya-color-raised);
+    backdrop-filter: none;
+  }
+}
+@media (max-width: 720px) {
+  :where(html[data-catalog='true']) .motion-sections {
+    gap: 40px;
+    padding: 24px 20px 28px;
+    border-radius: 20px;
+  }
+}
+@media (forced-colors: active) {
+  :where(html[data-catalog='true']) .motion-sections {
+    border-color: CanvasText;
+  }
 }
 :where(html[data-catalog='true']) .motion-sections section {
   display: grid;
