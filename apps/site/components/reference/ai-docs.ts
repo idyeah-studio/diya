@@ -37,13 +37,15 @@ export const RULES = `- Every component renders inside \`DiyaProvider\`; popups,
 - Links: items with \`href\` render the provider's \`linkComponent\` (such as Next.js \`Link\`, passed from a \`'use client'\` providers file) or a plain anchor. Button takes \`href\` and \`asChild\`. TextLink's \`href\` is always a plain anchor; for client-side routing, pass your router's link to it with \`asChild\`.
 - DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.
 - Charts import from \`${API.package}/charts\` and need \`echarts@6\` installed.
-- Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.`
+- Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
+- DIYA animates popups, dialogs, toggles and selection, and follows the device's reduce-motion setting. \`motion="reduced"\` (fades only) or \`"off"\` on DiyaProvider changes it for everything inside; nested providers inherit it. Tune the speed with \`--diya-duration-scale\`. In browser tests, render with \`motion="off"\`.`
 
 function propsTable(reference: Pick<ItemReference, 'props' | 'extendsDom'> & Partial<Pick<ItemReference, 'modes'>>) {
   const table = (props: ItemReference['props']) => {
     const rows = props.map(([name, prop]) => {
       const fallback = defaultText(prop)
-      return `| \`${name}\`${prop.required ? ' (required)' : ''} | \`${cell(prop.type)}\` | ${fallback ? `\`${cell(fallback)}\`` : ''} | ${cell(prop.description)} |`
+      const since = prop.since ? ` Since ${prop.since}.` : ''
+      return `| \`${name}\`${prop.required ? ' (required)' : ''} | \`${cell(prop.type)}\` | ${fallback ? `\`${cell(fallback)}\`` : ''} | ${cell(prop.description)}${since} |`
     })
     return `| Prop | Type | Default | Description |\n| --- | --- | --- | --- |\n${rows.join('\n')}`
   }
@@ -160,7 +162,7 @@ export function llmsFull() {
       const light = token.defaults?.light
       const dark = token.defaults?.dark
       const value = light && dark ? (light === dark ? `\`${light}\`` : `\`${light}\` light, \`${dark}\` dark`) : ''
-      return `| \`${name}\` | ${token.group ?? ''} | ${value} |`
+      return `| \`${name}\`${token.since ? ` (since ${token.since})` : ''} | ${token.group ?? ''} | ${value} |`
     })
     .join('\n')
   return `# DIYA, the full reference

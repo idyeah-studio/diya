@@ -146,6 +146,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 - DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.
 - Charts import from \`@idyeah/diya/charts\` and need \`echarts@6\` installed.
 - Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
+- DIYA animates popups, dialogs, toggles and selection, and follows the device's reduce-motion setting. \`motion="reduced"\` (fades only) or \`"off"\` on DiyaProvider changes it for everything inside; nested providers inherit it. Tune the speed with \`--diya-duration-scale\`. In browser tests, render with \`motion="off"\`.
 
 These notes describe 1.0.1. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
 `;
@@ -186,6 +187,7 @@ createRoot(document.getElementById('root')!).render(
 - DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.
 - Charts import from \`@idyeah/diya/charts\` and need \`echarts@6\` installed.
 - Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
+- DIYA animates popups, dialogs, toggles and selection, and follows the device's reduce-motion setting. \`motion="reduced"\` (fades only) or \`"off"\` on DiyaProvider changes it for everything inside; nested providers inherit it. Tune the speed with \`--diya-duration-scale\`. In browser tests, render with \`motion="off"\`.
 
 These notes describe 1.0.1. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
 `;
