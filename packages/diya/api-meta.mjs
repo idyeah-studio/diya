@@ -140,7 +140,7 @@ export const items = {
     children: none,
     state: uncontrolledFieldState,
     tokens: ['--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-muted', '--diya-color-text',
-      '--diya-text-body', '--diya-text-caption', '--diya-text-large'],
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-enter', '--diya-ease-move'],
     messages: 'choice',
   },
   switch: {
@@ -151,7 +151,7 @@ export const items = {
     state: [{ value: 'checked', onChange: 'onCheckedChange', default: 'defaultChecked' }],
     tokens: ['--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line',
       '--diya-color-muted', '--diya-color-selected', '--diya-color-text', '--diya-text-body',
-      '--diya-text-caption'],
+      '--diya-text-caption', '--diya-duration-fast', '--diya-ease-move'],
     messages: null,
   },
   slider: {

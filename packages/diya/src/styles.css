@@ -3372,3 +3372,73 @@
     background-color: color-mix(in srgb, var(--diya-internal-button-fill, var(--diya-color-accent)) 76%, #000);
   }
 }
+
+/* Switch: the thumb slides with translate (it no longer jumps by justify-content), and the
+   track's color eases with it. Nothing travels under Reduce Motion. */
+.diya-root .diya-switch {
+  --diya-internal-switch-travel: 18px;
+  transition-property: background-color, border-color;
+  transition-duration: var(--diya-internal-duration-fast);
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-switch-field[data-size='small'] .diya-switch {
+  --diya-internal-switch-travel: 14px;
+}
+.diya-root .diya-switch-field[data-size='large'] .diya-switch {
+  --diya-internal-switch-travel: 22px;
+}
+.diya-root .diya-switch::before {
+  transition-property: translate, background-color;
+  transition-duration: calc(var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel)), var(--diya-internal-duration-fast);
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-switch:checked {
+  justify-content: start;
+}
+.diya-root .diya-switch:checked::before {
+  translate: var(--diya-internal-switch-travel) 0;
+}
+/* Right to left, the thumb starts on the right and travels left. Two rules, so an engine
+   without :dir() still has the attribute one. */
+.diya-root[dir='rtl'] .diya-switch:checked::before,
+.diya-root [dir='rtl'] .diya-switch:checked::before {
+  translate: calc(-1 * var(--diya-internal-switch-travel)) 0;
+}
+.diya-root .diya-switch:checked:dir(rtl)::before {
+  translate: calc(-1 * var(--diya-internal-switch-travel)) 0;
+}
+
+/* Choice: the mark is always there, hidden, and grows in when checked. A transition, not a
+   keyframe, so nothing plays on page load or when hidden content is shown again. Unchecking
+   is instant. */
+.diya-root .diya-choice-option input {
+  transition-property: background-color, border-color;
+  transition-duration: var(--diya-internal-duration-fast);
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-choice-option input::before {
+  content: '';
+  opacity: 0;
+  scale: calc(1 - 0.4 * var(--diya-internal-motion-travel));
+  transition-property: opacity, scale;
+  transition-duration: 0s;
+  transition-timing-function: var(--diya-ease-enter);
+}
+.diya-root .diya-choice-option input[type='radio']::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--diya-color-accent-text);
+}
+.diya-root .diya-choice-option input[type='checkbox']::before {
+  width: 4px;
+  height: 8px;
+  border: solid var(--diya-color-accent-text);
+  border-width: 0 1.5px 1.5px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+.diya-root .diya-choice-option input:is(:checked, :indeterminate)::before {
+  opacity: 1;
+  scale: 1;
+  transition-duration: var(--diya-internal-duration-fast);
+}
