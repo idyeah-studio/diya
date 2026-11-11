@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@idyeah/diya": "^1.0.0",
+    "@idyeah/diya": "^1.0.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

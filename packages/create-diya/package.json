@@ -1,6 +1,6 @@
 {
   "name": "create-diya",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Start a React app with DIYA: Next.js or Vite, a page that already looks finished, and notes for your coding agent.",
   "license": "MIT",
   "type": "module",

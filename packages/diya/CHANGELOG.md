@@ -4,6 +4,20 @@ All notable changes to `@idyeah/diya` are documented here. The format is based
 on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-11-11
+
+### Fixed
+
+- `Progress`: under Reduce Motion, indeterminate progress no longer freezes as
+  a 35% bar or a 28% ring, which read as a stuck amount. It shows a full bar or
+  ring that fades gently between faint and clear, so it still reads as working.
+  Without Reduce Motion nothing changes. The indeterminate bar's width now comes
+  from CSS instead of an inline style, and the rule uses no `!important`, so
+  your own styles can still restyle it.
+- `Drawer`: the docs no longer say it slides in from the side, which it doesn't
+  in 1.0. The description and the `side` prop now say where it sits; `api.json`
+  and the type declarations follow.
+
 ## [1.0.0] - 2026-11-07
 
 First public release, under the MIT License.
@@ -314,4 +328,5 @@ change in any release. The README lists the public tokens.
 - Chatbot and Data Viz (`DataViz`, `Chart`) are `experimental`: outside semver
   until their API settles.
 
+[1.0.1]: https://github.com/idyeah-studio/diya/releases/tag/v1.0.1
 [1.0.0]: https://github.com/idyeah-studio/diya/releases/tag/v1.0.0
