@@ -3274,6 +3274,10 @@
     translate: var(--diya-internal-overlay-drift);
   }
 }
+/* A tooltip shown in place of its neighbor's appears at once: the two never show together. */
+.diya-root .diya-floating[data-swap='true'] {
+  transition-duration: 0s;
+}
 .diya-root .diya-floating[data-exiting='true'] {
   opacity: 0;
   scale: var(--diya-internal-motion-scale);

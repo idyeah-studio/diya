@@ -1,7 +1,7 @@
 // Popups that animate: what a closing popup does while its exit plays, the Tooltip hover delay
 // and the Toast exit. HappyDOM has no Web Animations, so exits are synchronous by default; these
 // tests stand in a running exit where they need one. Runs on React 18 and 19.
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -144,8 +144,9 @@ describe('Tooltip hover delay', () => {
   }
   const tip = () => screen.queryByRole('tooltip')
   const mouse = { pointerType: 'mouse' }
-  const hover = (element: Element) => fireEvent.pointerEnter(element, mouse)
-  const unhover = (element: Element) => fireEvent.pointerLeave(element, mouse)
+  // A real mouse sends the pointer event, then the mouse event; hover itself is the mouse event.
+  const hover = (element: Element) => { fireEvent.pointerEnter(element, mouse); fireEvent.mouseEnter(element) }
+  const unhover = (element: Element) => { fireEvent.pointerLeave(element, mouse); fireEvent.mouseLeave(element) }
   const wait = (ms: number) => act(() => { vi.advanceTimersByTime(ms) })
   const help = () => screen.getByRole('button', { name: 'Billing help' })
 
@@ -185,8 +186,9 @@ describe('Tooltip hover delay', () => {
     expect(tip()).toBeNull()
     fireEvent.blur(help())
     wait(1000)
-    // A tap.
+    // A tap: the touch pointer, then the compatibility mouse event.
     fireEvent.pointerEnter(help(), { pointerType: 'touch' })
+    fireEvent.mouseEnter(help())
     expect(tip()).not.toBeNull()
   })
 
@@ -213,6 +215,65 @@ describe('Tooltip hover delay', () => {
   it('shows at once with motion="off", as in 1.0', () => {
     cold()
     render(<DiyaProvider motion="off"><Tooltip label="Billing help" content="Charged monthly">?</Tooltip></DiyaProvider>)
+    hover(help())
+    expect(tip()?.textContent).toBe('Charged monthly')
+  })
+
+  it('shows at once on fireEvent.mouseEnter, which sends no pointer event, as in 1.0', () => {
+    cold()
+    render(<DiyaProvider>
+      <Tooltip label="Billing help" content="Charged monthly">?</Tooltip>
+      <Tooltip content="Saves the file"><Button>Save</Button></Tooltip>
+    </DiyaProvider>)
+    fireEvent.mouseEnter(help())
+    expect(tip()?.textContent).toBe('Charged monthly')
+    fireEvent.mouseLeave(help())
+    wait(1000)
+    expect(tip()).toBeNull()
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'Save' }))
+    expect(tip()?.textContent).toBe('Saves the file')
+  })
+
+  it('keeps a tapped tooltip up when the touch lifts, and hides it on a tap elsewhere', () => {
+    cold()
+    render(<DiyaProvider><Tooltip content="Saves the file"><Button>Save</Button></Tooltip></DiyaProvider>)
+    const save = screen.getByRole('button', { name: 'Save' })
+    const touch = { pointerType: 'touch' }
+    // What WebKit sends for a tap: no focus, and the pointer leaves on lift.
+    fireEvent.pointerEnter(save, touch)
+    fireEvent.pointerDown(save, touch)
+    fireEvent.pointerUp(save, touch)
+    fireEvent.pointerLeave(save, touch)
+    fireEvent.mouseEnter(save)
+    fireEvent.click(save, { detail: 1 })
+    wait(560)
+    expect(tip()?.textContent).toBe('Saves the file')
+    // A tap elsewhere: the trigger gets the compatibility mouseleave.
+    fireEvent.mouseLeave(save)
+    wait(200)
+    expect(tip()).toBeNull()
+  })
+
+  it('swaps to a neighbor at once: never two bubbles, and the new one has no enter', () => {
+    cold()
+    render(<DiyaProvider>
+      <Tooltip label="Bold" content="Bold text">B</Tooltip>
+      <Tooltip label="Italic" content="Italic text">I</Tooltip>
+    </DiyaProvider>)
+    hover(screen.getByRole('button', { name: 'Bold' }))
+    wait(300)
+    expect(tip()?.hasAttribute('data-swap')).toBe(false)
+    unhover(screen.getByRole('button', { name: 'Bold' }))
+    hover(screen.getByRole('button', { name: 'Italic' }))
+    wait(50)
+    const shown = screen.getAllByRole('tooltip')
+    expect(shown.map((node) => node.textContent)).toEqual(['Italic text'])
+    expect(shown[0].getAttribute('data-swap')).toBe('true')
+  })
+
+  it('skips the wait when the duration scale is 0', () => {
+    cold()
+    render(<DiyaProvider style={{ '--diya-duration-scale': '0' } as CSSProperties}><Tooltip label="Billing help" content="Charged monthly">?</Tooltip></DiyaProvider>)
     hover(help())
     expect(tip()?.textContent).toBe('Charged monthly')
   })
