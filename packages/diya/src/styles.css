@@ -3570,3 +3570,22 @@
     display: none;
   }
 }
+
+/* Progress: a new value eases there, on the bar and on the ring; under Reduce Motion it moves
+   at once. The indeterminate loops are unchanged, and keep moving with motion off, since they
+   show that work is under way. */
+.diya-root .diya-progress-track > span {
+  transition-property: width;
+  transition-duration: calc(var(--diya-internal-duration-slow) * var(--diya-internal-motion-travel));
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-progress-fill-circle {
+  transition-property: stroke-dashoffset;
+  transition-duration: calc(var(--diya-internal-duration-slow) * var(--diya-internal-motion-travel));
+  transition-timing-function: var(--diya-ease-move);
+}
+/* Table's loading rows breathe with the same pulse an indeterminate Progress uses under Reduce
+   Motion: a fade, never a sweep. */
+.diya-root .diya-table-skeleton {
+  animation: diya-progress-breathe 2s ease-in-out infinite alternate;
+}

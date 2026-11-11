@@ -391,7 +391,7 @@ export const items = {
     slots: {},
     children: none,
     state: [],
-    tokens: ['--diya-color-accent', '--diya-color-selected', '--diya-color-text', '--diya-text-caption'],
+    tokens: ['--diya-color-accent', '--diya-color-selected', '--diya-color-text', '--diya-text-caption', '--diya-duration-slow', '--diya-ease-move'],
     messages: 'progress',
   },
   tooltip: {

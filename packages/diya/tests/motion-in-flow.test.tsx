@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { Accordion, Button, DiyaProvider } from '../dist/index.js'
+import { Accordion, Button, DiyaProvider, Progress } from '../dist/index.js'
 import { renderToString } from 'react-dom/server'
 
 const css = readFileSync(resolve(process.cwd(), 'src/styles.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
@@ -112,5 +112,21 @@ describe('Accordion', () => {
     expect(hidden).toMatch(/transition-delay: 0s, 0s, 0s, var\(--diya-internal-exit-slow\);/)
     // @starting-style is limited to popups, Toast, Dialog and Drawer: see t0-l1-styles.
     expect(css).toMatch(/\.diya-accordion-heading button\[aria-expanded='true'\] svg \{\s*rotate: 180deg;/)
+  })
+})
+
+describe('Progress and loading rows', () => {
+  it('eases a new value on the bar and the ring, and still sets the bar\'s width inline', () => {
+    const { container, rerender } = render(<DiyaProvider><Progress label="Upload" value={20} /><Progress label="Sync" variant="circular" value={20} /></DiyaProvider>)
+    rerender(<DiyaProvider><Progress label="Upload" value={60} /><Progress label="Sync" variant="circular" value={60} /></DiyaProvider>)
+    expect((container.querySelector('.diya-progress-track > span') as HTMLElement).style.width).toBe('60%')
+    expect(container.querySelector('.diya-progress-fill-circle')!.getAttribute('stroke-dashoffset')).toBe('40')
+    expect(css).toMatch(/\.diya-progress-track > span \{\s*transition-property: width;/)
+    expect(css).toMatch(/\.diya-progress-fill-circle \{\s*transition-property: stroke-dashoffset;/)
+  })
+
+  it('pulses Table\'s loading rows with the Progress breathe, one keyframe for both', () => {
+    expect(css).toMatch(/\.diya-table-skeleton \{\s*animation: diya-progress-breathe 2s ease-in-out infinite alternate;/)
+    expect(css.match(/@keyframes [\w-]+/g)).toEqual(['@keyframes diya-progress-travel', '@keyframes diya-progress-spin', '@keyframes diya-progress-breathe'])
   })
 })
