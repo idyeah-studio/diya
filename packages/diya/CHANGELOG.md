@@ -4,7 +4,7 @@ All notable changes to `@idyeah/diya` are documented here. The format is based
 on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0-beta.1] - 2026-11-12
+## [1.1.0-beta.1] - 2026-11-11
 
 On the `next` tag. Becomes 1.1.0 after the preview check.
 
@@ -460,5 +460,6 @@ change in any release. The README lists the public tokens.
 - Chatbot and Data Viz (`DataViz`, `Chart`) are `experimental`: outside semver
   until their API settles.
 
+[1.1.0-beta.1]: https://github.com/idyeah-studio/diya/releases/tag/v1.1.0-beta.1
 [1.0.1]: https://github.com/idyeah-studio/diya/releases/tag/v1.0.1
 [1.0.0]: https://github.com/idyeah-studio/diya/releases/tag/v1.0.0
