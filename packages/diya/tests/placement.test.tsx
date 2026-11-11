@@ -49,4 +49,16 @@ describe('place() uses layout size, not a scaled rect', () => {
     expect(panel.style.getPropertyValue('--diya-internal-overlay-origin')).toBe('100px 100%')
   })
 
+  it('places a tooltip before paint, with no hidden first frame', () => {
+    layout({ left: 400, top: 300 })
+    render(<DiyaProvider><Tooltip label="Billing help" content="Charged monthly">?</Tooltip></DiyaProvider>)
+    fireEvent.focus(screen.getByRole('button', { name: 'Billing help' }))
+    const bubble = screen.getByRole('tooltip')
+    // Centered over the trigger by its full 200px, and 10px above it.
+    expect(bubble.style.left).toBe('320px')
+    expect(bubble.style.top).toBe('190px')
+    expect(bubble.style.visibility).toBe('')
+    expect(bubble.getAttribute('data-side')).toBe('top')
+    expect(bubble.style.getPropertyValue('--diya-internal-overlay-origin')).toBe('100px 100%')
+  })
 })

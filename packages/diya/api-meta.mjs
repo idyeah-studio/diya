@@ -400,7 +400,7 @@ export const items = {
     slots: {},
     children: { allowed: true, accepts: ['button', 'text-link'], content: ['icon', 'text'] },
     state: [],
-    tokens: ['--diya-color-hover', '--diya-color-line', '--diya-color-text', '--diya-corner-scale', '--diya-elevation', '--diya-text-body', '--diya-text-caption', '--diya-color-surface'],
+    tokens: ['--diya-color-hover', '--diya-color-line', '--diya-color-text', '--diya-corner-scale', '--diya-elevation', '--diya-text-body', '--diya-text-caption', '--diya-color-surface', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit'],
     messages: null,
   },
   popover: {

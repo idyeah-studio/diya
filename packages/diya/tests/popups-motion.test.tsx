@@ -85,3 +85,120 @@ describe('a closing popup', () => {
     expect(list.isConnected).toBe(false)
   })
 })
+
+describe('Tooltip hover delay', () => {
+  function cold() {
+    vi.useFakeTimers()
+    // Start cold: no tooltip shown in the last moments.
+    vi.advanceTimersByTime(1000)
+  }
+  const tip = () => screen.queryByRole('tooltip')
+  const mouse = { pointerType: 'mouse' }
+  const hover = (element: Element) => fireEvent.pointerEnter(element, mouse)
+  const unhover = (element: Element) => fireEvent.pointerLeave(element, mouse)
+  const wait = (ms: number) => act(() => { vi.advanceTimersByTime(ms) })
+  const help = () => screen.getByRole('button', { name: 'Billing help' })
+
+  it('waits 300ms on a mouse hover', () => {
+    cold()
+    render(<DiyaProvider><Tooltip label="Billing help" content="Charged monthly">?</Tooltip></DiyaProvider>)
+    hover(help())
+    expect(tip()).toBeNull()
+    wait(299)
+    expect(tip()).toBeNull()
+    wait(1)
+    expect(tip()?.textContent).toBe('Charged monthly')
+  })
+
+  it('shows nothing when the pointer passes over', () => {
+    cold()
+    render(<DiyaProvider><Tooltip label="Billing help" content="Charged monthly">?</Tooltip></DiyaProvider>)
+    hover(help())
+    wait(200)
+    unhover(help())
+    wait(1000)
+    expect(tip()).toBeNull()
+  })
+
+  it('shows at once on keyboard focus or a tap, and not on a mouse click by itself', () => {
+    cold()
+    render(<DiyaProvider><Tooltip label="Billing help" content="Charged monthly">?</Tooltip></DiyaProvider>)
+    fireEvent.focus(help())
+    expect(tip()?.textContent).toBe('Charged monthly')
+    fireEvent.blur(help())
+    expect(tip()).toBeNull()
+    wait(1000)
+    // A mouse press: focus and the click wait for the hover.
+    fireEvent.pointerDown(help(), mouse)
+    fireEvent.focus(help())
+    fireEvent.click(help(), { detail: 1 })
+    expect(tip()).toBeNull()
+    fireEvent.blur(help())
+    wait(1000)
+    // A tap.
+    fireEvent.pointerEnter(help(), { pointerType: 'touch' })
+    expect(tip()).not.toBeNull()
+  })
+
+  it('shows the next tooltip at once while one is warm', () => {
+    cold()
+    render(<DiyaProvider>
+      <Tooltip label="Bold" content="Bold text">B</Tooltip>
+      <Tooltip label="Italic" content="Italic text">I</Tooltip>
+    </DiyaProvider>)
+    hover(screen.getByRole('button', { name: 'Bold' }))
+    wait(300)
+    expect(tip()?.textContent).toBe('Bold text')
+    unhover(screen.getByRole('button', { name: 'Bold' }))
+    hover(screen.getByRole('button', { name: 'Italic' }))
+    expect(screen.getAllByRole('tooltip').map((node) => node.textContent)).toContain('Italic text')
+    // Still warm just after the last one closed.
+    unhover(screen.getByRole('button', { name: 'Italic' }))
+    wait(200)
+    expect(tip()).toBeNull()
+    hover(screen.getByRole('button', { name: 'Bold' }))
+    expect(tip()?.textContent).toBe('Bold text')
+  })
+
+  it('shows at once with motion="off", as in 1.0', () => {
+    cold()
+    render(<DiyaProvider motion="off"><Tooltip label="Billing help" content="Charged monthly">?</Tooltip></DiyaProvider>)
+    hover(help())
+    expect(tip()?.textContent).toBe('Charged monthly')
+  })
+
+  it('stays up while the pointer rests on the bubble', () => {
+    cold()
+    render(<DiyaProvider><Tooltip label="Billing help" content="Charged monthly">?</Tooltip></DiyaProvider>)
+    hover(help())
+    wait(300)
+    const bubble = tip()!
+    unhover(help())
+    fireEvent.mouseEnter(bubble)
+    wait(1000)
+    expect(tip()).toBe(bubble)
+    fireEvent.mouseLeave(bubble)
+    wait(200)
+    expect(tip()).toBeNull()
+  })
+
+  it('clears its timers when it unmounts', () => {
+    cold()
+    const errors = vi.spyOn(console, 'error')
+    const { unmount } = render(<DiyaProvider><Tooltip label="Billing help" content="Charged monthly">?</Tooltip></DiyaProvider>)
+    hover(help())
+    unmount()
+    expect(vi.getTimerCount()).toBe(0)
+    wait(1000)
+    expect(errors).not.toHaveBeenCalled()
+  })
+
+  it('closes at once, with no exit, when the page scrolls', () => {
+    holdExits('diya-floating')
+    render(<DiyaProvider><Tooltip label="Billing help" content="Charged monthly">?</Tooltip></DiyaProvider>)
+    fireEvent.focus(help())
+    expect(tip()).not.toBeNull()
+    fireEvent.scroll(window)
+    expect(tip()).toBeNull()
+  })
+})
