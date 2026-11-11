@@ -84,8 +84,9 @@ presses Continue.
 `Stack` lays things out top to bottom and `Inline` side by side, with even
 space between them. See [Layout](#layout).
 
-Popups, dialogs and toggles move a little, and follow the device's Reduce
-Motion setting. To slow that down or turn it off, see [Motion](#motion).
+New in 1.1: popups, dialogs and toggles move a little, and follow the
+device's Reduce Motion setting. To slow that down or turn it off, see
+[Motion](#motion).
 
 Props, behavior and examples for every piece are in the
 [component guide](https://github.com/idyeah-studio/diya/blob/main/packages/diya/docs/components.md)
@@ -489,50 +490,76 @@ Keep the backdrop quiet enough that text stays readable.
 
 ## Motion
 
-**By default,** DIYA moves and follows the device's Reduce Motion setting,
-with no code:
+New in 1.1. DIYA moves a little: popups grow out of the control that opened
+them, a dialog settles into place, a drawer slides in from its edge and the
+tabs' indicator follows your choice. With no code, it follows the device's
+Reduce Motion setting (Reduce Motion on Apple devices, Animation effects on
+Windows, Remove animations on Android): nothing slides or scales then, and
+fades stay, so every change is still visible.
 
-```tsx
-<DiyaProvider>
-```
-
-**Turn it off for the whole app** and everything changes at once, as in 1.0
-(loading indicators still move, because they show progress):
+**Turn it off for the whole app:** add `motion="off"` to your `DiyaProvider`.
+Everything changes at once, as in 1.0; loading indicators still move, because
+they show progress.
 
 ```tsx
 <DiyaProvider motion="off">
+  {children}
+</DiyaProvider>
 ```
 
-**Fades only, for everyone:** nothing slides or scales, but changes still
-ease in and out.
+**Fades only, for everyone:** add `motion="reduced"`. Nothing slides or
+scales, but changes still ease in and out.
 
 ```tsx
 <DiyaProvider motion="reduced">
+  {children}
+</DiyaProvider>
 ```
 
 **One part of the app** gets its own setting from a nested provider; without
 `motion`, a nested provider inherits the one around it.
 
 ```tsx
-<DiyaProvider motion="reduced"><LiveFeed /></DiyaProvider>
+<DiyaProvider motion="reduced">
+  <LiveFeed />
+</DiyaProvider>
 ```
 
 **Faster, slower or off in CSS:** `--diya-duration-scale` multiplies every
-duration (`0.5` is twice as fast, `0` is off).
+duration (`0.5` is twice as fast, `0` is off). Set durations and the scale on
+the provider (its `style` or `className`) or above it; on an element inside
+the provider they have no effect. For one region, use a nested `DiyaProvider`.
 
 ```css
 .diya-root { --diya-duration-scale: 0.5; }
 ```
 
-**In tests,** render inside `motion="off"`, so closing popups leave at once and
-a tooltip shows on hover without its 300ms wait; Playwright's
+**In unit tests,** render inside `motion="off"`: closing popups leave at once
+and a tooltip shows on hover without its 300ms wait. In jsdom and happy-dom,
+popups already close at once, and `fireEvent.mouseEnter` shows a tooltip at
+once, as in 1.0.
+
+```tsx
+render(
+  <DiyaProvider motion="off">
+    <Settings />
+  </DiyaProvider>
+)
+```
+
+**In end-to-end tests,** closing popups stay up to 160ms with
+`data-exiting="true"`, and Playwright's `getByRole` still finds them. Use
+web-first assertions (`await expect(menu).toBeHidden()`), not `isVisible()`
+or `count()`, or render `motion="off"` in your test build. Playwright's
 `reducedMotion: 'reduce'` isn't enough, since things still fade.
 
 ```tsx
-render(<DiyaProvider motion="off"><Settings /></DiyaProvider>)
+<DiyaProvider motion={process.env.NEXT_PUBLIC_E2E ? 'off' : undefined}>
+  {children}
+</DiyaProvider>
 ```
 
-**To stay on 1.0's behavior without the prop,** pin the 1.0 line:
+**Rather keep 1.0 exactly?** Pin the 1.0 line:
 
 ```sh
 npm install @idyeah/diya@~1.0.1

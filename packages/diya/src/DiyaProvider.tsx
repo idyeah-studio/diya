@@ -21,7 +21,7 @@ export type DiyaAppearance = {
   fontFamily: string
   /** The accent tokens for the theme in effect, as hex. */
   brand: DiyaBrandTokens
-  /** How much DIYA moves: 'full', 'reduced' (fades only) or 'off'. With `motion="system"` it is 'full' on the server and follows the reader's Reduce Motion setting from mount. */
+  /** How much DIYA moves: 'full', 'reduced' (fades only) or 'off'. With `motion="system"` it is 'full' on the server and follows the device's Reduce Motion setting from mount. */
   motion: 'full' | 'reduced' | 'off'
 }
 const AppearanceContext = createContext<DiyaAppearance>({ theme: 'light', glass: false, fontFamily: DEFAULT_FONT_FAMILY, brand: DEFAULT_BRAND.light, motion: 'full' })
@@ -90,7 +90,7 @@ export type DiyaProviderProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'>
   /** Locale for dates and numbers, e.g. 'en-GB'. Defaults to the parent provider's, then 'en-US'. */
   locale?: string
   /**
-   * How much DIYA moves. 'system' animates and follows the reader's Reduce Motion setting; 'reduced' never slides or scales, only fades; 'off' changes everything at once, with 1.0's timing. Defaults to the parent provider's, then 'system'.
+   * How much DIYA moves. 'system' animates and follows the device's Reduce Motion setting; 'reduced' never slides or scales, only fades; 'off' changes everything at once, with 1.0's timing. Defaults to the parent provider's, then 'system'.
    * @since 1.1.0
    */
   motion?: 'system' | 'reduced' | 'off'
