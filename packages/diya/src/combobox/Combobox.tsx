@@ -1,5 +1,6 @@
 'use client'
-import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type InputHTMLAttributes } from 'react'
+import { forwardRef, useEffect, useId, useMemo, useRef, useState, type InputHTMLAttributes } from 'react'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { createPortal } from 'react-dom'
 import { Icon } from '../Icon.js'
 import { useAnchoredPopover } from './useAnchoredPopover.js'
@@ -13,7 +14,6 @@ declare module '../messages.js' {
     combobox: typeof comboboxMessages
   }
 }
-const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 export type ComboboxOption = {
   /** The value reported when this option is chosen; unique within the list. */

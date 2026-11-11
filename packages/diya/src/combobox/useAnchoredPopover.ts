@@ -1,8 +1,7 @@
 'use client'
-import { useEffect, useLayoutEffect, useState, type RefObject } from 'react'
+import { useEffect, useState, type RefObject } from 'react'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { useDiyaPortal } from '../DiyaProvider.js'
-
-const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 const tabbableSelector = 'a[href], area[href], button, input:not([type="hidden"]), select, textarea, iframe, object, embed, audio[controls], video[controls], summary, [contenteditable], [tabindex]'
 

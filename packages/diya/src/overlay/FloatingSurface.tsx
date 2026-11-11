@@ -3,7 +3,6 @@ import {
   forwardRef,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -16,8 +15,8 @@ import {
 import { createPortal } from 'react-dom'
 import { Button } from '../button/Button.js'
 import { useDiyaPortal } from '../DiyaProvider.js'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { composeRefs, mergeSlotProps, renderSlot } from '../internal/slot.js'
-const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 // Scrolls this soon after opening only reposition, even if the trigger is briefly out of view:
 // the browser may still be bringing it in after focus moved to it.

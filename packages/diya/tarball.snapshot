@@ -86,6 +86,8 @@ dist/internal/brand.d.ts
 dist/internal/brand.js
 dist/internal/cx.d.ts
 dist/internal/cx.js
+dist/internal/layout-effect.d.ts
+dist/internal/layout-effect.js
 dist/internal/link.d.ts
 dist/internal/link.js
 dist/internal/slot.d.ts
