@@ -47,7 +47,7 @@ describe('the changelog reader', () => {
   it('reads the real CHANGELOG.md: versions, sections, lists and tables, without its own H1', () => {
     const headings = changelog.blocks.filter((block) => block.type === 'heading')
     expect(headings.some((block) => block.type === 'heading' && block.text === 'Changelog')).toBe(false)
-    expect(headings.find((block) => block.type === 'heading' && block.level === 2)).toMatchObject({ id: 'v1.0.1' })
+    expect(headings.find((block) => block.type === 'heading' && block.level === 2)).toMatchObject({ id: 'v1.1.0-beta.1' })
     expect(changelog.blocks.filter((block) => block.type === 'table').length).toBeGreaterThanOrEqual(3)
     expect(changelog.links['1.0.1']).toBe('https://github.com/idyeah-studio/diya/releases/tag/v1.0.1')
     expect(changelog.links['1.0.0']).toBe('https://github.com/idyeah-studio/diya/releases/tag/v1.0.0')
@@ -59,7 +59,7 @@ describe('the changelog reader', () => {
     expect(version.querySelector('time')?.getAttribute('dateTime')).toBe('2026-11-07')
     expect(version.textContent).toContain('November 7, 2026')
     expect(within(version).getByRole('link', { name: '1.0.0' }).getAttribute('href')).toContain('/releases/tag/v1.0.0')
-    screen.getByRole('heading', { level: 3, name: 'Added' })
+    expect(screen.getAllByRole('heading', { level: 3, name: 'Added' }).length).toBeGreaterThanOrEqual(2)
     screen.getByRole('heading', { level: 4, name: 'Values and callbacks' })
     const table = screen.getByRole('region', { name: 'Props, table' })
     expect(table.getAttribute('tabindex')).toBe('0')

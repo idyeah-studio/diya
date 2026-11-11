@@ -516,7 +516,7 @@ export function CustomizePanel({
           </div>
           <p className="customize-help" data-testid="customize-motion-hint">
             {shown.motion === 'system' ? (
-              <>Your theme follows the device’s setting.</>
+              <>Your theme follows the device’s Reduce Motion setting.</>
             ) : shown.motion === 'reduced' ? (
               <>
                 Your theme sets <code>motion="reduced"</code>: fades, nothing slides.

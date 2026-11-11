@@ -39,7 +39,7 @@ const CURVES: Lane[] = [
 ]
 
 const MOVES = [
-  { name: 'Popups', text: 'Menus, popovers, tooltips and lists grow from the control that opened them and drift a few pixels toward it.' },
+  { name: 'Popups', text: 'Menus, popovers, tooltips and lists grow out of the control that opened them, and sink back into it when they close.' },
   { name: 'Dialogs and drawers', text: 'A dialog settles in from slightly smaller while the page dims; a drawer slides in from its own edge.' },
   { name: 'Toasts', text: 'A toast rises a short way from the edge it lives on.' },
   { name: 'Selection', text: 'A tab’s indicator slides to your choice, a switch’s thumb slides across, and a radio dot or a check grows in.' },
@@ -57,15 +57,15 @@ const TOKENS = [
   { token: '--diya-ease-move', value: 'cubic-bezier(0.4, 0, 0.2, 1)', text: 'Moves and color changes on screen.' },
 ]
 
-/* The README's Motion steps, word for word in substance. */
+/* The README's Motion steps, word for word in substance. Each is an edit to your provider. */
 const STEPS: { lead: string; label: string; name: string; language: CodeLanguage; code: string }[] = [
-  { lead: 'By default, DIYA moves and follows the device’s setting, with no code.', name: 'default provider', label: 'Root layout or entry', language: 'tsx', code: '<DiyaProvider>' },
-  { lead: 'Turn it off for the whole app, and everything changes at once. Loading indicators still move, because they show progress.', name: 'provider with motion off', label: 'Root layout or entry', language: 'tsx', code: '<DiyaProvider motion="off">' },
-  { lead: 'Fades only, for everyone: nothing slides or scales, but changes still ease in and out.', name: 'provider with reduced motion', label: 'Root layout or entry', language: 'tsx', code: '<DiyaProvider motion="reduced">' },
-  { lead: 'One part of the app gets its own setting from a nested provider. Without `motion`, a nested provider inherits the one around it.', name: 'nested provider', label: 'Any component', language: 'tsx', code: '<DiyaProvider motion="reduced"><LiveFeed /></DiyaProvider>' },
-  { lead: 'Faster, slower or off in CSS: `--diya-duration-scale` multiplies every duration. Set it on the provider, not on an element inside it.', name: 'duration scale', label: 'Your stylesheet', language: 'css', code: '.diya-root { --diya-duration-scale: 0.5; }' },
-  { lead: 'In tests, render inside `motion="off"`, so closing popups leave at once and a tooltip shows on hover without its wait. Emulating reduced motion isn’t enough, since things still fade.', name: 'test render', label: 'A test', language: 'tsx', code: 'render(<DiyaProvider motion="off"><Settings /></DiyaProvider>)' },
-  { lead: 'To stay on 1.0’s behavior without the prop, pin the 1.0 line.', name: 'install command for 1.0', label: 'Terminal, in your app’s folder', language: 'shell', code: 'npm install @idyeah/diya@~1.0.1' },
+  { lead: 'Turn it off for the whole app: add `motion="off"` to your `DiyaProvider`. Everything changes at once, as in 1.0; loading indicators still move, because they show progress.', name: 'provider with motion off', label: 'Root layout or entry', language: 'tsx', code: '<DiyaProvider motion="off">\n  {children}\n</DiyaProvider>' },
+  { lead: 'Fades only, for everyone: add `motion="reduced"`. Nothing slides or scales, but changes still ease in and out.', name: 'provider with reduced motion', label: 'Root layout or entry', language: 'tsx', code: '<DiyaProvider motion="reduced">\n  {children}\n</DiyaProvider>' },
+  { lead: 'One part of the app gets its own setting from a nested provider. Without `motion`, a nested provider inherits the one around it.', name: 'nested provider', label: 'Any component', language: 'tsx', code: '<DiyaProvider motion="reduced">\n  <LiveFeed />\n</DiyaProvider>' },
+  { lead: 'Faster, slower or off in CSS: `--diya-duration-scale` multiplies every duration. Set it on the provider (its `style` or `className`) or above it; on an element inside the provider it has no effect. For one region, use a nested `DiyaProvider`.', name: 'duration scale', label: 'Your stylesheet', language: 'css', code: '.diya-root { --diya-duration-scale: 0.5; }' },
+  { lead: 'In unit tests, render inside `motion="off"`: closing popups leave at once and a tooltip shows on hover without its 300ms wait.', name: 'test render', label: 'A unit test', language: 'tsx', code: 'render(\n  <DiyaProvider motion="off">\n    <Settings />\n  </DiyaProvider>\n)' },
+  { lead: 'In end-to-end tests, closing popups stay up to 160ms and Playwright’s `getByRole` still finds them. Use web-first assertions (`await expect(menu).toBeHidden()`), or render `motion="off"` in your test build. Emulating reduced motion isn’t enough, since things still fade.', name: 'test build provider', label: 'Root layout or entry', language: 'tsx', code: "<DiyaProvider motion={process.env.NEXT_PUBLIC_E2E ? 'off' : undefined}>\n  {children}\n</DiyaProvider>" },
+  { lead: 'Rather keep 1.0 exactly? Pin the 1.0 line.', name: 'install command for 1.0', label: 'Terminal, in your app’s folder', language: 'shell', code: 'npm install @idyeah/diya@~1.0.1' },
 ]
 
 export function MotionPage() {
@@ -141,7 +141,7 @@ export function MotionPage() {
           <section aria-labelledby="motion-setting">
             <h2 id="motion-setting">Less motion, or none</h2>
             <p>
-              DIYA follows the device’s reduce-motion setting (Reduce Motion on Apple devices, Animation effects on
+              DIYA follows the device’s Reduce Motion setting (Reduce Motion on Apple devices, Animation effects on
               Windows, Remove animations on Android): nothing slides or scales, and fades stay, so every change is still
               visible.
             </p>
@@ -150,6 +150,7 @@ export function MotionPage() {
 
           <section aria-labelledby="motion-setup">
             <h2 id="motion-setup">Set it up</h2>
+            <p>With no code, DIYA moves and follows the device’s Reduce Motion setting. To change that:</p>
             <ol className="motion-steps">
               {STEPS.map((step) => (
                 <li key={step.code}>

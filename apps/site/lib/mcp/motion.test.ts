@@ -5,7 +5,7 @@ import { getComponent, getTheme, listTokens, searchComponents, themeProviderLine
 
 describe('motion for agents', () => {
   it('states the motion rule once, with the test advice', () => {
-    expect(RULES).toContain('follows the device\'s reduce-motion setting')
+    expect(RULES).toContain('follows the device\'s Reduce Motion setting')
     expect(RULES).toContain('In browser tests, render with `motion="off"`.')
   })
 

@@ -43,7 +43,7 @@ function GetCode() {
   return <DiyaProvider><Button onClick={() => setOpen(true)}>Open</Button><GetCodeDrawer id="button" open={open} onOpenChange={setOpen} /></DiyaProvider>
 }
 const states = [
-  { choice: 'Match device', motion: 'system', prop: null, hint: 'Your theme follows the device’s setting.' },
+  { choice: 'Match device', motion: 'system', prop: null, hint: 'Your theme follows the device’s Reduce Motion setting.' },
   { choice: 'Reduced', motion: 'reduced', prop: 'motion="reduced"', hint: 'Your theme sets motion="reduced": fades, nothing slides.' },
   { choice: 'Off', motion: 'off', prop: 'motion="off"', hint: 'Your theme turns motion off with motion="off".' },
 ] as const

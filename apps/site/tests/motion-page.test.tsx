@@ -59,9 +59,12 @@ describe('the Motion page', () => {
 
   it('gives the README’s setup steps as copyable code', () => {
     page()
-    for (const name of ['default provider', 'provider with motion off', 'provider with reduced motion', 'nested provider', 'duration scale', 'test render', 'install command for 1.0'])
+    for (const name of ['provider with motion off', 'provider with reduced motion', 'nested provider', 'duration scale', 'test render', 'test build provider', 'install command for 1.0'])
       screen.getByRole('button', { name: new RegExp(`Copy ${name}`) })
     const text = document.body.textContent ?? ''
+    // Each snippet is closed, so it pastes as an edit to the provider.
+    const snippets = [...document.querySelectorAll('.motion-steps pre')].map((pre) => pre.textContent ?? '')
+    expect(snippets.filter((code) => code.startsWith('<DiyaProvider')).every((code) => code.trim().endsWith('</DiyaProvider>'))).toBe(true)
     expect(text).toContain('<DiyaProvider motion="off">')
     expect(text).toContain('.diya-root { --diya-duration-scale: 0.5; }')
     expect(text).toContain('npm install @idyeah/diya@~1.0.1')
