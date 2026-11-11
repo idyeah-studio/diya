@@ -14,6 +14,8 @@ const IGNORED = [
   'dialog',
   '.customize-scope:not(.customize-scope--bare)',
   '.pattern-canvas',
+  /* Slow motion is the catalog's, not part of anyone's code. */
+  '.slow-motion',
 ].join(', ')
 
 /** Whether `node` sits inside an ignored region below `root` (never looks above root). */

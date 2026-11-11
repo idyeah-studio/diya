@@ -845,3 +845,27 @@
     margin-top: 8px;
   }
 }
+
+/* ---- slow motion, beside Customize and Get code ------------------------ */
+:where(html[data-catalog='true']) .component-document-actions {
+  flex-wrap: wrap;
+}
+:where(html[data-catalog='true']) .slow-motion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-inline-start: 8px;
+}
+:where(html[data-catalog='true']) .diya-root .slow-motion .diya-switch-label {
+  font-size: 15px;
+  color: var(--diya-color-muted);
+}
+:where(html[data-catalog='true']) .diya-root .slow-motion[data-on] .diya-switch-label {
+  color: var(--diya-color-text);
+}
+:where(html[data-catalog='true']) .slow-motion-note {
+  flex-basis: 100%;
+  font-size: 14px;
+  color: var(--diya-color-muted);
+}
