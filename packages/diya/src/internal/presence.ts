@@ -76,3 +76,25 @@ export function inertWhileExiting(node: HTMLElement) {
     release()
   })
 }
+
+/** A time from computed style, such as '0.16s', in milliseconds. */
+const milliseconds = (time: string) => parseFloat(time) * (/ms$/.test(time.trim()) ? 1 : 1000)
+
+/**
+ * The provider's resolved timing for a Web Animations call on `node`: one of the gated times
+ * (such as 'duration-medium' or 'exit-slow') and a curve ('enter', 'exit' or 'move'), with every
+ * motion setting applied. A duration of 0 means don't animate. The node's own inline timing is
+ * put back afterwards; `style` stays live, for reading the motion distances.
+ */
+export function motionTiming(node: HTMLElement, time: string, curve: string) {
+  const view = node.ownerDocument.defaultView
+  const { animationDuration, animationTimingFunction } = node.style
+  node.style.animationDuration = `var(--diya-internal-${time})`
+  node.style.animationTimingFunction = `var(--diya-ease-${curve})`
+  const style = view ? view.getComputedStyle(node) : undefined
+  const duration = style ? milliseconds(style.animationDuration) : 0
+  const easing = style?.animationTimingFunction || 'ease'
+  node.style.animationDuration = animationDuration
+  node.style.animationTimingFunction = animationTimingFunction
+  return { duration: duration > 0 ? duration : 0, easing, style }
+}

@@ -448,7 +448,7 @@ export const items = {
     ],
     tokens: ['--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover', '--diya-color-line',
       '--diya-color-muted', '--diya-color-raised', '--diya-color-selected', '--diya-color-text',
-      '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit'],
     messages: 'siteHeader',
   },
   'side-navigation': {
@@ -581,7 +581,7 @@ export const items = {
       '--diya-color-muted', '--diya-color-raised', '--diya-color-selected', '--diya-color-surface',
       '--diya-color-text', '--diya-corner-scale', '--diya-elevation', '--diya-leading-tight',
       '--diya-text-body', '--diya-text-caption', '--diya-text-display', '--diya-text-large',
-      '--diya-text-title', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'chatbot',
   },
   dialog: {

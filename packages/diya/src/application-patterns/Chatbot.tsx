@@ -3,6 +3,8 @@ import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, ty
 import { Button } from '../button/Button.js'
 import { Icon } from '../Icon.js'
 import { cx } from '../internal/cx.js'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
+import { motionTiming } from '../internal/presence.js'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { chatbotMessages } from './chatbot-messages.js'
 
@@ -83,6 +85,25 @@ export const Chatbot = forwardRef<HTMLElement, ChatbotProps>(function Chatbot({ 
   const previousLoading = useRef(loading)
   const actionHadFocus = useRef(false)
   const copyOperation = useRef(0)
+  // Messages added after mount rise 4px and fade in; the ones already there, including any the
+  // server rendered, never animate, so a full-page chat doesn't replay its history on load.
+  const seen = useRef<Set<string> | null>(null)
+  useClientLayoutEffect(() => {
+    const ids = messages.map(message => message.id)
+    const before = seen.current
+    seen.current = new Set(ids)
+    const node = thread.current
+    if (!before || !node) return
+    const rows = Array.from(node.children).filter(child => child.classList.contains('diya-chat-message')) as HTMLElement[]
+    ids.forEach((messageId, index) => {
+      const row = rows[index]
+      if (before.has(messageId) || !row || typeof row.animate !== 'function') return
+      const { duration, easing, style } = motionTiming(row, 'duration-medium', 'enter')
+      if (!duration) return
+      const distance = style?.getPropertyValue('--diya-internal-motion-distance').trim() || '0px'
+      row.animate([{ opacity: 0, translate: `0 ${distance}` }, { opacity: 1, translate: '0 0' }], { duration, easing })
+    })
+  }, [messages])
   const copyContext = useRef({ open, title, messages })
   copyContext.current = { open, title, messages }
   const [copyNotice, setCopyNotice] = useState('')

@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { Accordion, Button, DiyaProvider, Progress } from '../dist/index.js'
+import { Accordion, Button, Chatbot, DiyaProvider, Progress, type ChatMessage } from '../dist/index.js'
 import { renderToString } from 'react-dom/server'
 
 const css = readFileSync(resolve(process.cwd(), 'src/styles.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
@@ -128,5 +128,70 @@ describe('Progress and loading rows', () => {
   it('pulses Table\'s loading rows with the Progress breathe, one keyframe for both', () => {
     expect(css).toMatch(/\.diya-table-skeleton \{\s*animation: diya-progress-breathe 2s ease-in-out infinite alternate;/)
     expect(css.match(/@keyframes [\w-]+/g)).toEqual(['@keyframes diya-progress-travel', '@keyframes diya-progress-spin', '@keyframes diya-progress-breathe'])
+  })
+})
+
+describe('Chatbot messages', () => {
+  /** Web Animations and the provider's resolved medium time, for chat rows. */
+  function webAnimations(duration = '0.16s') {
+    const calls: { row: Element; keyframes: Keyframe[]; options: KeyframeAnimationOptions }[] = []
+    Object.defineProperty(Element.prototype, 'animate', {
+      configurable: true,
+      writable: true,
+      value(this: Element, keyframes: Keyframe[], options: KeyframeAnimationOptions) {
+        calls.push({ row: this, keyframes, options })
+        return { finished: Promise.resolve(), cancel() {} }
+      },
+    })
+    const real = window.getComputedStyle.bind(window)
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((element: Element, pseudo?: string | null) => {
+      const style = real(element, pseudo)
+      if (!(element as HTMLElement).classList?.contains('diya-chat-message')) return style
+      return new Proxy(style, {
+        get(target, property) {
+          if (property === 'animationDuration') return duration
+          if (property === 'animationTimingFunction') return 'cubic-bezier(0.2, 0.7, 0.2, 1)'
+          if (property === 'getPropertyValue') return (name: string) => name === '--diya-internal-motion-distance' ? '4px' : target.getPropertyValue(name)
+          const value = Reflect.get(target, property)
+          return typeof value === 'function' ? value.bind(target) : value
+        },
+      })
+    })
+    return calls
+  }
+  afterEach(() => { delete (Element.prototype as { animate?: unknown }).animate })
+  const chat = (messages: ChatMessage[]) => <DiyaProvider><Chatbot title="Assistant" messages={messages} value="" onValueChange={() => {}} onSend={() => {}} /></DiyaProvider>
+  const first: ChatMessage[] = [{ id: '1', role: 'user', text: 'Hi' }, { id: '2', role: 'assistant', text: 'Hello' }]
+
+  it('never animates the messages it starts with', () => {
+    const calls = webAnimations()
+    render(chat(first))
+    expect(calls).toHaveLength(0)
+  })
+
+  it('raises only a message added after mount, and not one that streams in place', () => {
+    const calls = webAnimations()
+    const { rerender } = render(chat(first))
+    rerender(chat([...first, { id: '3', role: 'user', text: 'Thanks' }]))
+    expect(calls).toHaveLength(1)
+    expect(calls[0].row.textContent).toContain('Thanks')
+    expect(calls[0].keyframes).toEqual([{ opacity: 0, translate: '0 4px' }, { opacity: 1, translate: '0 0' }])
+    expect(calls[0].options).toEqual({ duration: 160, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)' })
+    rerender(chat([...first, { id: '3', role: 'user', text: 'Thanks a lot' }]))
+    expect(calls).toHaveLength(1)
+  })
+
+  it('stays still when the time is 0, as with motion off', () => {
+    const calls = webAnimations('0s')
+    const { rerender } = render(chat(first))
+    rerender(chat([...first, { id: '3', role: 'user', text: 'Thanks' }]))
+    expect(calls).toHaveLength(0)
+  })
+})
+
+describe('Site Header phone menu', () => {
+  it('opens like a popup and leaves through a discrete display transition, written as a longhand', () => {
+    expect(css).toMatch(/\.diya-site-mobile-nav \{\s*transform-origin: 50% 0;\s*transition-property: opacity, scale, translate, display;[^}]*transition-behavior: normal, normal, normal, allow-discrete;/)
+    expect(css).toMatch(/\.diya-site-mobile-nav\[hidden\] \{\s*opacity: 0;[^}]*pointer-events: none;/)
   })
 })

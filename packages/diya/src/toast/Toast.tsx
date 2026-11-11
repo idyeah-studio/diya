@@ -3,6 +3,7 @@ import { forwardRef, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Alert, type AlertProps } from '../alert/Alert.js'
 import { useDiyaMessages, useDiyaPortal } from '../DiyaProvider.js'
+import { motionTiming } from '../internal/presence.js'
 import { toastMessages } from './messages.js'
 
 declare module '../messages.js' {
@@ -13,9 +14,6 @@ declare module '../messages.js' {
 
 // The longest a leaving copy stays on the page, even if its animation never settles.
 const EXIT_CAP_MS = 1000
-
-/** A time from computed style, such as '0.16s', in milliseconds. */
-const milliseconds = (time: string) => parseFloat(time) * (/ms$/.test(time.trim()) ? 1 : 1000)
 
 /**
  * Plays the toast's exit on a copy, so onDismiss can run at once and the host can unmount it or
@@ -39,20 +37,17 @@ function playExit(node: HTMLElement | null) {
   Object.assign(copy.style, {
     position: 'fixed', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, right: 'auto', bottom: 'auto', margin: '0',
     pointerEvents: 'none', transition: 'none',
-    // Read back below as plain times: the provider's exit duration and curve, with motion settings applied.
-    animationDuration: 'var(--diya-internal-exit-slow)', animationTimingFunction: 'var(--diya-ease-exit)',
   })
   parent.append(copy)
-  const style = view.getComputedStyle(copy)
-  const duration = milliseconds(style.animationDuration)
-  if (!(duration > 0)) {
+  const { duration, easing, style } = motionTiming(copy, 'exit-slow', 'exit')
+  if (!duration) {
     copy.remove()
     return
   }
-  const distance = style.getPropertyValue('--diya-internal-motion-distance-edge').trim() || '0px'
+  const distance = style?.getPropertyValue('--diya-internal-motion-distance-edge').trim() || '0px'
   const animation = copy.animate(
     [{ opacity: from, translate: '0 0' }, { opacity: 0, translate: `0 ${distance}` }],
-    { duration, easing: style.animationTimingFunction || 'ease-in', fill: 'forwards' },
+    { duration, easing, fill: 'forwards' },
   )
   const cap = setTimeout(() => copy.remove(), EXIT_CAP_MS)
   const done = () => { clearTimeout(cap); copy.remove() }

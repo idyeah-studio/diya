@@ -221,6 +221,10 @@ export const SiteHeader = forwardRef<HTMLDivElement, SiteHeaderProps>(function S
     }
     if (!items.length) setOpen(false)
   }, [layout, navigationKey])
+  // The phone menu fades out after it closes; meanwhile it takes no focus, clicks or screen reader.
+  useClientLayoutEffect(() => {
+    if (navigation.current) navigation.current.inert = layout.compact && !open
+  }, [layout.compact, open, items.length])
   useEffect(() => {
     if (!open) return
     const outside = (event: PointerEvent) => { if (!container.current?.contains(event.target as Node)) setOpen(false) }

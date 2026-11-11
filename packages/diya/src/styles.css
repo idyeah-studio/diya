@@ -3589,3 +3589,30 @@
 .diya-root .diya-table-skeleton {
   animation: diya-progress-breathe 2s ease-in-out infinite alternate;
 }
+
+/* Site Header's phone menu opens like a popup: it fades in, settles from 0.97 and drifts 4px
+   down from the header; it leaves the same way, then hides. */
+.diya-root .diya-site-mobile-nav {
+  transform-origin: 50% 0;
+  transition-property: opacity, scale, translate, display;
+  transition-duration: var(--diya-internal-exit-medium);
+  transition-timing-function: var(--diya-ease-exit);
+  transition-behavior: normal, normal, normal, allow-discrete;
+}
+.diya-root .diya-site-mobile-nav[hidden] {
+  opacity: 0;
+  scale: var(--diya-internal-motion-scale);
+  translate: 0 calc(-1 * var(--diya-internal-motion-distance));
+  pointer-events: none;
+}
+.diya-root .diya-site-mobile-nav:not([hidden]) {
+  transition-duration: var(--diya-internal-duration-medium);
+  transition-timing-function: var(--diya-ease-enter);
+}
+@starting-style {
+  .diya-root .diya-site-mobile-nav:not([hidden]) {
+    opacity: 0;
+    scale: var(--diya-internal-motion-scale);
+    translate: 0 calc(-1 * var(--diya-internal-motion-distance));
+  }
+}
