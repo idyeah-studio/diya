@@ -103,6 +103,12 @@ describe('Tabs indicator', () => {
     expect(copies[0].closest('[aria-hidden="true"]')).not.toBeNull()
   })
 
+  it('swaps the selected tab\'s own mark for the indicator without a fade', async () => {
+    const { readFileSync } = await import('node:fs')
+    const css = readFileSync('src/styles.css', 'utf8')
+    expect(css).toMatch(/\.diya-root \.diya-tab-list\[data-indicator\] \.diya-tab\[aria-selected='true'\] \{\s*transition-duration: 0s;\s*\}/)
+  })
+
   it('motion off renders no indicator and no observer', () => {
     layout()
     const made = observers()

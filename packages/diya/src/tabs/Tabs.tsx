@@ -70,22 +70,27 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs({ items,
         delete node.dataset.indicator
         return
       }
+      // Every read first, then every write: a read between writes would apply the new position
+      // before data-indicator says to slide, and the indicator would jump.
+      const box = (button: HTMLElement) => ({ left: button.offsetLeft, top: button.offsetTop, width: button.offsetWidth, height: button.offsetHeight })
+      const selectedBox = box(tab)
+      const boxes = copies.current.map((copy, index) => (copy && buttons.current[index] ? box(buttons.current[index]!) : null))
+      node.dataset.indicator = performance.now() - changedAt.current < SLIDE_MS ? 'move' : 'still'
       // Physical left plus translate, from offsetLeft: right to left and scrolled lists line up too.
-      node.style.setProperty('--diya-internal-tab-indicator-x', `${tab.offsetLeft}px`)
-      node.style.setProperty('--diya-internal-tab-indicator-y', `${tab.offsetTop}px`)
-      node.style.setProperty('--diya-internal-tab-indicator-width', `${tab.offsetWidth}px`)
-      node.style.setProperty('--diya-internal-tab-indicator-height', `${tab.offsetHeight}px`)
+      node.style.setProperty('--diya-internal-tab-indicator-x', `${selectedBox.left}px`)
+      node.style.setProperty('--diya-internal-tab-indicator-y', `${selectedBox.top}px`)
+      node.style.setProperty('--diya-internal-tab-indicator-width', `${selectedBox.width}px`)
+      node.style.setProperty('--diya-internal-tab-indicator-height', `${selectedBox.height}px`)
       // Pill labels: a copy of every label sits exactly over its tab, inside the indicator, so the
       // selected label rides along in the fill's own color and never fades mid-slide (VIS-01).
       copies.current.forEach((copy, index) => {
-        const button = buttons.current[index]
-        if (!copy || !button) return
-        copy.style.left = `${button.offsetLeft}px`
-        copy.style.top = `${button.offsetTop}px`
-        copy.style.width = `${button.offsetWidth}px`
-        copy.style.height = `${button.offsetHeight}px`
+        const place = boxes[index]
+        if (!copy || !place) return
+        copy.style.left = `${place.left}px`
+        copy.style.top = `${place.top}px`
+        copy.style.width = `${place.width}px`
+        copy.style.height = `${place.height}px`
       })
-      node.dataset.indicator = performance.now() - changedAt.current < SLIDE_MS ? 'move' : 'still'
     }
     measure()
     // Fonts arriving, labels changing and the list resizing all re-measure, once a frame. Only

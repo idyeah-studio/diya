@@ -3530,6 +3530,11 @@
   background: transparent;
   color: var(--diya-color-text);
 }
+/* The indicator covers the selected tab, which changes under it at once: when the indicator
+   first takes over from the tab's own mark, nothing fades out behind it. */
+.diya-root .diya-tab-list[data-indicator] .diya-tab[aria-selected='true'] {
+  transition-duration: 0s;
+}
 /* Inside the pill, a copy of every label sits over its own tab, held still against the slide,
    so the fill reveals the selected label in its own color as it moves. */
 .diya-root .diya-tab-indicator-labels {
