@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { Accordion, Button, Chatbot, DiyaProvider, Progress, type ChatMessage } from '../dist/index.js'
 import { renderToString } from 'react-dom/server'
 
@@ -78,6 +78,19 @@ describe('theme changes', () => {
     expect(root.hasAttribute('data-theme-change')).toBe(false)
     // The pause closes the same gate motion="off" does.
     expect(css).toMatch(/\.diya-root\[data-theme-change\] \{\s*--diya-internal-motion: 0;\s*\}/)
+  })
+
+  it('puts the pause in the same commit as the new theme, before any child reads layout', () => {
+    // A child that measures in a layout effect (as Tabs does) flushes style: by then the pause
+    // must already be on the provider, or its transitions start with the new colors.
+    const seen: (string | null)[] = []
+    function Measures({ theme }: { theme: string }) {
+      useLayoutEffect(() => { seen.push(`${theme}:${document.querySelector('.diya-root')!.getAttribute('data-theme-change')}`) }, [theme])
+      return null
+    }
+    const { rerender } = render(<DiyaProvider theme="light"><Measures theme="light" /></DiyaProvider>)
+    rerender(<DiyaProvider theme="dark"><Measures theme="dark" /></DiyaProvider>)
+    expect(seen).toEqual(['light:null', 'dark:'])
   })
 })
 

@@ -1,11 +1,10 @@
 'use client'
-import { createContext, forwardRef, useContext, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type HTMLAttributes, type ReactNode, type Ref } from 'react'
+import { createContext, forwardRef, useContext, useMemo, useState, useSyncExternalStore, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react'
 import type { DiyaMessages, DiyaMessagesInput } from './messages.js'
 import { LinkComponentContext, type DiyaLinkComponent } from './internal/link.js'
 import { cx } from './internal/cx.js'
 import { resolveBrand, type DiyaBrandTokens } from './internal/brand.js'
 import { useClientLayoutEffect } from './internal/layout-effect.js'
-import { composeRefs } from './internal/slot.js'
 
 /** DIYA Sans ships with the stylesheet; a metric-matched Arial covers the moment before it loads. */
 export const DEFAULT_FONT_FAMILY = '"DIYA Sans", "DIYA Sans Fallback", Arial, sans-serif'
@@ -118,24 +117,21 @@ export const DiyaProvider = forwardRef<HTMLDivElement, DiyaProviderProps>(functi
   const brand = useMemo(() => (brandColor === undefined ? DEFAULT_BRAND : resolveBrand(brandColor)), [brandKey])
   const appearance = useMemo(() => ({ theme: resolved, glass, fontFamily, brand: brand[resolved], motion: resolvedMotion }), [resolved, glass, fontFamily, brand, resolvedMotion])
   // When the theme changes, transitions pause for the frame that paints it, so controls change
-  // with the page instead of easing behind it.
-  const root = useRef<HTMLDivElement | null>(null)
-  const setRoot = useMemo(() => composeRefs<HTMLDivElement>(root, ref as Ref<HTMLDivElement>), [ref])
-  const painted = useRef(resolved)
+  // with the page instead of easing behind it. The pause is rendered in the same commit as the
+  // new theme, so it's in place before any component reads layout in its own effects.
+  const [painted, setPainted] = useState(resolved)
+  const changing = painted !== resolved
   useClientLayoutEffect(() => {
-    const node = root.current
-    if (painted.current === resolved || !node) return
-    painted.current = resolved
-    node.setAttribute('data-theme-change', '')
-    let frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => node.removeAttribute('data-theme-change')) })
-    return () => { cancelAnimationFrame(frame); node.removeAttribute('data-theme-change') }
-  }, [resolved])
+    if (!changing) return
+    let frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => setPainted(resolved)) })
+    return () => cancelAnimationFrame(frame)
+  }, [changing, resolved])
   const tokens = {
     '--diya-font': fontFamily,
     ...accentVariables(brand),
     ...style,
   } as CSSProperties
-  return <div {...rest} ref={setRoot} className={cx('diya-root', className)} data-theme={theme} data-glass={String(glass)} data-surface={String(surface)} data-motion={motionSetting} style={tokens}>
+  return <div {...rest} ref={ref} className={cx('diya-root', className)} data-theme={theme} data-theme-change={changing ? '' : undefined} data-glass={String(glass)} data-surface={String(surface)} data-motion={motionSetting} style={tokens}>
     <AppearanceContext.Provider value={appearance}><MotionContext.Provider value={motionSetting}><MessagesContext.Provider value={text}><PortalContext.Provider value={portal}><LinkComponentContext.Provider value={linkComponent ?? parentLink}>{children}</LinkComponentContext.Provider><div className="diya-portal-root" ref={setPortal} /></PortalContext.Provider></MessagesContext.Provider></MotionContext.Provider></AppearanceContext.Provider>
   </div>
 })
