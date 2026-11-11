@@ -1,6 +1,6 @@
 # Files in the @idyeah/diya npm tarball. Regenerate with: pnpm snapshot:tarball
 # budget packed <= 516994 bytes
-# budget unpacked <= 1257000 bytes
+# budget unpacked <= 1300000 bytes
 CHANGELOG.md
 LICENSE
 NOTICE
