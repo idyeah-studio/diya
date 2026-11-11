@@ -92,8 +92,8 @@ describe('tokens', () => {
 
   it('defines the scrim in Light and Dark, not only under Glass, and dims Dialog and Drawer with it', () => {
     // Unset, var(--diya-color-scrim) was empty outside Glass, so overlays and shadows built on it failed.
-    expect(dark['--diya-color-scrim']).toBe('#00000088')
-    expect(light['--diya-color-scrim']).toBe('#00000088')
+    expect(dark['--diya-color-scrim']).toBe('#0000009e')
+    expect(light['--diya-color-scrim']).toBe('#0000009e')
     for (const owner of ['diya-dialog', 'diya-drawer-modal']) {
       const backdrop = bare.match(new RegExp(`\\.diya-root \\.${owner}::backdrop \\{([^}]*)\\}`))?.[1]
       expect(backdrop?.replace(/\s/g, ''), owner).toContain('background:var(--diya-color-scrim,#0008)')
@@ -256,6 +256,16 @@ describe('motion house rules', () => {
       const properties = value.split(/,(?![^()]*\))/).map(part => part.trim().split(/\s+/)[0])
       for (const banned of ['filter', 'backdrop-filter', '-webkit-backdrop-filter', 'outline']) expect(properties, `${name}: ${value}`).not.toContain(banned)
     }
+  })
+})
+
+describe('the dim behind Dialog and Drawer', () => {
+  it('has no blur in Light and Dark, keeps a still one under Glass, and never animates it', () => {
+    const backdrops = [...bare.matchAll(/([^{}]*::backdrop[^{}]*)\{([^}]*)\}/g)].map(([, selector, body]) => ({ selector: selector.trim(), body }))
+    const blurred = backdrops.filter(({ body }) => /backdrop-filter:\s*blur/.test(body)).map(({ selector }) => selector)
+    expect(blurred).toEqual([".diya-root[data-glass='true'] :is(.diya-dialog, .diya-drawer-modal)::backdrop"])
+    expect(bare).toMatch(/@supports \(backdrop-filter: blur\(14px\)\) \{[^@]*\.diya-root\[data-glass='true'\] :is\(\.diya-dialog, \.diya-drawer-modal\)::backdrop \{\s*backdrop-filter: blur\(5px\);/)
+    for (const { selector, body } of backdrops) expect(body, selector).not.toMatch(/transition[^;]*backdrop-filter/)
   })
 })
 

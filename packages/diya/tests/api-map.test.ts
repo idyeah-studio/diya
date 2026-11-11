@@ -297,7 +297,7 @@ describe('API map', () => {
     expect(api.tokens['--diya-space-4'].defaults).toEqual({ light: '16px', dark: '16px' })
     expect(api.tokens['--diya-font'].setBy).toBe('DiyaProvider.fontFamily')
     expect(api.tokens['--diya-corner-scale'].defaults).toEqual({ light: '1', dark: '1' })
-    expect(api.tokens['--diya-color-scrim'].defaults).toEqual({ light: '#00000088', dark: '#00000088' })
+    expect(api.tokens['--diya-color-scrim'].defaults).toEqual({ light: '#0000009e', dark: '#0000009e' })
   })
 
   it('describes the motion tokens, new in 1.1, with no setBy', () => {

@@ -94,7 +94,7 @@
   --diya-color-glass: #ffffff0d;
   /* The dimming layer behind dialogs and drawers, in Light and Dark alike; Glass sets a lighter one,
      since its blur already sets the page back. Use it for your own overlays and spotlights too. */
-  --diya-color-scrim: #00000088;
+  --diya-color-scrim: #0000009e;
   --diya-color-hover: #ffffff10;
   --diya-color-selected: #ffffff1c;
   /* The brand: DiyaProvider's brandColor sets the private pair per theme; the fallbacks
@@ -1548,7 +1548,7 @@
 .diya-root .diya-dialog { width: min(480px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); overflow: auto; margin: auto; padding: 28px; border: 1px solid var(--diya-color-line); border-radius: calc(22px * var(--diya-corner-scale, 1)); background: var(--diya-color-surface); color: var(--diya-color-text); box-shadow: var(--diya-shadow-raised); box-sizing: border-box; }
 .diya-root .diya-dialog[data-size='small'] { width: min(380px, calc(100vw - 48px)); }
 .diya-root .diya-dialog[data-size='large'] { width: min(640px, calc(100vw - 48px)); }
-.diya-root .diya-dialog::backdrop { background: var(--diya-color-scrim, #0008); backdrop-filter: blur(5px); }
+.diya-root .diya-dialog::backdrop { background: var(--diya-color-scrim, #0008); }
 /* Container rules for plain elements (Dialog, Card, Drawer, Form and the other workflow surfaces) end in
    the guard Prose uses: they reach your own plain elements, never a DIYA component placed inside, nor
    anything it renders. Parts at a fixed place are reached with child combinators instead. Neither
@@ -2034,7 +2034,7 @@
 .diya-root .diya-project-form { max-width:520px; margin:auto; padding:24px; display:grid; gap:24px; }.diya-root .diya-project-form > footer { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:12px; padding-top:8px; }
 .diya-root .diya-workflow-eyebrow { font-size:var(--diya-text-caption); letter-spacing:0; color:var(--diya-color-muted); display:block; margin-bottom:16px; }
 .diya-root .diya-drawer-modal>header { display:flex; gap:16px; align-items:flex-start; padding:24px; border-bottom:1px solid var(--diya-color-line); }.diya-root .diya-drawer-body { padding:24px; }.diya-root .diya-drawer-body h4:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { font-size:var(--diya-text-title); margin:0; }.diya-root .diya-drawer-body dl:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { margin:24px 0 0; }.diya-root .diya-drawer-body dl div:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid var(--diya-color-line); font-size:var(--diya-text-body); }.diya-root .diya-drawer-body dt:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { color:var(--diya-color-muted); }.diya-root .diya-drawer-body dd:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { margin:0; }.diya-root .diya-drawer-modal > footer { display:flex; justify-content:flex-end; gap:12px; padding:20px 24px; border-top:1px solid var(--diya-color-line); }
-.diya-root .diya-drawer-modal { position:fixed; inset:0 0 0 auto; width:min(440px,100vw); height:100dvh; max-height:100dvh; max-width:100vw; padding:0; margin:0; border-radius:calc(16px * var(--diya-corner-scale, 1)) 0 0 calc(16px * var(--diya-corner-scale, 1)); overflow:hidden; box-shadow:var(--diya-shadow-raised); }.diya-root .diya-drawer-modal[data-side='left'] { inset:0 auto 0 0; border-radius:0 calc(16px * var(--diya-corner-scale, 1)) calc(16px * var(--diya-corner-scale, 1)) 0; }.diya-root .diya-drawer-modal::backdrop { background:var(--diya-color-scrim, #0008); backdrop-filter:blur(5px); }.diya-root .diya-drawer-modal>header>div { flex:1; min-width:0; overflow-wrap:anywhere; }.diya-root .diya-drawer-modal>header>.diya-button { flex-shrink:0; }.diya-root .diya-drawer-modal[open] { display:flex; flex-direction:column; }.diya-root .diya-drawer-modal > footer { margin-top:auto; flex-wrap:wrap; }
+.diya-root .diya-drawer-modal { position:fixed; inset:0 0 0 auto; width:min(440px,100vw); height:100dvh; max-height:100dvh; max-width:100vw; padding:0; margin:0; border-radius:calc(16px * var(--diya-corner-scale, 1)) 0 0 calc(16px * var(--diya-corner-scale, 1)); overflow:hidden; box-shadow:var(--diya-shadow-raised); }.diya-root .diya-drawer-modal[data-side='left'] { inset:0 auto 0 0; border-radius:0 calc(16px * var(--diya-corner-scale, 1)) calc(16px * var(--diya-corner-scale, 1)) 0; }.diya-root .diya-drawer-modal::backdrop { background:var(--diya-color-scrim, #0008); }.diya-root .diya-drawer-modal>header>div { flex:1; min-width:0; overflow-wrap:anywhere; }.diya-root .diya-drawer-modal>header>.diya-button { flex-shrink:0; }.diya-root .diya-drawer-modal[open] { display:flex; flex-direction:column; }.diya-root .diya-drawer-modal > footer { margin-top:auto; flex-wrap:wrap; }
 .diya-root .diya-content-state { max-width:600px; margin:auto; padding:44px 32px; text-align:center; }.diya-root .diya-content-state p { max-width:360px; margin:10px auto 24px; }
 .diya-root .diya-workflow-surface :is(.diya-content-state-title, .diya-wizard-title) { margin:0; font-size:var(--diya-text-title); font-weight:600; letter-spacing:-.015em; line-height:var(--diya-leading-tight); }
 @media(max-width:700px) {.diya-root .diya-project-form { padding:20px; } }
@@ -2531,6 +2531,11 @@
     background: var(--diya-internal-overlay-fill);
     border-color: var(--diya-internal-glass-edge);
     border-top-color: var(--diya-internal-glass-top-edge);
+  }
+  /* Under Glass the page behind them blurs as well as dims: blur is the material. In Light and
+     Dark the dim alone sets the page back. */
+  .diya-root[data-glass='true'] :is(.diya-dialog, .diya-drawer-modal)::backdrop {
+    backdrop-filter: blur(5px);
   }
   .diya-root[data-glass='true'] :is(.diya-card, .diya-analytics-card, .diya-workflow-surface, .diya-app-pattern-surface, .diya-table .diya-table-scroll, .diya-floating-surface, .diya-dialog, .diya-drawer-modal) {
     background-image: var(--diya-internal-glass-sheen);
@@ -3315,8 +3320,8 @@
   }
 }
 
-/* The dimmed page behind them fades in and out. Its blur stays still: animating a full-page
-   blur dropped frames on a throttled laptop-size screen (VIS-03). */
+/* The dimmed page behind them fades in and out. Under Glass its blur stays still: animating a
+   full-page blur dropped frames on a throttled laptop-size screen (VIS-03). */
 .diya-root :is(.diya-dialog, .diya-drawer-modal)::backdrop {
   transition-property: opacity, display, overlay;
   transition-duration: var(--diya-internal-exit-slow);
