@@ -65,6 +65,32 @@ describe('Button press and hover', () => {
 
 })
 
+describe('hover and selected colors', () => {
+  // Every rule that eases colors over the fast duration, by its selector.
+  const eased = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, , body]) => /transition-property:[^;]*(background-color|color)/.test(body) && /transition-duration: var\(--diya-internal-duration-fast\)/.test(body))
+    .map(([, selector]) => selector.replace(/\s+/g, ' '))
+    .join('\n')
+
+  it('ease on every control that has a hover, selected or current color', () => {
+    const siblings = [
+      '.diya-button', '.diya-tab', '.diya-accordion-heading button', '.diya-list-row', '.diya-dialog-close', '.diya-site-nav :is(button, a)',
+      '.diya-text-field-control', '.diya-select-control', '.diya-combobox-control',
+      '.diya-side-navigation > :where(div) > :is(a, button)', '.diya-breadcrumbs a', '.diya-text-link',
+      '.diya-table-sort', '.diya-table-clear', '.diya-table-expander button', '.diya-table tbody td',
+      '.diya-calendar-grid button', '.diya-calendar-heading button', '.diya-inline-calendar button',
+      '.diya-tag button', '.diya-alert-dismiss', '.diya-text-field-clear', '.diya-upload-drop', '.diya-wizard-steps li > span',
+    ]
+    for (const sibling of siblings) expect(eased, sibling).toContain(sibling)
+    // Table's sort arrow brightens on hover.
+    expect(css).toMatch(/\.diya-table-sort svg \{\s*transition-property: opacity;\s*transition-duration: var\(--diya-internal-duration-fast\);/)
+  })
+
+  it('leave menu items and list options instant, so a list never lags the pointer or the keys', () => {
+    expect(eased).not.toMatch(/diya-menu-item|diya-combobox-options|diya-select-option/)
+  })
+})
+
 describe('theme changes', () => {
   it('pause transitions for the frame that paints a new theme', async () => {
     const { container, rerender } = render(<DiyaProvider theme="light">Text</DiyaProvider>)

@@ -3379,6 +3379,26 @@
   transition-duration: var(--diya-internal-duration-fast);
   transition-timing-function: var(--diya-ease-move);
 }
+/* Every other control with a hover, selected or current color eases the same way: Side
+   Navigation items, Breadcrumbs and Text Link, Table rows and their sort, clear and expander
+   buttons, Calendar days and headings, Tag remove, Alert and Toast dismiss, the field clear
+   button, the File Upload drop zone and the Wizard's step marker. Menu items and list options
+   stay instant, so a list never lags the pointer or the arrow keys. */
+.diya-root :is(.diya-side-navigation > :where(div) > :is(a, button), .diya-breadcrumbs a, .diya-text-link, .diya-table-sort, .diya-table-clear, .diya-table-expander button, .diya-calendar-grid button, .diya-calendar-heading button, .diya-inline-calendar button, .diya-tag button, .diya-alert-dismiss, .diya-text-field-clear, .diya-upload-drop, .diya-wizard-steps li, .diya-wizard-steps li > span) {
+  transition-property: background-color, border-color, color, text-decoration-color, text-decoration-thickness;
+  transition-duration: var(--diya-internal-duration-fast);
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-table-sort svg {
+  transition-property: opacity;
+  transition-duration: var(--diya-internal-duration-fast);
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-table tbody td {
+  transition-property: background-color;
+  transition-duration: var(--diya-internal-duration-fast);
+  transition-timing-function: var(--diya-ease-move);
+}
 /* A Button press lands at once and eases back. It shrinks to 0.98, but never more than about
    2px a side: Button writes the floor for its own width when it's pressed. Its hover tint
    eases with the colors. */
