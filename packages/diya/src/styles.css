@@ -3484,3 +3484,89 @@
   rotate: 180deg;
   transition-duration: calc(var(--diya-internal-duration-slow) * var(--diya-internal-motion-travel));
 }
+
+/* Tabs: one indicator per list slides to the selected tab. Each tab keeps its own mark until
+   Tabs has measured and set data-indicator on the list, so server HTML and a page without
+   JavaScript show the selection as 1.0 did. A recent selection slides; a first placement, a
+   resize or a reveal moves at once (data-indicator="still"), and so does Reduce Motion. */
+.diya-root .diya-tab-list {
+  position: relative;
+}
+.diya-root .diya-tab-indicator {
+  display: none;
+}
+.diya-root .diya-tab-list[data-indicator] > .diya-tab-indicator {
+  display: block;
+  position: absolute;
+  top: var(--diya-internal-tab-indicator-y);
+  left: 0;
+  width: var(--diya-internal-tab-indicator-width);
+  height: var(--diya-internal-tab-indicator-height);
+  translate: var(--diya-internal-tab-indicator-x) 0;
+  pointer-events: none;
+  transition-property: translate, width;
+  transition-duration: calc(var(--diya-internal-duration-slow) * var(--diya-internal-motion-travel));
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-tab-list[data-indicator='still'] :is(.diya-tab-indicator, .diya-tab-indicator-labels) {
+  transition-duration: 0s;
+}
+.diya-root .diya-tabs[data-variant='underline'] .diya-tab-list[data-indicator] > .diya-tab-indicator {
+  top: calc(var(--diya-internal-tab-indicator-y) + var(--diya-internal-tab-indicator-height) - 2px);
+  height: 2px;
+  border-radius: 2px;
+  background: var(--diya-color-text);
+}
+.diya-root .diya-tabs[data-variant='underline'] .diya-tab-list[data-indicator] .diya-tab[aria-selected='true']::after {
+  content: none;
+}
+.diya-root .diya-tabs[data-variant='pill'] .diya-tab-list[data-indicator] > .diya-tab-indicator {
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--diya-color-accent);
+}
+.diya-root .diya-tabs[data-variant='pill'] .diya-tab-list[data-indicator] .diya-tab[aria-selected='true'] {
+  background: transparent;
+  color: var(--diya-color-text);
+}
+/* Inside the pill, a copy of every label sits over its own tab, held still against the slide,
+   so the fill reveals the selected label in its own color as it moves. */
+.diya-root .diya-tab-indicator-labels {
+  position: absolute;
+  top: calc(-1 * var(--diya-internal-tab-indicator-y));
+  left: 0;
+  translate: calc(-1 * var(--diya-internal-tab-indicator-x)) 0;
+  transition-property: translate;
+  transition-duration: calc(var(--diya-internal-duration-slow) * var(--diya-internal-motion-travel));
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-tab-indicator-labels > .diya-tab {
+  position: absolute;
+  display: flex;
+  color: var(--diya-color-accent-text);
+}
+.diya-root .diya-tab-indicator .diya-badge[data-color='neutral'] {
+  --diya-internal-badge-fill: var(--diya-color-accent-text);
+  --diya-internal-badge-ink: var(--diya-color-accent);
+}
+/* An underline tab turns bold when selected; its bold width is reserved, so its neighbors
+   don't shift and the indicator's width doesn't change mid-slide. */
+.diya-root .diya-tabs[data-variant='underline'] .diya-tab-label {
+  display: inline-flex;
+  flex-direction: column;
+}
+.diya-root .diya-tabs[data-variant='underline'] .diya-tab-label::after {
+  content: attr(data-label);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: 600;
+  user-select: none;
+  pointer-events: none;
+}
+@media (forced-colors: active) {
+  .diya-root .diya-tab-list[data-indicator] > .diya-tab-indicator {
+    display: none;
+  }
+}

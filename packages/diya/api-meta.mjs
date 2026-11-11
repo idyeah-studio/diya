@@ -214,7 +214,7 @@ export const items = {
       '--diya-color-neutral-fill', '--diya-color-neutral-on-fill', '--diya-color-raised',
       '--diya-color-success-fill', '--diya-color-success-on-fill', '--diya-color-text',
       '--diya-color-warning', '--diya-color-warning-fill', '--diya-color-warning-on-fill',
-      '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-slow'],
     messages: null,
   },
   breadcrumbs: {
