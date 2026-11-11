@@ -30,7 +30,7 @@ export const Progress = forwardRef<HTMLDivElement, ProgressProps>(function Progr
   const amount = indeterminate ? 0 : Math.min(100, Math.max(0, value as number))
   return <div {...props} ref={ref} className={cx('diya-progress', className)} data-variant={variant} data-indeterminate={indeterminate}>
     <div className="diya-progress-meter" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={indeterminate ? undefined : amount} aria-valuetext={indeterminate ? t.inProgress : undefined}>
-      {variant === 'linear' ? <div className="diya-progress-track"><span style={{width: indeterminate ? '35%' : `${amount}%`}} /></div> : <svg viewBox="0 0 100 100" aria-hidden="true"><circle className="diya-progress-track-circle" cx="50" cy="50" r="42" /><circle className="diya-progress-fill-circle" cx="50" cy="50" r="42" pathLength="100" strokeDasharray="100" strokeDashoffset={indeterminate ? 72 : 100 - amount} /></svg>}
+      {variant === 'linear' ? <div className="diya-progress-track"><span style={indeterminate ? undefined : {width: `${amount}%`}} /></div> : <svg viewBox="0 0 100 100" aria-hidden="true"><circle className="diya-progress-track-circle" cx="50" cy="50" r="42" /><circle className="diya-progress-fill-circle" cx="50" cy="50" r="42" pathLength="100" strokeDasharray="100" strokeDashoffset={indeterminate ? 72 : 100 - amount} /></svg>}
     </div>
     {showValue && !indeterminate && <span className="diya-progress-value" aria-hidden="true">{new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(Math.round(amount) / 100)}</span>}
   </div>
