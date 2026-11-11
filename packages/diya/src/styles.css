@@ -3442,3 +3442,45 @@
   scale: 1;
   transition-duration: var(--diya-internal-duration-fast);
 }
+
+/* Accordion: a section grows to its height and fades in as it opens, and shrinks and fades out
+   as it closes. It stays laid out and turns invisible after its exit, rather than switching
+   display, so an open section doesn't replay when a hidden panel around it is shown again,
+   and Firefox animates the close too. Under Reduce Motion the height changes at once and only
+   the fade remains. The chevron turns with it. */
+.diya-root .diya-accordion-content {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-property: grid-template-rows, padding-bottom, opacity, visibility;
+  transition-duration: calc(var(--diya-internal-duration-slow) * var(--diya-internal-motion-travel)), calc(var(--diya-internal-duration-slow) * var(--diya-internal-motion-travel)), var(--diya-internal-duration-slow), 0s;
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-accordion-content[hidden] {
+  display: grid;
+  grid-template-rows: 0fr;
+  padding-bottom: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition-duration: calc(var(--diya-internal-exit-slow) * var(--diya-internal-motion-travel)), calc(var(--diya-internal-exit-slow) * var(--diya-internal-motion-travel)), var(--diya-internal-exit-slow), 0s;
+  transition-delay: 0s, 0s, 0s, var(--diya-internal-exit-slow);
+}
+/* Clips the content while the row grows. The extra 8px all round, given back by the negative
+   margin, leaves room for focus rings at the edges without changing the layout. */
+.diya-root .diya-accordion-body {
+  min-height: 0;
+  overflow: hidden;
+  margin: -8px;
+  padding: 8px;
+}
+.diya-root .diya-accordion-heading svg {
+  flex-shrink: 0;
+  transition-property: rotate;
+  transition-duration: calc(var(--diya-internal-exit-slow) * var(--diya-internal-motion-travel));
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-accordion-heading button[aria-expanded='true'] svg {
+  rotate: 180deg;
+  transition-duration: calc(var(--diya-internal-duration-slow) * var(--diya-internal-motion-travel));
+}

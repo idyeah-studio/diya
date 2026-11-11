@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { Button, DiyaProvider } from '../dist/index.js'
+import { Accordion, Button, DiyaProvider } from '../dist/index.js'
+import { renderToString } from 'react-dom/server'
 
 const css = readFileSync(resolve(process.cwd(), 'src/styles.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
 const nextFrame = () => act(() => new Promise<void>((done) => requestAnimationFrame(() => done())))
@@ -78,5 +79,38 @@ describe('Switch and Choice', () => {
     const stateful = [...css.matchAll(/([^{}]*:(?:checked|indeterminate)[^{}]*)\{([^}]*)\}/g)]
     expect(stateful.length).toBeGreaterThan(5)
     for (const [, selector, body] of stateful) expect(body, selector.trim()).not.toMatch(/(^|[;\s])animation/)
+  })
+})
+
+describe('Accordion', () => {
+  const items = [{ id: 'ship', label: 'Shipping', content: 'Two days.' }, { id: 'return', label: 'Returns', content: 'Thirty days.' }]
+
+  it('keeps hidden and its region, adds a body to clip, and turns one chevron', () => {
+    const html = renderToString(<DiyaProvider><Accordion items={items} /></DiyaProvider>)
+    expect(html).toMatch(/role="region"[^>]*hidden=""[^>]*class="diya-accordion-content"><div class="diya-accordion-body">Two days\.<\/div>/)
+    expect(html.match(/d="M5 8l5 5 5-5"/g)).toHaveLength(2)
+  })
+
+  it('makes a closed section inert from the moment it closes, and an open one usable', () => {
+    render(<DiyaProvider><Accordion items={items} /></DiyaProvider>)
+    const shipping = screen.getByRole('button', { name: 'Shipping' })
+    const region = document.getElementById(shipping.getAttribute('aria-controls')!)!
+    expect(region.inert).toBe(true)
+    fireEvent.click(shipping)
+    expect(region.hidden).toBe(false)
+    expect(region.inert).toBe(false)
+    fireEvent.click(shipping)
+    expect(region.hidden).toBe(true)
+    expect(region.inert).toBe(true)
+  })
+
+  it('animates rows and opacity, and hides after its exit instead of switching display', () => {
+    const hidden = css.match(/\.diya-root \.diya-accordion-content\[hidden\] \{([^}]*)\}/g)!.at(-1)!
+    expect(hidden).toMatch(/display: grid;/)
+    expect(hidden).toMatch(/grid-template-rows: 0fr;/)
+    expect(hidden).toMatch(/visibility: hidden;/)
+    expect(hidden).toMatch(/transition-delay: 0s, 0s, 0s, var\(--diya-internal-exit-slow\);/)
+    // @starting-style is limited to popups, Toast, Dialog and Drawer: see t0-l1-styles.
+    expect(css).toMatch(/\.diya-accordion-heading button\[aria-expanded='true'\] svg \{\s*rotate: 180deg;/)
   })
 })

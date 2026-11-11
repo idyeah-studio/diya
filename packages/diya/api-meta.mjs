@@ -314,7 +314,7 @@ export const items = {
     slots: { 'items[].content': { accepts: 'any', content: ['text'], multiple: true } },
     children: none,
     state: [],
-    tokens: ['--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-duration-fast', '--diya-ease-move'],
+    tokens: ['--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-slow'],
     messages: null,
   },
   prose: {
