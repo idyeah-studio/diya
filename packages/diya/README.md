@@ -511,8 +511,9 @@ duration (`0.5` is twice as fast, `0` is off).
 .diya-root { --diya-duration-scale: 0.5; }
 ```
 
-**In tests,** render inside `motion="off"` so closing popups leave at once;
-Playwright's `reducedMotion: 'reduce'` isn't enough, since things still fade.
+**In tests,** render inside `motion="off"`, so closing popups leave at once and
+a tooltip shows on hover without its 300ms wait; Playwright's
+`reducedMotion: 'reduce'` isn't enough, since things still fade.
 
 ```tsx
 render(<DiyaProvider motion="off"><Settings /></DiyaProvider>)

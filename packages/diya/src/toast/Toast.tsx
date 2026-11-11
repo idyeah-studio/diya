@@ -20,7 +20,7 @@ const playExit = (node: HTMLElement | null) => playOnCopy(node, node?.parentElem
 ])
 
 export type ToastProps = Omit<AlertProps, 'onDismiss'> & {
-  /** Called once, at once, when the toast goes, by timer, close button or Escape; unmount the toast here. Its exit plays on its own afterwards. */
+  /** Called once, straight away, when the toast goes (by timer, close button or Escape); unmount the toast here. Its exit then plays on its own. */
   onDismiss: () => void
   /** Milliseconds before it dismisses itself, paused while hovered, focused or the tab is hidden; 0 or less keeps it until dismissed. Toasts with an `action` never time out. Defaults to 8000. */
   duration?: number
