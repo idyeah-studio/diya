@@ -84,6 +84,9 @@ presses Continue.
 `Stack` lays things out top to bottom and `Inline` side by side, with even
 space between them. See [Layout](#layout).
 
+Popups, dialogs and toggles move a little, and follow the device's Reduce
+Motion setting. To slow that down or turn it off, see [Motion](#motion).
+
 Props, behavior and examples for every piece are in the
 [component guide](https://github.com/idyeah-studio/diya/blob/main/packages/diya/docs/components.md)
 and the [pattern guide](https://github.com/idyeah-studio/diya/blob/main/packages/diya/docs/patterns.md).
@@ -453,8 +456,9 @@ Get theme: you get one `diya-theme.css` file to import after the styles, and a
 few props.
 
 A nested `DiyaProvider` can give one region its own look. It inherits
-`locale`, `messages` and `linkComponent` from the provider around it, but not
-`theme`, `glass`, `brandColor` or `fontFamily`, so set those on each provider.
+`locale`, `messages`, `linkComponent` and `motion` from the provider around
+it, but not `theme`, `glass`, `brandColor` or `fontFamily`, so set those on
+each provider.
 
 ## Glass
 
@@ -469,6 +473,60 @@ and tabs get a translucent, blurred surface. Glass wants something behind it:
 over a flat background it looks solid. Where the browser can't blur, or the
 reader has asked for less transparency, DIYA uses its solid surfaces instead.
 Keep the backdrop quiet enough that text stays readable.
+
+## Motion
+
+**By default,** DIYA moves and follows the device's Reduce Motion setting,
+with no code:
+
+```tsx
+<DiyaProvider>
+```
+
+**Turn it off for the whole app** and everything changes at once, as in 1.0
+(loading indicators still move, because they show progress):
+
+```tsx
+<DiyaProvider motion="off">
+```
+
+**Fades only, for everyone:** nothing slides or scales, but changes still
+ease in and out.
+
+```tsx
+<DiyaProvider motion="reduced">
+```
+
+**One part of the app** gets its own setting from a nested provider; without
+`motion`, a nested provider inherits the one around it.
+
+```tsx
+<DiyaProvider motion="reduced"><LiveFeed /></DiyaProvider>
+```
+
+**Faster, slower or off in CSS:** `--diya-duration-scale` multiplies every
+duration (`0.5` is twice as fast, `0` is off).
+
+```css
+.diya-root { --diya-duration-scale: 0.5; }
+```
+
+**In tests,** render inside `motion="off"` so closing popups leave at once;
+Playwright's `reducedMotion: 'reduce'` isn't enough, since things still fade.
+
+```tsx
+render(<DiyaProvider motion="off"><Settings /></DiyaProvider>)
+```
+
+**To stay on 1.0's behavior without the prop,** pin the 1.0 line:
+
+```sh
+npm install @idyeah/diya@~1.0.1
+```
+
+`useDiyaAppearance().motion` tells your own code which applies: `'full'`,
+`'reduced'` or `'off'`. There's no `motion="full"`: DIYA never overrides a
+reader who asked for less motion.
 
 ## Translation
 
@@ -526,6 +584,7 @@ header edges, are worked out once per provider from these tokens.
 | Line height | `--diya-leading-tight`, `--diya-leading-body` |
 | Space | `--diya-space-1` to `--diya-space-8`: 4, 8, 12, 16, 24, 32, 48 and 64px |
 | Shape and depth | `--diya-corner-scale`; `--diya-radius-control`, the one corner every control shares; `--diya-radius-surface`, the one corner every in-page surface shares; `--diya-shadow-raised` for cards, dialogs, drawers, toasts, menus and popups; `--diya-elevation` scales table, tooltip and floating chat shadows (`0` removes them). For a flat look, set `--diya-shadow-raised: none` as well |
+| Motion | `--diya-duration-fast`, `--diya-duration-medium` and `--diya-duration-slow` (120, 160 and 240ms; exits take two-thirds), `--diya-duration-scale` (`0` turns motion off), and the curves `--diya-ease-enter`, `--diya-ease-exit` and `--diya-ease-move`. See [Motion](#motion) |
 
 ```tsx
 <DiyaProvider
@@ -564,10 +623,10 @@ major version:
 
 Not covered, so don't build on them: `.diya-*` class names, DOM structure,
 the `data-*` attributes components set on their own elements (the provider's
-`data-theme` is covered), anything named `--diya-internal-*`, file paths inside
-`dist`, and anything marked `"stability": "experimental"` in `api.json`, with
-its own messages and types. In 1.0 that's Chatbot and the charts (`DataViz`
-and `Chart`).
+`data-theme` and `data-motion` are covered), anything named
+`--diya-internal-*`, file paths inside `dist`, and anything marked
+`"stability": "experimental"` in `api.json`, with its own messages and types.
+In 1.0 that's Chatbot and the charts (`DataViz` and `Chart`).
 
 ## License and fonts
 
