@@ -28,13 +28,13 @@ export type DrawerProps = Omit<DialogHTMLAttributes<HTMLDialogElement>, 'title' 
   children: ReactNode
   /** Content pinned to the bottom, usually action buttons. */
   footer?: ReactNode
-  /** Edge the drawer slides from; defaults to 'right'. */
+  /** Which edge of the page the drawer sits on; defaults to 'right'. */
   side?: 'left' | 'right'
   /** Shows the close icon button in the header; defaults to true. */
   showClose?: boolean
 }
 
-/** A modal panel that slides in from the side, traps focus and returns it on close. The ref, `className`, `style` and other attributes go to the native `dialog` element. */
+/** A modal panel at the side of the page that traps focus and returns it on close. The ref, `className`, `style` and other attributes go to the native `dialog` element. */
 export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer({ open, onOpenChange, title, headingLevel = 3, description, children, footer, side = 'right', showClose = true, className, onCancel, onClose, onClick, ...props }, ref) {
   const t = useDiyaMessages('drawer', drawerMessages)
   const dialog = useRef<HTMLDialogElement>(null)
