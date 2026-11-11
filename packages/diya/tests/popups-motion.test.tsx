@@ -202,3 +202,115 @@ describe('Tooltip hover delay', () => {
     expect(tip()).toBeNull()
   })
 })
+
+describe('Toast exit', () => {
+  /** A browser's Web Animations and computed exit timing, enough for the toast's leaving copy. */
+  function webAnimations(duration = '0.16s') {
+    const animations: { keyframes: Keyframe[]; options: KeyframeAnimationOptions; finish: () => void }[] = []
+    Object.defineProperty(Element.prototype, 'animate', {
+      configurable: true,
+      writable: true,
+      value(keyframes: Keyframe[], options: KeyframeAnimationOptions) {
+        let finish!: () => void
+        const finished = new Promise<void>((resolve) => { finish = resolve })
+        animations.push({ keyframes, options, finish })
+        return { finished, cancel() {} }
+      },
+    })
+    const real = window.getComputedStyle.bind(window)
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((element: Element, pseudo?: string | null) => {
+      const style = real(element, pseudo)
+      if (!(element as HTMLElement).classList?.contains('diya-toast-region')) return style
+      return new Proxy(style, {
+        get(target, property) {
+          if (property === 'animationDuration') return duration
+          if (property === 'animationTimingFunction') return 'cubic-bezier(0.4, 0, 1, 1)'
+          if (property === 'getPropertyValue') return (name: string) => name === '--diya-internal-motion-distance-edge' ? '12px' : target.getPropertyValue(name)
+          const value = Reflect.get(target, property)
+          return typeof value === 'function' ? value.bind(target) : value
+        },
+      })
+    })
+    return animations
+  }
+  function Host() {
+    const [toast, setToast] = useState<string | undefined>()
+    // The keyless pattern many apps use: raising the same message again is the same state.
+    return <>
+      <Button onClick={() => setToast('Saved')}>Save</Button>
+      {toast && <Toast duration={0} onDismiss={() => setToast(undefined)}>{toast}</Toast>}
+    </>
+  }
+  const copies = () => Array.from(document.querySelectorAll<HTMLElement>('.diya-toast-region[aria-hidden="true"]'))
+
+  it('calls onDismiss at once, and plays the exit on a copy', async () => {
+    const animations = webAnimations()
+    const dismissed = vi.fn()
+    render(<DiyaProvider><Toast duration={0} onDismiss={dismissed}>Saved</Toast></DiyaProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss alert' }))
+    expect(dismissed).toHaveBeenCalledOnce()
+    expect(copies()).toHaveLength(1)
+    expect(animations).toHaveLength(1)
+    expect(animations[0].options).toMatchObject({ duration: 160, easing: 'cubic-bezier(0.4, 0, 1, 1)' })
+    expect(animations[0].keyframes.at(-1)).toMatchObject({ opacity: 0, translate: '0 12px' })
+  })
+
+  it('a new toast raised at once is not cleared', async () => {
+    const animations = webAnimations()
+    vi.useFakeTimers()
+    render(<DiyaProvider><Host /></DiyaProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    expect(screen.getByRole('status').textContent).toContain('Saved')
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss alert' }))
+    expect(screen.queryByRole('status')).toBeNull()
+    // Saved again while the first one is still leaving.
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    expect(screen.getByRole('status').textContent).toContain('Saved')
+    await act(async () => { animations.forEach((animation) => animation.finish()); vi.advanceTimersByTime(2000) })
+    expect(screen.getByRole('status').textContent).toContain('Saved')
+    expect(copies()).toHaveLength(0)
+  })
+
+  it('never announces the copy or lets it take focus or clicks', () => {
+    webAnimations()
+    render(<DiyaProvider><Toast duration={0} onDismiss={() => {}} action={{ label: 'Undo', onClick: () => {} }}>Archived</Toast></DiyaProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss alert' }))
+    const [copy] = copies()
+    expect(copy.inert).toBe(true)
+    expect(copy.style.pointerEvents).toBe('none')
+    for (const element of [copy, ...Array.from(copy.querySelectorAll('*'))]) {
+      const names = Array.from(element.attributes).map((attribute) => attribute.name)
+      expect(names.filter((name) => name === 'id' || name === 'role' || (name.startsWith('aria-') && !(element === copy && name === 'aria-hidden')))).toEqual([])
+    }
+    // Only the real toast is announced; the host keeps it mounted here.
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: 'Undo' })).toHaveLength(1)
+  })
+
+  it('removes the copy when its exit ends, or after a second at most', async () => {
+    const animations = webAnimations()
+    vi.useFakeTimers()
+    const { unmount } = render(<DiyaProvider><Toast duration={0} onDismiss={() => {}}>Saved</Toast></DiyaProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss alert' }))
+    expect(copies()).toHaveLength(1)
+    await act(async () => { animations[0].finish() })
+    expect(copies()).toHaveLength(0)
+    unmount()
+    render(<DiyaProvider><Toast duration={0} onDismiss={() => {}}>Saved</Toast></DiyaProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss alert' }))
+    expect(copies()).toHaveLength(1)
+    act(() => { vi.advanceTimersByTime(1000) })
+    expect(copies()).toHaveLength(0)
+  })
+
+  it('makes no copy when the exit takes no time, or without Web Animations', () => {
+    webAnimations('0s')
+    render(<DiyaProvider><Toast duration={0} onDismiss={() => {}}>Saved</Toast></DiyaProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss alert' }))
+    expect(copies()).toHaveLength(0)
+    delete (Element.prototype as { animate?: unknown }).animate
+    render(<DiyaProvider><Toast duration={0} onDismiss={() => {}}>Again</Toast></DiyaProvider>)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Dismiss alert' })[1])
+    expect(copies()).toHaveLength(0)
+  })
+})

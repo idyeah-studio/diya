@@ -3249,3 +3249,16 @@
   transition-duration: var(--diya-internal-exit-medium);
   transition-timing-function: var(--diya-ease-exit);
 }
+
+/* Toast rises 12px from its edge. Its exit plays on a copy, once onDismiss has run. */
+.diya-root .diya-toast-region {
+  transition-property: opacity, translate;
+  transition-duration: var(--diya-internal-duration-slow);
+  transition-timing-function: var(--diya-ease-enter);
+}
+@starting-style {
+  .diya-root .diya-toast-region {
+    opacity: 0;
+    translate: 0 var(--diya-internal-motion-distance-edge);
+  }
+}

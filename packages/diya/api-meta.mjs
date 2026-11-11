@@ -382,7 +382,7 @@ export const items = {
       '--diya-color-success', '--diya-color-success-fill', '--diya-color-success-on-fill',
       '--diya-color-surface', '--diya-color-text', '--diya-color-warning', '--diya-color-warning-fill',
       '--diya-color-warning-on-fill', '--diya-corner-scale', '--diya-shadow-raised', '--diya-text-body',
-      '--diya-text-caption'],
+      '--diya-text-caption', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit'],
     messages: 'toast',
   },
   progress: {
