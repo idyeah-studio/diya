@@ -54,6 +54,85 @@ describe('DiyaProvider theme', () => {
   })
 })
 
+describe('DiyaProvider motion', () => {
+  function Motion() {
+    return <output>{useDiyaAppearance().motion}</output>
+  }
+  /** A matchMedia stand-in that answers only the Reduce Motion query, which the test can flip. */
+  function mockReduceMotion(reduce: boolean) {
+    const listeners = new Set<() => void>()
+    const state = { reduce }
+    vi.stubGlobal('matchMedia', vi.fn((media: string) => ({
+      get matches() { return media === '(prefers-reduced-motion: reduce)' && state.reduce },
+      media,
+      addEventListener: (_: string, fn: () => void) => listeners.add(fn),
+      removeEventListener: (_: string, fn: () => void) => listeners.delete(fn),
+    })))
+    return (next: boolean) => { state.reduce = next; listeners.forEach(fn => fn()) }
+  }
+  const roots = (container: HTMLElement) => [...container.querySelectorAll('.diya-root')].map(root => root.getAttribute('data-motion'))
+
+  it('defaults to system, and reports full motion', () => {
+    mockReduceMotion(false)
+    const { container } = render(<DiyaProvider><Motion /></DiyaProvider>)
+    expect(roots(container)).toEqual(['system'])
+    expect(screen.getByRole('status').textContent).toBe('full')
+  })
+
+  it('follows the reader’s Reduce Motion setting under system', () => {
+    const flip = mockReduceMotion(true)
+    render(<DiyaProvider><Motion /></DiyaProvider>)
+    expect(screen.getByRole('status').textContent).toBe('reduced')
+    act(() => flip(false))
+    expect(screen.getByRole('status').textContent).toBe('full')
+    act(() => flip(true))
+    expect(screen.getByRole('status').textContent).toBe('reduced')
+  })
+
+  it('reports reduced and off as set, whatever the OS says', () => {
+    mockReduceMotion(false)
+    const { container } = render(<><DiyaProvider motion="reduced"><Motion /></DiyaProvider><DiyaProvider motion="off"><Motion /></DiyaProvider></>)
+    expect(roots(container)).toEqual(['reduced', 'off'])
+    expect(screen.getAllByRole('status').map(node => node.textContent)).toEqual(['reduced', 'off'])
+  })
+
+  it('inherits the parent’s setting, and a nested motion wins inside it', () => {
+    mockReduceMotion(true)
+    const { container } = render(
+      <DiyaProvider motion="off">
+        <DiyaProvider theme="dark"><Motion /></DiyaProvider>
+        <DiyaProvider motion="system"><Motion /></DiyaProvider>
+      </DiyaProvider>,
+    )
+    expect(roots(container)).toEqual(['off', 'off', 'system'])
+    expect(screen.getAllByRole('status').map(node => node.textContent)).toEqual(['off', 'reduced'])
+  })
+
+  it('renders data-motion over a passed-through attribute', () => {
+    const { container } = render(<DiyaProvider {...{ 'data-motion': 'off' }}>Text</DiyaProvider>)
+    expect(roots(container)).toEqual(['system'])
+  })
+
+  it('hydrates without a mismatch when the reader asks for less motion', async () => {
+    const { renderToString } = await import('react-dom/server')
+    const { hydrateRoot } = await import('react-dom/client')
+    const app = <DiyaProvider><DiyaProvider motion="reduced"><Motion /></DiyaProvider><Motion /></DiyaProvider>
+    const host = document.createElement('div')
+    host.innerHTML = renderToString(app)
+    expect(roots(host)).toEqual(['system', 'reduced'])
+    expect([...host.querySelectorAll('output')].map(node => node.textContent)).toEqual(['reduced', 'full'])
+    document.body.append(host)
+    mockReduceMotion(true)
+    const errors = vi.spyOn(console, 'error')
+    let root: ReturnType<typeof hydrateRoot> | undefined
+    await act(async () => { root = hydrateRoot(host, app) })
+    expect(errors).not.toHaveBeenCalled()
+    expect([...host.querySelectorAll('output')].map(node => node.textContent)).toEqual(['reduced', 'reduced'])
+    act(() => root!.unmount())
+    host.remove()
+  })
+})
+
 describe('DiyaProvider brandColor', () => {
   const vars = (root: Element) => Object.fromEntries(['accent', 'accent-text', 'accent-soft', 'accent-ink'].flatMap(name =>
     (['light', 'dark'] as const).map(theme => [`${name}-${theme}`, (root as HTMLElement).style.getPropertyValue(`--diya-internal-${name}-${theme}`)])))

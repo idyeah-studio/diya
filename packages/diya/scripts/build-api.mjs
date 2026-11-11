@@ -95,6 +95,9 @@ function describeProp(symbol, defaults) {
   // The checker orders literal unions by creation; keep the order the source wrote.
   if (values && resolved.node && ts.isUnionTypeNode(resolved.node)) prop.type = values.map(value => JSON.stringify(value)).join(' | ')
   if (Object.hasOwn(defaults, symbol.name)) prop.default = defaults[symbol.name]
+  // `@since` in the JSDoc: a prop added after its component.
+  const since = symbol.getJsDocTags(checker).find(tag => tag.name === 'since')
+  if (since) prop.since = ts.displayPartsToString(since.text).trim()
   return prop
 }
 

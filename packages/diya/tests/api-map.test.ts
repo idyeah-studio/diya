@@ -9,7 +9,7 @@ import { exportSources, styleTokens } from './style-tokens'
 const root = process.cwd()
 const work = mkdtempSync(join(tmpdir(), 'diya-api-'))
 
-type Prop = { type: string; required: boolean; description?: string; values?: (string | number)[]; default?: unknown }
+type Prop = { type: string; required: boolean; description?: string; values?: (string | number)[]; default?: unknown; since?: string }
 type Mode = { when: Record<string, unknown>; default?: true; props: Record<string, Prop> }
 type Accepts = 'any' | string[]
 type Slot = { accepts: Accepts; content?: string[]; multiple?: boolean; as?: string }
@@ -300,6 +300,7 @@ describe('API map', () => {
     expect(api.tokens['--diya-color-scrim'].defaults).toEqual({ light: '#00000088', dark: '#00000088' })
   })
 
+
   it('describes every messages namespace and key', async () => {
     const { defaultMessages } = await import(/* @vite-ignore */ resolve(root, 'dist/index.js'))
     expect(Object.keys(api.messages).sort()).toEqual(Object.keys(defaultMessages).sort())
@@ -378,6 +379,12 @@ describe('API map', () => {
     expect(props.theme.values).toEqual(['light', 'dark', 'system'])
     expect(props.theme.default).toBe('system')
     expect(props.surface.default).toBe(true)
+    // Inherited, like locale: values, no default, and the version that added it.
+    expect(props.motion).toMatchObject({ type: '"system" | "reduced" | "off"', required: false, values: ['system', 'reduced', 'off'], since: '1.1.0' })
+    expect(props.motion).not.toHaveProperty('default')
+    expect(props.locale).not.toHaveProperty('default')
+    expect(Object.entries(props).filter(([, prop]) => prop.since).map(([name]) => name)).toEqual(['motion'])
+    expect(api.types.DiyaAppearance).toContain('motion: "full" | "reduced" | "off";')
   })
 
   // Regenerates the map from the TypeScript program, which is slow on shared CI runners.

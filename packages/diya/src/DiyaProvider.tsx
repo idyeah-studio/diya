@@ -20,11 +20,18 @@ export type DiyaAppearance = {
   fontFamily: string
   /** The accent tokens for the theme in effect, as hex. */
   brand: DiyaBrandTokens
+  /** How much DIYA moves: 'full', 'reduced' (fades only) or 'off'. With `motion="system"` it is 'full' on the server and follows the reader's Reduce Motion setting from mount. */
+  motion: 'full' | 'reduced' | 'off'
 }
-const AppearanceContext = createContext<DiyaAppearance>({ theme: 'light', glass: false, fontFamily: DEFAULT_FONT_FAMILY, brand: DEFAULT_BRAND.light })
+const AppearanceContext = createContext<DiyaAppearance>({ theme: 'light', glass: false, fontFamily: DEFAULT_FONT_FAMILY, brand: DEFAULT_BRAND.light, motion: 'full' })
+type MotionSetting = 'system' | 'reduced' | 'off'
+// The motion setting in effect, which a nested provider inherits.
+const MotionContext = createContext<MotionSetting>('system')
 export function useDiyaPortal() { return useContext(PortalContext) }
-/** The nearest provider's resolved theme, Glass, font and brand accent. */
+/** The nearest provider's resolved theme, Glass, font, brand accent and motion. */
 export function useDiyaAppearance() { return useContext(AppearanceContext) }
+/** How much DIYA moves inside the nearest provider: 'full', 'reduced' or 'off'. */
+export function useDiyaMotion() { return useContext(AppearanceContext).motion }
 const MessagesContext = createContext<{ overrides: DiyaMessagesInput; locale?: string }>({ overrides: {} })
 /** A nested provider adds to its parent's strings; a key set to undefined keeps the inherited one. */
 function mergeMessages(parent: DiyaMessagesInput, own: DiyaMessagesInput | undefined): DiyaMessagesInput {
@@ -46,17 +53,23 @@ export function useDiyaMessages<K extends keyof DiyaMessages>(component: K, defa
 /** BCP 47 locale for dates and numbers. */
 export function useDiyaLocale() { return useContext(MessagesContext).locale ?? 'en-US' }
 
-// theme="system" is pure CSS (prefers-color-scheme); this only tells JavaScript which one won.
-const DARK_QUERY = '(prefers-color-scheme: dark)'
-const media = () => (typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia(DARK_QUERY) : undefined)
-function subscribeToScheme(onChange: () => void) {
-  const query = media()
-  query?.addEventListener?.('change', onChange)
-  return () => query?.removeEventListener?.('change', onChange)
+// theme="system" and motion="system" are pure CSS (prefers-color-scheme, prefers-reduced-motion);
+// this only tells JavaScript which one won. The server, and hydration, assume light and full motion.
+function mediaQuery(query: string) {
+  const list = () => (typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia(query) : undefined)
+  return {
+    subscribe(onChange: () => void) {
+      const media = list()
+      media?.addEventListener?.('change', onChange)
+      return () => media?.removeEventListener?.('change', onChange)
+    },
+    matches: () => list()?.matches ?? false,
+  }
 }
-const ignoreScheme = () => () => {}
-const prefersDark = () => media()?.matches ?? false
-const serverPrefersDark = () => false
+const darkScheme = mediaQuery('(prefers-color-scheme: dark)')
+const reducedMotion = mediaQuery('(prefers-reduced-motion: reduce)')
+const ignoreMedia = () => () => {}
+const onServer = () => false
 
 export type DiyaProviderProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
   /** The app or section that uses DIYA components; popups, tooltips and toasts render only inside a provider. */
@@ -75,6 +88,11 @@ export type DiyaProviderProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'>
   messages?: DiyaMessagesInput
   /** Locale for dates and numbers, e.g. 'en-GB'. Defaults to the parent provider's, then 'en-US'. */
   locale?: string
+  /**
+   * How much DIYA moves. 'system' animates and follows the reader's Reduce Motion setting; 'reduced' never slides or scales, only fades; 'off' changes everything at once, with 1.0's timing. Defaults to the parent provider's, then 'system'.
+   * @since 1.1.0
+   */
+  motion?: 'system' | 'reduced' | 'off'
   /** Router link for every DIYA item with an `href` (Side Navigation, Breadcrumbs, Menu, Button), such as Next.js `Link`. Defaults to a plain anchor; a nested provider inherits it. */
   linkComponent?: DiyaLinkComponent
   /** Extra class on the provider's wrapper element. */
@@ -83,23 +101,27 @@ export type DiyaProviderProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'>
   style?: CSSProperties
 }
 /** Scoped appearance; no document mutation, cookies, network calls or global CSS. */
-export const DiyaProvider = forwardRef<HTMLDivElement, DiyaProviderProps>(function DiyaProvider({ children, theme = 'system', surface = true, glass = false, brandColor, fontFamily = DEFAULT_FONT_FAMILY, messages, locale, linkComponent, className, style, ...rest }, ref) {
+export const DiyaProvider = forwardRef<HTMLDivElement, DiyaProviderProps>(function DiyaProvider({ children, theme = 'system', surface = true, glass = false, brandColor, fontFamily = DEFAULT_FONT_FAMILY, messages, locale, motion, linkComponent, className, style, ...rest }, ref) {
   const [portal, setPortal] = useState<HTMLDivElement | null>(null)
   const parent = useContext(MessagesContext)
   const parentLink = useContext(LinkComponentContext)
   const text = useMemo(() => ({ overrides: mergeMessages(parent.overrides, messages), locale: locale ?? parent.locale }), [parent, messages, locale])
-  const dark = useSyncExternalStore(theme === 'system' ? subscribeToScheme : ignoreScheme, prefersDark, serverPrefersDark)
+  const dark = useSyncExternalStore(theme === 'system' ? darkScheme.subscribe : ignoreMedia, darkScheme.matches, onServer)
   const resolved = theme === 'system' ? (dark ? 'dark' : 'light') : theme
+  const parentMotion = useContext(MotionContext)
+  const motionSetting = motion ?? parentMotion
+  const reduce = useSyncExternalStore(motionSetting === 'system' ? reducedMotion.subscribe : ignoreMedia, reducedMotion.matches, onServer)
+  const resolvedMotion: DiyaAppearance['motion'] = motionSetting === 'system' ? (reduce ? 'reduced' : 'full') : motionSetting
   const brandKey = typeof brandColor === 'object' ? `${brandColor.light}|${brandColor.dark}` : brandColor
   const brand = useMemo(() => (brandColor === undefined ? DEFAULT_BRAND : resolveBrand(brandColor)), [brandKey])
-  const appearance = useMemo(() => ({ theme: resolved, glass, fontFamily, brand: brand[resolved] }), [resolved, glass, fontFamily, brand])
+  const appearance = useMemo(() => ({ theme: resolved, glass, fontFamily, brand: brand[resolved], motion: resolvedMotion }), [resolved, glass, fontFamily, brand, resolvedMotion])
   const tokens = {
     '--diya-font': fontFamily,
     ...accentVariables(brand),
     ...style,
   } as CSSProperties
-  return <div {...rest} ref={ref} className={cx('diya-root', className)} data-theme={theme} data-glass={String(glass)} data-surface={String(surface)} style={tokens}>
-    <AppearanceContext.Provider value={appearance}><MessagesContext.Provider value={text}><PortalContext.Provider value={portal}><LinkComponentContext.Provider value={linkComponent ?? parentLink}>{children}</LinkComponentContext.Provider><div className="diya-portal-root" ref={setPortal} /></PortalContext.Provider></MessagesContext.Provider></AppearanceContext.Provider>
+  return <div {...rest} ref={ref} className={cx('diya-root', className)} data-theme={theme} data-glass={String(glass)} data-surface={String(surface)} data-motion={motionSetting} style={tokens}>
+    <AppearanceContext.Provider value={appearance}><MotionContext.Provider value={motionSetting}><MessagesContext.Provider value={text}><PortalContext.Provider value={portal}><LinkComponentContext.Provider value={linkComponent ?? parentLink}>{children}</LinkComponentContext.Provider><div className="diya-portal-root" ref={setPortal} /></PortalContext.Provider></MessagesContext.Provider></MotionContext.Provider></AppearanceContext.Provider>
   </div>
 })
 

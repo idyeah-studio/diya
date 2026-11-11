@@ -154,7 +154,8 @@
         "required": { "type": "boolean" },
         "description": { "type": "string" },
         "values": { "type": "array", "items": { "type": ["string", "number"] } },
-        "default": true
+        "default": true,
+        "since": { "type": "string", "description": "The version that added the prop, when it came after its component." }
       }
     },
     "props": { "type": "object", "additionalProperties": { "$ref": "#/$defs/prop" } },
