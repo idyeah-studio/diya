@@ -13,7 +13,7 @@ vi.mock('next/link', () => ({
 }))
 
 describe('the phone catalog sheet', () => {
-  it('opens the full list as a named modal dialog, and Escape returns focus to its key', async () => {
+  it('opens the full list in a Drawer, a named modal dialog, and Escape returns focus to its key', async () => {
     const user = userEvent.setup()
     render(
       <DiyaProvider>
@@ -25,7 +25,10 @@ describe('the phone catalog sheet', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
     await user.click(key)
     const sheet = screen.getByRole('dialog', { name: 'Components' })
-    expect(sheet.getAttribute('aria-modal')).toBe('true')
+    expect(sheet.tagName).toBe('DIALOG')
+    expect((sheet as HTMLDialogElement).open).toBe(true)
+    expect(sheet.classList.contains('diya-drawer-modal')).toBe(true)
+    expect(sheet.getAttribute('data-side')).toBe('left')
     expect(within(within(sheet).getByRole('navigation', { name: 'Choose a component' })).getAllByRole('link')).toHaveLength(29)
     expect(document.activeElement).toBe(within(sheet).getByRole('searchbox', { name: 'Search components' }))
     expect(document.documentElement.dataset.catalogSheet).toBe('open')
@@ -43,7 +46,7 @@ describe('the phone catalog sheet', () => {
       </DiyaProvider>
     )
     await user.click(screen.getByRole('button', { name: 'All components' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close drawer' }))
     expect(screen.queryByRole('dialog')).toBeNull()
     await user.click(screen.getByRole('button', { name: 'All components' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('link', { name: 'Switch' }))

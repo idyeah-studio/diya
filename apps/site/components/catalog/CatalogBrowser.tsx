@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
-import { useEffect, useId, useRef, useState } from 'react'
-import { Search } from '@idyeah/diya'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { Drawer, Search } from '@idyeah/diya'
 import { useCatalogSearch, useListedScreens } from '../CatalogSearchProvider'
 import { useActiveCatalogItem } from '../useActiveCatalogItem'
 import { SidebarFoot } from './SidebarFoot'
@@ -22,17 +22,19 @@ const list = (parts: string[]) => (parts.length > 1 ? `${parts.slice(0, -1).join
  * The catalog's list of components, patterns or screens, with one search
  * across all three: matches from the other areas follow under "In Patterns",
  * "In Screens" (or "In Components"). From 901px it's the sidebar. Below
- * that, a "Browse" button opens it as a full-height sheet, so the page's
- * specimen comes first.
+ * that, an "All components" button opens it in a DIYA Drawer from the left,
+ * so the page's specimen comes first.
  */
 export function CatalogBrowser({ area, current, pro = false }: { area: CatalogListArea; current?: string; pro?: boolean }) {
   const [query, setQuery] = useCatalogSearch(area)
   const [open, setOpen] = useState(false)
   const nav = useRef<HTMLElement>(null)
-  const panel = useRef<HTMLElement>(null)
+  const panel = useRef<HTMLDialogElement>(null)
+  // The Drawer stays mounted until its exit has played; then the sidebar's own markup returns.
+  const [sheet, setSheet] = useState(false)
+  if (open && !sheet) setSheet(true)
   const opener = useRef<HTMLButtonElement>(null)
   const resultsId = useId()
-  const sheetTitle = useId()
   const screens = useListedScreens()
   const groups = (target: CatalogListArea) => (target === 'screens' ? onlyItems(catalogGroups.screens, screens) : catalogGroups[target])
   const own = filterGroups(groups(area), query)
@@ -46,46 +48,42 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
   const status = !query ? '' : `${found.length ? list(found) : count(0, area)} found`
   useActiveCatalogItem(nav, current ?? '', query)
 
+  // The phone sheet is a Drawer: the native modal keeps focus inside and closes on Escape, and
+  // Drawer returns focus to the "All components" key. While it's open, <html> says so, so a
+  // page change chosen from it skips the page transition: the Drawer's exit is the motion.
   useEffect(() => {
     if (!open) return
     const root = document.documentElement
-    const close = (returnFocus: boolean) => {
-      setOpen(false)
-      if (returnFocus) opener.current?.focus()
-    }
-    const focusables = () =>
-      Array.from(panel.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled])') ?? []).filter(
-        (node) => node.getClientRects().length > 0
-      )
     panel.current?.querySelector<HTMLInputElement>('input[type="search"], input')?.focus()
-    const keydown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !event.defaultPrevented) {
-        event.preventDefault()
-        close(true)
-      }
-      if (event.key !== 'Tab') return
-      const nodes = focusables()
-      const first = nodes[0]
-      const last = nodes[nodes.length - 1]
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault()
-        last?.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault()
-        first?.focus()
-      }
-    }
     const wide = window.matchMedia('(min-width: 901px)')
-    const resize = () => wide.matches && close(false)
+    const resize = () => wide.matches && setOpen(false)
+    // The dialog's own cancel closes it too; this covers engines and tests without one.
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && !event.defaultPrevented) setOpen(false) }
     root.dataset.catalogSheet = 'open'
-    document.addEventListener('keydown', keydown)
     wide.addEventListener('change', resize)
+    document.addEventListener('keydown', escape)
     return () => {
       delete root.dataset.catalogSheet
-      document.removeEventListener('keydown', keydown)
       wide.removeEventListener('change', resize)
+      document.removeEventListener('keydown', escape)
     }
   }, [open])
+  useLayoutEffect(() => {
+    if (open || !sheet) return
+    const running = panel.current?.getAnimations?.() ?? []
+    if (!running.length) {
+      setSheet(false)
+      return
+    }
+    let live = true
+    const done = () => { if (live) setSheet(false) }
+    const cap = window.setTimeout(done, 1000)
+    void Promise.allSettled(running.map((animation) => animation.finished)).then(done)
+    return () => {
+      live = false
+      window.clearTimeout(cap)
+    }
+  }, [open, sheet])
 
   const link = (target: CatalogListArea, item: { id: string; title: string; soon?: boolean }) => (
     <Link
@@ -107,6 +105,53 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
     </Link>
   )
 
+  const search = (
+    <div role="search" aria-label={words[area].search}>
+      <Search
+        label={`Search ${words[area].many}`}
+        hideLabel
+        placeholder="Search"
+        shape="pill"
+        size="small"
+        value={query}
+        onValueChange={setQuery}
+        clearable={!!query}
+        aria-controls={resultsId}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape' && query) {
+            setQuery('')
+            event.preventDefault()
+            event.stopPropagation()
+          }
+        }}
+      />
+    </div>
+  )
+  const results = (
+    <>
+      <nav ref={nav} id={resultsId} className="atomic-navigation" aria-label={words[area].nav}>
+        {own.map((group) => (
+          <div role="group" className="atomic-group" key={group.title} aria-label={group.title}>
+            <h2>{group.title}</h2>
+            {group.items.map((item) => link(area, item))}
+          </div>
+        ))}
+        {elsewhere.map((other) => (
+          <div role="group" className="atomic-group catalog-elsewhere" key={other.area} aria-label={`In ${words[other.area].title}`}>
+            <h2>In {words[other.area].title}</h2>
+            {other.items.map((item) => link(other.area, item))}
+          </div>
+        ))}
+        {ownCount === 0 && elsewhere.length === 0 && (
+          <p className="atomic-empty">No components, patterns or screens match “{query.trim()}”.</p>
+        )}
+      </nav>
+      <span className="atomic-search-status" role="status" aria-live="polite">
+        {status}
+      </span>
+    </>
+  )
+
   return (
     <>
       <div className="catalog-browse">
@@ -124,69 +169,23 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
           All {words[area].many}
         </button>
       </div>
-      <aside
-        ref={panel}
-        className={`component-browser atomic-browser${area !== 'components' ? ' pattern-browser' : ''}`}
-        aria-label={open ? undefined : words[area].label}
-        role={open ? 'dialog' : undefined}
-        aria-modal={open || undefined}
-        aria-labelledby={open ? sheetTitle : undefined}
-        data-sheet={open ? 'open' : undefined}
-      >
-        <div className="component-browser-heading">
-          <div className="catalog-browser-title">
-            <div id={sheetTitle} className="catalog-browser-name">{words[area].title}</div>
-            <button type="button" className="catalog-sheet-close" aria-label="Close" onClick={() => {
-              setOpen(false)
-              opener.current?.focus()
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-                <path d="M6 6l12 12M18 6 6 18" />
-              </svg>
-            </button>
-          </div>
-          <div role="search" aria-label={words[area].search}>
-            <Search
-              label={`Search ${words[area].many}`}
-              hideLabel
-              placeholder="Search"
-              shape="pill"
-              size="small"
-              value={query}
-              onValueChange={setQuery}
-              clearable={!!query}
-              aria-controls={resultsId}
-              onKeyDown={(event) => {
-                if (event.key === 'Escape' && query) {
-                  setQuery('')
-                  event.preventDefault()
-                }
-              }}
-            />
-          </div>
-        </div>
-        <nav ref={nav} id={resultsId} className="atomic-navigation" aria-label={words[area].nav}>
-          {own.map((group) => (
-            <div role="group" className="atomic-group" key={group.title} aria-label={group.title}>
-              <h2>{group.title}</h2>
-              {group.items.map((item) => link(area, item))}
+      {sheet ? (
+        <Drawer ref={panel} side="left" open={open} onOpenChange={setOpen} title={words[area].title} className="catalog-sheet atomic-browser">
+          {search}
+          {results}
+        </Drawer>
+      ) : (
+        <aside className={`component-browser atomic-browser${area !== 'components' ? ' pattern-browser' : ''}`} aria-label={words[area].label}>
+          <div className="component-browser-heading">
+            <div className="catalog-browser-title">
+              <div className="catalog-browser-name">{words[area].title}</div>
             </div>
-          ))}
-          {elsewhere.map((other) => (
-            <div role="group" className="atomic-group catalog-elsewhere" key={other.area} aria-label={`In ${words[other.area].title}`}>
-              <h2>In {words[other.area].title}</h2>
-              {other.items.map((item) => link(other.area, item))}
-            </div>
-          ))}
-          {ownCount === 0 && elsewhere.length === 0 && (
-            <p className="atomic-empty">No components, patterns or screens match “{query.trim()}”.</p>
-          )}
-        </nav>
-        <span className="atomic-search-status" role="status" aria-live="polite">
-          {status}
-        </span>
-        <SidebarFoot placement="side" pro={pro} />
-      </aside>
+            {search}
+          </div>
+          {results}
+          <SidebarFoot placement="side" pro={pro} />
+        </aside>
+      )}
     </>
   )
 }
