@@ -258,14 +258,27 @@
 
 /* Destructive: the theme's own red, with the page surface as its text. */
 .diya-root .diya-button[data-variant='destructive'] {
-  --diya-internal-button-fill: var(--diya-color-destructive);
   background: var(--diya-color-destructive);
   color: var(--diya-color-raised);
 }
 
-/* Hover darkens the fill by 12%, as brightness(0.88) did, without a filter. */
-.diya-root .diya-button:not(:disabled, [aria-disabled='true']):hover {
-  background-color: color-mix(in srgb, var(--diya-internal-button-fill, var(--diya-color-accent)) 88%, #000);
+/* Hover: a Solid or Destructive fill moves 10% toward its own label color, so it reads in
+   Light and Dark alike. The tint is a layer over the fill and under the label, so a Button
+   whose background you set yourself (className or style) takes it too. */
+.diya-root .diya-button {
+  isolation: isolate;
+}
+.diya-root .diya-button::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background-color: var(--diya-internal-button-tint, transparent);
+  pointer-events: none;
+}
+.diya-root .diya-button:is([data-variant='solid'], [data-variant='destructive']):not(:disabled, [aria-disabled='true']):hover {
+  --diya-internal-button-tint: color-mix(in srgb, currentColor 10%, transparent);
 }
 
 .diya-root .diya-button[data-variant='outline']:not(:disabled, [aria-disabled='true']):hover,
@@ -982,6 +995,10 @@
     color: ButtonText;
     backdrop-filter: none;
     filter: none;
+  }
+
+  .diya-root .diya-button::after {
+    display: none;
   }
 
   .diya-root .diya-button:disabled,
@@ -3346,9 +3363,10 @@
 }
 
 /* Hover and press. Colors ease over the fast duration; the focus ring never does. Menu items
-   and list options highlight at once, so a list never lags the pointer or the arrow keys. */
+   and list options highlight at once, so a list never lags the pointer or the arrow keys.
+   (scale is listed for Button, the one control here that scales.) */
 .diya-root :is(.diya-button, .diya-tab, .diya-accordion-heading button, .diya-list-row, .diya-dialog-close, .diya-tooltip-trigger, .diya-combobox-toggle, .diya-date-trigger, .diya-site-nav :is(button, a)) {
-  transition-property: background-color, border-color, color, box-shadow;
+  transition-property: background-color, border-color, color, box-shadow, scale;
   transition-duration: var(--diya-internal-duration-fast);
   transition-timing-function: var(--diya-ease-move);
 }
@@ -3358,22 +3376,28 @@
   transition-timing-function: var(--diya-ease-move);
 }
 /* A Button press lands at once and eases back. It shrinks to 0.98, but never more than about
-   2px a side: Button writes the floor for its own width when it's pressed. */
-.diya-root .diya-button {
-  transition-property: background-color, border-color, color, box-shadow, scale;
+   2px a side: Button writes the floor for its own width when it's pressed. Its hover tint
+   eases with the colors. */
+.diya-root .diya-button::after {
+  transition-property: background-color;
+  transition-duration: var(--diya-internal-duration-fast);
+  transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active,
+.diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active::after {
+  transition-duration: 0s;
 }
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active {
   scale: max(var(--diya-internal-motion-scale-press), var(--diya-internal-button-press-floor, 0));
-  transition-duration: 0s;
 }
-/* With nothing scaling, a pressed Solid or Destructive button darkens instead: its ring is
-   about 1:1 on its own fill. */
+/* With nothing scaling, a pressed Solid or Destructive button moves 22% toward its label color
+   instead, which shows in Light and Dark: its ring is about 1:1 on its own fill. */
 .diya-root[data-motion='reduced'] .diya-button:is([data-variant='solid'], [data-variant='destructive']):not(:disabled, [aria-disabled='true']):active {
-  background-color: color-mix(in srgb, var(--diya-internal-button-fill, var(--diya-color-accent)) 76%, #000);
+  --diya-internal-button-tint: color-mix(in srgb, currentColor 22%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
   .diya-root[data-motion='system'] .diya-button:is([data-variant='solid'], [data-variant='destructive']):not(:disabled, [aria-disabled='true']):active {
-    background-color: color-mix(in srgb, var(--diya-internal-button-fill, var(--diya-color-accent)) 76%, #000);
+    --diya-internal-button-tint: color-mix(in srgb, currentColor 22%, transparent);
   }
 }
 

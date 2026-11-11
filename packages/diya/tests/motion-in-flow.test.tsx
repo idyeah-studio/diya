@@ -35,17 +35,34 @@ describe('Button press and hover', () => {
     expect(Number(link.style.getPropertyValue('--diya-internal-button-press-floor'))).toBeCloseTo(1 - 4 / 120, 6)
   })
 
-  it('presses with scale, landing at once, and hovers with a darker fill, not a filter', () => {
-    expect(css).toMatch(/\.diya-button:not\(:disabled, \[aria-disabled='true'\], \[aria-busy='true'\]\):active \{\s*scale: max\(var\(--diya-internal-motion-scale-press\), var\(--diya-internal-button-press-floor, 0\)\);\s*transition-duration: 0s;/)
-    expect(css).toMatch(/\.diya-button:not\(:disabled, \[aria-disabled='true'\]\):hover \{\s*background-color: color-mix\(in srgb, var\(--diya-internal-button-fill, var\(--diya-color-accent\)\) 88%, #000\);\s*\}/)
+  it('presses with scale, landing at once, and eases the release back', () => {
+    expect(css).toMatch(/\.diya-button:not\(:disabled, \[aria-disabled='true'\], \[aria-busy='true'\]\):active \{\s*scale: max\(var\(--diya-internal-motion-scale-press\), var\(--diya-internal-button-press-floor, 0\)\);\s*\}/)
     expect(css).not.toMatch(/filter:\s*brightness/)
+    // Every rule that sets a Button's transition list includes scale, so whichever wins the
+    // cascade, the release eases (a shared list without it once snapped the release back).
+    const lists = [...css.matchAll(/([^{}]*\.diya-button[^{}]*)\{([^{}]*transition-property:[^;]*;)/g)]
+      .filter(([, selector]) => !selector.includes('::after'))
+      .map(([, selector, body]) => ({ selector: selector.trim(), list: /transition-property:([^;]*);/.exec(body)![1] }))
+    expect(lists.length).toBeGreaterThan(0)
+    for (const { selector, list } of lists) expect(list, selector).toContain('scale')
   })
 
-  it('under reduced motion, darkens a pressed Solid or Destructive button instead', () => {
-    const reduced = /\.diya-root\[data-motion='(reduced|system)'\] \.diya-button:is\(\[data-variant='solid'\], \[data-variant='destructive'\]\):not\(:disabled, \[aria-disabled='true'\]\):active \{\s*background-color: color-mix\(in srgb, var\(--diya-internal-button-fill, var\(--diya-color-accent\)\) 76%, #000\);/g
+  it('hovers a Solid or Destructive fill 10% toward its label color, as a layer under the label', () => {
+    expect(css).toMatch(/\.diya-root \.diya-button::after \{\s*content: '';\s*position: absolute;\s*inset: -1px;\s*z-index: -1;\s*border-radius: inherit;\s*background-color: var\(--diya-internal-button-tint, transparent\);/)
+    expect(css).toMatch(/\.diya-root \.diya-button \{\s*isolation: isolate;\s*\}/)
+    expect(css).toMatch(/\.diya-button:is\(\[data-variant='solid'\], \[data-variant='destructive'\]\):not\(:disabled, \[aria-disabled='true'\]\):hover \{\s*--diya-internal-button-tint: color-mix\(in srgb, currentColor 10%, transparent\);\s*\}/)
+    // Nothing on a Solid hover sets the background, so a background from className or style
+    // keeps the tint over it.
+    expect(css).not.toMatch(/\.diya-button:not\(:disabled, \[aria-disabled='true'\]\):hover \{[^}]*background/)
+    expect(css).toMatch(/\.diya-button::after \{\s*transition-property: background-color;\s*transition-duration: var\(--diya-internal-duration-fast\);/)
+  })
+
+  it('under reduced motion, tints a pressed Solid or Destructive button 22% toward its label color', () => {
+    const reduced = /\.diya-root\[data-motion='(reduced|system)'\] \.diya-button:is\(\[data-variant='solid'\], \[data-variant='destructive'\]\):not\(:disabled, \[aria-disabled='true'\]\):active \{\s*--diya-internal-button-tint: color-mix\(in srgb, currentColor 22%, transparent\);/g
     expect([...css.matchAll(reduced)].map((match) => match[1])).toEqual(['reduced', 'system'])
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.diya-root\[data-motion='system'\] \.diya-button/)
   })
+
 })
 
 describe('theme changes', () => {
