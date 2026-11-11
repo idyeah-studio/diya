@@ -274,6 +274,15 @@ describe('the dim behind Dialog and Drawer', () => {
   })
 })
 
+describe('Drawer while it leaves', () => {
+  it('keeps its column layout through the exit, not only while open', () => {
+    // During the exit the dialog is no longer [open] but still displayed: a column layout tied
+    // to [open] put the header beside the body for the 160ms of the slide.
+    expect(bare).toMatch(/\.diya-root \.diya-drawer-modal \{ flex-direction:column; \}/)
+    expect(bare).not.toMatch(/\.diya-drawer-modal\[open\] \{[^}]*flex-direction/)
+  })
+})
+
 describe('enter styles', () => {
   // @starting-style also fires for elements in the first HTML and whenever hidden content is
   // shown again, so it's only for what mounts or opens on demand.
