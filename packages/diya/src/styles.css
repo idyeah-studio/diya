@@ -3498,13 +3498,23 @@
   transition-duration: calc(var(--diya-internal-exit-slow) * var(--diya-internal-motion-travel)), calc(var(--diya-internal-exit-slow) * var(--diya-internal-motion-travel)), var(--diya-internal-exit-slow), 0s;
   transition-delay: 0s, 0s, 0s, var(--diya-internal-exit-slow);
 }
-/* Clips the content while the row grows. The extra 8px all round, given back by the negative
-   margin, leaves room for focus rings at the edges without changing the layout. */
+/* Clips the content only while the row grows or shrinks: once open, wide content, shadows and
+   sticky elements behave as in 1.0. Opening, the clip lifts when the row has grown; closing, it
+   returns at once. The extra 8px all round, given back by the negative margin, leaves room for
+   focus rings at the edges without changing the layout. */
 .diya-root .diya-accordion-body {
   min-height: 0;
-  overflow: hidden;
   margin: -8px;
   padding: 8px;
+  overflow: visible;
+  transition-property: overflow;
+  transition-duration: 0s;
+  transition-delay: calc(var(--diya-internal-duration-slow) * var(--diya-internal-motion-travel));
+  transition-behavior: allow-discrete;
+}
+.diya-root .diya-accordion-content[hidden] > .diya-accordion-body {
+  overflow: hidden;
+  transition-delay: 0s;
 }
 .diya-root .diya-accordion-heading svg {
   flex-shrink: 0;

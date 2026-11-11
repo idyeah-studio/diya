@@ -327,6 +327,19 @@ Tailwind's styles. If you'd rather import DIYA's styles from JavaScript, keep
 the `@layer` line at the top of your CSS and import `@idyeah/diya/styles.css`
 before it.
 
+Tailwind's base styles hide every `[hidden]` element with `!important`, which
+stops Accordion sections from growing and shrinking: they open and close at
+once. To keep their motion, add this after `@import "tailwindcss"`:
+
+```css
+/* Let DIYA keep its closing sections laid out. */
+@layer base {
+  .diya-root .diya-accordion-content[hidden] { display: grid !important; }
+}
+```
+
+The Site Header's phone menu still opens with its motion, but closes at once.
+
 ## Links and routers
 
 Anything DIYA renders from an `href` (Button, Menu items, Breadcrumbs, Side

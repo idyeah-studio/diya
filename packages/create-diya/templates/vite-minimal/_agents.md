@@ -24,7 +24,8 @@ read DIYA's docs before guessing at props.
   pass its `Link` as `linkComponent` there.
 - `src/index.css` names the CSS layer order, then imports DIYA's styles. Keep
   that `@layer` line first. Adding Tailwind v4? The order is already right:
-  put `@import "tailwindcss";` above the DIYA import.
+  put `@import "tailwindcss";` above the DIYA import, and add the `@layer base`
+  rule from DIYA's README (Tailwind CSS) so Accordion sections keep their motion.
 
 ## Conventions
 

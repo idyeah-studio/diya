@@ -131,6 +131,17 @@ describe('Accordion', () => {
     // @starting-style is limited to popups, Toast, Dialog and Drawer: see t0-l1-styles.
     expect(css).toMatch(/\.diya-accordion-heading button\[aria-expanded='true'\] svg \{\s*rotate: 180deg;/)
   })
+
+  it('lets an open section\'s content overflow once it has grown; a closed or closing one clips', () => {
+    const body = css.match(/\.diya-root \.diya-accordion-body \{([^}]*)\}/)![1]
+    expect(body).toMatch(/overflow: visible;/)
+    expect(body).toMatch(/transition-property: overflow;/)
+    expect(body).toMatch(/transition-delay: calc\(var\(--diya-internal-duration-slow\) \* var\(--diya-internal-motion-travel\)\);/)
+    expect(body).toMatch(/transition-behavior: allow-discrete;/)
+    expect(css).toMatch(/\.diya-accordion-content\[hidden\] > \.diya-accordion-body \{\s*overflow: hidden;\s*transition-delay: 0s;\s*\}/)
+    // No rule clips an open section for good, as the first 1.1 draft did.
+    expect(css).not.toMatch(/\.diya-root \.diya-accordion-body \{[^}]*overflow: hidden/)
+  })
 })
 
 describe('Progress and loading rows', () => {
