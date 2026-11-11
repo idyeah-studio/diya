@@ -65,11 +65,10 @@
   background: var(--material-raised, var(--diya-color-surface));
   box-shadow: var(--diya-shadow-raised);
   overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color var(--site-duration-fast) var(--site-ease-move), box-shadow var(--site-duration-fast) var(--site-ease-move);
 }
 :where(html[data-catalog='true']) .screens-card:hover {
   border-color: var(--diya-color-line);
-  transform: translateY(-2px);
 }
 :where(html[data-catalog='true']) .screens-card:has(.screens-card-link:focus-visible) {
   outline: 2px solid var(--diya-color-text);
@@ -88,7 +87,7 @@
   height: 100%;
   object-fit: cover;
   object-position: top center;
-  transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition: transform var(--site-duration-slow) var(--site-ease-enter);
 }
 :where(html[data-catalog='true']) .screens-card:hover .screens-thumb {
   transform: scale(1.02);

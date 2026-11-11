@@ -1,0 +1,14 @@
+/* The site's motion: the values DIYA 1.1 ships as public tokens
+   (--diya-duration-fast|medium|slow, --diya-ease-enter|exit|move), on :root
+   so the site chrome, the catalog and view transitions can all read them.
+   When 1.1 lands, these alias the package tokens and the site keeps no
+   timing of its own. The page duration stays site-only. */
+:root {
+  --site-duration-fast: 120ms;
+  --site-duration-medium: 160ms;
+  --site-duration-slow: 240ms;
+  --site-duration-page: 300ms;
+  --site-ease-enter: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --site-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --site-ease-move: cubic-bezier(0.4, 0, 0.2, 1);
+}

@@ -1897,17 +1897,17 @@ h4 {
 }
 @media (prefers-reduced-motion: no-preference) {
   :where(html[data-catalog='true']) .resource-card .mini-app {
-    transition: transform 0.25s ease;
+    transition: transform var(--site-duration-slow) var(--site-ease-enter);
   }
   :where(html[data-catalog='true']) .poster-link:hover .mini-app {
-    transform: translateY(9px);
+    transform: translateY(4px);
   }
   :where(html[data-catalog='true']) .primary-button,
 :where(html[data-catalog='true']) 
   .rail-group button {
     transition:
-      background 0.15s,
-      color 0.15s;
+      background var(--site-duration-fast) var(--site-ease-move),
+      color var(--site-duration-fast) var(--site-ease-move);
   }
 }
 @media (min-width: 1500px) {
