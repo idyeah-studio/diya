@@ -5,7 +5,7 @@ import { Drawer, Search } from '@idyeah/diya'
 import { useCatalogSearch, useListedScreens } from '../CatalogSearchProvider'
 import { useActiveCatalogItem } from '../useActiveCatalogItem'
 import { useCatalogTransition } from './CatalogTransitions'
-import { SidebarFoot } from './SidebarFoot'
+import { SidebarFoot, type FootPage } from './SidebarFoot'
 import { catalogGroups, catalogHref, filterGroups, onlyItems, type CatalogListArea } from './catalog-index'
 import '../AtomicSidebar.css'
 
@@ -26,7 +26,8 @@ const list = (parts: string[]) => (parts.length > 1 ? `${parts.slice(0, -1).join
  * that, an "All components" button opens it in a DIYA Drawer from the left,
  * so the page's specimen comes first.
  */
-export function CatalogBrowser({ area, current, pro = false }: { area: CatalogListArea; current?: string; pro?: boolean }) {
+/** `page` marks a foot entry (Motion, Relight) as the current page instead of an item. */
+export function CatalogBrowser({ area, current, page }: { area: CatalogListArea; current?: string; page?: FootPage }) {
   const [query, setQuery] = useCatalogSearch(area)
   const [open, setOpen] = useState(false)
   const nav = useRef<HTMLElement>(null)
@@ -195,7 +196,7 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
             {search}
           </div>
           {results}
-          <SidebarFoot placement="side" pro={pro} />
+          <SidebarFoot placement="side" page={page} />
         </aside>
       )}
     </>

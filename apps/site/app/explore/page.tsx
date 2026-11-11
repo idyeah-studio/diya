@@ -30,6 +30,7 @@ import { catalogIsOpen, resolveCatalogRoute, type CatalogRoute } from '../../lib
 import { catalogPath, catalogTitle } from '../../lib/catalog-route-meta'
 import { CatalogFrame } from '../../components/catalog/CatalogFrame'
 import { ProPage } from '../../components/catalog/ProPage'
+import { MotionPage } from '../../components/catalog/MotionPage'
 import { ScreensLibrary } from '../../components/screens/ScreensLibrary'
 import { builtWith, readScreenSource } from '../../components/screens/screen-source'
 import { screenById } from '../../components/screens/screens-data'
@@ -60,6 +61,7 @@ export default async function Explore({ searchParams }: Props) {
 
 function CatalogPage({ route, want }: { route: Exclude<CatalogRoute, { area: 'skills' }>; want: string | null }) {
   if (route.area === 'pro') return <ProPage />
+  if (route.area === 'motion') return <MotionPage />
   if (route.area === 'screens') return <ScreensPage id={route.id} want={want} />
   const initial = {
     area: route.area,

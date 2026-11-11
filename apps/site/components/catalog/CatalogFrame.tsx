@@ -35,7 +35,7 @@ export function CatalogFrame({
       <ReferencePanel path={path} />
       <OrielDoor path={path} />
       <aside className="catalog-below" aria-label="Install, requests and Relight">
-        <SidebarFoot placement="below" pro={area === 'pro'} />
+        <SidebarFoot placement="below" page={area === 'pro' || area === 'motion' ? area : undefined} />
       </aside>
       <SiteFooter />
     </div>

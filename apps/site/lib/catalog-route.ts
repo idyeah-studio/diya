@@ -51,7 +51,7 @@ export const patternIds = [
   'empty-state',
 ] as const
 
-export type CatalogArea = 'patterns' | 'components' | 'screens' | 'skills' | 'pro'
+export type CatalogArea = 'patterns' | 'components' | 'screens' | 'skills' | 'pro' | 'motion'
 export type CatalogRoute =
   | { area: 'components'; id: (typeof componentIds)[number] }
   | { area: 'patterns'; id: (typeof patternIds)[number] }
@@ -59,6 +59,8 @@ export type CatalogRoute =
   | { area: 'screens'; id: string | null }
   | { area: 'skills' }
   | { area: 'pro' }
+  /** How DIYA moves: the tokens, live, and the settings. Not an item, so the counts don't change. */
+  | { area: 'motion' }
 type CatalogRouteResult = CatalogRoute | { redirect: string }
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -75,7 +77,7 @@ export function catalogIsOpen(
 }
 
 export function catalogArea(area: string | null | undefined): CatalogArea {
-  return area === 'components' || area === 'screens' || area === 'skills' || area === 'pro' ? area : 'patterns'
+  return area === 'components' || area === 'screens' || area === 'skills' || area === 'pro' || area === 'motion' ? area : 'patterns'
 }
 
 /** api.json ids whose catalog page goes by another name, or shows them on a sibling's page. */
@@ -98,9 +100,9 @@ export function resolveCatalogRoute(
   const area = catalogArea(params.area)
   // The Relight page's address before it was neutral; shared links still land.
   if (params.area === 'rebuild') return { redirect: '/explore?area=pro' }
-  if (params.area && !['components', 'patterns', 'screens', 'skills', 'pro'].includes(params.area))
+  if (params.area && !['components', 'patterns', 'screens', 'skills', 'pro', 'motion'].includes(params.area))
     return { redirect: '/explore' }
-  if (area === 'skills' || area === 'pro') return { area }
+  if (area === 'skills' || area === 'pro' || area === 'motion') return { area }
 
   if (area === 'screens') {
     if (params.screen === undefined) return { area, id: null }

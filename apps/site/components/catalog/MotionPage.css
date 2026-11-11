@@ -1,0 +1,280 @@
+/* The Motion page (/explore?area=motion). The playground card is the catalog's own (the stage,
+   its control strip and the raised section); everything below it is plain reading at a 680px
+   measure. The lanes' times come only from DIYA's public tokens, worked out by the nested
+   provider, so its `motion` setting and --diya-duration-scale really change them. */
+
+:where(html[data-catalog='true']) .motion-page .component-document-heading > p {
+  max-width: 680px;
+  margin: 4px 0 28px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--diya-color-muted);
+}
+:where(html[data-catalog='true']) .motion-page code {
+  font-family: var(--site-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 14px;
+}
+
+/* The playground */
+:where(html[data-catalog='true']) .motion-playground > section {
+  container: motion-stage / inline-size;
+  min-width: 0;
+}
+:where(html[data-catalog='true']) .motion-scope {
+  display: block;
+  color: var(--diya-color-text);
+}
+:where(html[data-catalog='true']) .motion-scope > .diya-portal-root {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+:where(html[data-catalog='true']) .motion-lanes {
+  display: grid;
+  gap: 32px;
+  padding: 32px 0 36px;
+}
+:where(html[data-catalog='true']) .motion-play {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+:where(html[data-catalog='true']) .motion-play p {
+  flex: 1 1 260px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--diya-color-text);
+}
+:where(html[data-catalog='true']) .motion-play p span {
+  color: var(--diya-color-muted);
+}
+:where(html[data-catalog='true']) .motion-groups {
+  display: grid;
+  gap: 32px;
+}
+@container motion-stage (min-width: 720px) {
+  :where(html[data-catalog='true']) .motion-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 48px;
+  }
+}
+:where(html[data-catalog='true']) .motion-group h2 {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--diya-color-muted);
+}
+:where(html[data-catalog='true']) .motion-group ul {
+  display: grid;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:where(html[data-catalog='true']) .motion-group li {
+  display: grid;
+  gap: 12px;
+}
+:where(html[data-catalog='true']) .motion-lane-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+:where(html[data-catalog='true']) .motion-lane-name > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+:where(html[data-catalog='true']) .motion-lane-name code {
+  white-space: nowrap;
+}
+:where(html[data-catalog='true']) .motion-lane-name span {
+  font-size: 14px;
+  color: var(--diya-color-muted);
+}
+:where(html[data-catalog='true']) .motion-curve {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  overflow: visible;
+  fill: none;
+  stroke: var(--diya-color-text);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+:where(html[data-catalog='true']) .motion-curve .motion-curve-box {
+  stroke: var(--diya-color-line);
+  stroke-width: 2;
+}
+
+/* A lane: the track, a tick where the dot ends, and the dot. In: the token's duration on the
+   enter curve. Back out: two-thirds of it on the exit curve, as DIYA's exits do. */
+:where(html[data-catalog='true']) .motion-lane {
+  container-type: inline-size;
+  position: relative;
+  width: 240px;
+  max-width: 100%;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--diya-color-selected);
+}
+:where(html[data-catalog='true']) .motion-dot {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--diya-color-text);
+  transition:
+    translate calc(var(--lane-in) * 2 / 3) var(--lane-exit),
+    opacity calc(var(--lane-in) * 2 / 3) var(--lane-exit);
+}
+:where(html[data-catalog='true']) .motion-lanes[data-played] .motion-dot {
+  transition-duration: var(--lane-in);
+  transition-timing-function: var(--lane-enter);
+}
+:where(html[data-catalog='true']) .motion-dot[data-end] {
+  left: auto;
+  right: 4px;
+  opacity: 0;
+}
+:where(html[data-catalog='true']) .motion-tick {
+  position: absolute;
+  top: 6px;
+  right: 11px;
+  width: 2px;
+  height: 12px;
+  border-radius: 1px;
+  background: var(--diya-color-muted);
+}
+/* Full motion: the dot slides to the tick. */
+:where(html[data-catalog='true']) .motion-lanes[data-mode='full'][data-played] .motion-dot:not([data-end]) {
+  translate: calc(100cqw - 24px) 0;
+}
+/* Reduced: the dot fades out where it is and in at the end, in the same time. */
+:where(html[data-catalog='true']) .motion-lanes[data-mode='reduced'][data-played] .motion-dot:not([data-end]),
+:where(html[data-catalog='true']) .motion-lanes[data-mode='off'][data-played] .motion-dot:not([data-end]) {
+  opacity: 0;
+}
+:where(html[data-catalog='true']) .motion-lanes:is([data-mode='reduced'], [data-mode='off'])[data-played] .motion-dot[data-end] {
+  opacity: 1;
+}
+/* Off: it jumps. */
+:where(html[data-catalog='true']) .motion-lanes[data-mode='off'] .motion-dot {
+  transition: none;
+}
+@container motion-stage (max-width: 639px) {
+  :where(html[data-catalog='true']) .motion-lane {
+    width: 100%;
+  }
+}
+
+/* The reading below the card */
+:where(html[data-catalog='true']) .motion-sections {
+  display: grid;
+  gap: 48px;
+  max-width: 680px;
+  margin: 48px 0 0;
+}
+:where(html[data-catalog='true']) .motion-sections section {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+:where(html[data-catalog='true']) .motion-sections h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--diya-color-text);
+}
+:where(html[data-catalog='true']) .motion-sections p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--diya-color-text);
+}
+:where(html[data-catalog='true']) .motion-list {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:where(html[data-catalog='true']) .motion-list li {
+  display: grid;
+  gap: 2px;
+  font-size: 16px;
+  line-height: 1.55;
+}
+:where(html[data-catalog='true']) .motion-list b {
+  font-weight: 500;
+}
+:where(html[data-catalog='true']) .motion-list span {
+  color: var(--diya-color-muted);
+}
+
+/* Tokens: name, then value and use; stacked on a phone. */
+:where(html[data-catalog='true']) .motion-tokens {
+  margin: 0;
+  border-top: 1px solid var(--diya-color-line);
+}
+:where(html[data-catalog='true']) .motion-tokens > div {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 4px 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--diya-color-line);
+}
+:where(html[data-catalog='true']) .motion-tokens dt {
+  min-width: 0;
+  padding-top: 2px;
+}
+:where(html[data-catalog='true']) .motion-tokens dt code {
+  white-space: nowrap;
+}
+:where(html[data-catalog='true']) .motion-tokens dd {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+:where(html[data-catalog='true']) .motion-tokens dd > span:last-child {
+  color: var(--diya-color-muted);
+}
+@media (max-width: 640px) {
+  :where(html[data-catalog='true']) .motion-tokens > div {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px 0;
+  }
+}
+
+:where(html[data-catalog='true']) .motion-steps {
+  display: grid;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:where(html[data-catalog='true']) .motion-steps li {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (forced-colors: active) {
+  :where(html[data-catalog='true']) .motion-lane {
+    border: 1px solid CanvasText;
+  }
+  :where(html[data-catalog='true']) .motion-dot,
+  :where(html[data-catalog='true']) .motion-tick {
+    background: CanvasText;
+  }
+}

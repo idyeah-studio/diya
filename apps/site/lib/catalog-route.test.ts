@@ -128,6 +128,15 @@ describe('Catalog route selection', () => {
     })
   })
 
+  it('resolves the Motion page as its own area, which isn\'t an item', () => {
+    expect(catalogArea('motion')).toBe('motion')
+    expect(resolveCatalogRoute({ area: 'motion' })).toEqual({ area: 'motion' })
+    expect(resolveCatalogRoute({ area: 'motion', component: 'button' })).toEqual({ area: 'motion' })
+    expect(catalogPath({ area: 'motion' })).toBe('/explore?area=motion')
+    expect(catalogTitle({ area: 'motion' })).toBe('Motion — DIYA')
+    expect(catalogItemPaths()).not.toContain('/explore?area=motion')
+  })
+
   it('sends the old address, area=rebuild, to area=pro', () => {
     expect(resolveCatalogRoute({ area: 'rebuild' })).toEqual({ redirect: '/explore?area=pro' })
     expect(resolveCatalogRoute({ area: 'rebuild', pattern: 'table' })).toEqual({ redirect: '/explore?area=pro' })

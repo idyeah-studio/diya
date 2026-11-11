@@ -12,7 +12,7 @@ export function ProPage() {
   return (
     <main id="content" className="gallery-study component-library catalog-pro-page" data-area="pro">
       <div className="gallery-study-backdrop" aria-hidden="true" />
-      <AtomicSidebar pro />
+      <AtomicSidebar page="pro" />
       <div className="component-document">
         <article className="rl-page" aria-labelledby="relight-title">
           <header className="rl-head">
