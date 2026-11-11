@@ -64,7 +64,7 @@ html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2p
   background: color-mix(in srgb, var(--site-ground) 86%, transparent);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--diya-color-line) 60%, transparent);
   backdrop-filter: blur(16px) saturate(1.1);
-  transition: opacity var(--site-duration-medium) var(--site-ease-move);
+  transition: opacity var(--diya-duration-medium) var(--diya-ease-move);
 }
 .site-top[data-solid]::before { opacity: 1; }
 .site-top-bar {
@@ -252,7 +252,7 @@ html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2p
     visibility: hidden;
     opacity: 0;
     transform: translateY(-4px);
-    transition: opacity var(--site-duration-medium) var(--site-ease-enter), transform var(--site-duration-medium) var(--site-ease-enter), visibility 0s linear var(--site-duration-medium);
+    transition: opacity var(--diya-duration-medium) var(--diya-ease-enter), transform var(--diya-duration-medium) var(--diya-ease-enter), visibility 0s linear var(--diya-duration-medium);
   }
   .site-top-chip[data-shown] { visibility: visible; opacity: 1; transform: none; transition-delay: 0s; }
 }
@@ -409,7 +409,7 @@ a.site-menu-row:hover, button.site-menu-row:hover { background: var(--diya-color
   color: var(--diya-color-text);
   background: linear-gradient(180deg, color-mix(in srgb, var(--diya-color-raised) 100%, #fff 6%), var(--diya-color-raised));
   box-shadow: inset 0 1px 0 #ffffff26, 0 1px 0 #0006, 0 4px 10px -2px #0008;
-  transition: transform var(--site-duration-fast) var(--site-ease-move);
+  transition: transform var(--diya-duration-fast) var(--diya-ease-move);
 }
 .diya-root[data-theme='light'] .site-chip-key {
   background: linear-gradient(180deg, #fff, #f6f6f3);

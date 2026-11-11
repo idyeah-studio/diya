@@ -80,7 +80,7 @@
   html[data-catalog-sheet='open'][data-catalog='true'] body .catalog-frame main.gallery-study { z-index: 100; }
 }
 @media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
-  html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] { animation: catalog-sheet-in var(--site-duration-slow) var(--site-ease-enter); }
+  html[data-catalog='true'] body .component-browser.atomic-browser[data-sheet='open'] { animation: catalog-sheet-in var(--diya-duration-slow) var(--diya-ease-enter); }
 }
 @keyframes catalog-sheet-in {
   from { opacity: 0; transform: translateY(12px); }

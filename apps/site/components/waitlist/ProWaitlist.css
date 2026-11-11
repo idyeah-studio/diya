@@ -81,7 +81,7 @@
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
-  transition: background-color var(--site-duration-fast) var(--site-ease-move), color var(--site-duration-fast) var(--site-ease-move), border-color var(--site-duration-fast) var(--site-ease-move);
+  transition: background-color var(--diya-duration-fast) var(--diya-ease-move), color var(--diya-duration-fast) var(--diya-ease-move), border-color var(--diya-duration-fast) var(--diya-ease-move);
 }
 .pro-waitlist .rw-pill:hover span {
   background: var(--diya-color-hover);

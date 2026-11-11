@@ -65,7 +65,7 @@
   background: var(--material-raised, var(--diya-color-surface));
   box-shadow: var(--diya-shadow-raised);
   overflow: hidden;
-  transition: border-color var(--site-duration-fast) var(--site-ease-move), box-shadow var(--site-duration-fast) var(--site-ease-move);
+  transition: border-color var(--diya-duration-fast) var(--diya-ease-move), box-shadow var(--diya-duration-fast) var(--diya-ease-move);
 }
 :where(html[data-catalog='true']) .screens-card:hover {
   border-color: var(--diya-color-line);
@@ -87,7 +87,7 @@
   height: 100%;
   object-fit: cover;
   object-position: top center;
-  transition: transform var(--site-duration-slow) var(--site-ease-enter);
+  transition: transform var(--diya-duration-slow) var(--diya-ease-enter);
 }
 :where(html[data-catalog='true']) .screens-card:hover .screens-thumb {
   transform: scale(1.02);
