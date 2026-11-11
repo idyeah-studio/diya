@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Drawer, Search } from '@idyeah/diya'
 import { useCatalogSearch, useListedScreens } from '../CatalogSearchProvider'
 import { useActiveCatalogItem } from '../useActiveCatalogItem'
@@ -71,9 +71,16 @@ export function CatalogBrowser({ area, current, page }: { area: CatalogListArea;
       document.removeEventListener('keydown', escape)
     }
   }, [open])
-  useLayoutEffect(() => {
+  // A passive effect, so it runs after the Drawer's own effect has closed the dialog: by then its
+  // exit is running, and the sheet stays mounted until it ends. Closed without a page change
+  // (Escape, the close button), focus goes back to "All components": Safari would leave it on
+  // <body>, since it never focused the button that opened the sheet.
+  useEffect(() => {
     if (open || !sheet) return
-    const running = panel.current?.getAnimations?.() ?? []
+    const node = panel.current
+    const active = document.activeElement
+    if (!active || active === document.body || node?.contains(active)) opener.current?.focus()
+    const running = node?.getAnimations?.() ?? []
     if (!running.length) {
       setSheet(false)
       return
