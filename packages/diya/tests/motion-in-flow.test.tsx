@@ -77,7 +77,7 @@ describe('hover and selected colors', () => {
       '.diya-button', '.diya-tab', '.diya-accordion-heading button', '.diya-list-row', '.diya-dialog-close', '.diya-site-nav :is(button, a)',
       '.diya-text-field-control', '.diya-select-control', '.diya-combobox-control',
       '.diya-side-navigation > :where(div) > :is(a, button)', '.diya-breadcrumbs a', '.diya-text-link',
-      '.diya-table-sort', '.diya-table-clear', '.diya-table-expander button', '.diya-table tbody td',
+      '.diya-table-sort', '.diya-table-clear', '.diya-table-expander button', '.diya-table tbody td:not(:where(',
       '.diya-calendar-grid button', '.diya-calendar-heading button', '.diya-inline-calendar button',
       '.diya-tag button', '.diya-alert-dismiss', '.diya-text-field-clear', '.diya-upload-drop', '.diya-wizard-steps li > span',
     ]

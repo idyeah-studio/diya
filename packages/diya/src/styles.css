@@ -3411,7 +3411,7 @@
   transition-duration: var(--diya-internal-duration-fast);
   transition-timing-function: var(--diya-ease-move);
 }
-.diya-root .diya-table tbody td {
+.diya-root .diya-table tbody td:not(:where([class*='diya-']:not([class*='diya-table']), .diya-table [class*='diya-']:not([class*='diya-table']) *)) {
   transition-property: background-color;
   transition-duration: var(--diya-internal-duration-fast);
   transition-timing-function: var(--diya-ease-move);
