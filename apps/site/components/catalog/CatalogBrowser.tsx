@@ -48,7 +48,7 @@ export function CatalogBrowser({ area, current, page }: { area: CatalogListArea;
   const ownCount = own.reduce((total, group) => total + group.items.length, 0)
   const found = [...(ownCount ? [count(ownCount, area)] : []), ...elsewhere.map((other) => count(other.items.length, other.area))]
   const status = !query ? '' : `${found.length ? list(found) : count(0, area)} found`
-  useActiveCatalogItem(nav, current ?? '', query)
+  useActiveCatalogItem(nav, current ?? '', query, area)
   const armTransition = useCatalogTransition()
 
   // The phone sheet is a Drawer: the native modal keeps focus inside and closes on Escape, and
@@ -99,7 +99,15 @@ export function CatalogBrowser({ area, current, page }: { area: CatalogListArea;
         onClick={(event) => {
           // A sidebar choice plays the page transition; one from the phone sheet doesn't, since
           // the Drawer's exit is that change's motion (UX-07). Modified clicks open a new tab.
-          if (!open && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0) armTransition()
+          if (!open && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0) {
+          // A highlight scrolled out of the list's view doesn't fly in from outside it: the new
+          // one simply appears.
+          const mark = nav.current?.querySelector<HTMLElement>('.catalog-selected-mark')
+          const box = nav.current?.getBoundingClientRect()
+          const at = mark?.getBoundingClientRect()
+          if (mark && box && at && (at.top < box.top || at.bottom > box.bottom)) mark.style.viewTransitionName = 'none'
+          armTransition()
+        }
           setOpen(false)
         }}
       >
