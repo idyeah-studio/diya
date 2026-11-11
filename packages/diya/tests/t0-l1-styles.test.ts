@@ -266,6 +266,11 @@ describe('the dim behind Dialog and Drawer', () => {
     expect(blurred).toEqual([".diya-root[data-glass='true'] :is(.diya-dialog, .diya-drawer-modal)::backdrop"])
     expect(bare).toMatch(/@supports \(backdrop-filter: blur\(14px\)\) \{[^@]*\.diya-root\[data-glass='true'\] :is\(\.diya-dialog, \.diya-drawer-modal\)::backdrop \{\s*backdrop-filter: blur\(5px\);/)
     for (const { selector, body } of backdrops) expect(body, selector).not.toMatch(/transition[^;]*backdrop-filter/)
+    // Under Glass only the tint fades: the backdrop stays fully opaque, so the blur is at full
+    // strength from the first frame to the last.
+    expect(bare).toMatch(/\.diya-root\[data-glass='true'\] :is\(\.diya-dialog, \.diya-drawer-modal\)::backdrop \{\s*transition-property: background-color, display, overlay;\s*\}/)
+    expect(bare).toMatch(/\.diya-root\[data-glass='true'\] :is\(\.diya-dialog, \.diya-drawer-modal\):not\(\[open\]\)::backdrop \{\s*opacity: 1;\s*background-color: transparent;\s*\}/)
+    expect(bare).toMatch(/@starting-style \{\s*\.diya-root\[data-glass='true'\] :is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop \{\s*opacity: 1;\s*background-color: transparent;/)
   })
 })
 
@@ -276,7 +281,7 @@ describe('enter styles', () => {
 
   it('starts only popups, Toast, an opening Dialog or Drawer and the phone menu', () => {
     expect(startingRules.length).toBeGreaterThan(0)
-    const allowed = /^\.diya-root (\.diya-floating|\.diya-toast-region|\.diya-dialog\[open\]|\.diya-drawer-modal\[open\]|:is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop|\.diya-site-mobile-nav:not\(\[hidden\]\))$/
+    const allowed = /^\.diya-root(\[data-glass='true'\])? (\.diya-floating|\.diya-toast-region|\.diya-dialog\[open\]|\.diya-drawer-modal\[open\]|:is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop|\.diya-site-mobile-nav:not\(\[hidden\]\))$/
     expect(startingRules.filter((selector) => !allowed.test(selector))).toEqual([])
   })
 

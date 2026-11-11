@@ -3365,6 +3365,23 @@
     opacity: 0;
   }
 }
+/* Under Glass the blur is there from the first frame and stays still; only the tint fades in
+   and out, so the page never shows sharp and blurred at once. */
+@supports (backdrop-filter: blur(14px)) {
+  .diya-root[data-glass='true'] :is(.diya-dialog, .diya-drawer-modal)::backdrop {
+    transition-property: background-color, display, overlay;
+  }
+  .diya-root[data-glass='true'] :is(.diya-dialog, .diya-drawer-modal):not([open])::backdrop {
+    opacity: 1;
+    background-color: transparent;
+  }
+  @starting-style {
+    .diya-root[data-glass='true'] :is(.diya-dialog, .diya-drawer-modal)[open]::backdrop {
+      opacity: 1;
+      background-color: transparent;
+    }
+  }
+}
 
 /* Hover and press. Colors ease over the fast duration; the focus ring never does. Menu items
    and list options highlight at once, so a list never lags the pointer or the arrow keys.
