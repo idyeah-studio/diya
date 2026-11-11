@@ -631,6 +631,18 @@ const family = status => {
 const readable = ['--diya-color-surface', '--diya-color-recessed', '--diya-color-raised']
 const ink = ['--diya-color-text', '--diya-color-muted', '--diya-color-accent-ink']
 const space = Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map(step => [`--diya-space-${step}`, { group: 'space', kind: 'length', pairsWith: [] }]))
+// Motion, added in 1.1. Durations and curves are the same in both themes. DiyaProvider `motion`
+// switches motion off or down to fades without touching these, so they have no setBy.
+const v1_1 = { since: '1.1.0' }
+const motion = {
+  '--diya-duration-fast': { group: 'motion', kind: 'duration', pairsWith: [], ...v1_1 },
+  '--diya-duration-medium': { group: 'motion', kind: 'duration', pairsWith: [], ...v1_1 },
+  '--diya-duration-slow': { group: 'motion', kind: 'duration', pairsWith: [], ...v1_1 },
+  '--diya-duration-scale': { group: 'motion', kind: 'number', pairsWith: [], ...v1_1 },
+  '--diya-ease-enter': { group: 'motion', kind: 'easing', pairsWith: [], ...v1_1 },
+  '--diya-ease-exit': { group: 'motion', kind: 'easing', pairsWith: [], ...v1_1 },
+  '--diya-ease-move': { group: 'motion', kind: 'easing', pairsWith: [], ...v1_1 },
+}
 
 export const tokens = {
   '--diya-color-text': { group: 'text', kind: 'color', pairsWith: readable },
@@ -670,4 +682,5 @@ export const tokens = {
   '--diya-radius-control': { group: 'shape', kind: 'length', pairsWith: [] },
   '--diya-radius-surface': { group: 'shape', kind: 'length', pairsWith: [] },
   ...space,
+  ...motion,
 }

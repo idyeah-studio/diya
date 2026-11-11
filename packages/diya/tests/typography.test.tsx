@@ -56,7 +56,7 @@ it('defines the type scale once and sets no reader text below caption', () => {
 })
 
 it('names every custom property as public or --diya-internal-*', () => {
-  const publicTokens = /^--diya-(color-[a-z-]+|shadow-raised|text-(caption|body|large|title|heading|display|hero)|leading-(tight|body)|corner-scale|radius-(control|surface)|space-[1-8]|elevation|brand|font)$/
+  const publicTokens = /^--diya-(color-[a-z-]+|shadow-raised|text-(caption|body|large|title|heading|display|hero)|leading-(tight|body)|corner-scale|radius-(control|surface)|space-[1-8]|elevation|brand|font|duration-(fast|medium|slow|scale)|ease-(enter|exit|move))$/
   const defined = new Set([...css.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]))
   const used = new Set([...css.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1]))
   const names = [...new Set([...defined, ...used])]

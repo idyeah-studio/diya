@@ -54,6 +54,26 @@
   --diya-radius-control: calc(6px * var(--diya-corner-scale, 1));
   /* One corner for every surface that sits in the page: Card, chart cards, Page Header, Form, Table. */
   --diya-radius-surface: calc(16px * var(--diya-corner-scale, 1));
+  /* Motion. Three durations: fast for hover, press and toggles; medium for small popups; slow for
+     dialogs, drawers, toasts and moves. Exits take two-thirds of their enter. Set
+     --diya-duration-scale on the provider or any ancestor to speed everything up or slow it
+     down; 0 turns motion off. */
+  --diya-duration-fast: calc(120ms * var(--diya-duration-scale, 1));
+  --diya-duration-medium: calc(160ms * var(--diya-duration-scale, 1));
+  --diya-duration-slow: calc(240ms * var(--diya-duration-scale, 1));
+  /* Arrive and settle; leave without lingering; move or change on screen. */
+  --diya-ease-enter: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --diya-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --diya-ease-move: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Every motion rule multiplies its duration by this gate, which only motion="off" closes, so no
+     token override can bring motion back. Travel, drift and scale are what Reduce Motion removes. */
+  --diya-internal-motion: 1;
+  --diya-internal-motion-travel: 1;
+  --diya-internal-motion-distance: 4px;
+  --diya-internal-motion-distance-edge: 12px;
+  --diya-internal-motion-scale: 0.97;
+  --diya-internal-motion-scale-dialog: 0.98;
+  --diya-internal-motion-scale-press: 0.98;
   /* Neutral grays. Dark is the base; Light overrides below. Dark sits on a near-black
      ground; raised surfaces lift only slightly and recessed wells sink below it. */
   --diya-color-text: #f1f3f2;
@@ -3153,4 +3173,31 @@
   background: transparent;
   box-shadow: none;
   backdrop-filter: none;
+}
+
+/* Motion settings. motion="reduced", and "system" when the reader asks for less motion: color
+   and opacity still ease, so every change stays visible, but nothing slides or scales.
+   motion="off" also leaves nothing to slide or scale, and closes the gate, so every change is
+   instant. */
+.diya-root[data-motion='reduced'],
+.diya-root[data-motion='off'] {
+  --diya-internal-motion-travel: 0;
+  --diya-internal-motion-distance: 0px;
+  --diya-internal-motion-distance-edge: 0px;
+  --diya-internal-motion-scale: 1;
+  --diya-internal-motion-scale-dialog: 1;
+  --diya-internal-motion-scale-press: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .diya-root[data-motion='system'] {
+    --diya-internal-motion-travel: 0;
+    --diya-internal-motion-distance: 0px;
+    --diya-internal-motion-distance-edge: 0px;
+    --diya-internal-motion-scale: 1;
+    --diya-internal-motion-scale-dialog: 1;
+    --diya-internal-motion-scale-press: 1;
+  }
+}
+.diya-root[data-motion='off'] {
+  --diya-internal-motion: 0;
 }

@@ -189,7 +189,7 @@
       "required": ["group", "kind", "pairsWith", "defaults"],
       "properties": {
         "group": { "type": "string" },
-        "kind": { "type": "string", "examples": ["color", "length", "number", "shadow", "font-family"] },
+        "kind": { "type": "string", "examples": ["color", "length", "number", "shadow", "font-family", "duration", "easing"] },
         "pairsWith": { "type": "array", "items": { "type": "string", "pattern": "^--diya-" }, "uniqueItems": true, "description": "Tokens to change together with this one." },
         "defaults": {
           "description": "The value in each theme; null when it is unset.",
@@ -197,7 +197,8 @@
           "required": ["light", "dark"],
           "properties": { "light": { "type": ["string", "null"] }, "dark": { "type": ["string", "null"] } }
         },
-        "setBy": { "type": "string", "description": "The DiyaProvider prop that sets it; set the prop rather than the token." }
+        "setBy": { "type": "string", "description": "The DiyaProvider prop that sets it; set the prop rather than the token." },
+        "since": { "type": "string", "description": "The version that added the token, when later than 1.0.0." }
       }
     },
     "message": {
