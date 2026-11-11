@@ -3583,6 +3583,9 @@
   display: flex;
   color: var(--diya-color-accent-text);
 }
+.diya-root .diya-tab-indicator-labels :is(.diya-tab-label, .diya-badge > span)::before {
+  content: attr(data-label);
+}
 .diya-root .diya-tab-indicator .diya-badge[data-color='neutral'] {
   --diya-internal-badge-fill: var(--diya-color-accent-text);
   --diya-internal-badge-ink: var(--diya-color-accent);

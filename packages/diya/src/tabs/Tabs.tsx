@@ -1,6 +1,7 @@
 'use client'
 import { forwardRef, useId, useRef, type HTMLAttributes, type ReactNode, type KeyboardEvent } from 'react'
 import { Badge, type BadgeProps } from '../badge/Badge.js'
+import { countLabel } from '../badge/badge-utils.js'
 import { useDiyaMotion } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
@@ -121,8 +122,9 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs({ items,
           {variant === 'pill' && <span className="diya-tab-indicator-labels">
             {items.map((item, index) => <span key={item.value} ref={(node) => { copies.current[index] = node }} className="diya-tab">
               {item.icon && <span className="diya-tab-icon">{item.icon}</span>}
-              <span className="diya-tab-label">{item.label}</span>
-              {item.badge && <Badge {...item.badge} size="small" />}
+              {/* Drawn from data-label, so the copy adds no text: getByText still finds one. */}
+              <span className="diya-tab-label" data-label={item.label} />
+              {item.badge && <BadgeCopy {...item.badge} />}
             </span>)}
           </span>}
         </span>}
@@ -148,3 +150,15 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs({ items,
     </div>
   )
 })
+
+/** A pill indicator's picture of a tab's Badge: the count is drawn, not text, like the label. */
+function BadgeCopy({ variant, tone = 'neutral', count = 0, max = 99, showZero = false, className }: Omit<BadgeProps, 'size'>) {
+  if (variant === 'dot') return <span className={cx('diya-badge', className)} data-variant="dot" data-size="small" data-color={tone} />
+  const value = countLabel(count, max)
+  if (value.count === 0 && !showZero) return null
+  return (
+    <span className={cx('diya-badge', className)} data-variant="count" data-size="small" data-color={tone} data-multiple={value.text.length > 1 ? true : undefined}>
+      <span data-label={value.text} />
+    </span>
+  )
+}

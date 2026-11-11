@@ -98,9 +98,21 @@ describe('Tabs indicator', () => {
     render(<Host variant="pill" />)
     expect(screen.getAllByRole('tab')).toHaveLength(3)
     const copies = Array.from(document.querySelectorAll<HTMLElement>('.diya-tab-indicator-labels > .diya-tab'))
-    expect(copies.map((copy) => copy.textContent)).toEqual(['Overview', 'Activity', 'Settings'])
+    // The copies draw their labels from data-label: no text of their own.
+    expect(copies.map((copy) => copy.querySelector('.diya-tab-label')?.getAttribute('data-label'))).toEqual(['Overview', 'Activity', 'Settings'])
+    expect(copies.map((copy) => copy.textContent)).toEqual(['', '', ''])
     expect(copies.map((copy) => copy.style.left)).toEqual(['4px', '112px', '220px'])
     expect(copies[0].closest('[aria-hidden="true"]')).not.toBeNull()
+  })
+
+  it('pill Tabs: each label and badge count is DOM text once, so getByText finds one', () => {
+    layout()
+    observers()
+    const counted: TabItem[] = [{ ...items[0], badge: { variant: 'count', count: 3, label: 'new' } }, items[1], items[2]]
+    render(<DiyaProvider><Tabs variant="pill" label="Project" items={counted} value="overview" onValueChange={() => {}} /></DiyaProvider>)
+    expect(document.querySelector('.diya-tab-indicator-labels')).not.toBeNull()
+    for (const label of ['Overview', 'Activity', 'Settings']) expect(screen.getByText(label).closest('[role="tab"]')).not.toBeNull()
+    expect(screen.getAllByText('3')).toHaveLength(1)
   })
 
   it('swaps the selected tab\'s own mark for the indicator without a fade', async () => {
