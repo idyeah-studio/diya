@@ -1,5 +1,6 @@
 // Order matters: DIYA's styles, then the site chrome, then the landing.
 import '@idyeah/diya/styles.css'
+import '../site/motion.css'
 import '../site/site.css'
 import './landing.css'
 

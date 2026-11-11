@@ -9,6 +9,7 @@ import { listedScreens, screensPreview } from '../../components/screens/screens-
    component CSS: the cascade ties depend on that order. The SDK stylesheet
    is scoped to `.diya-root`, so loading it here keeps ~95 KB of unused,
    render-blocking CSS off the countdown. */
+import '../../components/site/motion.css'
 import '../../components/CatalogChrome.css'
 import '../../components/AppearanceMaterials.css'
 import '../../components/LibraryAppearance.css'
