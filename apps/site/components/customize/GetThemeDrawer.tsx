@@ -128,7 +128,7 @@ export function GetThemeDrawer({
     say(`Showing ${value} commands.`)
   }
 
-  const changed = props.map((p) => (p.name === 'brandColor' ? 'your brand color' : p.name === 'fontFamily' ? 'your font' : 'the glass finish'))
+  const changed = props.map((p) => (p.name === 'brandColor' ? 'your brand color' : p.name === 'fontFamily' ? 'your font' : p.name === 'motion' ? 'your motion setting' : 'the glass finish'))
   let n = 0
   /* Suggestions take some working out; only while the drawer is showing them. */
   const unique = open ? issues.filter((issue, index) => issues.findIndex((other) => sameIssue(other, issue)) === index) : []
@@ -182,6 +182,10 @@ export function GetThemeDrawer({
           <div>
             <dt>Glass</dt>
             <dd>{summary.glass ? 'On' : 'Off'}</dd>
+          </div>
+          <div>
+            <dt>Motion</dt>
+            <dd>{summary.motion}</dd>
           </div>
           <div>
             <dt>Status colors</dt>

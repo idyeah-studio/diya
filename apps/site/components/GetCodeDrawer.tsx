@@ -5,7 +5,7 @@ import { componentIds } from '../lib/catalog-route'
 import { catalogItem, codeTaken } from '../lib/code-taken'
 import { effectiveAppearance } from '../lib/customize/appearance'
 import { customizeItems, isItemId } from '../lib/customize/registry'
-import { brandColorAttribute } from '../lib/customize/theme'
+import { brandColorAttribute, motionAttribute } from '../lib/customize/theme'
 import { CodeBlock } from './code/CodeBlock'
 import { ConnectEditorLine } from './code/ConnectEditorLine'
 import { CreateAppNote } from './code/CreateAppNote'
@@ -108,7 +108,9 @@ export function GetCodeDrawer({
   const installText = installCommand(manager, `@idyeah/diya${charts ? ' echarts@6' : ''}`)
   /* Your brand from Customize, only when you picked one. */
   const brand = brandColorAttribute(effectiveAppearance(stored.brand))
-  const providerProps = [`theme="${theme}"`, ...(glass ? ['glass'] : []), ...(brand ? [brand] : [])]
+  /* Motion from Customize, only when it isn't "Match device". */
+  const motion = motionAttribute(effectiveAppearance(stored.brand))
+  const providerProps = [`theme="${theme}"`, ...(glass ? ['glass'] : []), ...(brand ? [brand] : []), ...(motion ? [motion] : [])]
   const providerOpen = `<DiyaProvider ${providerProps.join(' ')}>`
   const providerText = `import '@idyeah/diya/styles.css'
 import { DiyaProvider } from '@idyeah/diya'

@@ -37,6 +37,8 @@ export function CustomizationScope({ id, children, canvas = true }: { id: ItemId
       /* One theme at a time, so the brand for this theme alone. */
       brandColor={customized && brandSet(appearance) ? appearance.colors[theme].accent : undefined}
       fontFamily={customized ? fonts[appearance.font].family : undefined}
+      /* Motion from Customize; "Match device" leaves the preview following the device, as the site does. */
+      motion={appearance.motion === 'system' ? undefined : appearance.motion}
       className={`customize-scope ${scope}${painted ? ' customize-scope--painted' : ''}${canvas ? '' : ' customize-scope--bare'}`}
     >
       {children}
