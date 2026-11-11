@@ -1,6 +1,7 @@
 'use client'
 import { forwardRef, useEffect, useId, useMemo, useRef, useState, type InputHTMLAttributes } from 'react'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
+import { usePresence } from '../internal/presence.js'
 import { createPortal } from 'react-dom'
 import { Icon } from '../Icon.js'
 import { useAnchoredPopover } from './useAnchoredPopover.js'
@@ -104,6 +105,13 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
   const isOpen = open && !disabled
   const popupContent = useMemo(() => ({ filtered, value, size }), [filtered, value, size])
   const portal = useAnchoredPopover(isOpen, control, panel, 'anchor', popupContent)
+  // Closes the reader didn't cause in place (a scroll, a resize, being disabled) skip the exit.
+  const quiet = useRef(false)
+  const { present, closing } = usePresence(isOpen, panel, quiet.current || disabled)
+  // While the list leaves, it keeps showing what it showed, not every option again.
+  const shown = useRef(filtered)
+  if (isOpen) shown.current = filtered
+  const rows = isOpen ? filtered : shown.current
 
   function revealActive() {
     keyboardNavigation.current = true
@@ -115,23 +123,23 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
     const option = list?.querySelector<HTMLElement>('[data-active="true"]')
     if (!keyboardNavigation.current || !isOpen || !list || !option || !list.clientHeight) return
     // The anchoring hook runs first, including showing a native popover. Scroll only
-    // this list: scrollIntoView could move the host page and dismiss the popup.
-    const row = option.getBoundingClientRect()
-    const top = list.getBoundingClientRect().top + list.clientTop
-    const bottom = top + list.clientHeight
-    if (row.top < top || row.height > list.clientHeight) list.scrollTop += row.top - top
-    else if (row.bottom > bottom) list.scrollTop += row.bottom - bottom
+    // this list: scrollIntoView could move the host page and dismiss the popup. Layout
+    // offsets, not rectangles, which are smaller while the list scales in.
+    const top = option.offsetTop
+    const height = option.offsetHeight
+    if (top < list.scrollTop || height > list.clientHeight) list.scrollTop = top
+    else if (top + height > list.scrollTop + list.clientHeight) list.scrollTop = top + height - list.clientHeight
   }, [isOpen, activeIndex, filtered, portal, size, revealRequest])
 
-  function close() { setOpen(false); setQuery(''); setActive(-1) }
+  function close(quietly = false) { quiet.current = quietly; setOpen(false); setQuery(''); setActive(-1) }
   useEffect(() => { if (disabled) close() }, [disabled])
   useEffect(() => {
     if (!isOpen) return
     const outside = (event: Event) => {
       if (!field.current?.contains(event.target as Node) && !panel.current?.contains(event.target as Node)) close()
     }
-    const resize = () => close()
-    const scroll = (event: Event) => { if (!panel.current?.contains(event.target as Node)) close() }
+    const resize = () => close(true)
+    const scroll = (event: Event) => { if (!panel.current?.contains(event.target as Node)) close(true) }
     document.addEventListener('pointerdown', outside)
     window.addEventListener('resize', resize)
     window.addEventListener('scroll', scroll, true)
@@ -202,9 +210,10 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
         }}><Icon name="chevron-down" size={14} /></button>
     </div>
     {(error || helperText) && <p id={`${id}-help`} className="diya-field-help">{error && <span aria-hidden="true">!</span>}{error || helperText}</p>}
-    {isOpen && portal && createPortal(<ul ref={panel} id={`${id}-options`} className="diya-combobox-options"
-      role="listbox" aria-label={label} aria-multiselectable={multiple || undefined} style={{ position: 'fixed', inset: 'auto', margin: 0 }}>
-      {filtered.length ? filtered.map((option, index) => <li id={`${id}-option-${index}`} role="option" key={option.value}
+    {present && portal && createPortal(<ul ref={panel} id={`${id}-options`} className="diya-combobox-options diya-floating"
+      role="listbox" aria-label={label} aria-multiselectable={multiple || undefined} style={{ position: 'fixed', inset: 'auto', margin: 0 }}
+      data-side="bottom" data-exiting={closing ? 'true' : undefined}>
+      {rows.length ? rows.map((option, index) => <li id={`${id}-option-${index}`} role="option" key={option.value}
         aria-selected={value.includes(option.value)} aria-disabled={option.disabled} data-active={index === activeIndex}
         onMouseDown={(event) => event.preventDefault()} onMouseEnter={() => { if (!option.disabled) { keyboardNavigation.current = false; setActive(index) } }} onClick={() => choose(option)}>
         <span>{option.label}</span>{value.includes(option.value) && <span aria-hidden="true">✓</span>}

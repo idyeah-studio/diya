@@ -258,3 +258,22 @@ describe('motion house rules', () => {
     }
   })
 })
+
+describe('enter styles', () => {
+  // @starting-style also fires for elements in the first HTML and whenever hidden content is
+  // shown again, so it's only for what mounts or opens on demand.
+  const startingRules = [...bare.matchAll(/@starting-style\s*\{([\s\S]*?\}\s*)\}/g)].flatMap(([, body]) => [...body.matchAll(/([^{}]+)\{/g)].map(([, selector]) => selector.trim()))
+
+  it('starts only popups, Toast and an opening Dialog or Drawer', () => {
+    expect(startingRules.length).toBeGreaterThan(0)
+    const allowed = /^\.diya-root (\.diya-floating|\.diya-toast-region|\.diya-dialog\[open\]|\.diya-drawer-modal\[open\]|:is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop)$/
+    expect(startingRules.filter((selector) => !allowed.test(selector))).toEqual([])
+  })
+
+  it('passes @starting-style through, inside @layer diya', () => {
+    const built = buildStyles(source)
+    const layer = built.indexOf('@layer diya {')
+    expect(built.indexOf('@starting-style')).toBeGreaterThan(layer)
+    expect(built.match(/@starting-style/g)!.length).toBe(source.match(/@starting-style/g)!.length)
+  })
+})

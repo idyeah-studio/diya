@@ -109,7 +109,7 @@ export const items = {
     slots: {},
     children: none,
     state: uncontrolledFieldState,
-    tokens: ['--diya-radius-control', '--diya-color-accent-soft', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-shadow-raised'],
+    tokens: ['--diya-radius-control', '--diya-color-accent-soft', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-shadow-raised', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit'],
     messages: 'datePicker',
   },
   calendar: {
@@ -129,7 +129,7 @@ export const items = {
     slots: {},
     children: none,
     state: uncontrolledFieldState,
-    tokens: ['--diya-radius-control', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-shadow-raised'],
+    tokens: ['--diya-radius-control', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-shadow-raised', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit'],
     messages: 'combobox',
   },
   choice: {
@@ -226,7 +226,7 @@ export const items = {
     tokens: ['--diya-radius-control', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-destructive',
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-selected',
       '--diya-color-text', '--diya-corner-scale', '--diya-shadow-raised', '--diya-text-body',
-      '--diya-text-caption', '--diya-text-large'],
+      '--diya-text-caption', '--diya-text-large', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit'],
     messages: 'breadcrumbs',
   },
   menu: {
@@ -242,7 +242,7 @@ export const items = {
     tokens: ['--diya-radius-control', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-destructive',
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-selected',
       '--diya-color-text', '--diya-corner-scale', '--diya-shadow-raised', '--diya-text-body',
-      '--diya-text-caption', '--diya-text-large'],
+      '--diya-text-caption', '--diya-text-large', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit'],
     messages: null,
   },
   tag: {
@@ -411,7 +411,7 @@ export const items = {
     state: [{ value: 'open', onChange: 'onOpenChange' }],
     tokens: ['--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-line', '--diya-color-muted',
       '--diya-color-raised', '--diya-color-selected', '--diya-color-text', '--diya-corner-scale',
-      '--diya-shadow-raised', '--diya-text-body', '--diya-text-caption', '--diya-text-large'],
+      '--diya-shadow-raised', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit'],
     messages: null,
   },
 
@@ -496,7 +496,7 @@ export const items = {
       '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised',
       '--diya-color-recessed', '--diya-color-selected', '--diya-color-surface', '--diya-color-text',
       '--diya-corner-scale', '--diya-elevation', '--diya-leading-tight', '--diya-shadow-raised',
-      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title'],
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit'],
     messages: 'table',
   },
   'data-viz': {

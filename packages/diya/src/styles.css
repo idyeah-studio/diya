@@ -3210,3 +3210,42 @@
 .diya-root[data-motion='off'] {
   --diya-internal-motion: 0;
 }
+
+/* Floating panels (Menu, Popover, Tooltip, the Combobox list and the Date Picker calendar) grow
+   from their trigger: they fade in, scale up from the trigger's side and drift 4px toward it.
+   The component sets data-side and the origin when it places the panel, and data-exiting while
+   the exit plays; by then the panel is inert. */
+.diya-root .diya-floating {
+  --diya-internal-overlay-drift: 0 calc(-1 * var(--diya-internal-motion-distance));
+  transform-origin: var(--diya-internal-overlay-origin, 50% 0);
+  transition-property: opacity, scale, translate;
+  transition-duration: var(--diya-internal-duration-medium);
+  transition-timing-function: var(--diya-ease-enter);
+}
+.diya-root .diya-floating[data-side='top'] {
+  --diya-internal-overlay-drift: 0 var(--diya-internal-motion-distance);
+  transform-origin: var(--diya-internal-overlay-origin, 50% 100%);
+}
+.diya-root .diya-floating[data-side='left'] {
+  --diya-internal-overlay-drift: var(--diya-internal-motion-distance) 0;
+  transform-origin: var(--diya-internal-overlay-origin, 100% 50%);
+}
+.diya-root .diya-floating[data-side='right'] {
+  --diya-internal-overlay-drift: calc(-1 * var(--diya-internal-motion-distance)) 0;
+  transform-origin: var(--diya-internal-overlay-origin, 0 50%);
+}
+@starting-style {
+  .diya-root .diya-floating {
+    opacity: 0;
+    scale: var(--diya-internal-motion-scale);
+    translate: var(--diya-internal-overlay-drift);
+  }
+}
+.diya-root .diya-floating[data-exiting='true'] {
+  opacity: 0;
+  scale: var(--diya-internal-motion-scale);
+  translate: var(--diya-internal-overlay-drift);
+  pointer-events: none;
+  transition-duration: var(--diya-internal-exit-medium);
+  transition-timing-function: var(--diya-ease-exit);
+}
