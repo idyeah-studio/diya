@@ -90,6 +90,8 @@ dist/internal/layout-effect.d.ts
 dist/internal/layout-effect.js
 dist/internal/link.d.ts
 dist/internal/link.js
+dist/internal/presence.d.ts
+dist/internal/presence.js
 dist/internal/slot.d.ts
 dist/internal/slot.js
 dist/layout/Inline.d.ts
