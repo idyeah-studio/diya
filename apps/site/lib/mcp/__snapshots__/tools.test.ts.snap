@@ -282,7 +282,7 @@ exports[`what an agent reads, word for word > search: toggle 1`] = `
    For a message about the page or a task: saved, needs attention, failed. Toast is the same message, floated and temporary.
    Not quite? Something that needs a decision before going on? Dialog.
 4. Toast · \`import { Toast } from '@idyeah/diya'\`
-   A temporary Alert floated above the page that dismisses itself after a while. \`className\`, \`style\` and the ref reach the Alert.
+   A temporary Alert floated above the page that dismisses itself after a while; the host unmounts the toast in \`onDismiss\`. \`className\`, \`style\` and the ref reach the Alert.
 
 Next: get_component with a name, for its props and a complete file."
 `;

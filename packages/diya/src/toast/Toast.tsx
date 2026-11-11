@@ -67,7 +67,7 @@ export type ToastProps = Omit<AlertProps, 'onDismiss'> & {
   /** Shows a close button; a toast with an `action` always has one. Defaults to true. */
   showClose?: boolean
 }
-/** A temporary Alert floated above the page that dismisses itself after a while. `className`, `style` and the ref reach the Alert. */
+/** A temporary Alert floated above the page that dismisses itself after a while; the host unmounts the toast in `onDismiss`. `className`, `style` and the ref reach the Alert. */
 export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onDismiss, duration = 8000, ...props }, ref) {
   const portal = useDiyaPortal()
   const t = useDiyaMessages('toast', toastMessages)
