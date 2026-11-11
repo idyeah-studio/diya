@@ -1,0 +1,99 @@
+/* Catalog page changes inside /explore (D6). Only a choice in the sidebar starts one
+   (CatalogTransitionBoundary); the header, back and forward, and a choice from the phone sheet
+   change the page at once.
+
+   - The page body leaves first, quickly, then the new one settles in with a 4px rise, so the
+     two are never both visible (VIS-02).
+   - The selected item's highlight slides to its new place; the labels stay put.
+   - Everything else (the site header, the rest of the sidebar) doesn't move: the provider's
+     boundary shows the new page at once, behind the page body.
+   - Reduce Motion gets a short cross-fade with no movement. Browsers without view transitions
+     change the page at once.
+
+   View-transition pseudo-elements hang off <html>, so they read the site's :root copies of
+   DIYA's tokens (components/site/motion.css). */
+html[data-catalog='true'] .component-document {
+  view-transition-name: catalog-page;
+}
+
+/* The selected item's highlight is its own span (CatalogBrowser), so it can move without its
+   label. It draws the same fill the item had: the item goes clear, and the span sits under the
+   label, inside the item's corners. */
+:root[data-catalog='true'] body .atomic-browser .atomic-navigation-item[aria-current='page']:has(> .catalog-selected-mark) {
+  background: transparent;
+  isolation: isolate;
+}
+html[data-catalog='true'] .catalog-selected-mark {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--diya-color-selected);
+  pointer-events: none;
+}
+html[data-catalog='true'] .component-browser .catalog-selected-mark {
+  view-transition-name: catalog-selected;
+}
+
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-new(.catalog-frame) {
+  animation: none;
+}
+::view-transition-old(.catalog-frame) {
+  animation: none;
+  opacity: 0;
+}
+
+/* The page body: the old one out in 110ms, the new one in over 300ms after 90ms. Each keeps
+   its own size and sits at the top, rather than stretching to the other's. */
+::view-transition-group(catalog-page) {
+  animation: none;
+}
+::view-transition-old(catalog-page),
+::view-transition-new(catalog-page) {
+  height: auto;
+  object-fit: none;
+  object-position: left top;
+}
+::view-transition-old(catalog-page) {
+  animation: catalog-page-out 110ms var(--site-ease-move) both;
+}
+::view-transition-new(catalog-page) {
+  animation: catalog-page-in var(--site-duration-page) var(--site-ease-enter) 90ms both;
+}
+@keyframes catalog-page-out {
+  to { opacity: 0; }
+}
+@keyframes catalog-page-in {
+  from { opacity: 0; translate: 0 4px; }
+}
+
+/* The highlight slides, dimming a little mid-way so the labels it passes over never look
+   selected. */
+::view-transition-group(catalog-selected) {
+  animation-duration: var(--site-duration-slow);
+  animation-timing-function: var(--site-ease-move);
+}
+::view-transition-image-pair(catalog-selected) {
+  animation: catalog-selected-pass var(--site-duration-slow) var(--site-ease-move);
+}
+@keyframes catalog-selected-pass {
+  50% { opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(catalog-selected),
+  ::view-transition-image-pair(catalog-selected) {
+    animation: none;
+  }
+  ::view-transition-old(catalog-page) {
+    animation: catalog-page-out var(--site-duration-medium) linear both;
+  }
+  ::view-transition-new(catalog-page) {
+    animation: catalog-page-fade var(--site-duration-medium) linear both;
+  }
+  @keyframes catalog-page-fade {
+    from { opacity: 0; }
+  }
+}

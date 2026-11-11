@@ -3,6 +3,7 @@ import { connection } from 'next/server'
 import { CatalogProvider } from '../../components/CatalogProvider'
 import { CatalogSearchProvider } from '../../components/CatalogSearchProvider'
 import { CatalogFlag } from '../../components/site/CatalogFlag'
+import { CatalogTransitionBoundary, CatalogTransitions } from '../../components/catalog/CatalogTransitions'
 import { isLaunched, launchNow } from '../../lib/launch'
 import { listedScreens, screensPreview } from '../../components/screens/screens-data'
 /* The catalog's chrome styles, then the SDK stylesheet, then each page's
@@ -15,6 +16,7 @@ import '../../components/AppearanceMaterials.css'
 import '../../components/LibraryAppearance.css'
 import '../../components/CatalogIntegration.css'
 import '@idyeah/diya/styles.css'
+import './catalog-transitions.css'
 
 // Indexable from the launch moment; a preview build never is.
 export async function generateMetadata(): Promise<Metadata> {
@@ -29,7 +31,11 @@ export default function LibraryLayout({ children }: { children: React.ReactNode 
   return (
     <CatalogSearchProvider screens={screens}>
       <CatalogFlag />
-      <CatalogProvider>{children}</CatalogProvider>
+      <CatalogTransitions />
+      {/* Only a sidebar choice animates the page change (catalog-transitions.css). */}
+      <CatalogTransitionBoundary>
+        <CatalogProvider>{children}</CatalogProvider>
+      </CatalogTransitionBoundary>
     </CatalogSearchProvider>
   )
 }

@@ -4,6 +4,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Drawer, Search } from '@idyeah/diya'
 import { useCatalogSearch, useListedScreens } from '../CatalogSearchProvider'
 import { useActiveCatalogItem } from '../useActiveCatalogItem'
+import { useCatalogTransition } from './CatalogTransitions'
 import { SidebarFoot } from './SidebarFoot'
 import { catalogGroups, catalogHref, filterGroups, onlyItems, type CatalogListArea } from './catalog-index'
 import '../AtomicSidebar.css'
@@ -47,6 +48,7 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
   const found = [...(ownCount ? [count(ownCount, area)] : []), ...elsewhere.map((other) => count(other.items.length, other.area))]
   const status = !query ? '' : `${found.length ? list(found) : count(0, area)} found`
   useActiveCatalogItem(nav, current ?? '', query)
+  const armTransition = useCatalogTransition()
 
   // The phone sheet is a Drawer: the native modal keeps focus inside and closes on Escape, and
   // Drawer returns focus to the "All components" key. While it's open, <html> says so, so a
@@ -85,25 +87,35 @@ export function CatalogBrowser({ area, current, pro = false }: { area: CatalogLi
     }
   }, [open, sheet])
 
-  const link = (target: CatalogListArea, item: { id: string; title: string; soon?: boolean }) => (
-    <Link
-      key={`${target}-${item.id}`}
-      href={catalogHref(target, item.id)}
-      className={`atomic-navigation-item${target !== 'components' ? ' pattern-current' : ''}`}
-      aria-current={target === area && current === item.id ? 'page' : undefined}
-      onClick={() => setOpen(false)}
-    >
-      {item.title}
-      {item.soon && (
-        <>
-          <span className="sr-only">,</span>{' '}
-          <span className="site-soon" data-size="small">
-            Soon
-          </span>
-        </>
-      )}
-    </Link>
-  )
+  const link = (target: CatalogListArea, item: { id: string; title: string; soon?: boolean }) => {
+    const selected = target === area && current === item.id
+    return (
+      <Link
+        key={`${target}-${item.id}`}
+        href={catalogHref(target, item.id)}
+        className={`atomic-navigation-item${target !== 'components' ? ' pattern-current' : ''}`}
+        aria-current={selected ? 'page' : undefined}
+        onClick={(event) => {
+          // A sidebar choice plays the page transition; one from the phone sheet doesn't, since
+          // the Drawer's exit is that change's motion (UX-07). Modified clicks open a new tab.
+          if (!open && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0) armTransition()
+          setOpen(false)
+        }}
+      >
+        {/* The selected highlight, as its own piece so a page change can slide it alone. */}
+        {selected && <span className="catalog-selected-mark" aria-hidden="true" />}
+        {item.title}
+        {item.soon && (
+          <>
+            <span className="sr-only">,</span>{' '}
+            <span className="site-soon" data-size="small">
+              Soon
+            </span>
+          </>
+        )}
+      </Link>
+    )
+  }
 
   const search = (
     <div role="search" aria-label={words[area].search}>
