@@ -35,6 +35,9 @@ html[data-catalog='true'] .component-browser .catalog-selected-mark {
   view-transition-name: catalog-selected;
 }
 
+/* The page around the body doesn't move or resize: its groups and its new image show at once. */
+::view-transition-group(root),
+::view-transition-group(.catalog-frame),
 ::view-transition-old(root),
 ::view-transition-new(root),
 ::view-transition-new(.catalog-frame) {
