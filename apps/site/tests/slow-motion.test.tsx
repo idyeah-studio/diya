@@ -42,7 +42,7 @@ function Catalog() {
 const frame = () => act(() => new Promise<void>((done) => requestAnimationFrame(() => done())))
 
 describe('Slow motion', () => {
-  it('plays the preview at a quarter speed while on, and says so', async () => {
+  it('plays the preview at a quarter speed while on, shown by the switch itself', async () => {
     const user = userEvent.setup()
     render(<Catalog />)
     const toggle = screen.getByRole('switch', { name: 'Slow motion (¼ speed)' })
@@ -51,7 +51,10 @@ describe('Slow motion', () => {
     await frame()
     const stage = document.querySelector('.component-preview-stage')!
     expect(made.get(stage)?.playbackRate).toBe(0.25)
-    expect(screen.getByText('Slow motion is on: the preview plays at a quarter of its speed.')).toBeTruthy()
+    expect((toggle as HTMLInputElement).checked).toBe(true)
+    expect(toggle.closest('.slow-motion')?.hasAttribute('data-on')).toBe(true)
+    // No note under the switch: it pushed the page title aside (BR-VIS-01).
+    expect(document.querySelector('.slow-motion-note')).toBeNull()
     // Site chrome and the page around the stage keep their speed.
     for (const outside of [document.querySelector('header.site-header')!, document.querySelector('.component-document-heading')!])
       expect(made.get(outside)?.playbackRate ?? 1).toBe(1)

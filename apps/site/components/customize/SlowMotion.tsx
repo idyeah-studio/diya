@@ -77,7 +77,6 @@ export function SlowMotionSwitch() {
   return (
     <div ref={anchor} className="slow-motion" data-on={slow || undefined}>
       <Switch size="small" label="Slow motion (¼ speed)" checked={slow} onCheckedChange={setSlowMotion} />
-      {slow && <span className="slow-motion-note" role="status">Slow motion is on: the preview plays at a quarter of its speed.</span>}
     </div>
   )
 }
