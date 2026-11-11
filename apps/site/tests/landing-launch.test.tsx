@@ -6,8 +6,7 @@ import { ConceptLanding } from '../components/ConceptLanding'
 import { LaunchedLanding } from '../components/landing/LaunchedLanding'
 import { LaunchCountdown } from '../components/LaunchCountdown'
 import { REFRESH_TIMEOUT_MS, ZERO_HOLD_MS } from '../components/ConceptLanding'
-import { LaunchMoment } from '../components/landing/LaunchMoment'
-import { LAUNCH_PENDING_SCRIPT, LAUNCH_SIGNAL_KEY, LAUNCH_SIGNAL_WINDOW_MS } from '../components/landing/launch-signal'
+import { LAUNCH_SIGNAL_KEY } from '../components/landing/launch-signal'
 import { SiteHeader } from '../components/site/SiteHeader'
 import { LAUNCH_AT } from '../lib/launch'
 
@@ -25,7 +24,6 @@ vi.mock('../components/landing/islands', async () => ({
   GlassCards: (await import('../components/landing/GlassBand')).GlassCards,
   ProScreen: (await import('../components/landing/ProScreen')).ProScreen,
   ProWaitlist: (await import('../components/waitlist/ProWaitlist')).ProWaitlist,
-  LaunchMoment: (await import('../components/landing/LaunchMoment')).LaunchMoment,
 }))
 vi.mock('next/server', () => ({ connection: async () => {} }))
 vi.mock('next/headers', () => ({ cookies: async () => ({ get: () => undefined }) }))
@@ -251,57 +249,6 @@ describe('the countdown at zero', () => {
     render(<LaunchCountdown initialSeconds={2} onZero={onZero} />)
     await reachZero(2000)
     expect(onZero).toHaveBeenCalledWith({ watched: true })
-  })
-})
-
-describe('the lighting after a full page load', () => {
-  beforeEach(() => {
-    window.sessionStorage.clear()
-    vi.stubGlobal('matchMedia', (query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {} }))
-    // A lighting that is still under way.
-    Element.prototype.animate = () => ({ finished: new Promise(() => {}), cancel() {} }) as unknown as Animation
-  })
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    delete document.documentElement.dataset.launchMoment
-  })
-
-  it('plays once from the sessionStorage signal the countdown left, with nothing in memory', () => {
-    // What the countdown's document wrote just before the browser reloaded.
-    window.sessionStorage.setItem(LAUNCH_SIGNAL_KEY, String(Date.now() - 2000))
-    document.documentElement.dataset.launchMoment = 'pending'
-    render(
-      <>
-        <div data-launch-line-slot="" />
-        <LaunchMoment />
-      </>,
-    )
-    expect(document.querySelector('.ld-moment')).toBeTruthy()
-    expect(document.querySelector('[data-launch-line-slot]')?.textContent).toBe('DIYA 1.0 is on npm. Happy Diwali.')
-    expect(document.documentElement.dataset.launchMoment).toBeUndefined()
-  })
-
-  it('stays quiet when the signal is older than the window, or absent', () => {
-    window.sessionStorage.setItem(LAUNCH_SIGNAL_KEY, String(Date.now() - LAUNCH_SIGNAL_WINDOW_MS - 1))
-    document.documentElement.dataset.launchMoment = 'pending'
-    const { unmount } = render(<LaunchMoment />)
-    expect(document.querySelector('.ld-moment')).toBeNull()
-    expect(document.documentElement.dataset.launchMoment).toBeUndefined()
-    unmount()
-    window.sessionStorage.clear()
-    render(<LaunchMoment />)
-    expect(document.querySelector('.ld-moment')).toBeNull()
-  })
-
-  it('veils the page before first paint only for a fresh signal', () => {
-    const run = () => new Function(LAUNCH_PENDING_SCRIPT)()
-    window.sessionStorage.setItem(LAUNCH_SIGNAL_KEY, String(Date.now() - 1000))
-    run()
-    expect(document.documentElement.dataset.launchMoment).toBe('pending')
-    delete document.documentElement.dataset.launchMoment
-    window.sessionStorage.setItem(LAUNCH_SIGNAL_KEY, String(Date.now() - 60_000))
-    run()
-    expect(document.documentElement.dataset.launchMoment).toBeUndefined()
   })
 })
 
