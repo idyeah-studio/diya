@@ -3,6 +3,7 @@ import { forwardRef, useEffect, useId, useMemo, useRef, useState, type DialogHTM
 import { Button } from '../button/Button.js'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
+import { inertWhileExiting } from '../internal/presence.js'
 import { composeRefs, renderSlot } from '../internal/slot.js'
 import { dialogMessages } from './messages.js'
 
@@ -90,7 +91,11 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
   const previousFocus = useRef<HTMLElement | null>(null)
   const operation = useRef(0)
   const id = useId()
+  // Whether the dialog is open as of the latest change, ahead of the next render.
+  const openNow = useRef(open)
+  openNow.current = open
   function change(next: boolean) {
+    openNow.current = next
     if (controlledOpen === undefined) setLocalOpen(next)
     onOpenChange?.(next)
   }
@@ -113,6 +118,7 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
       previousFocus.current =
         document.activeElement instanceof HTMLElement ? document.activeElement : null
       setError('')
+      node.inert = false
       if (typeof node.showModal === 'function') node.showModal()
       else node.setAttribute('open', '')
     } else if (!open && node.open) {
@@ -120,11 +126,13 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
       setPending(false)
       if (typeof node.close === 'function') node.close()
       else node.removeAttribute('open')
+      inertWhileExiting(node)
       ;(trigger.current ?? previousFocus.current)?.focus()
     }
   }, [open])
   async function confirm() {
-    if (busy || confirmDisabled || !onConfirm) return
+    // A second click while the dialog closes, which Safari still delivers, confirms nothing.
+    if (busy || confirmDisabled || !onConfirm || !openNow.current) return
     const request = ++operation.current
     setPending(true)
     setError('')

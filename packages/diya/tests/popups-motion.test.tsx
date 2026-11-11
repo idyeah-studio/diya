@@ -86,6 +86,56 @@ describe('a closing popup', () => {
   })
 })
 
+describe('Dialog and Drawer while closing', () => {
+  it('Dialog confirm runs once when clicked twice', async () => {
+    const confirmed = vi.fn()
+    render(<DiyaProvider><Dialog trigger={<Button>Delete</Button>} title="Delete project?" onConfirm={confirmed} confirmLabel="Delete" /></DiyaProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    const confirm = within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' })
+    await act(async () => { fireEvent.click(confirm) })
+    // Safari still delivers a click to a dialog during its exit; it must confirm nothing.
+    await act(async () => { fireEvent.click(confirm) })
+    expect(confirmed).toHaveBeenCalledOnce()
+  })
+
+  it('is inert while its exit plays, and reopens usable', async () => {
+    const exits = holdExits('diya-dialog')
+    function Host() {
+      const [open, setOpen] = useState(true)
+      return <><Button onClick={() => setOpen(!open)}>Toggle</Button><Dialog open={open} onOpenChange={setOpen} title="Settings" /></>
+    }
+    render(<DiyaProvider><Host /></DiyaProvider>)
+    const dialog = document.querySelector('dialog')!
+    expect(dialog.inert).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(dialog.open).toBe(false)
+    expect(dialog.inert).toBe(true)
+    await exits.finish()
+    expect(dialog.inert).toBe(false)
+    // Reopened mid-exit, it's usable at once.
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(dialog.inert).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle', hidden: true }))
+    expect(dialog.open).toBe(true)
+    expect(dialog.inert).toBe(false)
+  })
+
+  it('Drawer is inert while its exit plays', async () => {
+    const exits = holdExits('diya-drawer-modal')
+    function Host() {
+      const [open, setOpen] = useState(true)
+      return <Drawer open={open} onOpenChange={setOpen} title="Details">Body</Drawer>
+    }
+    render(<DiyaProvider><Host /></DiyaProvider>)
+    const drawer = document.querySelector('dialog')!
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Close drawer' }))
+    expect(drawer.inert).toBe(true)
+    await exits.finish()
+    expect(drawer.inert).toBe(false)
+  })
+})
+
 describe('Tooltip hover delay', () => {
   function cold() {
     vi.useFakeTimers()

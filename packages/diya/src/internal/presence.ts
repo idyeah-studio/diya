@@ -59,3 +59,20 @@ export function usePresence(open: boolean, ref: RefObject<HTMLElement | null>, i
 
   return { present: present || open, closing }
 }
+
+/**
+ * For a native dialog that has just closed: inert while its exit plays, so a closing Dialog or
+ * Drawer takes no clicks, focus or screen reader (Safari still hit-tests it). Released when the
+ * exit ends, so a dialog reopened another way is never left inert; reopening clears it first.
+ */
+export function inertWhileExiting(node: HTMLElement) {
+  const running = typeof node.getAnimations === 'function' ? node.getAnimations() : []
+  if (!running.length) return
+  node.inert = true
+  const release = () => { if (!node.matches('[open]')) node.inert = false }
+  const cap = setTimeout(release, EXIT_CAP_MS)
+  void Promise.allSettled(running.map((animation) => animation.finished)).then(() => {
+    clearTimeout(cap)
+    release()
+  })
+}

@@ -594,7 +594,7 @@ export const items = {
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-scrim',
       '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale',
       '--diya-leading-tight', '--diya-shadow-raised', '--diya-text-body', '--diya-text-caption',
-      '--diya-text-large', '--diya-text-title'],
+      '--diya-text-large', '--diya-text-title', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit'],
     messages: 'dialog',
   },
   drawer: {
@@ -606,7 +606,7 @@ export const items = {
     },
     children: { allowed: true, accepts: 'any', content: ['text'], multiple: true },
     state: [{ value: 'open', onChange: 'onOpenChange' }],
-    tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-scrim', '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-shadow-raised'],
+    tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-scrim', '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-shadow-raised', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit'],
     messages: 'drawer',
   },
   'content-state': {

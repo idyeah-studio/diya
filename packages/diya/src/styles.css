@@ -3262,3 +3262,69 @@
     translate: 0 var(--diya-internal-motion-distance-edge);
   }
 }
+
+/* Dialog fades and settles from 0.98; Drawer slides in from its edge, or fades in place when
+   nothing travels. Both keep their box through the exit (display and overlay are discrete, so
+   allow-discrete is a longhand: an engine that doesn't know it keeps the fade). Fixed in place,
+   so the panel doesn't jump when it stops being modal. A closing one takes no clicks. */
+.diya-root .diya-dialog {
+  position: fixed;
+  inset: 0;
+  opacity: 0;
+  scale: var(--diya-internal-motion-scale-dialog);
+}
+.diya-root .diya-drawer-modal {
+  --diya-internal-drawer-edge: 100%;
+  opacity: var(--diya-internal-motion-travel);
+  translate: calc(var(--diya-internal-drawer-edge) * var(--diya-internal-motion-travel)) 0;
+}
+.diya-root .diya-drawer-modal[data-side='left'] {
+  --diya-internal-drawer-edge: -100%;
+}
+.diya-root :is(.diya-dialog, .diya-drawer-modal) {
+  transition-property: opacity, scale, translate, display, overlay;
+  transition-duration: var(--diya-internal-exit-slow);
+  transition-timing-function: var(--diya-ease-exit);
+  transition-behavior: normal, normal, normal, allow-discrete, allow-discrete;
+}
+.diya-root :is(.diya-dialog, .diya-drawer-modal):not([open]) {
+  pointer-events: none;
+}
+.diya-root :is(.diya-dialog, .diya-drawer-modal)[open] {
+  opacity: 1;
+  scale: 1;
+  translate: 0 0;
+  transition-duration: var(--diya-internal-duration-slow);
+  transition-timing-function: var(--diya-ease-enter);
+}
+@starting-style {
+  .diya-root .diya-dialog[open] {
+    opacity: 0;
+    scale: var(--diya-internal-motion-scale-dialog);
+  }
+  .diya-root .diya-drawer-modal[open] {
+    opacity: var(--diya-internal-motion-travel);
+    translate: calc(var(--diya-internal-drawer-edge) * var(--diya-internal-motion-travel)) 0;
+  }
+}
+
+/* The dimmed page behind them fades in and out. Its blur stays still: animating a full-page
+   blur dropped frames on a throttled laptop-size screen (VIS-03). */
+.diya-root :is(.diya-dialog, .diya-drawer-modal)::backdrop {
+  transition-property: opacity, display, overlay;
+  transition-duration: var(--diya-internal-exit-slow);
+  transition-timing-function: var(--diya-ease-exit);
+  transition-behavior: normal, allow-discrete, allow-discrete;
+}
+.diya-root :is(.diya-dialog, .diya-drawer-modal):not([open])::backdrop {
+  opacity: 0;
+}
+.diya-root :is(.diya-dialog, .diya-drawer-modal)[open]::backdrop {
+  transition-duration: var(--diya-internal-duration-slow);
+  transition-timing-function: var(--diya-ease-enter);
+}
+@starting-style {
+  .diya-root :is(.diya-dialog, .diya-drawer-modal)[open]::backdrop {
+    opacity: 0;
+  }
+}

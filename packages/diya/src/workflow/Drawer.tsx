@@ -4,6 +4,7 @@ import { Button } from '../button/Button.js'
 import { Icon } from '../Icon.js'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
+import { inertWhileExiting } from '../internal/presence.js'
 import { composeRefs } from '../internal/slot.js'
 import { drawerMessages } from './drawer-messages.js'
 
@@ -28,13 +29,13 @@ export type DrawerProps = Omit<DialogHTMLAttributes<HTMLDialogElement>, 'title' 
   children: ReactNode
   /** Content pinned to the bottom, usually action buttons. */
   footer?: ReactNode
-  /** Which edge of the page the drawer sits on; defaults to 'right'. */
+  /** Edge the drawer slides in from; defaults to 'right'. */
   side?: 'left' | 'right'
   /** Shows the close icon button in the header; defaults to true. */
   showClose?: boolean
 }
 
-/** A modal panel at the side of the page that traps focus and returns it on close. The ref, `className`, `style` and other attributes go to the native `dialog` element. */
+/** A modal panel that slides in from the side, traps focus and returns it on close. The ref, `className`, `style` and other attributes go to the native `dialog` element. */
 export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer({ open, onOpenChange, title, headingLevel = 3, description, children, footer, side = 'right', showClose = true, className, onCancel, onClose, onClick, ...props }, ref) {
   const t = useDiyaMessages('drawer', drawerMessages)
   const dialog = useRef<HTMLDialogElement>(null)
@@ -51,8 +52,12 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
     if (!node) return
     if (open && !node.open) {
       returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      node.inert = false
       node.showModal()
-    } else if (!open && node.open) node.close()
+    } else if (!open && node.open) {
+      node.close()
+      inertWhileExiting(node)
+    }
   }, [open])
   useEffect(() => {
     const node = dialog.current
