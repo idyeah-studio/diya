@@ -65,9 +65,18 @@
   --diya-ease-enter: cubic-bezier(0.2, 0.7, 0.2, 1);
   --diya-ease-exit: cubic-bezier(0.4, 0, 1, 1);
   --diya-ease-move: cubic-bezier(0.4, 0, 0.2, 1);
-  /* Every motion rule multiplies its duration by this gate, which only motion="off" closes, so no
-     token override can bring motion back. Travel, drift and scale are what Reduce Motion removes. */
+  /* Every motion rule takes its time from these, each multiplied by the gate, which only
+     motion="off" closes, so no token override can bring motion back. They're worked out once
+     per provider: override the public durations on the provider (its style, or .diya-root),
+     not on an element inside it. Exits take two-thirds of their enter. Travel, drift and scale
+     are what Reduce Motion removes. */
   --diya-internal-motion: 1;
+  --diya-internal-duration-fast: calc(var(--diya-duration-fast) * var(--diya-internal-motion));
+  --diya-internal-duration-medium: calc(var(--diya-duration-medium) * var(--diya-internal-motion));
+  --diya-internal-duration-slow: calc(var(--diya-duration-slow) * var(--diya-internal-motion));
+  --diya-internal-exit-fast: calc(var(--diya-duration-fast) * 2 / 3 * var(--diya-internal-motion));
+  --diya-internal-exit-medium: calc(var(--diya-duration-medium) * 2 / 3 * var(--diya-internal-motion));
+  --diya-internal-exit-slow: calc(var(--diya-duration-slow) * 2 / 3 * var(--diya-internal-motion));
   --diya-internal-motion-travel: 1;
   --diya-internal-motion-distance: 4px;
   --diya-internal-motion-distance-edge: 12px;

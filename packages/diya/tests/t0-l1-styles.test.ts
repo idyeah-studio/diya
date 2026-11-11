@@ -152,15 +152,17 @@ function milliseconds(expression: string, values: Record<string, string>): numbe
   if (!/^[\d\s.()*/+-]+$/.test(arithmetic)) throw new Error(`not arithmetic: ${arithmetic}`)
   return Number(Function(`return (${arithmetic})`)())
 }
-const enter = (token: string) => `calc(var(${token}) * var(--diya-internal-motion))`
-const exit = (token: string) => `calc(var(${token}) * 2 / 3 * var(--diya-internal-motion))`
 const durations = ['--diya-duration-fast', '--diya-duration-medium', '--diya-duration-slow']
-// Every gated duration the stylesheet writes, plus the two forms the motion rules use.
-const gatedUses = [
+// Motion rules read their times from these, declared once on the provider root.
+const step = (token: string) => token.replace('--diya-duration-', '')
+const enter = (token: string) => `var(--diya-internal-duration-${step(token)})`
+const exit = (token: string) => `var(--diya-internal-exit-${step(token)})`
+// Every time a motion rule uses, plus the six the root declares.
+const timeReferences = (value: string) => [...value.matchAll(/var\(--diya-internal-(?:duration|exit)-[\w-]+\)/g)].map(match => match[0])
+const gatedUses = [...new Set([
   ...durations.flatMap(token => [enter(token), exit(token)]),
-  ...motionDeclarations.flatMap(({ value }) => [...value.matchAll(/calc\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)/g)].map(match => match[0]))
-    .filter(expression => expression.includes('--diya-duration-')),
-]
+  ...motionDeclarations.flatMap(({ value }) => timeReferences(value)),
+])]
 
 describe('motion tokens', () => {
   it('declares three durations, a scale and three curves, and no page duration', () => {
@@ -199,12 +201,18 @@ describe('motion tokens', () => {
     }
   })
 
-  it('multiplies every duration a motion rule uses by the gate', () => {
-    for (const { name, value } of motionDeclarations) {
-      if (!value.includes('--diya-duration-')) continue
-      const uses = [...value.matchAll(/var\(--diya-duration-(?!scale)[\w-]+\)/g)].length
-      expect([...value.matchAll(/var\(--diya-internal-motion\)/g)].length, `${name}: ${value}`).toBe(uses)
+  it('times every motion rule through the gated durations on the root, one form everywhere', () => {
+    // The six gated times: each is a public duration (an exit, two-thirds of it) times the gate.
+    for (const token of durations) {
+      expect(dark[`--diya-internal-duration-${step(token)}`]).toBe(`calc(var(${token}) * var(--diya-internal-motion))`)
+      expect(dark[`--diya-internal-exit-${step(token)}`]).toBe(`calc(var(${token}) * 2 / 3 * var(--diya-internal-motion))`)
     }
+    for (const { name, value } of motionDeclarations) {
+      // No rule reads a public duration, or the gate, directly.
+      expect(value, `${name}: ${value}`).not.toMatch(/--diya-duration-|--diya-internal-motion\)/)
+      for (const reference of timeReferences(value)) expect(gatedUses, `${name}: ${reference}`).toContain(reference)
+    }
+    for (const reference of gatedUses) expect(dark[reference.slice(4, -1)], reference).toBeDefined()
   })
 
   it('derives exits from their enter: no transition is timed with a fixed value', () => {
