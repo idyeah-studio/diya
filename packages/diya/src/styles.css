@@ -3589,11 +3589,13 @@
   transition-duration: calc(var(--diya-internal-duration-slow) * var(--diya-internal-motion-travel));
   transition-timing-function: var(--diya-ease-move);
 }
-/* Table's loading rows breathe with the same pulse an indeterminate Progress uses under Reduce
-   Motion: a fade, never a sweep. */
+/* Table's loading rows pulse, the same pulse DIYA's Screens use: a fade at full strength, never
+   a sweep, so it stays under Reduce Motion, and keeps running with motion off, as loading
+   indicators do. */
 .diya-root .diya-table-skeleton {
-  animation: diya-progress-breathe 2s ease-in-out infinite alternate;
+  animation: diya-skeleton-pulse 1.4s ease-in-out infinite;
 }
+@keyframes diya-skeleton-pulse { 50% { opacity: 0.55; } }
 
 /* Site Header's phone menu opens like a popup: it fades in, settles from 0.97 and drifts 4px
    down from the header; it leaves the same way, then hides. */
