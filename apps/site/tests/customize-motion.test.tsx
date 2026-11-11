@@ -93,6 +93,8 @@ describe('Customize Motion', () => {
         `<DiyaProvider\n  brandColor={{ light: '#8A3D1F', dark: '#F0B48A' }}${prop ? `\n  ${prop}` : ''}\n>`,
       )
       expect(within(drawer).getByText('Motion').nextElementSibling!.textContent).toBe(choice)
+      // The motion prop arrived in 1.1, so the footer names the version the code needs.
+      expect(within(drawer).getByText(`Public tokens only · @idyeah/diya ${prop ? '1.1 or later' : '1.x'}`)).toBeTruthy()
     })
 
     it(`${choice}: Get code ${prop ? `adds ${prop}` : 'adds nothing'}`, async () => {

@@ -141,7 +141,8 @@ export function GetThemeDrawer({
       description="Your brand as one CSS file and a few props."
       footer={
         <div className="get-code-footer">
-          <span>Public tokens only · @idyeah/diya 1.x</span>
+          {/* The motion prop arrived in 1.1; anything else works on any 1.x. */}
+          <span>Public tokens only · @idyeah/diya {props.some((p) => p.name === 'motion') ? '1.1 or later' : '1.x'}</span>
           <button type="button" className="diya-button" data-variant="outline" data-size="small" data-shape="pill" onClick={() => onOpenChange(false)}>
             Back to Customize
           </button>
