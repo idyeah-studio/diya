@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import { useState } from 'react'
 import { Accordion, Button, Chatbot, DiyaProvider, Progress, type ChatMessage } from '../dist/index.js'
 import { renderToString } from 'react-dom/server'
 
@@ -196,5 +197,86 @@ describe('Site Header phone menu', () => {
   it('opens like a popup and leaves through a discrete display transition, written as a longhand', () => {
     expect(css).toMatch(/\.diya-site-mobile-nav \{\s*transform-origin: 50% 0;\s*transition-property: opacity, scale, translate, display;[^}]*transition-behavior: normal, normal, normal, allow-discrete;/)
     expect(css).toMatch(/\.diya-site-mobile-nav\[hidden\] \{\s*opacity: 0;[^}]*pointer-events: none;/)
+  })
+})
+
+describe('floating Chatbot', () => {
+  /** Web Animations and the provider's resolved timing, for the chat panel and its copy. */
+  function webAnimations(duration = '0.16s') {
+    const calls: { target: HTMLElement; keyframes: Keyframe[]; options: KeyframeAnimationOptions; finish: () => void }[] = []
+    Object.defineProperty(Element.prototype, 'animate', {
+      configurable: true,
+      writable: true,
+      value(this: HTMLElement, keyframes: Keyframe[], options: KeyframeAnimationOptions) {
+        let finish!: () => void
+        const finished = new Promise<void>((resolve) => { finish = resolve })
+        calls.push({ target: this, keyframes, options, finish })
+        return { finished, cancel() {} }
+      },
+    })
+    const real = window.getComputedStyle.bind(window)
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((element: Element, pseudo?: string | null) => {
+      const style = real(element, pseudo)
+      if (!(element as HTMLElement).classList?.contains('diya-chat')) return style
+      const values: Record<string, string> = { '--diya-internal-motion-distance': '4px', '--diya-internal-motion-scale': '0.97' }
+      return new Proxy(style, {
+        get(target, property) {
+          if (property === 'animationDuration') return duration
+          if (property === 'animationTimingFunction') return 'ease'
+          if (property === 'opacity') return '1'
+          if (property === 'getPropertyValue') return (name: string) => values[name] ?? target.getPropertyValue(name)
+          const value = Reflect.get(target, property)
+          return typeof value === 'function' ? value.bind(target) : value
+        },
+      })
+    })
+    return calls
+  }
+  afterEach(() => { delete (Element.prototype as { animate?: unknown }).animate })
+  function Host({ startOpen = true }: { startOpen?: boolean }) {
+    const [open, setOpen] = useState(startOpen)
+    return <DiyaProvider><Chatbot title="Assistant" layout="floating" open={open} onOpenChange={setOpen} messages={[{ id: '1', role: 'assistant', text: 'Hello' }]} value="" onValueChange={() => {}} onSend={() => {}} /></DiyaProvider>
+  }
+  const copies = () => Array.from(document.querySelectorAll<HTMLElement>('.diya-chat[aria-hidden="true"]'))
+
+  it('doesn\'t animate a chat that mounts open', () => {
+    const calls = webAnimations()
+    render(<Host />)
+    expect(calls).toHaveLength(0)
+  })
+
+  it('closes at once, playing its exit on an inert copy that is never announced', async () => {
+    const calls = webAnimations()
+    render(<Host />)
+    fireEvent.click(screen.getByRole('button', { name: 'Close chat' }))
+    // The real chat is gone and "Open chat" is there, with focus.
+    expect(screen.queryByRole('region', { name: 'Assistant' })).toBeNull()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Open chat' }))
+    const [copy] = copies()
+    expect(copy.inert).toBe(true)
+    expect(copy.querySelectorAll('[id], [role], [aria-label], [aria-live]')).toHaveLength(0)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].options).toMatchObject({ duration: 160, easing: 'ease', fill: 'forwards' })
+    expect(calls[0].keyframes.at(-1)).toMatchObject({ opacity: 0, scale: '0.97', translate: '0 4px' })
+    await act(async () => { calls[0].finish() })
+    expect(copies()).toHaveLength(0)
+  })
+
+  it('grows in when it opens again', () => {
+    const calls = webAnimations()
+    render(<Host startOpen={false} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Open chat' }))
+    expect(calls).toHaveLength(1)
+    expect(calls[0].target.getAttribute('aria-label')).toBe('Assistant')
+    expect(calls[0].keyframes[0]).toMatchObject({ opacity: 0, scale: '0.97', translate: '0 4px', transformOrigin: '100% 100%' })
+  })
+
+  it('makes no copy and plays nothing when the time is 0, as with motion off', () => {
+    const calls = webAnimations('0s')
+    render(<Host />)
+    fireEvent.click(screen.getByRole('button', { name: 'Close chat' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Open chat' }))
+    expect(copies()).toHaveLength(0)
+    expect(calls).toHaveLength(0)
   })
 })

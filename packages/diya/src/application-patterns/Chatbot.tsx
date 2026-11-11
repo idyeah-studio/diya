@@ -1,11 +1,12 @@
 'use client'
-import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, type ReactNode } from 'react'
+import { forwardRef, useEffect, useId, useMemo, useRef, useState, type HTMLAttributes, type ReactNode, type Ref } from 'react'
 import { Button } from '../button/Button.js'
 import { Icon } from '../Icon.js'
 import { cx } from '../internal/cx.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
-import { motionTiming } from '../internal/presence.js'
-import { useDiyaMessages } from '../DiyaProvider.js'
+import { motionTiming, playOnCopy } from '../internal/presence.js'
+import { composeRefs } from '../internal/slot.js'
+import { useDiyaMessages, useDiyaPortal } from '../DiyaProvider.js'
 import { chatbotMessages } from './chatbot-messages.js'
 
 declare module '../messages.js' {
@@ -104,6 +105,31 @@ export const Chatbot = forwardRef<HTMLElement, ChatbotProps>(function Chatbot({ 
       row.animate([{ opacity: 0, translate: `0 ${distance}` }, { opacity: 1, translate: '0 0' }], { duration, easing })
     })
   }, [messages])
+  // A floating chat opens and closes like a popup: it grows from the bottom corner where its
+  // "Open chat" button sits. Opening plays here; a chat that mounts open (server HTML included)
+  // doesn't. Closing with its own button plays on a copy, so the button replaces it at once.
+  const surface = useRef<HTMLElement | null>(null)
+  const setSurface = useMemo(() => composeRefs<HTMLElement>(surface, ref as Ref<HTMLElement>), [ref])
+  const outlet = useDiyaPortal()
+  const shownOpen = useRef(open)
+  useClientLayoutEffect(() => {
+    const opened = open && !shownOpen.current
+    shownOpen.current = open
+    const node = surface.current
+    if (!opened || layout !== 'floating' || !node || typeof node.animate !== 'function') return
+    const { duration, easing, style } = motionTiming(node, 'duration-medium', 'enter')
+    if (!duration || !style) return
+    const distance = style.getPropertyValue('--diya-internal-motion-distance').trim() || '0px'
+    const scale = style.getPropertyValue('--diya-internal-motion-scale').trim() || '1'
+    node.animate([{ opacity: 0, scale, translate: `0 ${distance}`, transformOrigin: '100% 100%' }, { opacity: 1, scale: '1', translate: '0 0', transformOrigin: '100% 100%' }], { duration, easing })
+  }, [open, layout])
+  function close() {
+    playOnCopy(surface.current, outlet ?? surface.current?.parentElement, 'exit-medium', (style, opacity) => [
+      { opacity, scale: '1', translate: '0 0', transformOrigin: '100% 100%' },
+      { opacity: 0, scale: style.getPropertyValue('--diya-internal-motion-scale').trim() || '1', translate: `0 ${style.getPropertyValue('--diya-internal-motion-distance').trim() || '0px'}`, transformOrigin: '100% 100%' },
+    ])
+    onOpenChange?.(false)
+  }
   const copyContext = useRef({ open, title, messages })
   copyContext.current = { open, title, messages }
   const [copyNotice, setCopyNotice] = useState('')
@@ -165,8 +191,8 @@ export const Chatbot = forwardRef<HTMLElement, ChatbotProps>(function Chatbot({ 
   // starts, the log stays live and shows "Preparing a response…", which goes once the reply's first words arrive.
   const writing = loading && messages[messages.length - 1]?.role === 'assistant'
   const closable = layout === 'floating' && onOpenChange
-  return <section aria-label={title} {...props} ref={ref} className={cx('diya-chat diya-app-pattern-surface', className)} data-presentation={layout}>
-    {(showHeader || closable) && <header className="diya-chat-header"><div>{showHeader && <><strong>{title}</strong>{description && <small>{description}</small>}</>}</div>{closable && <Button variant="quiet" iconOnly aria-label={t.closeChat} onClick={() => onOpenChange(false)}><Icon name="close" /></Button>}</header>}
+  return <section aria-label={title} {...props} ref={setSurface} className={cx('diya-chat diya-app-pattern-surface', className)} data-presentation={layout}>
+    {(showHeader || closable) && <header className="diya-chat-header"><div>{showHeader && <><strong>{title}</strong>{description && <small>{description}</small>}</>}</div>{closable && <Button variant="quiet" iconOnly aria-label={t.closeChat} onClick={close}><Icon name="close" /></Button>}</header>}
     <div className="diya-chat-thread" ref={thread} role="log" aria-label={t.messages(title)} aria-live="polite" aria-relevant="additions text" aria-busy={writing || undefined} onScroll={() => { const node = thread.current; if (node && !empty) follows.current = node.scrollHeight - node.scrollTop - node.clientHeight < 50 }}>
       {!messages.length && (welcome || suggestions.length > 0) && <div className="diya-chat-welcome">{welcome}{suggestions.length > 0 && <div className="diya-chat-suggestions">{suggestions.map(suggestion => <Button key={suggestion} variant="outline" shape="pill" disabled={loading} onClick={() => send(suggestion)}>{suggestion}</Button>)}</div>}</div>}
       {messages.map((message, index) => <article key={message.id} className="diya-chat-message" data-role={message.role}><small>{message.role === 'user' ? userLabel ?? t.you : assistantLabel ?? t.assistant}{showTimestamps && message.timestamp && ` · ${message.timestamp}`}</small><p>{message.text}</p>{message.role === 'assistant' && !(writing && index === messages.length - 1) && <Button size="small" variant="quiet" onClick={() => void copy(message)}>{t.copy}</Button>}</article>)}

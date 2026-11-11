@@ -581,7 +581,7 @@ export const items = {
       '--diya-color-muted', '--diya-color-raised', '--diya-color-selected', '--diya-color-surface',
       '--diya-color-text', '--diya-corner-scale', '--diya-elevation', '--diya-leading-tight',
       '--diya-text-body', '--diya-text-caption', '--diya-text-display', '--diya-text-large',
-      '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-medium', '--diya-ease-enter'],
+      '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit'],
     messages: 'chatbot',
   },
   dialog: {

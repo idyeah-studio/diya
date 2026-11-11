@@ -3,7 +3,7 @@ import { forwardRef, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Alert, type AlertProps } from '../alert/Alert.js'
 import { useDiyaMessages, useDiyaPortal } from '../DiyaProvider.js'
-import { motionTiming } from '../internal/presence.js'
+import { playOnCopy } from '../internal/presence.js'
 import { toastMessages } from './messages.js'
 
 declare module '../messages.js' {
@@ -12,47 +12,12 @@ declare module '../messages.js' {
   }
 }
 
-// The longest a leaving copy stays on the page, even if its animation never settles.
-const EXIT_CAP_MS = 1000
-
-/**
- * Plays the toast's exit on a copy, so onDismiss can run at once and the host can unmount it or
- * raise the next one straight away. The copy is a picture: no ids, roles or ARIA, hidden from
- * assistive tech, inert and click-through. Nothing plays with motion off, without the Web
- * Animations API (jsdom, happy-dom) or in a hidden tab.
- */
-function playExit(node: HTMLElement | null) {
-  const parent = node?.parentElement
-  if (!node || !parent || typeof node.animate !== 'function' || node.ownerDocument.hidden) return
-  const view = node.ownerDocument.defaultView
-  if (!view) return
-  const box = node.getBoundingClientRect()
-  const from = view.getComputedStyle(node).opacity
-  const copy = node.cloneNode(true) as HTMLElement
-  for (const element of [copy, ...Array.from(copy.querySelectorAll<HTMLElement>('*'))]) {
-    for (const { name } of Array.from(element.attributes)) if (name === 'id' || name === 'role' || name.startsWith('aria-')) element.removeAttribute(name)
-  }
-  copy.setAttribute('aria-hidden', 'true')
-  copy.inert = true
-  Object.assign(copy.style, {
-    position: 'fixed', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, right: 'auto', bottom: 'auto', margin: '0',
-    pointerEvents: 'none', transition: 'none',
-  })
-  parent.append(copy)
-  const { duration, easing, style } = motionTiming(copy, 'exit-slow', 'exit')
-  if (!duration) {
-    copy.remove()
-    return
-  }
-  const distance = style?.getPropertyValue('--diya-internal-motion-distance-edge').trim() || '0px'
-  const animation = copy.animate(
-    [{ opacity: from, translate: '0 0' }, { opacity: 0, translate: `0 ${distance}` }],
-    { duration, easing, fill: 'forwards' },
-  )
-  const cap = setTimeout(() => copy.remove(), EXIT_CAP_MS)
-  const done = () => { clearTimeout(cap); copy.remove() }
-  animation.finished.then(done, done)
-}
+// The toast leaves on a copy, so onDismiss can run at once and the host can unmount it or raise
+// the next one straight away: it sinks 12px and fades over two-thirds of the slow time.
+const playExit = (node: HTMLElement | null) => playOnCopy(node, node?.parentElement, 'exit-slow', (style, opacity) => [
+  { opacity, translate: '0 0' },
+  { opacity: 0, translate: `0 ${style.getPropertyValue('--diya-internal-motion-distance-edge').trim() || '0px'}` },
+])
 
 export type ToastProps = Omit<AlertProps, 'onDismiss'> & {
   /** Called once, at once, when the toast goes, by timer, close button or Escape; unmount the toast here. Its exit plays on its own afterwards. */

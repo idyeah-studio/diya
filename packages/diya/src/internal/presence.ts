@@ -98,3 +98,39 @@ export function motionTiming(node: HTMLElement, time: string, curve: string) {
   node.style.animationTimingFunction = animationTimingFunction
   return { duration: duration > 0 ? duration : 0, easing, style }
 }
+
+/**
+ * Plays an exit on a copy of `node`, appended to `parent` and fixed where the node was, so the
+ * component can go at once: a host can unmount it, or show what replaces it, straight away. The
+ * copy is a picture: no ids, roles or ARIA, hidden from assistive tech, inert and click-through,
+ * removed when the exit ends or after a second at most. Nothing plays with motion off, without
+ * the Web Animations API (jsdom, happy-dom) or in a hidden tab. `frames` gets the copy's computed
+ * style, for the motion distances, and the node's opacity at that moment.
+ */
+export function playOnCopy(node: HTMLElement | null | undefined, parent: Element | null | undefined, time: string, frames: (style: CSSStyleDeclaration, opacity: string) => Keyframe[]) {
+  if (!node || !parent || typeof node.animate !== 'function' || node.ownerDocument.hidden) return
+  const view = node.ownerDocument.defaultView
+  if (!view) return
+  const box = node.getBoundingClientRect()
+  const opacity = view.getComputedStyle(node).opacity
+  const copy = node.cloneNode(true) as HTMLElement
+  for (const element of [copy, ...Array.from(copy.querySelectorAll<HTMLElement>('*'))]) {
+    for (const { name } of Array.from(element.attributes)) if (name === 'id' || name === 'role' || name.startsWith('aria-')) element.removeAttribute(name)
+  }
+  copy.setAttribute('aria-hidden', 'true')
+  copy.inert = true
+  Object.assign(copy.style, {
+    position: 'fixed', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`,
+    right: 'auto', bottom: 'auto', margin: '0', zIndex: '1200', pointerEvents: 'none', transition: 'none',
+  })
+  parent.append(copy)
+  const { duration, easing, style } = motionTiming(copy, time, 'exit')
+  if (!duration || !style) {
+    copy.remove()
+    return
+  }
+  const animation = copy.animate(frames(style, opacity), { duration, easing, fill: 'forwards' })
+  const cap = setTimeout(() => copy.remove(), EXIT_CAP_MS)
+  const done = () => { clearTimeout(cap); copy.remove() }
+  animation.finished.then(done, done)
+}
