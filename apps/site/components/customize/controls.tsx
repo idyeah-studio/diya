@@ -11,16 +11,19 @@ export function Segmented<T extends string>({
   options,
   onChange,
   hideLegend = false,
+  fit = false,
 }: {
   legend: string
   value: T
   options: readonly { value: T; label: string }[]
   onChange: (value: T) => void
   hideLegend?: boolean
+  /** Each segment as wide as its label, on one line, for labels of uneven length. */
+  fit?: boolean
 }) {
   const name = useId()
   return (
-    <fieldset className="customize-segmented">
+    <fieldset className={`customize-segmented${fit ? ' customize-segmented--fit' : ''}`}>
       <legend className={hideLegend ? 'customize-visually-hidden' : undefined}>{legend}</legend>
       <div>
         {options.map((option) => (

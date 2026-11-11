@@ -505,6 +505,7 @@ export function CustomizePanel({
             <Segmented
               legend="Motion"
               hideLegend
+              fit
               value={shown.motion}
               onChange={(v: Motion) => set('motion', v)}
               options={[

@@ -1,5 +1,7 @@
 // Customize's Motion row: it sets the preview's motion, and Get code and Get theme carry it,
 // only when it isn't "Match device".
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { useState, type ComponentProps } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
@@ -62,6 +64,17 @@ describe('Customize Motion', () => {
       expect(preview().getAttribute('data-motion')).toBe(motion)
       expect(within(panel).getByTestId('customize-motion-hint').textContent).toBe(`${hint} Open a menu or switch tabs in the preview to see it.`)
     }
+  })
+
+  it('sizes the Motion row to its labels, so "Match device" stays on one line', async () => {
+    const user = userEvent.setup()
+    render(<Catalog />)
+    await user.click(screen.getByRole('button', { name: /^Customiz/ }))
+    const row = screen.getByRole('radio', { name: 'Match device' }).closest('fieldset')!
+    expect(row.classList.contains('customize-segmented--fit')).toBe(true)
+    const css = readFileSync(resolve(process.cwd(), 'components/customize/CustomizePanel.css'), 'utf8')
+    expect(css).toMatch(/\.customize-segmented--fit span \{\s*padding-inline: 12px;\s*white-space: nowrap;\s*\}/)
+    expect(css).toMatch(/\.customize-segmented--fit label \{\s*flex: 1 1 auto;\s*\}/)
   })
 
   for (const { choice, motion, prop } of states) {
