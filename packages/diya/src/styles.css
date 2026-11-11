@@ -1740,10 +1740,14 @@
 .diya-root .diya-progress[data-indeterminate='true'][data-variant='circular'] svg { animation: diya-progress-spin 1.4s linear infinite; }
 @keyframes diya-progress-travel { from { transform: translateX(-100%); } to { transform: translateX(285%); } }
 @keyframes diya-progress-spin { to { transform: rotate(270deg); } }
-/* Under Reduce Motion, indeterminate progress stops travelling or spinning and
-   breathes in place instead: a full bar or ring that fades between faint and
-   clear, so it reads as "working", never as a stuck amount or as done. */
+/* Under Reduce Motion, and with motion="reduced", indeterminate progress stops
+   travelling or spinning and breathes in place instead: a full bar or ring that
+   fades between faint and clear, so it reads as "working", never as a stuck
+   amount or as done. motion="off" keeps it moving, since it shows work under way. */
 @keyframes diya-progress-breathe { from { opacity: .25; } to { opacity: .7; } }
+.diya-root[data-motion='reduced'] .diya-progress[data-indeterminate='true'][data-variant='circular'] svg { animation: none; }
+.diya-root[data-motion='reduced'] .diya-progress[data-indeterminate='true'][data-variant='circular'] .diya-progress-fill-circle { stroke-dashoffset: 0; animation: diya-progress-breathe 2s ease-in-out infinite alternate; }
+.diya-root[data-motion='reduced'] .diya-progress[data-indeterminate='true'][data-variant='linear'] .diya-progress-track > span { width: 100%; transform: none; animation: diya-progress-breathe 2s ease-in-out infinite alternate; }
 @media (prefers-reduced-motion: reduce) {
   .diya-root .diya-progress[data-indeterminate='true'][data-variant='circular'] svg { animation: none; }
   .diya-root .diya-progress[data-indeterminate='true'][data-variant='circular'] .diya-progress-fill-circle { stroke-dashoffset: 0; animation: diya-progress-breathe 2s ease-in-out infinite alternate; }
