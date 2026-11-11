@@ -491,6 +491,48 @@
  :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope > section::before { background:Canvas; }
 }
 
+/* Customized (or previewed in the other theme), the scope is a painted canvas
+   with its own inset. The raised material then moves from the section to
+   around the canvas, so the canvas sits on it instead of the material
+   spilling past the canvas's edges. */
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens):has(> .customize-scope--painted) {
+  isolation:isolate;
+}
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope--painted {
+  position:relative;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  margin-block:24px;
+}
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope--painted::before {
+  content:'';
+  position:absolute;
+  inset:-24px calc(-1 * var(--preview-inset,32px));
+  z-index:-1;
+  pointer-events:none;
+  border-radius:0 0 21px 21px;
+  background:var(--material-raised);
+}
+:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope--painted > section::before {
+  content:none;
+}
+@supports(backdrop-filter:blur(14px)) {
+ :root[data-catalog='true'][data-glass='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope--painted::before {
+   background:color-mix(in srgb,var(--material-raised) 78%,transparent);
+ }
+}
+@media(prefers-reduced-transparency:reduce) {
+ :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope--painted::before { background:var(--material-raised); }
+}
+@media(forced-colors:active) {
+ :root[data-catalog='true']:root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope--painted::before { background:Canvas; }
+}
+@media(max-width:440px) {
+  :root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope--painted { margin-block:16px; }
+  :root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope--painted::before { inset:-16px calc(-1 * var(--preview-inset,20px)); }
+}
+
 /* On a phone the component or pattern comes first and its options follow, so
    the first screen shows what the page is about. The divider and the canvas's rounded
    corners swap ends with them. */
@@ -501,7 +543,8 @@
     border-top:1px solid var(--diya-color-line);
   }
   :root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > section::before,
-  :root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope > section::before {
+  :root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope > section::before,
+  :root[data-catalog='true'] body:has(.gallery-study) .component-preview-stage:is(.button-specimens,.input-specimens) > .customize-scope--painted::before {
     border-radius:21px 21px 0 0;
   }
   :root[data-catalog='true'] body:has(.gallery-study) .pattern-stage { display:flex; flex-direction:column; }
