@@ -119,6 +119,9 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
         document.activeElement instanceof HTMLElement ? document.activeElement : null
       setError('')
       node.inert = false
+      // Safari applies inert through style: read layout so it's lifted before showModal()
+      // picks what to focus, or a dialog reopened mid-exit opens with focus on <body>.
+      void node.offsetWidth
       if (typeof node.showModal === 'function') node.showModal()
       else node.setAttribute('open', '')
     } else if (!open && node.open) {

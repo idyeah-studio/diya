@@ -53,6 +53,9 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
     if (open && !node.open) {
       returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
       node.inert = false
+      // Safari applies inert through style: read layout so it's lifted before showModal()
+      // picks what to focus, or a drawer reopened mid-exit opens with focus on <body>.
+      void node.offsetWidth
       node.showModal()
     } else if (!open && node.open) {
       node.close()

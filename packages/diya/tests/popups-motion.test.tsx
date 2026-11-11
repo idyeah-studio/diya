@@ -121,6 +121,38 @@ describe('Dialog and Drawer while closing', () => {
     expect(dialog.inert).toBe(false)
   })
 
+  it('reopened mid-exit, lifts inert and reads layout before showModal, so Safari focuses inside', async () => {
+    // Safari applies inert through style; without a layout read in between, showModal() still
+    // sees the panel as inert and leaves focus on <body>.
+    for (const kind of ['dialog', 'drawer'] as const) {
+      const exits = holdExits(kind === 'dialog' ? 'diya-dialog' : 'diya-drawer-modal')
+      const steps: string[] = []
+      const width = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (this: HTMLElement) {
+        if (this.tagName === 'DIALOG') steps.push(`layout, inert ${this.inert}`)
+        return 0
+      })
+      const show = vi.spyOn(HTMLDialogElement.prototype, 'showModal')
+      function Host() {
+        const [open, setOpen] = useState(true)
+        return <><Button onClick={() => setOpen(!open)}>Toggle</Button>{kind === 'dialog'
+          ? <Dialog open={open} onOpenChange={setOpen} title="Settings" />
+          : <Drawer open={open} onOpenChange={setOpen} title="Details">Body</Drawer>}</>
+      }
+      const view = render(<DiyaProvider><Host /></DiyaProvider>)
+      const node = document.querySelector('dialog')!
+      fireEvent.click(within(node).getByRole('button', { name: kind === 'dialog' ? 'Close' : 'Close drawer' }))
+      expect(node.inert).toBe(true)
+      steps.length = 0
+      show.mockImplementation(function (this: HTMLDialogElement) { steps.push('showModal'); this.setAttribute('open', '') })
+      fireEvent.click(screen.getByRole('button', { name: 'Toggle', hidden: true }))
+      expect(steps.slice(-2)).toEqual(['layout, inert false', 'showModal'])
+      await exits.finish()
+      view.unmount()
+      width.mockRestore()
+      show.mockRestore()
+    }
+  })
+
   it('Drawer is inert while its exit plays', async () => {
     const exits = holdExits('diya-drawer-modal')
     function Host() {
