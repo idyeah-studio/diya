@@ -50,8 +50,11 @@ test.describe('toast motion from an empty stack', () => {
     const track = await frames(page, "window.comps.add({ title: 'Draft saved', description: 'Saved a moment ago.' })", 400)
     const seen = track.filter((frame) => frame.live.length)
     const rest = seen.at(-1)!.live[0].top
-    // The first frame it shows, it's at most 12px below its resting place (1.1.1: 12px).
+    // The first frame it shows, it's 12px below its resting place, as in 1.1.1: never more, and
+    // at least 11px, so the rise is really there (R11). WebKit's headless frames come about 50ms
+    // apart, so its first sample is already on the way (1.1.1 measures the same, 9–11px).
     expect(seen[0].live[0].top - rest).toBeLessThanOrEqual(13)
+    expect(seen[0].live[0].top - rest).toBeGreaterThanOrEqual(engine(testInfo) === 'webkit' ? 5 : 11)
     expect(Math.max(...seen.map((frame) => frame.live[0].top - rest))).toBeLessThanOrEqual(13)
     expect(seen.some((frame) => frame.live[0].waapi > 0)).toBe(false)
   })
@@ -88,7 +91,11 @@ test.describe('toast motion from an empty stack', () => {
     await settle(page)
     const restF8 = await restTop(page, 'Draft saved')
     await page.focus('input')
-    const f8 = await frames(page, "document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8', bubbles: true, cancelable: true }))", 200)
+    // A real F8 key (R11).
+    await startFrames(page, 200)
+    await page.keyboard.press('F8')
+    const f8 = await endFrames(page)
+    await expect(page.getByRole('button', { name: 'Dismiss: Draft saved' })).toBeFocused()
     expect(f8.every((frame) => frame.live.every((toast) => toast.waapi === 0 && Math.abs(toast.top - restF8) < 0.5))).toBe(true)
   })
 })
@@ -147,6 +154,22 @@ test.describe('an exit copy starts where its toast was', () => {
     }
     const rest = await restTop(page, 'Draft saved')
     const track = await frames(page, "window.diya.toast({ title: 'Invite sent', duration: 0 })", 120)
+    const first = track.find((frame) => frame.copies.some((copy) => copy.title === 'Draft saved'))!
+    expect(Math.abs(first.copies.find((copy) => copy.title === 'Draft saved')!.top - rest)).toBeLessThanOrEqual(1)
+  })
+})
+
+test.describe('an exit copy starts where its toast was, with a <Toast> newcomer (R11)', () => {
+  test('a full stack plus a <Toast>: the leaving toast\'s copy starts at its resting top', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    const full = isPhone(testInfo) ? ['Draft saved', 'Link copied'] : ['Draft saved', 'Link copied', 'Export started']
+    for (const title of full) {
+      await page.evaluate((title) => (window as any).diya.toast({ title, duration: 0 }), title)
+      await settle(page)
+    }
+    const rest = await restTop(page, 'Draft saved')
+    // A <Toast> takes two commits (its empty place, then its content).
+    const track = await frames(page, "window.comps.add({ title: 'Comment posted' })", 150)
     const first = track.find((frame) => frame.copies.some((copy) => copy.title === 'Draft saved'))!
     expect(Math.abs(first.copies.find((copy) => copy.title === 'Draft saved')!.top - rest)).toBeLessThanOrEqual(1)
   })
@@ -278,8 +301,10 @@ test('a same-id update that grows: the updated toast gets no shift of its own', 
 test.describe('the keyboard in the stack (T12)', () => {
   const focused = (page: Page) => page.evaluate(() => { const node = document.activeElement as HTMLElement; return node === document.body ? 'BODY' : node instanceof HTMLInputElement ? `input:${node.value}` : node.getAttribute('aria-label') ?? node.textContent })
   test('after F8, Tab walks the toasts newest to oldest, then back to where F8 was pressed', async ({ page }, testInfo) => {
-    test.skip(engine(testInfo) === 'webkit', 'WebKit\'s Tab skips buttons unless the user turns it on')
     test.skip(isPhone(testInfo), 'three toasts need the desktop limit')
+    // WebKit's Tab skips buttons unless the reader turns that on; Option+Tab reaches them, as in
+    // Safari, and the page sees a Tab key (R11).
+    const tab = engine(testInfo) === 'webkit' ? 'Alt+Tab' : 'Tab'
     await openCase(page, testInfo, 'case=probe&theme=light')
     await page.evaluate(() => { const { toast } = (window as any).diya; toast({ title: 'Draft saved', duration: 0 }); toast({ title: '3 emails archived', action: { label: 'Undo', onClick() {} } }) })
     await page.evaluate(() => { (window as any).comps.add({ title: 'Comment posted' }) })
@@ -287,10 +312,10 @@ test.describe('the keyboard in the stack (T12)', () => {
     await page.getByRole('textbox', { name: 'Project name' }).focus()
     await page.keyboard.press('F8')
     const order = [await focused(page)]
-    for (let i = 0; i < 4; i++) { await page.keyboard.press('Tab'); order.push(await focused(page)) }
+    for (let i = 0; i < 4; i++) { await page.keyboard.press(tab); order.push(await focused(page)) }
     expect(order).toEqual(['Dismiss: Comment posted', 'Undo', 'Dismiss: 3 emails archived', 'Dismiss: Draft saved', 'input:Atlas'])
     await page.keyboard.press('F8')
-    await page.keyboard.press('Shift+Tab')
+    await page.keyboard.press(`Shift+${tab}`)
     expect(await focused(page)).toBe('input:Atlas')
   })
 
@@ -428,7 +453,7 @@ const startFrames = (page: Page, ms: number) => page.evaluate((ms) => {
   const read = () => ({
     live: [...document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')].filter((slot) => slot.querySelector('.diya-alert')).map((slot) => {
       const box = slot.getBoundingClientRect()
-      return { title: slot.querySelector('.diya-alert-title')?.textContent ?? '', top: box.top, bottom: box.bottom, left: box.left, right: box.right, opacity: Number(getComputedStyle(slot).opacity), waapi: 0 }
+      return { title: slot.querySelector('.diya-alert-title')?.textContent ?? '', top: box.top, bottom: box.bottom, left: box.left, right: box.right, opacity: Number(getComputedStyle(slot).opacity), waapi: slot.getAnimations().filter((animation) => !('transitionProperty' in animation)).length }
     }),
     copies: [...document.querySelectorAll<HTMLElement>('.diya-toast-copies > *')].map((copy) => {
       const box = copy.getBoundingClientRect()
@@ -579,6 +604,65 @@ test.describe('a <Toast> arriving into a full stack (R10)', () => {
       const track = await frames(page, "window.comps.add({ title: 'Comment posted', description: 'Everyone on the thread can see it.' })", 500)
       seeThrough(track, 'Comment posted')
       for (const title of full.slice(1)) oneWay(track, title)
+    })
+  }
+})
+
+// Round 2 (R11): the two-provider column frame by frame while the nested toast arrives, and
+// what reduced, off and the duration scale do to an arrival.
+test('a nested provider\'s <Toast> arriving under two outer toasts: no two toasts overlap on any frame (R11)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=probe&theme=light&glass=1&bg=1&nested=1')
+  await page.evaluate(() => (window as any).diya.toast({ title: 'Link copied', duration: 0 }))
+  await settle(page)
+  if (!isPhone(testInfo)) {
+    await page.evaluate(() => { (window as any).comps.add({ title: 'Draft saved', description: 'Saved a moment ago.' }) })
+    await settle(page)
+  }
+  const track = await frames(page, "window.nested.add({ title: 'Synced', description: 'From the dark region.' })", 600)
+  seeThrough(track, 'Synced')
+  for (const frame of track) {
+    const shown = frame.live.filter((box) => box.opacity > 0.02)
+    for (let i = 0; i < shown.length; i++) for (let j = i + 1; j < shown.length; j++) expect(overlap(shown[i], shown[j]), `${shown[i].title} and ${shown[j].title} at ${Math.round(frame.t)}ms`).toBe(0)
+  }
+  // Settled: one column, 12px apart, the nested toast in its own Dark look.
+  const final = track.at(-1)!.live.sort((a, b) => a.top - b.top)
+  for (let i = 1; i < final.length; i++) expect(Math.round(final[i].top - final[i - 1].bottom)).toBe(12)
+})
+
+test.describe('an arrival under each motion setting (R11)', () => {
+  const arrive = async (page: Page) => {
+    await page.evaluate(() => (window as any).diya.toast({ title: 'Link copied', duration: 0 }))
+    await settle(page)
+    const rest = await restTop(page, 'Link copied')
+    const track = await frames(page, "window.diya.toast({ title: 'Export started', duration: 0 })", 700)
+    return { rest, track, older: track.map((frame) => frame.live.find((box) => box.title === 'Link copied')!), newcomer: track.map((frame) => ({ t: frame.t, box: frame.live.find((box) => box.title === 'Export started') })).filter((item) => item.box) }
+  }
+  test('motion="off": nothing moves or fades; the older toast is in its new place at once', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light&motion=off')
+    const { older, newcomer } = await arrive(page)
+    expect(new Set(older.map((box) => Math.round(box.top))).size).toBe(1)
+    expect(older.every((box) => box.waapi === 0)).toBe(true)
+    expect(newcomer.every((item) => item.box!.opacity > 0.99 && item.box!.waapi === 0)).toBe(true)
+  })
+
+  test('motion="reduced": no slide and no wait: the older toast jumps, the newcomer fades in place at once', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light&motion=reduced')
+    const { older, newcomer } = await arrive(page)
+    expect(new Set(older.map((box) => Math.round(box.top))).size).toBe(1)
+    expect(older.every((box) => box.waapi === 0)).toBe(true)
+    const rest = newcomer.at(-1)!.box!.top
+    expect(Math.max(...newcomer.map((item) => Math.abs(item.box!.top - rest)))).toBeLessThan(0.5)
+    // Fading from its first frames, with no make-room wait.
+    expect(newcomer.find((item) => item.box!.opacity > 0.05)!.t).toBeLessThan(110)
+  })
+
+  for (const [scale, from, to] of [[2, 200, 300], [0.5, 40, 100]] as const) {
+    test(`a duration scale of ${scale}: the newcomer waits ${120 * scale}ms for the slide, not 120ms`, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, `case=probe&theme=light&scale=${scale}`)
+      const { newcomer } = await arrive(page)
+      const shows = newcomer.find((item) => item.box!.opacity > 0.02)!.t
+      expect(shows).toBeGreaterThan(from)
+      expect(shows).toBeLessThan(to)
     })
   }
 })
