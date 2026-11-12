@@ -492,3 +492,29 @@ describe('the live regions (T7, T11)', () => {
     expect(screen.queryByText(/link copied/i)).toBeNull()
   })
 })
+
+// Round 2: the stack tells a <Toast> from a toast() by what it is, never by its id (R7).
+describe('toast ids are the app\'s own (R7)', () => {
+  it('Escape closes a toast() whose id starts with "c"', async () => {
+    render(<DiyaProvider motion="off"><p>App</p></DiyaProvider>)
+    act(() => { toast({ id: 'copied', title: 'Link copied', duration: 0 }) })
+    await waitFor(() => expect(shown()).toEqual(['Link copied']))
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Dismiss: Link copied' }), { key: 'Escape' })
+    await waitFor(() => expect(shown()).toEqual([]))
+  })
+
+  it('an app\'s id never meets a <Toast>\'s own key, nor a generated id', async () => {
+    const { Toast } = await import('../dist/index.js')
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+    render(<DiyaProvider motion="off"><Toast title="Draft saved" duration={0} onDismiss={() => {}} /></DiyaProvider>)
+    await waitFor(() => expect(shown()).toEqual(['Draft saved']))
+    act(() => {
+      for (const id of ['c1', 'c2', 'c3', 't1', 'diya-slot-1']) toast({ id, title: id, duration: 0 })
+    })
+    await waitFor(() => expect(shown()).toContain('diya-slot-1'))
+    const generated = toast({ title: 'Generated', duration: 0 })
+    expect(['c1', 'c2', 'c3', 't1', 'diya-slot-1']).not.toContain(generated)
+    expect(errors.mock.calls.filter((call) => /same key/i.test(String(call[0])))).toEqual([])
+    errors.mockRestore()
+  })
+})

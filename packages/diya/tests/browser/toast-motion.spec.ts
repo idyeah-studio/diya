@@ -551,3 +551,15 @@ test('after an earlier toast, a <Toast> action in a Dialog returns focus there, 
   await page.keyboard.press('Escape')
   await expect(page.locator('dialog[open]')).toHaveCount(0)
 })
+
+test('Escape closes a toast() whose id starts with "c", and returns focus (R7)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=probe&theme=light')
+  await page.evaluate(() => (window as any).diya.toast({ id: 'copied', title: 'Link copied', duration: 0 }))
+  await settle(page)
+  await page.getByRole('textbox', { name: 'Project name' }).focus()
+  await page.keyboard.press('F8')
+  await expect(page.getByRole('button', { name: 'Dismiss: Link copied' })).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast').length)).toBe(0)
+  await expect(page.getByRole('textbox', { name: 'Project name' })).toBeFocused()
+})

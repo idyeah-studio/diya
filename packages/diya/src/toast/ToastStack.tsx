@@ -131,7 +131,8 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   useClientLayoutEffect(() => {
     if (!active || !host) return
     setToastCopies(host.copies)
-    setToastFocus((leaving, fallback, adjacent) => (adjacent ? closeFocusRef.current(leaving, fallback) : returnFocusRef.current(leaving, fallback)))
+    // A <Toast> leaving, by its slot's key.
+    setToastFocus((leaving, fallback, adjacent) => (adjacent ? closeFocusRef.current(`slot:${leaving}`, fallback) : returnFocusRef.current(`slot:${leaving}`, fallback)))
     return () => {
       setToastCopies(null)
       setToastFocus(null)
@@ -197,17 +198,18 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     // Leaving: the exit plays on a copy under the live toasts, then the entry goes.
     for (const slot of slots) {
       const id = slot.dataset.toast!
-      const entry = entries.find((item) => item.id === id)
+      const key = slot.dataset.key!
+      const entry = slot.dataset.kind === 'toast' ? entries.find((item) => item.id === id) : undefined
       if (entry?.status !== 'leaving') continue
-      if (slot.contains(slot.ownerDocument.activeElement)) returnFocus(id)
+      if (slot.contains(slot.ownerDocument.activeElement)) returnFocus(key)
       // Under the live toasts (z-index 1), inside the stack's own layer, where the toast was on
       // screen: if a toast arrived in this same commit, the leaving one has already moved up by
       // the newcomer's height (T3). One that left to make room from the top rides up with the
       // stack; with a live toast still above it (one with an action, which never times out), it
       // fades where it is instead, so it never slides up under that toast (R4).
-      const was = positions.current.get(id)
+      const was = positions.current.get(key)
       const lift = was === undefined ? 0 : was - edge(slot, height)
-      const above = slots.slice(0, slots.indexOf(slot)).some((other) => other.style.display !== 'none' && (other.dataset.toast!.startsWith('c') ? !!other.querySelector('.diya-alert') : entries.find((item) => item.id === other.dataset.toast)?.status === 'shown'))
+      const above = slots.slice(0, slots.indexOf(slot)).some((other) => other.style.display !== 'none' && (other.dataset.kind === 'slot' ? !!other.querySelector('.diya-alert') : entries.find((item) => item.id === other.dataset.toast)?.status === 'shown'))
       const played = playOnCopy(slot, host.copies, 'exit-slow', exitFrames, { zIndex: 0, offsetY: lift })
       const copy = played ? host.copies.lastElementChild as HTMLElement | null : null
       if (copy && lift > 0 && !above && column?.duration && travel) {
@@ -215,9 +217,9 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       }
       // Out of the layout now, so the others move in this same pass.
       slot.style.display = 'none'
-      announced.current.delete(id)
-      voices.current?.polite.forget(id)
-      voices.current?.assertive.forget(id)
+      announced.current.delete(key)
+      voices.current?.polite.forget(key)
+      voices.current?.assertive.forget(key)
       remaining.current.delete(id)
       removeToast(id)
     }
@@ -235,10 +237,11 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     const obstacles: { span: Span; clear: number }[] = []
     for (const slot of slots) {
       const id = slot.dataset.toast!
-      if (id.startsWith('c') ? !slot.querySelector('.diya-alert') : entries.find((item) => item.id === id)?.status !== 'shown') continue
+      const key = slot.dataset.key!
+      if (slot.dataset.kind === 'slot' ? !slot.querySelector('.diya-alert') : entries.find((item) => item.id === id)?.status !== 'shown') continue
       const bottom = edge(slot, height)
-      next.set(id, bottom)
-      const before = positions.current.get(id)
+      next.set(key, bottom)
+      const before = positions.current.get(key)
       if (before === undefined) {
         arriving.push(slot)
         continue
@@ -304,18 +307,20 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     if (!next.size && !host.copies.childElementCount) lowerToastHost(host)
     // Each toast is read once, from the always-present live region, as one text node.
     for (const entry of live) {
-      const slot = slots.find((item) => item.dataset.toast === entry.id)
+      const key = `toast:${entry.id}`
+      const slot = slots.find((item) => item.dataset.key === key)
       const description = slot?.querySelector('.diya-alert-description')?.textContent?.trim() ?? ''
       const words = spoken(alertText[entry.tone], entry.title, description, entry.action ? t.actionHint(entry.action.label) : undefined)
-      const key = `${entry.tone}|${entry.title}|${description}`
+      const said = `${entry.tone}|${entry.title}|${description}`
       // A same-id update speaks again only when its title, words or tone changed.
-      if (announced.current.get(entry.id) === key) continue
-      announced.current.set(entry.id, key)
-      ;(entry.urgent ? voices.current?.assertive : voices.current?.polite)?.say(entry.id, words)
+      if (announced.current.get(key) === said) continue
+      announced.current.set(key, said)
+      ;(entry.urgent ? voices.current?.assertive : voices.current?.polite)?.say(key, words)
     }
     // <Toast>s too: their words are whatever they rendered.
     for (const component of components) {
-      const slot = slots.find((item) => item.dataset.toast === component.key)
+      const key = `slot:${component.key}`
+      const slot = slots.find((item) => item.dataset.key === key)
       const alert = slot?.querySelector<HTMLElement>('.diya-alert')
       if (!alert) continue
       const tone = alert.dataset.tone ?? 'info'
@@ -325,13 +330,13 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       const words = title
         ? spoken(alertText[tone as keyof typeof alertText] as string, title, description, action ? t.actionHint(action) : undefined)
         : [`${(alertText[tone as keyof typeof alertText] as string).replace(/^./, (first) => first.toLocaleUpperCase())}:`, description, action ? t.actionHint(action) : ''].filter(Boolean).join(' ')
-      const key = `${tone}|${title}|${description}`
-      if (announced.current.get(component.key) === key) continue
-      announced.current.set(component.key, key)
-      ;(component.urgent ? voices.current?.assertive : voices.current?.polite)?.say(component.key, words)
+      const said = `${tone}|${title}|${description}`
+      if (announced.current.get(key) === said) continue
+      announced.current.set(key, said)
+      ;(component.urgent ? voices.current?.assertive : voices.current?.polite)?.say(key, words)
     }
     // A toast that has left takes its words with it.
-    const present = new Set([...live.map((entry) => entry.id), ...components.map((component) => component.key)])
+    const present = new Set([...live.map((entry) => `toast:${entry.id}`), ...components.map((component) => `slot:${component.key}`)])
     for (const id of [...announced.current.keys()]) {
       if (present.has(id)) continue
       announced.current.delete(id)
@@ -449,7 +454,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     for (const candidate of [origin.current, fallback, outside.current]) {
       if (takesFocus(candidate)) { origin.current = null; return }
     }
-    const nextToast = Array.from(document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')).find((slot) => slot.dataset.toast !== leaving)?.querySelector<HTMLElement>(focusable)
+    const nextToast = Array.from(document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')).find((slot) => slot.dataset.key !== leaving)?.querySelector<HTMLElement>(focusable)
     if (nextToast) { nextToast.focus(); return }
     const modal = topModal(document)
     modal?.querySelector<HTMLElement>(focusable)?.focus()
@@ -462,7 +467,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
 
   /** The close button, clicked while focused: focus moves to the next toast, else back. */
   function close(id: string) {
-    closeFocus(id)
+    closeFocus(`toast:${id}`)
     leaveToast(id)
   }
 
@@ -475,7 +480,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   function closeFocus(id: string, fallback?: HTMLElement | null) {
     const document = host?.root.ownerDocument
     const slots = reachable()
-    const slot = slots.find((item) => item.dataset.toast === id)
+    const slot = slots.find((item) => item.dataset.key === id)
     if (!document || !slot?.contains(document.activeElement)) return
     const index = slots.indexOf(slot)
     const neighbor = slots[index - 1] ?? slots[index + 1]
@@ -520,15 +525,16 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     if (event.key !== 'Escape') return
     const slot = (event.target as HTMLElement).closest<HTMLElement>('.diya-toast')
     const id = slot?.dataset.toast
-    if (!id) return
+    if (!slot || !id) return
     // Only the toast: a Dialog around the stack doesn't also close.
     event.preventDefault()
     event.stopPropagation()
-    if (id.startsWith('c')) {
+    // A <Toast> or a toast() by what it is, never by the spelling of its id (R7).
+    if (slot.dataset.kind === 'slot') {
       components.find((item) => item.key === id)?.dismiss()
       return
     }
-    returnFocus(id)
+    returnFocus(slot.dataset.key!)
     leaveToast(id)
   }
 
@@ -581,7 +587,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
         ? (
           // From another provider, its place in the column moves the way that provider does:
           // its enter and its exit copy read these (R2). The column's shifts are this stack's.
-          <div key={item.id} className="diya-toast" data-toast={item.id} data-order={item.order} style={item.slot.owner === owner ? undefined : item.slot.motion?.() as CSSProperties | undefined}>
+          <div key={`slot:${item.id}`} className="diya-toast" data-toast={item.id} data-kind="slot" data-key={`slot:${item.id}`} data-order={item.order} style={item.slot.owner === owner ? undefined : item.slot.motion?.() as CSSProperties | undefined}>
             {/* The <Toast> portals in here. From another provider, this carries that provider's
                 look (theme, Glass, motion, class and style) and takes no box of its own. */}
             {item.slot.owner === owner
@@ -590,13 +596,13 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
           </div>
         )
         : (({ entry }) => (
-        <div key={entry.id} className="diya-toast" data-toast={entry.id} data-order={entry.order} data-leaving={entry.status === 'leaving' ? '' : undefined}>
+        <div key={`toast:${entry.id}`} className="diya-toast" data-toast={entry.id} data-kind="toast" data-key={`toast:${entry.id}`} data-order={entry.order} data-leaving={entry.status === 'leaving' ? '' : undefined}>
           <AlertInStackContext.Provider value={{ announce: false, dismissLabel: t.dismiss(entry.title) }}>
             <Alert
               tone={entry.tone}
               title={entry.title}
               urgent={entry.urgent}
-              action={entry.action ? { label: entry.action.label, onClick: () => { returnFocus(entry.id); entry.action!.onClick(); leaveToast(entry.id) } } : undefined}
+              action={entry.action ? { label: entry.action.label, onClick: () => { returnFocus(`toast:${entry.id}`); entry.action!.onClick(); leaveToast(entry.id) } } : undefined}
               onDismiss={() => close(entry.id)}
             >
               {entry.description}

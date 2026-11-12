@@ -98,7 +98,8 @@ function show(options: ToastOptions): string {
     return options.id ?? `t-server-${++serverCount}`
   }
   const state = store()
-  const id = options.id ?? `t${++state.count}`
+  // Generated ids are namespaced, so they never meet an app's own (DS-07).
+  const id = options.id ?? `diya-toast-${++state.count}`
   const known = state.entries.find((entry) => entry.id === id && entry.status !== 'leaving')
   const fields = {
     title: options.title,
@@ -190,7 +191,7 @@ export function nextToastOrder() {
 // --- <Toast> slots: every provider's <Toast>s share the page's one stack ------------------
 
 let slotCount = 0
-export const nextToastSlotKey = () => `c${++slotCount}`
+export const nextToastSlotKey = () => `diya-slot-${++slotCount}`
 export function addToastSlot(slot: ToastSlot) {
   const state = store()
   state.slots = [...state.slots.filter((item) => item.key !== slot.key), slot]
