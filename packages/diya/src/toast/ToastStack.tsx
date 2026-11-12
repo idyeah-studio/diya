@@ -160,6 +160,9 @@ export function ToastStack({ portal, outermost, registry }: { portal: HTMLElemen
     if (!host) return
     const node = list.current
     const slots = node ? Array.from(node.querySelectorAll<HTMLElement>(':scope > .diya-toast')) : []
+    // In the top layer before anything is measured: a popover that isn't open lays out as nothing,
+    // so a toast measured there would seem to have moved its whole height (T1).
+    if (slots.some((slot) => slot.firstElementChild && !slot.hasAttribute('data-leaving')) && host.popover && !host.region.matches(':popover-open')) raiseToastHost(host)
     // Leaving: the exit plays on a copy under the live toasts, then the entry goes.
     for (const slot of slots) {
       const id = slot.dataset.toast!

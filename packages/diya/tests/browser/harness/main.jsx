@@ -1,7 +1,7 @@
 // One page per case (?case=…), each a small app built on the package's dist. The specs drive
 // them in Chromium, WebKit and Firefox. Query: theme, glass, motion, scale (duration scale).
-import { useRef, useState, version } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useRef, useState, version } from 'react'
+import { createPortal, flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 import '@idyeah/diya/styles.css'
 import * as diya from '@idyeah/diya'
@@ -262,7 +262,59 @@ function ToastsCase() {
   )
 }
 
-const cases = { buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase }
+// The toast probe: everything driven from the page's window, so specs can start from an empty
+// stack and move a real pointer onto a toast. window.diya is the package; window.comps adds and
+// removes <Toast>s; window.nested does it in a nested Dark provider; window.openDialog opens a
+// DIYA Dialog; window.openNative opens an app's own showModal() dialog with a <Toast> button.
+// bg=1 puts a busy backdrop behind the corner, so Glass shows what's under it.
+function Comps({ store, prefix }) {
+  const [list, setList] = useState([])
+  useEffect(() => {
+    let n = 0
+    window[store] = {
+      add: (props) => { const key = `${prefix}${++n}`; flushSync(() => setList((items) => [...items, { key, ...props }])); return key },
+      update: (key, props) => flushSync(() => setList((items) => items.map((item) => (item.key === key ? { ...item, ...props } : item)))),
+      remove: (key) => flushSync(() => setList((items) => items.filter((item) => item.key !== key))),
+    }
+  }, [])
+  return list.map(({ key, title, description, action, duration = 0, tone = 'info', urgent }) => (
+    <Toast key={key} title={title} tone={tone} duration={duration} urgent={urgent} action={action}
+      onDismiss={() => { note('dismiss', title); setList((items) => items.filter((item) => item.key !== key)) }}>
+      {description}
+    </Toast>
+  ))
+}
+function ProbeCase() {
+  const [dialog, setDialog] = useState(false)
+  const native = useRef(null)
+  const [nativeToast, setNativeToast] = useState(false)
+  useEffect(() => {
+    window.diya = diya
+    window.openDialog = () => flushSync(() => setDialog(true))
+    window.closeDialog = () => flushSync(() => setDialog(false))
+    window.openNative = () => native.current.showModal()
+  }, [])
+  return (
+    <div style={{ padding: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'start' }}>
+      {query.get('bg') === '1' && <div aria-hidden="true" style={{ position: 'fixed', right: 0, bottom: 0, width: 520, height: 560, background: 'repeating-linear-gradient(135deg, #e4572e 0 24px, #29335c 24px 48px, #f3a712 48px 72px)', zIndex: 0 }} />}
+      <TextInput label="Project name" defaultValue="Atlas" />
+      <Button id="open-dialog" onClick={() => setDialog(true)}>Open dialog</Button>
+      <Dialog title="Edit task" open={dialog} onOpenChange={setDialog}>
+        <TextInput label="Task name" defaultValue="Write the brief" />
+        <Button onClick={() => diya.toast({ title: 'Saved in the dialog', duration: 0 })}>Toast inside</Button>
+      </Dialog>
+      <dialog ref={native} id="native" style={{ padding: 24 }}>
+        <button id="native-save" onClick={() => setNativeToast(true)}>Save</button>
+        <button id="native-close" onClick={() => native.current.close()}>Close</button>
+        {nativeToast && <Toast title="Saved in native" duration={0} action={{ label: 'Undo native', onClick: () => note('undo-native') }} onDismiss={() => setNativeToast(false)}>Saved in the app's own dialog.</Toast>}
+      </dialog>
+      <Comps store="comps" prefix="k" />
+      {query.get('nested') === '1' && <DiyaProvider theme="dark" glass={query.get('nestedglass') === '1'}><div id="nested-region"><Comps store="nested" prefix="n" /></div></DiyaProvider>}
+    </div>
+  )
+}
+
+const cases = { buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; }'
