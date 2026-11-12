@@ -318,3 +318,113 @@ describe('enter styles', () => {
     expect(built.match(/@starting-style/g)!.length).toBe(source.match(/@starting-style/g)!.length)
   })
 })
+
+// The nine theming tokens of 1.2. Each is read where it's used, with today's value as its
+// fallback, and nothing declares it on .diya-root, so with none set nothing moves.
+const theming = ['--diya-color-focus', '--diya-color-heading', '--diya-color-field', '--diya-color-field-line', '--diya-height-control-small', '--diya-height-control-medium', '--diya-height-control-large', '--diya-radius-popup', '--diya-radius-modal']
+
+/** Every rule in a stylesheet, with the at-rules around it. */
+function allRules(css: string) {
+  const out: { selector: string; body: string; at: string[]; index: number }[] = []
+  const stack: string[] = []
+  let buffer = ''
+  let index = 0
+  for (const char of css.replace(/\/\*[\s\S]*?\*\//g, '')) {
+    if (char === '{') { stack.push(buffer.trim()); buffer = ''; continue }
+    if (char !== '}') { buffer += char; continue }
+    const prelude = stack.pop() ?? ''
+    if (!prelude.startsWith('@') && !/^(from|to|\d+%)/.test(prelude)) out.push({ selector: prelude, body: buffer, at: stack.filter(part => part.startsWith('@')), index: index++ })
+    buffer = ''
+  }
+  return out
+}
+const distRules = allRules(dist)
+
+describe('theming tokens (1.2)', () => {
+  it('every focus outline reads --diya-color-focus with the text fallback', () => {
+    const rings: string[] = []
+    for (const rule of distRules) {
+      if (rule.at.some(at => at.includes('forced-colors: active'))) continue
+      for (const [, name, value] of rule.body.matchAll(/(?:^|;|\s)(outline(?:-color)?)\s*:\s*([^;]+)/g)) {
+        if (/^(none|0)$/.test(value.trim()) || !/solid|var\(|currentColor/.test(value)) continue
+        rings.push(`${rule.selector} :: ${name}: ${value.trim()}`)
+      }
+    }
+    expect(rings.length).toBeGreaterThanOrEqual(32)
+    // Alert's tone ink is its own; Chatbot's attach ring follows its muted text.
+    const exceptions = /diya-alert button|diya-chat-attach/
+    for (const ring of rings) {
+      if (/diya-alert button/.test(ring)) { expect(ring).toContain('var(--diya-internal-alert-ink'); continue }
+      if (/diya-chat-attach/.test(ring)) { expect(ring).toContain('var(--diya-color-focus, currentColor)'); continue }
+      expect(ring, ring).toMatch(/var\(--diya-color-focus, var\(--diya-color-text\)\)/)
+    }
+    expect(rings.filter(ring => !exceptions.test(ring)).length).toBe(31)
+  })
+
+  it('the nested root resets the nine 1.2 tokens to initial, inside @layer diya', () => {
+    const resets = distRules.filter(rule => rule.selector === '.diya-root .diya-root')
+    expect(resets).toHaveLength(1)
+    expect(resets[0].at).toEqual(['@layer diya'])
+    const declared = Object.fromEntries([...resets[0].body.matchAll(/(--diya-[\w-]+)\s*:\s*([^;]+)/g)].map(([, name, value]) => [name, value.trim()]))
+    expect(declared).toEqual(Object.fromEntries(theming.map(name => [name, 'initial'])))
+  })
+
+  it('the 1.2 tokens are never declared on .diya-root (E7)', () => {
+    for (const rule of distRules) {
+      if (rule.selector === '.diya-root .diya-root') continue
+      for (const name of theming) expect(rule.body, `${rule.selector} declares ${name}`).not.toMatch(new RegExp(`(^|[;\\s])${name}\\s*:`))
+    }
+    // Each is read with a fallback wherever it's used, except inside the Glass field mix, where
+    // an unset field color must make the mix invalid (see the Glass test below).
+    const glassMix = 'color-mix(in srgb, var(--diya-color-field) var(--diya-internal-glass-field-strength), transparent)'
+    expect(dist.split(glassMix)).toHaveLength(2)
+    for (const name of theming) {
+      const uses = [...dist.replace(glassMix, '').matchAll(new RegExp(`var\\(${name}(\\s*[,)])`, 'g'))]
+      expect(uses.length, name).toBeGreaterThan(0)
+      expect(uses.filter(([, next]) => next.trim() === ')'), `${name} read without a fallback`).toEqual([])
+    }
+  })
+
+  it('the invalid field border comes after the field-line rule and wins', () => {
+    const line = distRules.filter(rule => rule.at.length === 1 && /border-color:\s*var\(--diya-color-field-line/.test(rule.body))
+    expect(line.map(rule => rule.selector.replace(/\s+/g, ' '))).toEqual([
+      '.diya-root .diya-text-field-control, .diya-root .diya-select-control, .diya-root .diya-textarea textarea',
+      '.diya-root .diya-combobox-control, .diya-root .diya-date-trigger',
+    ])
+    const invalid = distRules.find(rule => rule.selector.includes(".diya-text-field[data-invalid='true'] .diya-text-field-control") && /border-color:\s*var\(--diya-color-error\)/.test(rule.body))!
+    expect(invalid).toBeDefined()
+    for (const part of ['.diya-select-control', '.diya-textarea[data-invalid=\'true\'] textarea', '.diya-combobox-control', '.diya-date-trigger']) expect(invalid.selector).toContain(part)
+    expect(invalid.index).toBeGreaterThan(Math.max(...line.map(rule => rule.index)))
+  })
+
+  it('Glass field fill mixes the field color once', () => {
+    const fields = ".diya-root[data-glass='true'] :is(.diya-text-field-control, .diya-select-control, .diya-textarea textarea"
+    const glass = distRules.filter(rule => rule.selector.startsWith(fields) || rule.selector.startsWith(".diya-root[data-glass='true'] :is(.diya-combobox-control"))
+    const supported = glass.filter(rule => rule.at.join() === '@layer diya,@supports (backdrop-filter: blur(14px))')
+    // The mix is worked out on the field itself, from the field color alone, at today's strength.
+    const mix = supported.filter(rule => rule.body.includes('--diya-internal-glass-field:'))
+    expect(mix).toHaveLength(1)
+    const value = /--diya-internal-glass-field:\s*([^;]+)/.exec(mix[0].body)![1].trim()
+    expect(value).toBe('color-mix(in srgb, var(--diya-color-field) var(--diya-internal-glass-field-strength), transparent)')
+    expect(value.match(/color-mix/g)).toHaveLength(1)
+    expect(value).not.toContain('--diya-internal-field-fill')
+    // Unset, the mix is invalid and the field keeps today's fill: the private one, as before.
+    expect(supported.filter(rule => /background:/.test(rule.body)).map(rule => /background:\s*([^;]+)/.exec(rule.body)![1].trim())).toEqual([
+      'var(--diya-internal-glass-field, var(--diya-internal-field-fill))',
+      'var(--diya-internal-glass-field, var(--diya-internal-popup-control-fill))',
+    ])
+    const strength = (selector: string) => distRules.find(rule => rule.selector === selector && rule.body.includes('--diya-internal-glass-field-strength'))?.body.match(/--diya-internal-glass-field-strength:\s*([^;]+)/)?.[1].trim()
+    expect(strength(".diya-root[data-glass='true']")).toBe('56%')
+    expect(strength(".diya-root[data-glass='true']:where([data-theme='light'])")).toBe('66%')
+    // Increase Contrast, Reduce Transparency and forced colors make a set field color solid.
+    const solid = glass.filter(rule => rule.at.length === 2 && rule.at[1].startsWith('@media'))
+    expect(solid.map(rule => rule.at[1])).toEqual(['@media (prefers-contrast: more)', '@media (prefers-contrast: more)', '@media (prefers-reduced-transparency: reduce)', '@media (prefers-reduced-transparency: reduce)', '@media (forced-colors: active)', '@media (forced-colors: active)'])
+    for (const rule of solid) expect(rule.body).toMatch(/background:\s*var\(--diya-color-field, var\(--diya-internal-(field|popup-control)-fill\)\)/)
+    for (const rule of solid) expect(rule.index).toBeGreaterThan(mix[0].index)
+  })
+
+  it('the Drawer doesn\'t read --diya-radius-modal yet', () => {
+    for (const rule of distRules.filter(rule => rule.selector.includes('diya-drawer-modal'))) expect(rule.body, rule.selector).not.toContain('--diya-radius-modal')
+    expect(distRules.find(rule => rule.selector === '.diya-root .diya-dialog' && rule.body.includes('border-radius'))!.body).toContain('border-radius: var(--diya-radius-modal, calc(22px * var(--diya-corner-scale, 1)))')
+  })
+})

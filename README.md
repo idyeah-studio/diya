@@ -461,6 +461,7 @@ Four props on `DiyaProvider` cover most apps: `theme`, `brandColor`,
 | Brand | Set `brandColor`. It sets `--diya-color-accent`, `--diya-color-accent-text`, `--diya-color-accent-soft` and `--diya-color-accent-ink` for you. |
 | Surfaces | Set `--diya-color-surface`, `--diya-color-raised` and `--diya-color-text` as a readable group. |
 | Corners | Set `--diya-corner-scale` (`0` is square, `2` is twice as round). Fields, selects and rounded Buttons share `--diya-radius-control`; Card, chart cards, Page Header, Form and Table share `--diya-radius-surface`. |
+| Control height | Set the three `--diya-height-control-*` tokens together, such as 36, 44 and 52px. |
 | Chart series | Pass `palette`, or a `color` on a series or data item. |
 | Size and behavior | Use each component's props. |
 
@@ -611,11 +612,13 @@ header edges, are worked out once per provider from these tokens.
 
 | Group | Tokens |
 | --- | --- |
-| Text | `--diya-color-text`, `--diya-color-muted` |
+| Text | `--diya-color-text`, `--diya-color-muted`, and `--diya-color-heading`: component titles (Card, Dialog, Drawer, Page Header, Table, Form, Wizard, Content State, Data Viz, Prose headings). Defaults to the text color. |
 | Surfaces | `--diya-color-surface`, `--diya-color-recessed`, `--diya-color-raised` |
 | Lines | `--diya-color-line` |
 | Brand | `--diya-color-accent` (fills), `--diya-color-accent-text` (text on the fill), `--diya-color-accent-soft` (a quiet tint) and `--diya-color-accent-ink` (brand-colored text on the page). `brandColor` sets all four; set them together if you override them. |
-| States | `--diya-color-hover`, `--diya-color-selected` |
+| States | `--diya-color-hover`, `--diya-color-selected`, and `--diya-color-focus`: every focus ring. Defaults to the text color. It needs 3:1 against the surfaces; in Light, use at least 5.1:1 against white so it holds over Glass. |
+| Fields | `--diya-color-field` (the fill) and `--diya-color-field-line` (the edge) of every field: TextInput, TextArea, Select, Search, Combobox, Date Picker and `Field framed`. The edge needs 3:1 against the field and the page. An invalid field keeps the error border. Under Glass, fields stay see-through at your color. |
+| Control height | `--diya-height-control-small`, `--diya-height-control-medium` and `--diya-height-control-large`: 32, 40 and 48px. These are the heights of Buttons (and icon-only squares), every field, Tabs and calendar days. Type sizes don't change. |
 | Destructive actions | `--diya-color-destructive` |
 | Statuses | For each of `success`, `warning`, `error` and `info`: `--diya-color-{status}` for text and icons on a surface, `--diya-color-{status}-surface` behind them, and `--diya-color-{status}-fill` with `--diya-color-{status}-on-fill` for solid badges. `--diya-color-error` also colors error messages, the border of every invalid field and a falling Metric. |
 | Neutral badge | `--diya-color-neutral-fill`, `--diya-color-neutral-on-fill` |
@@ -624,7 +627,7 @@ header edges, are worked out once per provider from these tokens.
 | Type scale | `--diya-text-caption`, `--diya-text-body`, `--diya-text-large`, `--diya-text-title`, `--diya-text-heading`, `--diya-text-display`, `--diya-text-hero` |
 | Line height | `--diya-leading-tight`, `--diya-leading-body` |
 | Space | `--diya-space-1` to `--diya-space-8`: 4, 8, 12, 16, 24, 32, 48 and 64px |
-| Shape and depth | `--diya-corner-scale`; `--diya-radius-control`, the one corner every control shares; `--diya-radius-surface`, the one corner every in-page surface shares; `--diya-shadow-raised` for cards, dialogs, drawers, toasts, menus and popups; `--diya-elevation` scales table, tooltip and floating chat shadows (`0` removes them). For a flat look, set `--diya-shadow-raised: none` as well |
+| Shape and depth | `--diya-corner-scale`; `--diya-radius-control`, the one corner every control shares; `--diya-radius-surface`, the one corner every in-page surface shares; `--diya-radius-popup`, the corner of Menu, Popover and the Combobox and Date Picker popups (16px × scale); `--diya-radius-modal`, the corner of Dialog and the Drawer's open edge (22px × scale; square when a Drawer fills a phone); `--diya-shadow-raised` for cards, dialogs, drawers, toasts, menus and popups; `--diya-elevation` scales table, tooltip and floating chat shadows (`0` removes them). For a flat look, set `--diya-shadow-raised: none` as well |
 | Motion | `--diya-duration-fast`, `--diya-duration-medium` and `--diya-duration-slow` (120, 160 and 240ms; exits take two-thirds), `--diya-duration-scale` (`0` turns motion off), and the curves `--diya-ease-enter`, `--diya-ease-exit` and `--diya-ease-move`. See [Motion](#motion) |
 
 ```tsx
@@ -638,13 +641,54 @@ header edges, are worked out once per provider from these tokens.
 ```
 
 Set `brandColor` and `fontFamily` as props rather than overriding the accent
-tokens and `--diya-font` directly. In your own CSS, `.diya-root` is the
-provider; with `theme="system"` its `data-theme` is `system`, so write Light
-and Dark overrides inside `@media (prefers-color-scheme: …)` as well as for
-`[data-theme='light']` and `[data-theme='dark']`. Set a status family's four tokens
-together, and check each pair in Light, Dark and Glass. Every public token,
-with its defaults and the tokens it pairs with, is also listed in
+tokens and `--diya-font` directly. Set a status family's four tokens together,
+and check each pair in Light, Dark and Glass. Every public token, with its
+defaults and the tokens it pairs with, is also listed in
 `@idyeah/diya/api.json`.
+
+A brand file sets the tokens for every provider at once. In your own CSS,
+`.diya-root` is the provider. `theme="system"` sets `data-theme="system"`, so
+repeat your Light and Dark values in the two `prefers-color-scheme` blocks.
+
+```css
+/* brand.css: import after '@idyeah/diya/styles.css'. brandColor stays on DiyaProvider. */
+.diya-root {
+  --diya-height-control-small: 36px;
+  --diya-height-control-medium: 44px;
+  --diya-height-control-large: 52px;
+}
+@media (forced-colors: none) {
+  .diya-root[data-theme='light'] {
+    --diya-color-heading: #0b4a4e;
+    --diya-color-focus: #0f6b70;
+    --diya-color-field: #ffffff;
+    --diya-color-field-line: #7d8c8e;
+  }
+  .diya-root[data-theme='dark'] {
+    --diya-color-heading: #9fe3dc;
+    --diya-color-focus: #4cc4bb;
+    --diya-color-field: #18181b;
+    --diya-color-field-line: #6b7a7c;
+  }
+}
+/* theme="system", the default: the same values, chosen by the OS. */
+@media (forced-colors: none) and (prefers-color-scheme: light) {
+  .diya-root[data-theme='system'] {
+    --diya-color-heading: #0b4a4e;
+    --diya-color-focus: #0f6b70;
+    --diya-color-field: #ffffff;
+    --diya-color-field-line: #7d8c8e;
+  }
+}
+@media (forced-colors: none) and (prefers-color-scheme: dark) {
+  .diya-root[data-theme='system'] {
+    --diya-color-heading: #9fe3dc;
+    --diya-color-focus: #4cc4bb;
+    --diya-color-field: #18181b;
+    --diya-color-field-line: #6b7a7c;
+  }
+}
+```
 
 ## Stability
 

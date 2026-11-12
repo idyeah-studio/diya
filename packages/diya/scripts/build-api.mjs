@@ -382,7 +382,11 @@ function describeTokens(provider) {
   const tokens = {}
   for (const [name, meta] of Object.entries(tokenMeta)) {
     const token = { ...meta }
-    if (Object.hasOwn(declared.dark, name)) {
+    // A token read only through fallbacks with var() or calc() inside, as the 1.2 theming
+    // tokens are, states its defaults in api-meta.mjs.
+    if (meta.defaults) {
+      token.defaults = meta.defaults
+    } else if (Object.hasOwn(declared.dark, name)) {
       token.defaults = { light: declared.light[name], dark: declared.dark[name] }
     } else if (meta.setBy) {
       const value = provider.props[meta.setBy.split('.')[1]]?.default ?? null

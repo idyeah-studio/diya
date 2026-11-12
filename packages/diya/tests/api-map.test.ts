@@ -300,6 +300,32 @@ describe('API map', () => {
     expect(api.tokens['--diya-color-scrim'].defaults).toEqual({ light: '#0000009e', dark: '#0000009e' })
   })
 
+  it('the 1.2 tokens have non-null Light and Dark defaults', () => {
+    const theming = Object.entries(api.tokens).filter(([, token]) => token.since === '1.2.0')
+    expect(theming.map(([name]) => name).sort()).toEqual(['--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-modal', '--diya-radius-popup'])
+    for (const [name, token] of theming) {
+      expect(token.defaults.light, name).toEqual(expect.any(String))
+      expect(token.defaults.dark, name).toEqual(expect.any(String))
+    }
+    expect(api.tokens['--diya-color-field'].defaults).toEqual({ light: 'var(--diya-color-raised)', dark: 'var(--diya-color-hover)' })
+    expect(api.tokens['--diya-height-control-medium'].defaults).toEqual({ light: '40px', dark: '40px' })
+    expect(api.tokens['--diya-radius-modal'].defaults).toEqual({ light: 'calc(22px * var(--diya-corner-scale, 1))', dark: 'calc(22px * var(--diya-corner-scale, 1))' })
+  })
+
+  it('no default names a --diya-internal- variable', () => {
+    for (const [name, token] of Object.entries(api.tokens)) {
+      expect(`${token.defaults.light} ${token.defaults.dark}`, name).not.toContain('--diya-internal-')
+    }
+  })
+
+  it('token descriptions are strings the schema allows', () => {
+    const schema = JSON.parse(readFileSync(resolve(root, 'api.schema.json'), 'utf8'))
+    expect(schema.$defs.token.properties.description).toEqual({ type: 'string', description: expect.any(String) })
+    const described = Object.entries(api.tokens).filter(([, token]) => 'description' in token)
+    expect(described.map(([name]) => name).sort()).toEqual(['--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-color-heading'])
+    expect((api.tokens['--diya-color-focus'] as { description?: string }).description).toContain('5.1:1 against white')
+  })
+
   it('describes the motion tokens, new in 1.1, with no setBy', () => {
     const both = (value: string) => ({ light: value, dark: value })
     const motion = Object.fromEntries(Object.entries(api.tokens).filter(([, token]) => token.group === 'motion'))
@@ -312,8 +338,9 @@ describe('API map', () => {
       '--diya-ease-exit': { group: 'motion', kind: 'easing', pairsWith: [], since: '1.1.0', defaults: both('cubic-bezier(0.4, 0, 1, 1)') },
       '--diya-ease-move': { group: 'motion', kind: 'easing', pairsWith: [], since: '1.1.0', defaults: both('cubic-bezier(0.4, 0, 0.2, 1)') },
     })
-    // Only tokens added after 1.0.0 carry since.
-    expect(Object.keys(api.tokens).filter(name => api.tokens[name].since)).toEqual(Object.keys(motion))
+    // Only tokens added after 1.0.0 carry since: motion (1.1) and the nine theming tokens (1.2).
+    const theming = ['--diya-color-focus', '--diya-color-heading', '--diya-color-field', '--diya-color-field-line', '--diya-height-control-small', '--diya-height-control-medium', '--diya-height-control-large', '--diya-radius-popup', '--diya-radius-modal']
+    expect(Object.keys(api.tokens).filter(name => api.tokens[name].since).sort()).toEqual([...Object.keys(motion), ...theming].sort())
   })
 
   it('describes every messages namespace and key', async () => {

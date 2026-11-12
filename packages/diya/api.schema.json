@@ -198,7 +198,8 @@
           "properties": { "light": { "type": ["string", "null"] }, "dark": { "type": ["string", "null"] } }
         },
         "setBy": { "type": "string", "description": "The DiyaProvider prop that sets it; set the prop rather than the token." },
-        "since": { "type": "string", "description": "The version that added the token, when later than 1.0.0." }
+        "since": { "type": "string", "description": "The version that added the token, when later than 1.0.0." },
+        "description": { "type": "string", "description": "What the token styles and the contrast it needs, when its name and pairsWith don't say." }
       }
     },
     "message": {
