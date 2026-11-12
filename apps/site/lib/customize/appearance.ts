@@ -33,6 +33,27 @@ export const TOKEN_LENGTHS: Record<TokenLength, { token: `--diya-${string}`; fal
   radiusPopup: { token: '--diya-radius-popup', fallback: 16, min: 0, max: 40 },
   radiusModal: { token: '--diya-radius-modal', fallback: 22, min: 0, max: 40 },
 }
+/**
+ * Customize's Control height row (F11): the three heights move together as a
+ * ladder (DS-SITE-03). Default is DIYA's own 32 / 40 / 48 and writes nothing.
+ */
+export const CONTROL_HEIGHTS = {
+  compact: { heightSmall: 28, heightMedium: 36, heightLarge: 44 },
+  default: { heightSmall: 32, heightMedium: 40, heightLarge: 48 },
+  roomy: { heightSmall: 36, heightMedium: 44, heightLarge: 52 },
+} as const
+export type ControlHeight = keyof typeof CONTROL_HEIGHTS
+export const CONTROL_HEIGHT_NAMES: Record<ControlHeight, string> = { compact: 'Compact', default: 'Default', roomy: 'Roomy' }
+
+/** Which ladder an appearance's heights are, or null for heights set some other way. */
+export function controlHeight(appearance: Appearance): ControlHeight | null {
+  const fallback = (name: 'heightSmall' | 'heightMedium' | 'heightLarge') => appearance.tokens?.[name] ?? CONTROL_HEIGHTS.default[name]
+  const found = (Object.keys(CONTROL_HEIGHTS) as ControlHeight[]).find((preset) =>
+    (['heightSmall', 'heightMedium', 'heightLarge'] as const).every((name) => fallback(name) === CONTROL_HEIGHTS[preset][name])
+  )
+  return found ?? null
+}
+
 /** The 1.2 tokens a theme sets; anything left out keeps DIYA's default. */
 export type ThemingTokens = Partial<Record<Theme, Partial<Record<TokenColor, string>>>> & Partial<Record<TokenLength, number>>
 

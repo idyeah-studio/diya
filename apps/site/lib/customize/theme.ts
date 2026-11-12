@@ -1,5 +1,7 @@
 import {
   BRAND_DEFAULT_NAME,
+  CONTROL_HEIGHT_NAMES,
+  controlHeight,
   brandSet,
   DEFAULT_APPEARANCE,
   fonts,
@@ -182,5 +184,10 @@ export function themeSummary(appearance: Appearance) {
     glass: appearance.translucent,
     motion: MOTION_NAMES[appearance.motion],
     status: statusChanged ? 'Your own' : 'DIYA defaults',
+    controlHeight: (() => {
+      const preset = controlHeight(appearance)
+      return preset ? CONTROL_HEIGHT_NAMES[preset] : 'Your own'
+    })(),
+    fields: (['light', 'dark'] as Theme[]).some((t) => appearance.tokens?.[t]?.field || appearance.tokens?.[t]?.fieldLine) ? 'Your own' : 'Auto',
   }
 }

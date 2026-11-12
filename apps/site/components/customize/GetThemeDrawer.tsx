@@ -181,6 +181,12 @@ export function GetThemeDrawer({
             </dd>
           </div>
           <div>
+            <dt>Control height · Fields</dt>
+            <dd>
+              {summary.controlHeight} · {summary.fields}
+            </dd>
+          </div>
+          <div>
             <dt>Glass</dt>
             <dd>{summary.glass ? 'On' : 'Off'}</dd>
           </div>
