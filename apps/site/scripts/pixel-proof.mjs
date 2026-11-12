@@ -188,19 +188,18 @@ async function capture(args) {
 }
 
 async function compare(args) {
-  const [left, right] = args._.slice(1).map(dir => resolve(dir))
+  // Each side may list several runs of the same build, comma-separated: a shot counts as changed
+  // only when no baseline run matches any candidate run, so noise that varies between two runs
+  // of one build (a lazy image, a chart's first frame) isn't reported as a change.
+  const [lefts, rights] = args._.slice(1).map(dirs => dirs.split(',').map(dir => resolve(dir)))
+  const [left, right] = [lefts[0], rights[0]]
   const diffs = args.diffs ? resolve(args.diffs) : null
   if (diffs) mkdirSync(diffs, { recursive: true })
   const names = readdirSync(left).filter(name => name.endsWith('.png')).sort()
   const browser = await chromium.launch()
   const page = await browser.newPage()
   const results = []
-  for (const name of names) {
-    if (!existsSync(join(right, name))) { results.push({ name, changed: 'missing' }); continue }
-    const a = readFileSync(join(left, name))
-    const b = readFileSync(join(right, name))
-    if (a.equals(b)) { results.push({ name, changed: 0 }); continue }
-    const result = await page.evaluate(async ([a, b, wantDiff]) => {
+  const diff = (a, b, wantDiff) => page.evaluate(async ([a, b, wantDiff]) => {
       const load = async source => {
         const image = new Image()
         image.src = `data:image/png;base64,${source}`
@@ -211,7 +210,7 @@ async function compare(args) {
         return { width: image.width, height: image.height, data: context.getImageData(0, 0, image.width, image.height).data }
       }
       const [one, two] = await Promise.all([load(a), load(b)])
-      if (one.width !== two.width || one.height !== two.height) return { changed: `size ${one.width}x${one.height} vs ${two.width}x${two.height}` }
+      if (one.width !== two.width || one.height !== two.height) return { changed: Infinity, size: `${one.width}x${one.height} vs ${two.width}x${two.height}` }
       let changed = 0
       let box = null
       const diff = wantDiff ? new OffscreenCanvas(one.width, one.height) : null
@@ -235,9 +234,24 @@ async function compare(args) {
         png = btoa(text)
       }
       return { changed, box, png }
-    }, [a.toString('base64'), b.toString('base64'), !!diffs])
-    if (result.png) writeFileSync(join(diffs, name), Buffer.from(result.png, 'base64'))
-    results.push({ name, changed: result.changed, box: result.box })
+    }, [a.toString('base64'), b.toString('base64'), wantDiff])
+  for (const name of names) {
+    const pairs = lefts.flatMap(l => rights.map(r => [join(l, name), join(r, name)])).filter(([, r]) => existsSync(r))
+    if (!pairs.length) { results.push({ name, changed: 'missing' }); continue }
+    let best = null
+    for (const [l, r] of pairs) {
+      if (!existsSync(l)) continue
+      const a = readFileSync(l)
+      const b = readFileSync(r)
+      if (a.equals(b)) { best = { changed: 0 }; break }
+      const result = await diff(a, b, false)
+      if (!best || result.changed < best.changed) best = { ...result, pair: [l, r] }
+    }
+    if (best.changed && diffs) {
+      const full = await diff(readFileSync(best.pair[0]), readFileSync(best.pair[1]), true)
+      if (full.png) writeFileSync(join(diffs, name), Buffer.from(full.png, 'base64'))
+    }
+    results.push({ name, changed: best.changed === Infinity ? `size ${best.size}` : best.changed, box: best.box })
   }
   for (const name of readdirSync(right).filter(name => name.endsWith('.png') && !names.includes(name))) results.push({ name, changed: 'extra' })
   await browser.close()
