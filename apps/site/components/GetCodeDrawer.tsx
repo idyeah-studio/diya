@@ -124,6 +124,9 @@ ${providerOpen.length <= 80 ? providerOpen : `<DiyaProvider\n${providerProps.map
     setAnnouncement(value === 'file' ? 'Showing the complete file.' : 'Showing the snippet.')
   }
   const component = snippet?.fileName.replace(/\.tsx$/, '') ?? ''
+  /* The code may show something other than the page's item, such as toast() on the Alert page. */
+  const use = snippet?.subject?.use ?? title
+  const shown = snippet?.subject?.title ?? title
   /* Next.js: a server layout can't pass Link (a function), so the provider moves into a client file. */
   const nextProviders = `'use client'
 import Link from 'next/link'
@@ -226,7 +229,7 @@ export function Providers({ children }: { children: ReactNode }) {
           </>
         )}
         {snippet && (
-          <Step n={3} title={`Use ${title}`} titleId={`${uid}-use`} tabs>
+          <Step n={3} title={`Use ${use}`} titleId={`${uid}-use`} tabs>
             <div className="code-step-pm">
               <Tabs
                 label="Code format"
@@ -243,8 +246,8 @@ export function Providers({ children }: { children: ReactNode }) {
                         <CodeBlock
                           code={snippet.code}
                           language="tsx"
-                          label={`${title}, as previewed`}
-                          name={`${title} example`}
+                          label={`${shown}, as previewed`}
+                          name={`${shown} example`}
                           collapseAfter={10}
                           onCopied={() => codeTaken(catalogItem(id), 'copy')}
                         />
@@ -260,7 +263,7 @@ export function Providers({ children }: { children: ReactNode }) {
                             code={snippet.file}
                             language="tsx"
                             label={snippet.fileName}
-                            name={`${title} complete file`}
+                            name={`${shown} complete file`}
                             collapseAfter={14}
                             onCopied={() => codeTaken(catalogItem(id), 'copy')}
                           />

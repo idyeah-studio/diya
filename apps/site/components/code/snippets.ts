@@ -25,6 +25,8 @@ export type Snippet = {
   charts?: boolean
   /** Declarations a type check needs for free identifiers the code uses (e.g. "declare const save: () => void"). Not shown to users. */
   context?: string
+  /** What the code shows when it isn't the page's own item, such as toast() on the Alert page: the step says "Use toast()" and the code is "Toast, as previewed". */
+  subject?: { use: string; title: string }
 }
 
 type Options = Record<string, string | boolean>
@@ -336,6 +338,8 @@ type Spec = {
   functionProps?: string[]
   /** Functions the code calls (not elements it renders), imported beside the components, such as `toast`. */
   calls?: string[]
+  /** When the code shows something other than the page's item: its words in Get code, and the complete file's name (`ToastExample`). */
+  subject?: { use: string; title: string; stem: string }
 }
 
 function importLine(names: string[], entry: string): string {
@@ -361,7 +365,7 @@ function build(id: ItemId, spec: Spec): Snippet {
   const jsx = spec.code ?? (spec.jsx instanceof El ? element(spec.jsx, '', 0) : child(spec.jsx, '', 0))
   const code = [importLine([...names, ...types], entry), ...consts, jsx].join('\n\n')
   const context = [...(spec.context ?? []), ...found.decls]
-  const fileName = `${fileStem(id)}.tsx`
+  const fileName = `${spec.subject?.stem ?? fileStem(id)}.tsx`
   const icons = [...found.components].filter(isIcon).sort()
   const links = /\bhref(=|: )/.test(code)
   const snippet: Snippet = { code, entry, functionProps: [...found.functionProps], file: '', fileName, icons, links }
@@ -373,6 +377,7 @@ function build(id: ItemId, spec: Spec): Snippet {
     )
   }
   if (charts) snippet.charts = true
+  if (spec.subject) snippet.subject = { use: spec.subject.use, title: spec.subject.title }
   if (context.length) snippet.context = context.join('\n')
   return snippet
 }
@@ -543,7 +548,7 @@ function completeFile(id: ItemId, spec: Spec, found: Found, names: string[], ent
       ? '    ' + element(spec.jsx, '    ', 4)
       : `    <>\n      ${child(spec.jsx, '      ', 6)}\n    </>`
   const sections = [...(body.length ? [body.join('\n')] : []), ...statements, `  return (\n${jsx}\n  )`]
-  const component = `export default function ${fileStem(id)}() {\n${sections.join('\n\n')}\n}`
+  const component = `export default function ${spec.subject?.stem ?? fileStem(id)}() {\n${sections.join('\n\n')}\n}`
 
   const imports: string[] = []
   const react = [...(state.length ? ['useState'] : []), ...[...(typeImports.get('react') ?? [])].sort().map((t) => `type ${t}`)]
@@ -1332,6 +1337,7 @@ function alert(p: Playground): Snippet {
   const call = raw(`toast(${js(options, '', 6)})`, ...(handler ? [handler] : []))
   return build('alert', {
     calls: ['toast'],
+    subject: { use: 'toast()', title: 'Toast', stem: 'ToastExample' },
     jsx: h('Button', { variant: 'outline', onClick: fn('', call) }, 'Show toast'),
   })
 }
