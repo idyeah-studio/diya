@@ -120,10 +120,23 @@ for (const theme of ['light', 'glass-dark'] as const) {
           last = now
           tops.push(first.getBoundingClientRect().top)
           const copy = document.querySelector<HTMLElement>('.diya-toast-copies > *')
-          if (copy) {
+          if (copy && !copyUnder.length) {
+            // The paint order, tested directly: lay the copy over a live toast and make it
+            // hit-testable (copies are inert and pointer-events: none, which elementFromPoint
+            // skips), then see which one is on top at the overlap's center (QA-05).
+            const { top, pointerEvents } = copy.style
+            const live = first.getBoundingClientRect()
+            copy.style.top = `${live.top}px`
+            copy.style.pointerEvents = 'auto'
+            copy.inert = false
             const box = copy.getBoundingClientRect()
-            const hit = document.elementFromPoint(box.left + 30, box.top + 6)
-            copyUnder.push(!copy.contains(hit))
+            const x = Math.max(box.left, live.left) + 20
+            const y = (Math.max(box.top, live.top) + Math.min(box.bottom, live.bottom)) / 2
+            const hit = document.elementFromPoint(x, y)
+            copyUnder.push(!!hit && first.contains(hit) && !copy.contains(hit))
+            copy.style.top = top
+            copy.style.pointerEvents = pointerEvents
+            copy.inert = true
           }
           if (now - start < 450) requestAnimationFrame(tick)
           else done({ tops, copyUnder, frames: frames.slice(1) })
@@ -135,8 +148,7 @@ for (const theme of ['light', 'glass-dark'] as const) {
       // It moves by a whole toast plus 12px, in steps, not in one jump.
       expect(moved).toBeGreaterThan(60)
       expect(Math.max(...steps)).toBeLessThan(moved * 0.6)
-      expect(track.copyUnder.length).toBeGreaterThan(0)
-      expect(track.copyUnder.every(Boolean)).toBe(true)
+      expect(track.copyUnder).toEqual([true])
     })
 
     test('an axe check with the stack open', async ({ page }, testInfo) => {
