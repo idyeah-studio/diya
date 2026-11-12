@@ -202,3 +202,21 @@ test('a framed component child that mounts an iframe shows the ring when focus i
   await page.locator('#blank').click()
   await expect(frame).not.toHaveAttribute('data-focused', '')
 })
+
+// H5 (FE G-04): the focus watcher polls only while focus or the pointer is in an iframe; a page at
+// rest with framed hosted fields does no work. (Every G5 spec above still passes with it.)
+test('with focus in a page field and the pointer away from iframes, nothing polls focus (H5)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=providers&theme=light')
+  await page.frameLocator('iframe[title="Split number"]').locator('#card').waitFor()
+  await page.mouse.move(2, 2)
+  await page.locator('#framed-notes').focus()
+  const reads = await page.evaluate(async () => {
+    const read = Object.getOwnPropertyDescriptor(Document.prototype, 'activeElement')!.get!
+    let count = 0
+    Object.defineProperty(document, 'activeElement', { configurable: true, get() { count += 1; return read.call(document) } })
+    await new Promise((done) => setTimeout(done, 1500))
+    delete (document as unknown as Record<string, unknown>).activeElement
+    return count
+  })
+  expect(reads).toBeLessThan(3)
+})
