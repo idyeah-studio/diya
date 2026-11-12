@@ -42,6 +42,10 @@ export const variants: Record<ItemId, { playground: Playground; options?: Record
     { playground: { Size: 'Large', Style: 'Pill', Options: ['Helper text'], State: 'Error' } },
     { playground: { Options: ['Label'], State: 'Read-only' } },
   ],
+  field: [
+    { playground: { Size: 'Large', Options: ['Label', 'Framed'], State: 'Error' } },
+    { playground: { Size: 'Small', Options: ['Helper text'], State: 'Disabled' } },
+  ],
   link: [
     { playground: { Type: 'Inline', Options: ['Leading icon', 'Trailing icon'] } },
     { playground: { Options: ['Trailing icon'] } },

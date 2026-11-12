@@ -14,6 +14,7 @@ export const componentGroups = [
     { id: 'switch', title: 'Switch', keywords: 'toggle boolean on off' },
     { id: 'slider', title: 'Slider', keywords: 'range value volume' },
     { id: 'search', title: 'Search', keywords: 'find filter query' },
+    { id: 'field', title: 'Field', keywords: 'label helper error wrapper own custom native third-party hosted iframe card payment time framed' },
   ] },
   { title: 'Navigation', items: [
     { id: 'link', title: 'Text Link', keywords: 'anchor inline navigation' },

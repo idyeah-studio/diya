@@ -63,6 +63,11 @@ export const guidance: Record<ItemId, Guidance> = {
     instead: 'A form field that happens to hold a query? Text Input.',
     access: 'type="search" with a label, so Escape clears it in most browsers and it is announced as a search field.',
   },
+  field: {
+    use: 'For a control DIYA doesn’t make: your own input, a native one DIYA doesn’t wrap (time, color), or a third-party or hosted control. Field gives it the label, help and error every DIYA field has.',
+    instead: 'DIYA makes the control? Use its own label, helperText and error. A payment provider’s card field? Field with framed draws the field box around it.',
+    access: 'The label points at the control, the help or error is linked with aria-describedby, and an error sets aria-invalid. A hosted iframe is named with aria-labelledby, a label click moves focus into it, and its error is spoken as focus arrives, since ids can’t reach inside a frame.',
+  },
   link: {
     use: 'For going somewhere: another page, a section, a document.',
     instead: 'Running an action? Button.',
@@ -133,7 +138,7 @@ export const guidance: Record<ItemId, Guidance> = {
     access: 'Every badge needs a label, which screen readers hear in place of the dot or number.',
   },
   alert: {
-    use: 'For a message about the page or a task: saved, needs attention, failed. Toast is the same message, floated and temporary.',
+    use: 'For a message about the page or a task: saved, needs attention, failed. For the same message floated and temporary, call toast({ title, description, tone }) from the code that did the work.',
     instead: 'Something that needs a decision before going on? Dialog.',
     access: 'An urgent alert is announced at once (role="alert"); others politely. The tone is said in words, not just shown in color.',
   },

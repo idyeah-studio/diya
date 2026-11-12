@@ -39,7 +39,7 @@ export const API = api as unknown as Api
 export const EXPORT_NAMES: Record<ItemId, string> = {
   button: 'Button', 'text-input': 'TextInput', 'text-area': 'TextArea', select: 'Select',
   'date-picker': 'DatePicker', calendar: 'Calendar', combobox: 'Combobox', choice: 'Choice', switch: 'Switch', slider: 'Slider',
-  search: 'Search', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
+  search: 'Search', field: 'Field', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
   menu: 'Menu', tag: 'Tag', metric: 'Metric', rating: 'Rating', avatar: 'Avatar', list: 'List',
   accordion: 'Accordion', prose: 'Prose', 'code-block': 'CodeBlock',
   badge: 'Badge', alert: 'Alert', progress: 'Progress', tooltip: 'Tooltip', popover: 'Popover',

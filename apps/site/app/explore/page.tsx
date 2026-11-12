@@ -24,6 +24,7 @@ import { ChoiceLibrary } from '../../components/ChoiceLibrary'
 import { SelectLibrary } from '../../components/SelectLibrary'
 import { PageHeaderLibrary } from '../../components/PageHeaderLibrary'
 import { TextInputLibrary } from '../../components/TextInputLibrary'
+import { FieldLibrary } from '../../components/FieldLibrary'
 import { ButtonLibrary } from '../../components/ButtonLibrary'
 import type { Metadata } from 'next'
 import { catalogIsOpen, resolveCatalogRoute, type CatalogRoute } from '../../lib/catalog-route'
@@ -111,6 +112,7 @@ function CatalogPage({ route, want }: { route: Exclude<CatalogRoute, { area: 'sk
   if (initial.area === 'components' && initial.component === 'rating') return <RatingLibrary />
   if (initial.area === 'components' && initial.component === 'choice') return <ChoiceLibrary />
   if (initial.area === 'components' && initial.component === 'select') return <SelectLibrary />
+  if (initial.area === 'components' && initial.component === 'field') return <FieldLibrary />
   if (initial.area === 'components')
     return initial.component === 'text-input' ? <TextInputLibrary /> : <ButtonLibrary />
   if (initial.pattern === 'card') return <CardLibrary />

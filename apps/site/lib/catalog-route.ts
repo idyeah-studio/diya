@@ -15,6 +15,7 @@ export const componentIds = [
   'switch',
   'slider',
   'search',
+  'field',
   'link',
   'pagination',
   'tabs',

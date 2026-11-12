@@ -38,6 +38,7 @@ const items: CustomizeItem[] = [
   { id: 'switch', title: 'Switch', kind: 'component', text: 'Label', roles: { accent: 'Track when on', lines: 'Edge of the track' } },
   { id: 'slider', title: 'Slider', kind: 'component', text: 'Label and value', roles: { accent: 'Filled part of the track and the handle', lines: 'Tick marks and the handle’s edge' } },
   { id: 'search', title: 'Search', kind: 'component', text: 'Query, icon and field edge', roles: {} },
+  { id: 'field', title: 'Field', kind: 'component', text: 'Label, help and the field edge', roles: {}, note: 'The control inside is yours; Field draws only its frame.' },
   { id: 'link', title: 'Text Link', kind: 'component', text: 'Link text and underline', roles: {} },
   { id: 'pagination', title: 'Pagination', kind: 'component', text: 'Page numbers and arrows', roles: {} },
   { id: 'tabs', title: 'Tabs', kind: 'component', text: 'Tab labels', roles: { accent: 'Selected pill tab', raised: 'Track behind pill tabs, in glass', lines: 'Line under underline tabs' } },

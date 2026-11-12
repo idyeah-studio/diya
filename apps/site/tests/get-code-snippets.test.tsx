@@ -28,6 +28,7 @@ import { SiteHeaderLibrary } from '../components/SiteHeaderLibrary'
 import { TableLibrary } from '../components/TableLibrary'
 import { TabsLibrary } from '../components/TabsLibrary'
 import { TextInputLibrary } from '../components/TextInputLibrary'
+import { FieldLibrary } from '../components/FieldLibrary'
 import { UtilityLibrary } from '../components/UtilityLibrary'
 import { V1ApplicationLibrary } from '../components/V1ApplicationLibrary'
 import { V1WorkflowLibrary } from '../components/V1WorkflowLibrary'
@@ -131,7 +132,7 @@ function knownFunctions(snippet: Snippet) {
 
 describe('Get code snippets', () => {
   it('covers every catalog item, with a non-default playground that changes the code', () => {
-    expect(ids).toHaveLength(42)
+    expect(ids).toHaveLength(43)
     for (const id of ids) {
       const base = snippetFor(id, {}).code
       expect(variants[id].length, id).toBeGreaterThan(0)
@@ -320,6 +321,7 @@ describe('Get code follows the live playground', () => {
     switch: () => <MoreAtomsLibrary component="switch" />,
     slider: () => <UtilityLibrary component="slider" />,
     search: () => <MoreAtomsLibrary component="search" />,
+    field: () => <FieldLibrary />,
     link: () => <DataAtomsLibrary component="link" />,
     pagination: () => <DataAtomsLibrary component="pagination" />,
     tabs: () => <TabsLibrary />,

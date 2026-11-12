@@ -289,7 +289,7 @@ const CHART_EXPORTS = new Set(['Chart', 'DataViz'])
 const COMPONENT_NAMES: Partial<Record<ItemId, string>> = {
   button: 'Button', 'text-input': 'TextInput', 'text-area': 'TextArea', select: 'Select',
   'date-picker': 'DatePicker', calendar: 'Calendar', combobox: 'Combobox', choice: 'Choice', switch: 'Switch', slider: 'Slider',
-  search: 'Search', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
+  search: 'Search', field: 'Field', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
   menu: 'Menu', tag: 'Tag', metric: 'Metric', rating: 'Rating', avatar: 'Avatar', list: 'List',
   accordion: 'Accordion', prose: 'Prose', 'code-block': 'CodeBlock',
   badge: 'Badge', alert: 'Alert', progress: 'Progress', tooltip: 'Tooltip', popover: 'Popover',
@@ -656,6 +656,32 @@ function textArea(p: Playground): Snippet {
       disabled: state === 'Disabled',
       readOnly: state === 'Read-only',
     }),
+  })
+}
+
+function field(p: Playground): Snippet {
+  const state = one(p, 'State', 'Default')
+  const framed = on(p, 'Options', 'Framed', true)
+  const time = v('startTime', 'string', "'09:30'")
+  return build('field', {
+    jsx: h(
+      'Field',
+      {
+        label: 'Start time',
+        hideLabel: !on(p, 'Options', 'Label', true),
+        helperText: on(p, 'Options', 'Helper text', true) && 'In your time zone.',
+        error: state === 'Error' && 'Pick a time between 9:00 AM and 6:00 PM.',
+        disabled: state === 'Disabled',
+        framed,
+        /* Size sets the frame's height, so it only matters with framed. */
+        size: framed && sized(sizeOf(p)),
+      },
+      h('input', {
+        type: 'time',
+        value: time,
+        onChange: fn('event', raw('setStartTime(event.target.value)', v('setStartTime', STRING_SETTER))),
+      })
+    ),
   })
 }
 
@@ -2085,6 +2111,7 @@ const SNIPPETS: Record<ItemId, (p: Playground, o: Options) => Snippet> = {
   switch: switchSnippet,
   slider,
   search,
+  field,
   link,
   pagination,
   tabs,
