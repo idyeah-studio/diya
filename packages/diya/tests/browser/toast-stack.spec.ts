@@ -195,3 +195,24 @@ test.describe('without the Popover API', () => {
     await expect.poll(() => titles(page)).toEqual(['Draft saved'])
   })
 })
+
+test.describe('<Toast> in the stack', () => {
+  test('two <Toast>s stack 12px apart instead of overlapping, and share the stack with toast()', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=toasts&theme=light')
+    await expect.poll(() => titles(page)).toEqual(['Draft saved', 'Link copied'])
+    await page.waitForTimeout(400)
+    const boxes = await page.evaluate(() => [...document.querySelectorAll('.diya-toast-list > .diya-toast')].map((slot) => { const box = slot.getBoundingClientRect(); return { top: Math.round(box.top), bottom: Math.round(box.bottom) } }))
+    expect(boxes[1].top - boxes[0].bottom).toBe(12)
+    await page.getByRole('button', { name: 'Export' }).click()
+    // Two <Toast>s fill a phone's two places, so there the toast() waits; <Toast>s always show.
+    await page.waitForTimeout(300)
+    expect(await titles(page)).toEqual(isPhone(testInfo) ? ['Draft saved', 'Link copied'] : ['Draft saved', 'Link copied', 'Export started'])
+  })
+
+  test('a <Toast> in a nested Dark provider shows in that provider\'s theme', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=toasts&theme=light&nested=1')
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list').length)).toBe(2)
+    const theme = await page.evaluate(() => [...document.querySelectorAll('.diya-toast-list > .diya-toast')].map((slot) => `${slot.querySelector('.diya-alert-title')?.textContent}:${slot.closest('.diya-root')?.getAttribute('data-theme')}`))
+    expect(theme.sort()).toEqual(['Draft saved:light', 'Link copied:light', 'Synced:dark'])
+  })
+})

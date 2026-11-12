@@ -248,7 +248,21 @@ function StackCase() {
   )
 }
 
-const cases = { buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase }
+// Two <Toast>s and a toast() in one provider, and a <Toast> in a nested Dark provider.
+function ToastsCase() {
+  const [first, setFirst] = useState(true)
+  const [second, setSecond] = useState(true)
+  return (
+    <div style={{ padding: 24, display: 'flex', gap: 12 }}>
+      <Button onClick={() => diya.toast({ title: 'Export started', duration: 0 })}>Export</Button>
+      {first && <Toast title="Draft saved" tone="success" duration={0} onDismiss={() => setFirst(false)}>Saved a moment ago.</Toast>}
+      {second && <Toast title="Link copied" duration={0} onDismiss={() => setSecond(false)}>Paste it anywhere.</Toast>}
+      {query.get('nested') === '1' && <DiyaProvider theme="dark"><Toast title="Synced" duration={0} onDismiss={() => {}}>Up to date.</Toast></DiyaProvider>}
+    </div>
+  )
+}
+
+const cases = { buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; }'

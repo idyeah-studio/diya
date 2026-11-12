@@ -18,14 +18,15 @@ test('the close button calls onDismiss at once; the exit plays on an inert, hidd
   await page.waitForTimeout(300)
   await page.getByRole('button', { name: /^Dismiss/ }).click()
   const right = await page.evaluate(() => {
-    const copies = [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].filter((node) => node.querySelector('.diya-alert') || node.classList.contains('diya-alert'))
+    // The copy is the innermost hidden picture holding the alert (1.2 keeps copies in a hidden layer).
+    const copies = [...document.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].filter((node) => (node.querySelector('.diya-alert') || node.classList.contains('diya-alert')) && !node.querySelector(':scope [aria-hidden="true"] .diya-alert'))
     return copies.map((copy) => ({ inert: copy.inert, running: copy.getAnimations().length, roles: copy.querySelectorAll('[role]').length }))
   })
   expect(await liveToasts(page)).toEqual([])
   expect((await log(page)).filter((entry) => entry.event === 'dismiss').map((entry) => entry.detail)).toEqual(['Draft saved'])
   expect(right).toEqual([{ inert: true, running: 1, roles: 0 }])
   await page.waitForTimeout(400)
-  expect(await page.evaluate(() => [...document.querySelectorAll('[aria-hidden="true"]')].filter((node) => node.querySelector('.diya-alert')).length)).toBe(0)
+  expect(await page.evaluate(() => document.querySelectorAll('[aria-hidden="true"] .diya-alert').length)).toBe(0)
 })
 
 test('times out after its duration, paused while the pointer is on it', async ({ page }, testInfo) => {
