@@ -92,6 +92,8 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   const announced = useRef(new Map<string, string>())
   const remaining = useRef(new Map<string, { version: number; left: number }>())
   const origin = useRef<HTMLElement | null>(null)
+  // An F8 walk is under way: only then does the stack take Tab over (R1).
+  const walking = useRef(false)
   const outside = useRef<HTMLElement | null>(null)
   const nativeModal = useRef<HTMLDialogElement | null>(null)
   // When a <Toast>'s exit copy last went into the copy layer (its gap closes after a delay too).
@@ -297,11 +299,13 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     }
   })
 
-  // The pointer and focus flags never outlive the toasts that set them: closing the last toast
+  // The pointer and focus flags, and an F8 walk, never outlive the toasts that set them: closing the last toast
   // with the pointer hides the list without a mouseleave, and WebKit and Firefox send no focusout
   // when a focused button is removed. Stale, either would freeze every later toast (T2).
   useClientLayoutEffect(() => {
     if (!showing) {
+      walking.current = false
+      origin.current = null
       if (pointer) setPointer(false)
       if (focusInside) setFocusInside(false)
     } else if (focusInside && !list.current?.contains(list.current.ownerDocument.activeElement)) setFocusInside(false)
@@ -352,7 +356,8 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       const button = newest?.querySelector<HTMLElement>(focusable)
       if (!button) return
       event.preventDefault()
-      if (isConnectedFocusable(document.activeElement)) origin.current = document.activeElement
+      origin.current = isConnectedFocusable(document.activeElement) ? document.activeElement : null
+      walking.current = true
       button.focus()
     }
     document.addEventListener('focusin', remember, true)
@@ -421,18 +426,23 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     else returnFocus(id, fallback)
   }
 
-  /** Back to where F8 was pressed, else the last place focused outside the stack. */
+  /** The F8 walk ends: back to where F8 was pressed, else the last place focused outside the stack. */
   function leaveStack() {
-    for (const candidate of [origin.current, outside.current]) {
+    walking.current = false
+    const candidates = [origin.current, outside.current]
+    origin.current = null
+    for (const candidate of candidates) {
       if (isConnectedFocusable(candidate)) { candidate.focus(); return true }
     }
     return false
   }
 
   function onKeyDown(event: globalThis.KeyboardEvent) {
-    // Tab walks the stack from the newest toast to the oldest, then back to where F8 was pressed;
-    // Shift+Tab goes the other way (T12). Within a toast, its own controls keep their order.
+    // After F8, Tab walks the stack from the newest toast to the oldest, then back to where F8 was
+    // pressed; Shift+Tab goes the other way (T12). Within a toast, its own controls keep their
+    // order. Focus that came in by Tab follows the page's order, through the toasts and on (R1).
     if (event.key === 'Tab' && !event.defaultPrevented) {
+      if (!walking.current) return
       const target = event.target as HTMLElement
       const slots = reachable()
       const slot = slots.find((item) => item.contains(target))
@@ -440,15 +450,13 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       const own = controls(slot)
       const index = slots.indexOf(slot)
       if (!event.shiftKey && own.at(-1) === target) {
-        event.preventDefault()
         const older = slots[index - 1]
-        if (older) controls(older)[0].focus()
-        else leaveStack()
+        if (older) { event.preventDefault(); controls(older)[0].focus() }
+        else if (leaveStack()) event.preventDefault()
       } else if (event.shiftKey && own[0] === target) {
-        event.preventDefault()
         const newer = slots[index + 1]
-        if (newer) controls(newer).at(-1)!.focus()
-        else leaveStack()
+        if (newer) { event.preventDefault(); controls(newer).at(-1)!.focus() }
+        else if (leaveStack()) event.preventDefault()
       }
       return
     }
@@ -479,7 +487,13 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     const enter = () => setPointer(true)
     const leave = (event: MouseEvent) => { if (!node.contains(event.relatedTarget as Node | null)) setPointer(false) }
     const focusIn = () => setFocusInside(true)
-    const focusOut = (event: globalThis.FocusEvent) => { if (!node.contains(event.relatedTarget as Node)) setFocusInside(false) }
+    const focusOut = (event: globalThis.FocusEvent) => {
+      if (node.contains(event.relatedTarget as Node)) return
+      setFocusInside(false)
+      // Focus left the stack: any F8 walk is over.
+      walking.current = false
+      origin.current = null
+    }
     const keydown = (event: globalThis.KeyboardEvent) => handlers.current.onKeyDown(event)
     node.addEventListener('mouseover', enter)
     node.addEventListener('mouseout', leave)

@@ -317,3 +317,48 @@ test.describe('the keyboard in the stack (T12)', () => {
     await expect(page.getByRole('button', { name: 'Dismiss: Link copied' })).toBeFocused()
   })
 })
+
+// Round 2. Plain Tab follows the page's order through the stack and on out of it; only an F8
+// walk takes Tab over, and it ends when focus leaves the stack (R1). WebKit's Tab skips buttons
+// unless the reader turns that on, so it walks with Option+Tab, as Safari's readers do.
+test.describe('Tab without F8 (R1)', () => {
+  const where = (page: Page) => page.evaluate(() => { const node = document.activeElement as HTMLElement | null; return !node || node === document.body ? 'BODY' : node instanceof HTMLInputElement ? `input:${node.value}` : node.getAttribute('aria-label') ?? node.textContent ?? node.id })
+  const tab = (page: Page, testInfo: Parameters<Parameters<typeof test>[1]>[1], shift = false) => page.keyboard.press(`${shift ? 'Shift+' : ''}${engine(testInfo) === 'webkit' ? 'Alt+' : ''}Tab`)
+  // Two toasts, and a control after the provider: the next stop in the page's order once the
+  // stack is passed (past it, focus would leave for the browser).
+  const raise = (page: Page) => page.evaluate(() => {
+    const after = document.createElement('button')
+    after.id = 'after'
+    after.textContent = 'After the app'
+    document.body.append(after)
+    const { toast } = (window as any).diya
+    toast({ title: 'Older', duration: 0 })
+    toast({ title: 'Newer', action: { label: 'Undo', onClick() {} } })
+  })
+
+  test('Tab from the page\'s last control, with two toasts, reaches both and then goes on past the stack', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await raise(page)
+    await settle(page)
+    await page.focus('#open-dialog')
+    const order: string[] = []
+    for (let i = 0; i < 4; i++) { await tab(page, testInfo); order.push(await where(page)) }
+    expect(order).toEqual(['Dismiss: Older', 'Undo', 'Dismiss: Newer', 'After the app'])
+  })
+
+  test('after an F8 walk, Tab from the page\'s end doesn\'t go back to where F8 was pressed', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await raise(page)
+    await settle(page)
+    await page.getByRole('textbox', { name: 'Project name' }).focus()
+    await page.keyboard.press('F8')
+    expect(await where(page)).toBe('Undo')
+    // The walk: newest to oldest, then back to the field, where it ends.
+    for (let i = 0; i < 3; i++) await tab(page, testInfo)
+    expect(await where(page)).toBe('input:Atlas')
+    await page.focus('#open-dialog')
+    const order: string[] = []
+    for (let i = 0; i < 4; i++) { await tab(page, testInfo); order.push(await where(page)) }
+    expect(order).toEqual(['Dismiss: Older', 'Undo', 'Dismiss: Newer', 'After the app'])
+  })
+})
