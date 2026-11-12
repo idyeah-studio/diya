@@ -1,5 +1,6 @@
 'use client'
 import { forwardRef, useId, type InputHTMLAttributes } from 'react'
+import { markField } from '../internal/field-parts.js'
 import { cx } from '../internal/cx.js'
 /** Native checkbox attributes, including `name`, `onChange`, `onBlur` and the ref, go on the switch input; `className` and `style` go on the outer field wrapper. */
 export type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'role' | 'size' | 'value' | 'checked' | 'defaultChecked' | 'children'> & {
@@ -43,3 +44,5 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
     <div><label htmlFor={inputId} className={hideLabel ? 'diya-sr-only' : 'diya-switch-label'}>{label}</label>{description && <p id={`${inputId}-description`} className="diya-switch-description" data-invalid={error ? true : undefined}>{error && <span aria-hidden="true">!</span>}{description}</p>}</div>
   </div>
 })
+// Field warns when it wraps one of DIYA's own fields, which have their own label.
+markField(Switch, 'Switch')

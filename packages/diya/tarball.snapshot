@@ -1,6 +1,6 @@
 # Files in the @idyeah/diya npm tarball. Regenerate with: pnpm snapshot:tarball
 # budget packed <= 545000 bytes
-# budget unpacked <= 1400000 bytes
+# budget unpacked <= 1500000 bytes
 CHANGELOG.md
 LICENSE
 NOTICE
@@ -77,15 +77,23 @@ dist/dialog/Dialog.d.ts
 dist/dialog/Dialog.js
 dist/dialog/messages.d.ts
 dist/dialog/messages.js
+dist/field/Field.d.ts
+dist/field/Field.js
+dist/field/messages.d.ts
+dist/field/messages.js
 dist/fonts/DIYASans-Italic.woff2
 dist/fonts/DIYASans.woff2
 dist/fonts/OFL.txt
 dist/index.d.ts
 dist/index.js
+dist/internal/announce.d.ts
+dist/internal/announce.js
 dist/internal/brand.d.ts
 dist/internal/brand.js
 dist/internal/cx.d.ts
 dist/internal/cx.js
+dist/internal/field-parts.d.ts
+dist/internal/field-parts.js
 dist/internal/layout-effect.d.ts
 dist/internal/layout-effect.js
 dist/internal/link.d.ts
@@ -94,6 +102,8 @@ dist/internal/modal-stack.d.ts
 dist/internal/modal-stack.js
 dist/internal/opener.d.ts
 dist/internal/opener.js
+dist/internal/pointer.d.ts
+dist/internal/pointer.js
 dist/internal/presence.d.ts
 dist/internal/presence.js
 dist/internal/slot.d.ts

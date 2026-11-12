@@ -1,5 +1,6 @@
 'use client'
 import { forwardRef, useId, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { markField } from '../internal/field-parts.js'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { selectMessages } from './messages.js'
@@ -136,3 +137,5 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     </div>
   )
 })
+// Field warns when it wraps one of DIYA's own fields, which have their own label.
+markField(Select, 'Select')

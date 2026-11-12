@@ -75,6 +75,8 @@ type Store = {
   slotCount: number
   /** The provider elements on this React, so a provider can tell whether one of its own React's is above it (S5). */
   roots: WeakSet<Element>
+  /** The page stack's polite voice, for a field's error announcement (step 5): set by the active stack. */
+  say: ((text: string) => void) | null
 }
 
 // One store per React on the page, on globalThis under a versioned key: two copies of the
@@ -109,8 +111,9 @@ type Store = {
 //   mounted inside this one's provider still hosts its own toasts. Every copy applies that
 //   rule, or two copies would disagree about who hosts.
 // - A newer copy may add behavior through optional fields (ToastSlot's `motion` and `leaving`
-//   are two); an older copy's stack ignores them, so that behavior is missing there, never
-//   broken.
+//   are two, and the store's `say`, read by internal/announce.ts for a field's error
+//   announcement); an older copy's stack
+//   ignores them, so that behavior is missing there, never broken.
 // Sharing across copies is best effort, and isn't promised in the public docs.
 const KEY = Symbol.for('@idyeah/diya/toast@1')
 function store(): Store {
@@ -137,6 +140,7 @@ function store(): Store {
   state.dropping ??= false
   state.slotCount ??= 0
   state.roots ??= new WeakSet()
+  state.say ??= null
   return state as Store
 }
 
@@ -251,6 +255,9 @@ export function providerAbove(element: Element) {
   for (let above = element.parentElement?.closest('.diya-root'); above; above = above.parentElement?.closest('.diya-root')) if (roots.has(above)) return true
   return false
 }
+
+/** The active stack's voice for a field's error announcement (internal/announce.ts reads it by this protocol), or null when it stops being the page's stack. */
+export function setToastSay(say: Store['say']) { store().say = say }
 
 /** The next place in arrival order, shared by toast() toasts and <Toast>s. */
 export function nextToastOrder() {

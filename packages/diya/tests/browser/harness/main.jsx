@@ -316,7 +316,31 @@ function ProbeCase() {
   )
 }
 
-const cases = { buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+// Field (1.2): TextInput beside Field framed around a raw input, with the same words, for the
+// pixel match; a hosted card iframe (cross-origin) and a same-origin one, each framed; and a form
+// whose field shows its error when you leave it, above a Pay button, for the held error.
+function FieldCase() {
+  const [error, setError] = useState()
+  const [paid, setPaid] = useState(0)
+  const cross = `${location.protocol}//127.0.0.1:${location.port}/card.html`
+  return (
+    <div style={{ display: 'grid', gap: 24, padding: 24, width: query.get('narrow') ? 'auto' : 360 }}>
+      <div id="pair" style={{ display: 'grid', gap: 24 }}>
+        <TextInput id="ti" label="Name on card" helperText="As it appears on the card." />
+        <diya.Field label="Name on card" helperText="As it appears on the card." framed><input id="fi" /></diya.Field>
+      </div>
+      <diya.Field label="Card number" framed error={query.get('error') ? 'Enter your card number.' : undefined}><div className="mount"><iframe title="Card number input" src={cross} /></div></diya.Field>
+      <diya.Field label="Expiry" framed><iframe title="Expiry input" srcDoc="<!doctype html><style>html,body{margin:0;background:transparent}</style><input aria-label=Expiry>" /></diya.Field>
+      <form id="pay" onSubmit={(event) => { event.preventDefault(); setPaid((count) => count + 1) }} style={{ display: 'grid', gap: 16 }}>
+        <diya.Field label="Security code" error={error}><input id="cvc" onBlur={(event) => setError(event.target.value.length < 3 ? 'Enter the 3 digits on the back.' : undefined)} /></diya.Field>
+        <Button type="submit" id="submit">Pay</Button>
+        <output id="paid">{paid}</output>
+      </form>
+    </div>
+  )
+}
+
+const cases = { field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; }'

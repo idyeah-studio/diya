@@ -11,6 +11,7 @@ import { comboboxMessages } from './combobox/messages.js'
 import { datePickerMessages } from './date-picker/messages.js'
 import { dialogMessages } from './dialog/messages.js'
 import { drawerMessages } from './workflow/drawer-messages.js'
+import { fieldMessages } from './field/messages.js'
 import { fileUploadMessages } from './workflow/file-upload-messages.js'
 import { formMessages } from './workflow/form-messages.js'
 import { listMessages } from './list/messages.js'
@@ -43,6 +44,7 @@ export const defaultMessages = {
   datePicker: datePickerMessages,
   dialog: dialogMessages,
   drawer: drawerMessages,
+  field: fieldMessages,
   fileUpload: fileUploadMessages,
   form: formMessages,
   list: listMessages,

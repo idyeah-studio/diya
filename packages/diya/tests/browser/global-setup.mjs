@@ -4,6 +4,7 @@ import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'vite'
+import { writeFileSync } from 'node:fs'
 import react from '@vitejs/plugin-react'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -40,4 +41,8 @@ export default async function setup() {
       })
     }
   }
+  // A hosted card field, as a payment provider ships one: its own page with one input, loaded
+  // cross-origin (127.0.0.1 inside localhost) by the field case. Focusing its window focuses the
+  // input, the way hosted fields forward focus.
+  writeFileSync(join(output, 'card.html'), `<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:transparent}input{font:16px system-ui;border:0;width:100%;height:38px;padding:0;background:transparent;outline:none;color:CanvasText}</style><input aria-label="Card number" id="card" placeholder="1234 1234 1234 1234"><script>addEventListener('focus',()=>document.getElementById('card').focus())</script>`)
 }

@@ -1139,7 +1139,8 @@
 :where(.diya-stack, .diya-inline)[data-justify='evenly'] { justify-content: space-evenly; }
 
 /* TextInputLibrary.css: portable component rules. */
-.diya-root .diya-text-field {
+.diya-root .diya-text-field,
+.diya-root .diya-field {
   --diya-internal-field-height: var(--diya-height-control-medium, 40px);
   --diya-internal-field-font-size: max(var(--diya-internal-field-min, 0px), var(--diya-text-body));
   width: 100%;
@@ -1147,15 +1148,18 @@
   max-width: min(100%, 400px);
   color: var(--diya-color-text);
 }
-.diya-root .diya-text-field[data-size='small'] {
+.diya-root .diya-text-field[data-size='small'],
+.diya-root .diya-field[data-size='small'] {
   --diya-internal-field-height: var(--diya-height-control-small, 32px);
   --diya-internal-field-font-size: max(var(--diya-internal-field-min, 0px), var(--diya-text-caption));
 }
-.diya-root .diya-text-field[data-size='large'] {
+.diya-root .diya-text-field[data-size='large'],
+.diya-root .diya-field[data-size='large'] {
   --diya-internal-field-height: var(--diya-height-control-large, 48px);
   --diya-internal-field-font-size: var(--diya-text-large);
 }
-.diya-root .diya-text-field > label {
+.diya-root .diya-text-field > label,
+.diya-root .diya-field > label {
   display: block;
   font-size: var(--diya-text-body);
   font-weight: 500;
@@ -1188,9 +1192,41 @@
   padding: 0;
   outline: none;
 }
-.diya-root .diya-text-field-control:focus-within {
+.diya-root .diya-text-field-control:focus-within,
+.diya-root .diya-field-frame[data-focused] {
   outline: 2px solid var(--diya-color-focus, var(--diya-color-text));
   outline-offset: 3px;
+}
+/* Field (1.2): the frame is TextInput's control box (it carries .diya-text-field-control, so
+   fill, edge, corner, height, Glass, focus ring and easing are shared). A native input, select
+   or textarea in the frame fills it, as TextInput's does, at
+   no less than iOS's no-zoom size; a hosted iframe gets light color-scheme, or an iframe whose
+   scheme differs from the page's paints an opaque white backing in Dark (E1). */
+.diya-root .diya-field-frame > :is(input, select, textarea) {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  color: var(--diya-color-text);
+  font: inherit;
+  font-size: var(--diya-internal-field-font-size);
+  width: 100%;
+  min-width: 0;
+  height: calc(var(--diya-internal-field-height) - 2px);
+  padding: 0;
+  outline: none;
+}
+.diya-root .diya-field-frame > :is(input, select, textarea)::placeholder {
+  color: var(--diya-color-muted);
+  opacity: 1;
+}
+.diya-root .diya-field-frame iframe {
+  color-scheme: light;
+  display: block;
+  width: 100%;
+  height: calc(var(--diya-internal-field-height) - 2px);
+  border: 0;
 }
 .diya-root .diya-text-field input:focus-visible {
   outline: none;
@@ -1244,7 +1280,8 @@
   flex-shrink: 0;
   line-height: 1;
 }
-.diya-root .diya-text-field[data-disabled='true'] {
+.diya-root .diya-text-field[data-disabled='true'],
+.diya-root .diya-field[data-disabled='true'] {
   opacity: 0.45;
 }
 .diya-root .diya-text-field input:disabled {
@@ -1262,6 +1299,9 @@
 @media (forced-colors: active) {
   .diya-root .diya-text-field-control {
     border-color: ButtonText;
+  }
+  .diya-root .diya-field-frame {
+    border-color: CanvasText;
   }
   .diya-root .diya-text-field[data-disabled='true'] {
     opacity: 1;
@@ -2382,6 +2422,7 @@
 
 /* Every invalid field reads the same: a solid error border, and the message (with its "!") in the error color. */
 .diya-root .diya-text-field[data-invalid='true'] .diya-text-field-description,
+.diya-root .diya-field[data-invalid='true'] > .diya-text-field-description,
 .diya-root .diya-select-field[data-invalid='true'] .diya-text-field-description,
 .diya-root .diya-choice[aria-invalid='true'] > .diya-text-field-description,
 .diya-root .diya-combobox[data-invalid='true'] .diya-field-help,
@@ -3490,6 +3531,9 @@
   transition-property: background-color, border-color, color, box-shadow, scale;
   transition-duration: var(--diya-internal-duration-fast);
   transition-timing-function: var(--diya-ease-move);
+}
+.diya-root .diya-field[data-invalid='true'] > .diya-field-frame {
+  border-color: var(--diya-color-error);
 }
 .diya-root :is(.diya-text-field-control, .diya-select-control, .diya-combobox-control, .diya-textarea textarea) {
   transition-property: background-color, border-color;

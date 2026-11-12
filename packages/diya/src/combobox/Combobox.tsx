@@ -1,5 +1,6 @@
 'use client'
 import { forwardRef, useEffect, useId, useMemo, useRef, useState, type InputHTMLAttributes } from 'react'
+import { markField } from '../internal/field-parts.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { usePresence } from '../internal/presence.js'
 import { createPortal } from 'react-dom'
@@ -221,3 +222,5 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
     </ul>, portal)}
   </div>
 })
+// Field warns when it wraps one of DIYA's own fields, which have their own label.
+markField(Combobox, 'Combobox')

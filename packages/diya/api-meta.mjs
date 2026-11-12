@@ -16,6 +16,8 @@
 const v1 = { stability: 'stable', since: '1.0.0' }
 // Outside semver until the API settles: props may change in a minor release.
 const experimental = { ...v1, stability: 'experimental' }
+// Items new in 1.2.
+const stable1_2 = { stability: 'stable', since: '1.2.0' }
 const fieldState = [{ value: 'value', onChange: 'onValueChange' }]
 // Fields that also work uncontrolled: `defaultValue` is the starting value and what a form reset restores.
 const uncontrolledFieldState = [{ value: 'value', onChange: 'onValueChange', default: 'defaultValue' }]
@@ -69,6 +71,19 @@ export const items = {
       '--diya-color-raised', '--diya-color-selected', '--diya-color-text', '--diya-corner-scale',
       '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
     messages: null,
+  },
+  field: {
+    kind: 'component', title: 'Field', ...stable1_2,
+    exports: ['Field'],
+    slots: {},
+    // control: a native or third-party form control (1.2).
+    children: { allowed: true, accepts: [], content: ['control'], as: 'render' },
+    state: [],
+    // The frame is TextInput's control box, so it reaches hover, line and raised too (its fill and edge without the 1.2 field tokens).
+    tokens: ['--diya-color-error', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-text',
+      '--diya-corner-scale', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-control',
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
+    messages: 'field',
   },
   'text-input': {
     kind: 'component', title: 'Text Input', ...v1,

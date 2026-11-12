@@ -1,5 +1,6 @@
 'use client'
 import { forwardRef, useId, useRef, type ChangeEventHandler, type FieldsetHTMLAttributes, type FocusEventHandler, type ReactNode } from 'react'
+import { markField } from '../internal/field-parts.js'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { useFormReset, useNativeMirror } from '../text-input/native-field.js'
@@ -198,3 +199,5 @@ export const Choice = forwardRef<HTMLInputElement, ChoiceProps>(function Choice(
     </fieldset>
   )
 })
+// Field warns when it wraps one of DIYA's own fields, which have their own label.
+markField(Choice, 'Choice')

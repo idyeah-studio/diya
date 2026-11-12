@@ -185,7 +185,8 @@ describe('API map', () => {
         expect(owners.get(name), `${name} needs exactly one item`).toHaveLength(1)
       }
     }
-    expect(Object.keys(api.items)).toHaveLength(46)
+    // 47 with Field (1.2, api.md §2).
+    expect(Object.keys(api.items)).toHaveLength(47)
     expect(api.items['data-viz'].exports.map(({ name }) => name)).toEqual(['DataViz', 'Chart'])
     expect(api.items['data-viz'].requires.peers).toEqual(['echarts'])
     // Ids are the first export's name in kebab-case.
@@ -217,7 +218,8 @@ describe('API map', () => {
         if (Array.isArray(accepts)) for (const target of accepts) expect(ids.has(target), `${id}.${where} accepts ${target}`).toBe(true)
       }
       for (const slot of [...Object.values(item.slots), item.children]) {
-        for (const kind of slot.content ?? []) expect(['text', 'icon', 'image']).toContain(kind)
+        // 'control' (1.2, api.md §2): a native or third-party form control, Field's child.
+        for (const kind of slot.content ?? []) expect(['text', 'icon', 'image', 'control']).toContain(kind)
       }
     }
   })

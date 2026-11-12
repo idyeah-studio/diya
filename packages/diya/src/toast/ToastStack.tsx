@@ -15,7 +15,7 @@ import { motionTiming, playOnCopy } from '../internal/presence.js'
 import { createAnnouncer, createToastHost, lowerToastHost, raiseToastHost, type ToastHost } from './host.js'
 import { elapsed, live as playing, moved, offsetY, overlaps, remaining as timeLeft, RIDE_ANIMATION, SHIFT_ANIMATION, showingCopies, type Shift, type Span } from './motion.js'
 import { toastMessages } from './messages.js'
-import { EMPTY_TOASTS, leaveToast, providerAbove, registerHost, removeToast, setToastCopies, setToastFocus, setToastSlotElement, setToastsPaused, settleToasts, subscribeToasts, toastSnapshot, unregisterHost, type ToastEntry, type ToastSlot } from './queue.js'
+import { EMPTY_TOASTS, leaveToast, providerAbove, registerHost, removeToast, setToastCopies, setToastFocus, setToastSay, setToastSlotElement, setToastsPaused, settleToasts, subscribeToasts, toastSnapshot, unregisterHost, type ToastEntry, type ToastSlot } from './queue.js'
 
 const LIMIT = 3
 const PHONE_LIMIT = 2
@@ -135,11 +135,16 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   useClientLayoutEffect(() => {
     if (!active || !host) return
     setToastCopies(host.copies)
+    // A field's error announcement speaks through this stack's polite region, with any toast
+    // said in the same frame (step 5).
+    let said = 0
+    setToastSay((text) => voices.current?.polite.say(`field:${++said}`, text))
     // A <Toast> leaving, by its slot's key.
     setToastFocus((leaving, fallback, adjacent) => (adjacent ? closeFocusRef.current(`slot:${leaving}`, fallback) : returnFocusRef.current(`slot:${leaving}`, fallback)))
     return () => {
       setToastCopies(null)
       setToastFocus(null)
+      setToastSay(null)
     }
   }, [active, host])
 

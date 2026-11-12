@@ -11,6 +11,7 @@ export { Breadcrumbs, type BreadcrumbsProps, type BreadcrumbItem } from './bread
 export { Tabs, type TabsProps, type TabItem } from './tabs/Tabs.js'
 export { Tag, type TagProps } from './tag/Tag.js'
 export { Badge, type BadgeProps, type Tone } from './badge/Badge.js'
+export { Field, type FieldProps, type FieldControlProps } from './field/Field.js'
 export { TextInput, type TextInputProps } from './text-input/TextInput.js'
 export { TextArea, type TextAreaProps } from './text-area/TextArea.js'
 export { Select, type SelectProps, type SelectOption } from './select/Select.js'

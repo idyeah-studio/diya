@@ -1,5 +1,6 @@
 'use client'
 import { forwardRef, useId, useRef, type TextareaHTMLAttributes } from 'react'
+import { markField } from '../internal/field-parts.js'
 import { cx } from '../internal/cx.js'
 import { useFormReset, useMergedRef, useNativeMirror } from '../text-input/native-field.js'
 /** Native textarea attributes, including `name`, `onChange`, `onBlur` and the ref, go on the textarea; `className` and `style` go on the outer field wrapper. */
@@ -42,3 +43,5 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
     <div className="diya-textarea-footer">{description && <p className="diya-text-field-description" id={`${inputId}-description`}>{error && <span aria-hidden="true">!</span>}{description}</p>}{showCount && <span className="diya-textarea-count" id={`${inputId}-count`}>{text.length}{maxLength ? ` / ${maxLength}` : ''}</span>}</div>
   </div>
 })
+// Field warns when it wraps one of DIYA's own fields, which have their own label.
+markField(TextArea, 'TextArea')

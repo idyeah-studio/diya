@@ -1,5 +1,6 @@
 'use client'
 import { forwardRef, useId, useRef, type InputHTMLAttributes, type ReactNode } from 'react'
+import { markField } from '../internal/field-parts.js'
 import { Icon } from '../Icon.js'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
@@ -131,3 +132,5 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function T
     </div>
   )
 })
+// Field warns when it wraps one of DIYA's own fields, which have their own label.
+markField(TextInput, 'TextInput')

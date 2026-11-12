@@ -1,5 +1,6 @@
 'use client'
 import { forwardRef, useEffect, useId, useMemo, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent } from 'react'
+import { markField } from '../internal/field-parts.js'
 import { createPortal } from 'react-dom'
 import { display, iso, monthOf, outsideLimits, useMonthGrid, type DateRange } from '../calendar/month.js'
 import { adjacentTabStop, useAnchoredPopover } from '../combobox/useAnchoredPopover.js'
@@ -195,3 +196,5 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(functio
     </div>, portal)}
   </div>
 })
+// Field warns when it wraps one of DIYA's own fields, which have their own label.
+markField(DatePicker, 'DatePicker')
