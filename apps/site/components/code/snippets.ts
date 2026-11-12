@@ -278,7 +278,7 @@ function walk(value: unknown, found: Found, key?: string): void {
 
 const MAIN_EXPORTS = new Set([
   'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Calendar', 'Card', 'Chatbot', 'Choice',
-  'CodeBlock', 'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'FileUpload', 'Form', 'Inline', 'List', 'Menu',
+  'CodeBlock', 'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'Field', 'FileUpload', 'Form', 'Inline', 'List', 'Menu',
   'Metric', 'PageHeader', 'Pagination', 'Popover', 'Progress', 'Prose', 'Rating', 'Search', 'Select',
   'SideNavigation', 'SiteHeader', 'Slider', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput',
   'TextLink', 'Toast', 'Tooltip', 'Wizard',
@@ -334,6 +334,8 @@ type Spec = {
   context?: string[]
   /** Function-valued props that live inside hand-written code the tree cannot see. */
   functionProps?: string[]
+  /** Functions the code calls (not elements it renders), imported beside the components, such as `toast`. */
+  calls?: string[]
 }
 
 function importLine(names: string[], entry: string): string {
@@ -350,7 +352,7 @@ function build(id: ItemId, spec: Spec): Snippet {
   const charts = [...found.names].some((name) => CHART_EXPORTS.has(name))
   const entry = charts ? '@idyeah/diya/charts' : '@idyeah/diya'
   const exported = charts ? CHART_EXPORTS : MAIN_EXPORTS
-  const names = [...found.names].filter((name) => exported.has(name)).sort()
+  const names = [...[...found.names].filter((name) => exported.has(name)), ...(spec.calls ?? [])].sort()
   const types = [...(spec.types ?? [])].sort().map((name) => `type ${name}`)
   const consts = (spec.consts ?? []).map(({ name, type, value }) => {
     const head = `const ${name}${type ? `: ${type}` : ''} = `
@@ -1293,16 +1295,18 @@ function alert(p: Playground): Snippet {
       jsx: h('Alert', { ...shared, onDismiss: dismiss && v('dismissAlert', VOID) }, example.text),
     })
   }
-  const close = v('setShowToast', '(show: boolean) => void')
+  /* A toast is shown with toast() from the code that did the work; <Toast> is for one tied to a component's state. */
+  const handler = shared.action ? v(example.handler, VOID) : undefined
+  const options = {
+    tone: shared.tone,
+    title: example.title,
+    description: example.text,
+    action: handler && { label: example.action, onClick: handler },
+  }
+  const call = raw(`toast(${js(options, '', 6)})`, ...(handler ? [handler] : []))
   return build('alert', {
-    jsx: new When(
-      v('showToast', 'boolean', 'true'),
-      h(
-        'Toast',
-        { ...shared, showClose: !dismiss && raw('false'), onDismiss: fn('', raw('setShowToast(false)', close)) },
-        example.text
-      )
-    ),
+    calls: ['toast'],
+    jsx: h('Button', { variant: 'outline', onClick: fn('', call) }, 'Show toast'),
   })
 }
 
