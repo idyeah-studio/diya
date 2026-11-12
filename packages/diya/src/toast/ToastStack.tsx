@@ -98,6 +98,8 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   const outside = useRef<HTMLElement | null>(null)
   // The element in the stack that focus last went to.
   const focused = useRef<Element | null>(null)
+  // Where focus was when it came into the stack from outside: where × sends it back (G8).
+  const cameFrom = useRef<HTMLElement | null>(null)
   const nativeModal = useRef<HTMLDialogElement | null>(null)
   // Each toast's shifts, so one still waiting to start can fold into the next (R3).
   const moving = useRef(new WeakMap<HTMLElement, Shift[]>())
@@ -386,6 +388,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       walking.current = false
       origin.current = null
       outside.current = null
+      cameFrom.current = null
       if (pointer) setPointer(false)
       if (focusInside) setFocusInside(false)
     } else if (focusInside && !(focused.current?.isConnected && list.current?.contains(focused.current))) setFocusInside(false)
@@ -475,13 +478,15 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     return candidate.ownerDocument.activeElement === candidate
   }
 
-  /** Where focus goes when a focused toast leaves: where F8 was pressed, else (a <Toast>) where it was raised, else the last place focused outside the stack, else the next toast, else the topmost modal. Never the page's body. */
+  /** Where focus goes when a focused toast leaves: where F8 was pressed, else where focus came into the stack from, else (a <Toast>) where it was raised, else the last place focused outside the stack, else the next toast, else the topmost modal. Never the page's body. */
   function returnFocus(leaving: string, fallback?: HTMLElement | null) {
     const document = host?.root.ownerDocument
     if (!document) return
     // A <Toast>'s own place (where it was raised, as in 1.1.1) comes before the last place
     // focused outside the stack, which a click in Safari can leave on a Dialog itself (R5).
-    for (const candidate of [origin.current, fallback, outside.current]) {
+    // Where focus came into the stack from comes before a <Toast>'s raise point: a click on ×
+    // while typing goes back to the field, not the button that raised the toast (G8).
+    for (const candidate of [origin.current, cameFrom.current, fallback, outside.current]) {
       if (takesFocus(candidate)) { origin.current = null; return }
     }
     const nextToast = Array.from(document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')).find((slot) => slot.dataset.key !== leaving)?.querySelector<HTMLElement>(focusable)
@@ -584,6 +589,8 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     const leave = (event: MouseEvent) => { if (!node.contains(event.relatedTarget as Node | null)) setPointer(false) }
     const focusIn = (event: globalThis.FocusEvent) => {
       focused.current = event.target as Element
+      const from = event.relatedTarget as HTMLElement | null
+      if (from && !node.contains(from)) cameFrom.current = from
       setFocusInside(true)
     }
     const focusOut = (event: globalThis.FocusEvent) => {

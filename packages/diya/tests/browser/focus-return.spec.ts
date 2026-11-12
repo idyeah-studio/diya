@@ -71,3 +71,21 @@ test('a Dialog mounted by its opener’s click, with no other overlay on the pag
   await expect(page.locator('dialog[open]')).toHaveCount(0)
   await expect.poll(() => focused(page)).toBe('Open later')
 })
+
+// G8 (UX-S56-04): × on a toast while typing keeps your typing, in every engine and for both toast
+// APIs: focus goes back to where it came from before the place the toast was raised.
+test.describe('× on a toast raised by another button, while typing in a field (G8)', () => {
+  for (const [kind, raise, title] of [['a <Toast>', '#post-comment', 'Comment posted'], ['a toast()', '#post-toast', 'Comment saved']] as const) {
+    test(kind, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, 'case=probe&theme=light')
+      await page.locator(raise).click()
+      const field = page.getByRole('textbox', { name: 'Project name' })
+      await field.click()
+      await page.keyboard.press('End')
+      await page.keyboard.type(' Labs')
+      await page.getByRole('button', { name: `Dismiss: ${title}` }).click()
+      await page.keyboard.type('!')
+      await expect(field).toHaveValue('Atlas Labs!')
+    })
+  }
+})
