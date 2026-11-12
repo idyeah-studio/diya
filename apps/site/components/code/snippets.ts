@@ -674,7 +674,8 @@ function field(p: Playground): Snippet {
       {
         label: 'Start time',
         hideLabel: !on(p, 'Options', 'Label', true),
-        helperText: on(p, 'Options', 'Helper text', true) && 'In your time zone.',
+        /* A disabled field says why in its help. */
+        helperText: on(p, 'Options', 'Helper text', true) && (state === 'Disabled' ? 'Locked while the event is live.' : 'In your time zone.'),
         error: state === 'Error' && 'Pick a time between 9:00 AM and 6:00 PM.',
         disabled: state === 'Disabled',
         framed,

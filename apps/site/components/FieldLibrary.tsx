@@ -51,7 +51,8 @@ export function FieldLibrary() {
               <Field
                 label="Start time"
                 hideLabel={!label}
-                helperText={helper ? 'In your time zone.' : undefined}
+                /* A disabled field says why in its help. */
+                helperText={helper ? (state === 'Disabled' ? 'Locked while the event is live.' : 'In your time zone.') : undefined}
                 error={state === 'Error' ? 'Pick a time between 9:00 AM and 6:00 PM.' : undefined}
                 disabled={state === 'Disabled'}
                 framed={framed}

@@ -76,7 +76,7 @@ describe('the Field page', () => {
     // Without the frame the input is the browser's own, still labeled, described and keeping its value.
     const bare = within(preview).getByLabelText('Start time') as HTMLInputElement
     expect(bare.value).toBe('09:30')
-    expect(description(bare)).toBe('In your time zone.')
+    expect(description(bare)).toBe('Locked while the event is live.')
     expect(bare.disabled).toBe(true)
   })
 
@@ -101,5 +101,20 @@ describe('the Field page', () => {
     expect(file).toContain("const [startTime, setStartTime] = useState('09:30')")
     await user.click(screen.getByRole('checkbox', { name: 'Framed' }))
     expect(snippetFor('field', page.read()).code).not.toMatch(/framed|size=/)
+  })
+})
+
+describe('the Field page’s Disabled state (UX-SITE-02)', () => {
+  it('gives the reason in the help, in the preview and in Get code', async () => {
+    const user = userEvent.setup()
+    const page = renderPage()
+    await user.click(screen.getByRole('radio', { name: 'Disabled' }))
+    const input = within(screen.getByRole('region', { name: 'Field preview' })).getByLabelText('Start time') as HTMLInputElement
+    expect(input.disabled).toBe(true)
+    expect(description(input)).toBe('Locked while the event is live.')
+    const { code } = snippetFor('field', page.read())
+    expect(code).toContain('helperText="Locked while the event is live."')
+    expect(code).not.toContain('In your time zone.')
+    expect(code).toContain('disabled')
   })
 })
