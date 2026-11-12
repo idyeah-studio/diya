@@ -158,6 +158,10 @@ describe('the contract checks catch what they say', () => {
     const effects = "useEffect(() => {\n  if (done) toast({ title: `${n} files (uploaded)` })\n}, [done])\nuseLayoutEffect(() => toast.dismiss('x'))\nfunction save() { toast({ title: 'Saved' }) }"
     expect(toastsInEffects(effects)).toEqual(['useEffect(… toast(', 'useLayoutEffect(… toast.dismiss('])
     expect(toastsInEffects("useEffect(() => { const say = ')'; setOpen(true) }, [])\nconst save = () => toast({ title: 'Saved' })")).toEqual([])
+    // A cleanup may dismiss the Screen's own toast (SITE-FE-01), but never raise one.
+    expect(toastsInEffects("useEffect(() => () => toast.dismiss('task-list-done'), [])")).toEqual([])
+    expect(toastsInEffects("useEffect(() => {\n  if (!x) return\n  return () => { toast.dismiss('a') }\n}, [x])")).toEqual([])
+    expect(toastsInEffects("useEffect(() => { toast.dismiss('a') }, [])\nuseEffect(() => () => toast({ title: 'Bye' }), [])")).toEqual(['useEffect(… toast.dismiss(', 'useEffect(… toast('])
     const ids = "toast({ id: 'saved', title: 'Saved' })\ntoast({ tone: 'info', id: `sign-in-${n}`, title: 'Hi' })\nconst id = 'sign-in-step'\ntoast({ id, title: 'Done' })\ntoast({ title: 'No id', description: `About ${id}` })"
     expect(toastIds(ids)).toEqual(['saved', 'sign-in-', 'sign-in-step'])
   })

@@ -70,6 +70,9 @@ export default function TaskListScreen() {
   const shown = tasks.filter((t) => t.project === project)
   const late = shown.filter(overdue).length
 
+  // Undo only works here, so its toast leaves with the page.
+  useEffect(() => () => toast.dismiss('task-list-done'), [])
+
   // After a task moves, keep the keyboard where the reader expects it.
   useEffect(() => {
     if (!focus) return

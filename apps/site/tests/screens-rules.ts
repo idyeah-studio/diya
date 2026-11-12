@@ -88,12 +88,21 @@ function bracketed(source: string, open: number) {
 /**
  * `toast()` calls inside an effect. In development StrictMode runs every effect
  * twice, so a toast fired from one shows twice; screens toast from handlers.
+ * `toast.dismiss()` is allowed in an effect's cleanup, so a toast that only
+ * makes sense on the Screen leaves with it (SITE-FE-01).
  */
 export function toastsInEffects(source: string) {
   const found: string[] = []
   for (const match of source.matchAll(/\buse(?:Layout)?Effect\s*\(/g)) {
     const body = bracketed(source, match.index + match[0].length - 1)
-    for (const [call] of body.matchAll(/\btoast(?:\.dismiss)?\s*\(/g)) found.push(`${match[0]}… ${call}`)
+    // Where the cleanup starts: `() => () => …`, or `return () => …` / `return function`.
+    const nested = /^\(\s*\(\s*\)\s*=>\s*(?=\(\s*\)\s*=>)/.exec(body)
+    const returned = /\breturn\s+(?:\([^()]*\)\s*=>|function\b)/.exec(body)
+    const cleanup = nested ? nested[0].length : returned ? returned.index : body.length
+    for (const call of body.matchAll(/\btoast(\.dismiss)?\s*\(/g)) {
+      if (call[1] && call.index >= cleanup) continue
+      found.push(`${match[0]}… ${call[0]}`)
+    }
   }
   return found
 }

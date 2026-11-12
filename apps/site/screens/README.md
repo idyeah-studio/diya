@@ -88,7 +88,10 @@ The approved reference is the Sign in screen, `sign-in.tsx`. Match its craft.
 - **Feedback.** Show feedback with `toast()`; never keep toast state.
   - Call it in the handler that did the work, never in an effect: in
     development, StrictMode runs effects twice, and the toast would show twice.
-  - An Undo is the toast's `action`.
+  - An Undo is the toast's `action`. An action toast that only makes sense on
+    this page is dismissed when the Screen unmounts:
+    `useEffect(() => () => toast.dismiss('task-list-done'), [])`. That's the one
+    `toast` call an effect may make, in its cleanup.
   - Give a toast an `id` when a later one replaces it, such as "Saving…" then
     "Saved", or the same action done again. Start the id with the screen id
     (`profile-saved`), so two screens on one site never share one.
@@ -115,7 +118,8 @@ The approved reference is the Sign in screen, `sign-in.tsx`. Match its craft.
   - the import allowlist and the single default export;
   - no `DiyaProvider`, and the `LucideProvider` is there;
   - no `title=`;
-  - no `<Toast>` and no toast state, and no `toast()` inside an effect;
+  - no `<Toast>` and no toast state, and no `toast()` inside an effect
+    (`toast.dismiss()` in an effect's cleanup is fine);
   - no `font-size` under 13px in the css;
   - class-name prefixes.
 - `tests/screens-compile.test.ts` compiles each file on its own with strict

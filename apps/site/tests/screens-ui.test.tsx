@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useEffect, type ComponentProps, type ComponentType, type ReactNode } from 'react'
+import { useEffect, useState, type ComponentProps, type ComponentType, type ReactNode } from 'react'
 import { DiyaProvider, toast } from '@idyeah/diya'
 import { AppearanceProvider, useAppearance } from '../app/Appearance'
 import { CatalogProvider } from '../components/CatalogProvider'
@@ -500,6 +500,27 @@ describe('each toast Screen raises its toast', () => {
     await act(() => new Promise((done) => setTimeout(done, 1500)))
     expect(within(screen.getByRole('region', { name: 'Notifications (F8)' })).getAllByText(title)).toHaveLength(1)
   }, 20_000)
+
+  // SITE-FE-01: an action toast never times out, so task-list's Undo would follow the reader to every page.
+  it('task-list’s Undo toast leaves with the Screen', async () => {
+    const user = userEvent.setup()
+    function App() {
+      const [page, setPage] = useState<'tasks' | 'settings'>('tasks')
+      return (
+        <DiyaProvider theme="light">
+          <button type="button" onClick={() => setPage('settings')}>Go to settings</button>
+          {page === 'tasks' ? <TaskListScreen /> : <h1>Settings</h1>}
+        </DiyaProvider>
+      )
+    }
+    render(<App />, { reactStrictMode: true })
+    await user.click(screen.getAllByRole('checkbox').find((box) => !(box as HTMLInputElement).checked)!)
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' })
+    expect(within(region).getByRole('button', { name: 'Undo' })).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'Go to settings' }))
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Notifications (F8)' })).toBeNull(), LONG)
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeTruthy()
+  })
 
   it('task-list: Undo is the toast’s action, and puts the task back', async () => {
     const user = userEvent.setup()
