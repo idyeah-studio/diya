@@ -749,3 +749,36 @@ test.describe('a second change while a toast is sliding (S2)', () => {
     seeThrough(track, 'Emails restored')
   })
 })
+
+// Round 3 (S4): a nested motion="off" <Toast> arriving into a page toast. It shows at once, in
+// its place, and the page toast makes room one way only. That the page toast still slides out
+// from behind it is MOT-R3-01, kept for 1.2.x; its spec is below, marked as known.
+test.describe('a nested motion="off" <Toast> arriving into a page toast (S4)', () => {
+  const arrive = async (page: Page, testInfo: Parameters<Parameters<typeof test>[1]>[1]) => {
+    await openCase(page, testInfo, 'case=probe&theme=light&glass=1&bg=1&nested=1&nestedmotion=off')
+    await page.evaluate(() => (window as any).diya.toast({ title: 'Link copied', description: 'Paste it anywhere.', duration: 0 }))
+    await settle(page)
+    return frames(page, "window.nested.add({ title: 'Synced', description: 'From the dark region.' })", 500)
+  }
+  test('it is opaque and in its place on its first frame; the page toast moves one way; the column settles 12px apart', async ({ page }, testInfo) => {
+    const track = await arrive(page, testInfo)
+    const seen = track.filter((frame) => frame.live.some((box) => box.title === 'Synced'))
+    const rest = seen.at(-1)!.live.find((box) => box.title === 'Synced')!
+    const first = seen[0].live.find((box) => box.title === 'Synced')!
+    expect(first.opacity).toBeGreaterThan(0.99)
+    expect(Math.abs(first.top - rest.top)).toBeLessThan(0.5)
+    oneWay(track, 'Link copied')
+    const final = track.at(-1)!.live.sort((a, b) => a.top - b.top)
+    expect(final.map((box) => box.title)).toEqual(['Link copied', 'Synced'])
+    expect(Math.round(final[1].top - final[0].bottom)).toBe(12)
+  })
+
+  test.fixme('the page toast never slides out from behind it while it shows (MOT-R3-01, 1.2.x)', async ({ page }, testInfo) => {
+    const track = await arrive(page, testInfo)
+    for (const frame of track) {
+      const synced = frame.live.find((box) => box.title === 'Synced' && box.opacity > 0.02)
+      const link = frame.live.find((box) => box.title === 'Link copied')
+      if (synced && link) expect(overlap(synced, link), `at ${Math.round(frame.t)}ms`).toBe(0)
+    }
+  })
+})
