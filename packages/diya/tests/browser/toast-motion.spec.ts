@@ -396,3 +396,96 @@ test.describe("a nested provider's motion reaches its <Toast> (R2)", () => {
     expect(opaque?.t ?? Infinity).toBeGreaterThan(700)
   })
 })
+
+// Round 2. Every frame, in Glass: no exit copy that still shows has a live toast over it, and a
+// newcomer that shows never sits under another toast.
+function seeThrough(track: Awaited<ReturnType<typeof frames>>, arriving?: string) {
+  for (const frame of track) {
+    for (const copy of frame.copies.filter((item) => item.opacity > 0.05)) {
+      // A newcomer still waiting to show (opacity 0) isn't over anything.
+      for (const toast of frame.live.filter((item) => item.opacity > 0.02)) expect(overlap(toast, copy), `${toast.title} over the copy of ${copy.title} at ${Math.round(frame.t)}ms`).toBe(0)
+    }
+    const enter = arriving ? frame.live.find((item) => item.title === arriving) : undefined
+    if (!enter || enter.opacity <= 0.02) continue
+    for (const toast of frame.live.filter((item) => item !== enter)) expect(overlap(toast, enter), `${arriving} under ${toast.title} at ${Math.round(frame.t)}ms`).toBe(0)
+  }
+}
+/** No toast moves against its net direction: one that ends lower never rises on the way, one that ends higher never drops, and one that ends where it started never moves. */
+function oneWay(track: Awaited<ReturnType<typeof frames>>, title: string) {
+  const tops = track.map((frame) => frame.live.find((box) => box.title === title)?.top).filter((top): top is number => top !== undefined)
+  const net = tops.at(-1)! - tops[0]
+  if (Math.abs(net) < 0.5) {
+    expect(Math.max(...tops.map((top) => Math.abs(top - tops[0]))), `${title} stays put`).toBeLessThan(1)
+    return
+  }
+  for (let i = 1; i < tops.length; i++) {
+    const step = tops[i] - tops[i - 1]
+    expect(net > 0 ? step : -step, `${title} goes against its way at frame ${i}`).toBeGreaterThan(-0.5)
+  }
+}
+/** Starts sampling every frame in the page, for actions taken with the real pointer. */
+const startFrames = (page: Page, ms: number) => page.evaluate((ms) => {
+  const read = () => ({
+    live: [...document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')].filter((slot) => slot.querySelector('.diya-alert')).map((slot) => {
+      const box = slot.getBoundingClientRect()
+      return { title: slot.querySelector('.diya-alert-title')?.textContent ?? '', top: box.top, bottom: box.bottom, left: box.left, right: box.right, opacity: Number(getComputedStyle(slot).opacity), waapi: 0 }
+    }),
+    copies: [...document.querySelectorAll<HTMLElement>('.diya-toast-copies > *')].map((copy) => {
+      const box = copy.getBoundingClientRect()
+      return { title: copy.querySelector('.diya-alert-title')?.textContent ?? '', top: box.top, bottom: box.bottom, left: box.left, right: box.right, opacity: Number(getComputedStyle(copy).opacity), waapi: 0 }
+    }),
+  })
+  const out: unknown[] = []
+  const t0 = performance.now()
+  ;(window as any).__frames = new Promise((done) => {
+    const tick = () => {
+      out.push({ t: performance.now() - t0, ...read() })
+      if (performance.now() - t0 < ms) requestAnimationFrame(tick)
+      else done(out)
+    }
+    requestAnimationFrame(tick)
+  })
+}, ms)
+const endFrames = (page: Page) => page.evaluate(() => (window as any).__frames) as ReturnType<typeof frames>
+
+test.describe('two changes close together (R3)', () => {
+  for (const theme of ['light', 'dark']) {
+    test(`Undo that raises a toast: the older toast moves one way, and nothing see-through passes over the copy, in Glass ${theme}`, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, `case=probe&theme=${theme}&glass=1&bg=1`)
+      await page.evaluate(() => {
+        const { toast } = (window as any).diya
+        toast({ title: 'Draft saved', duration: 0 })
+        toast({ title: '3 emails archived', description: 'From Inbox.', action: { label: 'Undo', onClick: () => toast({ title: 'Emails restored', duration: 0 }) } })
+      })
+      await settle(page)
+      const box = (await page.getByRole('button', { name: 'Undo' }).boundingBox())!
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 3 })
+      await startFrames(page, 650)
+      await page.mouse.down()
+      await page.mouse.up()
+      const track = await endFrames(page)
+      seeThrough(track, 'Emails restored')
+      oneWay(track, 'Draft saved')
+    })
+
+    test(`toast.dismiss() and toast() in one tick: the older toast stays put, and the newcomer waits for the copy, in Glass ${theme}`, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, `case=probe&theme=${theme}&glass=1&bg=1`)
+      await page.evaluate(() => { const { toast } = (window as any).diya; toast({ title: 'Draft saved', duration: 0 }); toast({ id: 'b', title: 'Link copied', duration: 0 }) })
+      await settle(page)
+      const track = await frames(page, "window.diya.toast.dismiss('b'); window.diya.toast({ title: 'Invoice sent', duration: 0 })", 600)
+      seeThrough(track, 'Invoice sent')
+      oneWay(track, 'Draft saved')
+    })
+
+    test(`a <Toast> closed, then a toast() 40ms later: one way, and no double image, in Glass ${theme}`, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, `case=probe&theme=${theme}&glass=1&bg=1`)
+      await page.evaluate(() => (window as any).diya.toast({ title: 'Draft saved', duration: 0 }))
+      await settle(page)
+      await page.evaluate(() => { (window as any).comps.add({ title: 'Export started', description: "We'll email you when it's ready." }) })
+      await settle(page)
+      const track = await frames(page, "document.querySelector('[aria-label=\"Dismiss: Export started\"]').click(); setTimeout(() => window.diya.toast({ title: 'Invoice sent', duration: 0 }), 40)", 700)
+      seeThrough(track, 'Invoice sent')
+      oneWay(track, 'Draft saved')
+    })
+  }
+})

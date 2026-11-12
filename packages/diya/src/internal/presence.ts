@@ -99,6 +99,9 @@ export function motionTiming(node: HTMLElement, time: string, curve: string) {
   return { duration: duration > 0 ? duration : 0, easing, style }
 }
 
+/** The id of a copy's exit animation, so code that times other motion around it can find it. */
+export const EXIT_ANIMATION = 'diya-exit'
+
 /**
  * Plays an exit on a copy of `node`, appended to `parent` and fixed where the node was, so the
  * component can go at once: a host can unmount it, or show what replaces it, straight away. The
@@ -130,6 +133,7 @@ export function playOnCopy(node: HTMLElement | null | undefined, parent: Element
     return false
   }
   const animation = copy.animate(frames(style, opacity), { duration, easing, fill: 'forwards' })
+  animation.id = EXIT_ANIMATION
   let ended = false
   const done = () => { if (ended) return; ended = true; clearTimeout(cap); copy.remove(); onDone?.() }
   const cap = setTimeout(done, EXIT_CAP_MS)

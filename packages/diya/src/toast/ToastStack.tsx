@@ -13,6 +13,7 @@ import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { subscribeModals, topModal } from '../internal/modal-stack.js'
 import { motionTiming, playOnCopy } from '../internal/presence.js'
 import { createAnnouncer, createToastHost, lowerToastHost, raiseToastHost, type ToastHost } from './host.js'
+import { elapsed, live as playing, moved, offsetY, overlaps, remaining as timeLeft, RIDE_ANIMATION, SHIFT_ANIMATION, showingCopies, type Shift, type Span } from './motion.js'
 import { toastMessages } from './messages.js'
 import { EMPTY_TOASTS, leaveToast, registerHost, removeToast, setToastCopies, setToastFocus, setToastSlotElement, setToastsPaused, settleToasts, subscribeToasts, toastSnapshot, unregisterHost, type ToastEntry, type ToastSlot } from './queue.js'
 
@@ -96,8 +97,8 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   const walking = useRef(false)
   const outside = useRef<HTMLElement | null>(null)
   const nativeModal = useRef<HTMLDialogElement | null>(null)
-  // When a <Toast>'s exit copy last went into the copy layer (its gap closes after a delay too).
-  const lastCopy = useRef(-Infinity)
+  // Each toast's shifts, so one still waiting to start can fold into the next (R3).
+  const moving = useRef(new WeakMap<HTMLElement, Shift[]>())
 
   // The host: made in the browser only, so the server markup is unchanged.
   useClientLayoutEffect(() => {
@@ -107,8 +108,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     // Out of the top layer once the last exit has played and nothing shows.
     const view = portal.ownerDocument.defaultView
     const observer = view && typeof view.MutationObserver === 'function'
-      ? new view.MutationObserver((records) => {
-        if (records.some((record) => record.addedNodes.length)) lastCopy.current = performance.now()
+      ? new view.MutationObserver(() => {
         if (!made.copies.childElementCount && !made.region.querySelector('.diya-toast-list > .diya-toast')) lowerToastHost(made)
       })
       : null
@@ -186,11 +186,12 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     // Each toast is measured by its bottom edge from the list's bottom, where the stack is
     // anchored: a toast that grew in place (a same-id update) hasn't moved (T10).
     const edge = (slot: HTMLElement, height: number) => slot.offsetTop + slot.offsetHeight - height
-    const hadToasts = positions.current.size > 0
+    const animate = !!node && typeof node.animate === 'function' && !node.ownerDocument.hidden && host.region.dataset.still === undefined
+    // The column moves on this stack's provider's motion, whoever's toasts are in it.
+    const column = animate && node ? motionTiming(node, 'duration-slow', 'move') : undefined
+    const travel = parseFloat(column?.style?.getPropertyValue('--diya-internal-motion-travel') ?? '1') || 0
+    const slow = column?.duration ?? 0
     let height = node?.clientHeight ?? 0
-    // Exits that leave a gap close it after the copy has mostly faded, so a see-through toast
-    // never slides over a visible copy (T9). One that left to make room rides up with the stack.
-    let gapDelay = performance.now() - lastCopy.current < 100
     // Leaving: the exit plays on a copy under the live toasts, then the entry goes.
     for (const slot of slots) {
       const id = slot.dataset.toast!
@@ -199,16 +200,14 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       if (slot.contains(slot.ownerDocument.activeElement)) returnFocus(id)
       // Under the live toasts (z-index 1), inside the stack's own layer, where the toast was on
       // screen: if a toast arrived in this same commit, the leaving one has already moved up by
-      // the newcomer's height (T3).
+      // the newcomer's height (T3). One that left to make room rides up with the stack.
       const was = positions.current.get(id)
       const lift = was === undefined ? 0 : was - edge(slot, height)
       const played = playOnCopy(slot, host.copies, 'exit-slow', exitFrames, { zIndex: 0, offsetY: lift })
       const copy = played ? host.copies.lastElementChild as HTMLElement | null : null
-      if (copy && lift > 0 && node) {
-        const { duration, easing, style } = motionTiming(node, 'duration-slow', 'move')
-        const travel = parseFloat(style?.getPropertyValue('--diya-internal-motion-travel') ?? '1') || 0
-        if (duration && travel) copy.animate([{ transform: 'none' }, { transform: `translateY(${-lift}px)` }], { duration: duration * travel, easing, composite: 'add', fill: 'forwards' })
-      } else if (played) gapDelay = true
+      if (copy && lift > 0 && column?.duration && travel) {
+        copy.animate([{ transform: 'none' }, { transform: `translateY(${-lift}px)` }], { duration: column.duration * travel, easing: column.easing, composite: 'add', fill: 'forwards' }).id = RIDE_ANIMATION
+      }
       // Out of the layout now, so the others move in this same pass.
       slot.style.display = 'none'
       announced.current.delete(id)
@@ -218,10 +217,17 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       removeToast(id)
     }
     height = node?.clientHeight ?? 0
-    // The others close the gap (or make room) by sliding, additively, on the move curve.
+    // Where a toast's place is on screen now, without its shifts or its enter.
+    const origin = node ? node.getBoundingClientRect().top - node.offsetTop : 0
+    const span = (slot: HTMLElement): Span => ({ top: origin + slot.offsetTop, bottom: origin + slot.offsetTop + slot.offsetHeight })
+    // The others close the gap (or make room) by sliding, additively, on the move curve. A shift
+    // still waiting to start folds into this one, so two changes close together never send a
+    // toast one way and then back (R3).
     const next = new Map<string, number>()
     const arriving: HTMLElement[] = []
-    let shifted = false
+    const movers: { slot: HTMLElement; dy: number; span: Span; now: number }[] = []
+    // What a newcomer may have to wait for: toasts still on their way out of its place.
+    const obstacles: { span: Span; clear: number }[] = []
     for (const slot of slots) {
       const id = slot.dataset.toast!
       if (id.startsWith('c') ? !slot.querySelector('.diya-alert') : entries.find((item) => item.id === id)?.status !== 'shown') continue
@@ -232,31 +238,54 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
         arriving.push(slot)
         continue
       }
-      const dy = before - bottom
-      if (!dy || !node || typeof slot.animate !== 'function' || slot.ownerDocument.hidden || host.region.dataset.still !== undefined) continue
-      // One column, one shift: on this stack's provider's motion, whoever's toast it is.
-      const { duration, easing, style } = motionTiming(node, 'duration-slow', 'move')
-      const travel = parseFloat(style?.getPropertyValue('--diya-internal-motion-travel') ?? '1') || 0
-      if (!duration || !travel) continue
-      shifted = true
-      const delay = gapDelay ? duration / 2 : 0
-      slot.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: duration * travel, easing, composite: 'add', delay, fill: 'backwards' })
-    }
-    // Make room, then arrive: when older toasts slide to make room, a newcomer's 12px rise and
-    // fade start half the slow duration later, once they've cleared its slot, so nothing
-    // see-through ever passes over it (T9). Into an empty stack, or under reduced motion, where
-    // nothing slides, the enter is the usual one from @starting-style.
-    if (shifted && hadToasts) {
-      for (const slot of arriving) {
-        const { duration, easing, style } = motionTiming(slot, 'duration-slow', 'enter')
-        if (!duration || !style || typeof slot.animate !== 'function') continue
-        const rise = style.getPropertyValue('--diya-internal-motion-distance-edge').trim() || '0px'
-        // The CSS enter has already started; this one replaces it.
-        slot.style.transition = 'none'
-        const enter = slot.animate([{ opacity: 0, translate: `0 ${rise}` }, { opacity: 1, translate: '0 0' }], { duration, easing, delay: duration / 2, fill: 'backwards' })
-        const done = () => { slot.style.transition = '' }
-        enter.finished.then(done, done)
+      let dy = before - bottom
+      const kept: Shift[] = []
+      for (const shift of moving.current.get(slot) ?? []) {
+        if (!playing(shift.animation)) continue
+        if (elapsed(shift.animation) < shift.until) {
+          shift.animation.cancel()
+          dy += shift.dy
+        } else kept.push(shift)
       }
+      moving.current.set(slot, kept)
+      const now = animate ? offsetY(slot) : 0
+      if (dy) movers.push({ slot, dy, span: span(slot), now })
+      else if (now) obstacles.push({ span: moved(span(slot), now), clear: Math.max(0, ...kept.map((shift) => timeLeft(shift.animation))) })
+    }
+    // A shift whose path crosses an exit copy fading where it is waits until the copy has mostly
+    // faded, so a see-through toast never slides over it (T9). The column moves together.
+    const copies = animate ? showingCopies(host.copies) : []
+    let wait = 0
+    for (const mover of movers) {
+      const path = { top: mover.span.top + Math.min(0, mover.dy), bottom: mover.span.bottom + Math.max(0, mover.dy) }
+      for (const copy of copies) if (!copy.ride && overlaps(path, copy.span)) wait = Math.max(wait, slow / 2 - copy.age)
+    }
+    for (const mover of movers) {
+      if (!column || !slow || !travel) continue
+      const animation = mover.slot.animate([{ transform: `translateY(${mover.dy}px)` }, { transform: 'none' }], { duration: slow * travel, easing: column.easing, composite: 'add', delay: wait, fill: 'backwards' })
+      animation.id = SHIFT_ANIMATION
+      moving.current.get(mover.slot)!.push({ animation, dy: mover.dy, until: wait })
+      if (mover.dy > 0) obstacles.push({ span: moved(mover.span, mover.dy + mover.now), clear: wait + slow / 2 })
+    }
+    // Make room, then arrive: a newcomer's 12px rise and fade wait until whatever is in its place
+    // has cleared it, so nothing see-through ever passes over it (T9, R3): a toast sliding out of
+    // the way has, half the slow duration after it starts; an exit copy fading there, once it's
+    // gone. Into an empty stack, where nothing is in the way, the enter is the usual one from
+    // @starting-style. Its rise and fade are its own provider's.
+    for (const slot of arriving) {
+      const place = span(slot)
+      let delay = 0
+      for (const obstacle of obstacles) if (overlaps(obstacle.span, place)) delay = Math.max(delay, obstacle.clear)
+      for (const copy of copies) if (overlaps(copy.span, place)) delay = Math.max(delay, copy.ride ? slow / 2 - elapsed(copy.ride) : copy.left)
+      if (delay <= 0 || !animate) continue
+      const { duration, easing, style } = motionTiming(slot, 'duration-slow', 'enter')
+      if (!duration || !style) continue
+      const rise = style.getPropertyValue('--diya-internal-motion-distance-edge').trim() || '0px'
+      // The CSS enter has already started; this one replaces it.
+      slot.style.transition = 'none'
+      const enter = slot.animate([{ opacity: 0, translate: `0 ${rise}` }, { opacity: 1, translate: '0 0' }], { duration, easing, delay, fill: 'backwards' })
+      const done = () => { slot.style.transition = '' }
+      enter.finished.then(done, done)
     }
     positions.current = next
     // In the top layer while it holds a toast or an exit copy.
