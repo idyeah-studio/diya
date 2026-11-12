@@ -220,3 +220,28 @@ test('with focus in a page field and the pointer away from iframes, nothing poll
   })
   expect(reads).toBeLessThan(3)
 })
+
+// H6 (VIS-G-02): a framed textarea has TextArea's box at each size: the same height, the same
+// text inset, and the resize grip in the frame's corner.
+test('a framed textarea matches TextArea at each size (H6)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=providers&theme=light')
+  for (const size of ['small', 'medium', 'large']) {
+    const m = await page.evaluate((size) => {
+      const reference = document.getElementById(`ta-${size}`)!
+      const area = document.getElementById(`fta-${size}`)!
+      const frame = area.parentElement!
+      const r = reference.getBoundingClientRect(), f = frame.getBoundingClientRect(), a = area.getBoundingClientRect()
+      const ra = getComputedStyle(reference), aa = getComputedStyle(area)
+      return {
+        height: [Math.round(r.height), Math.round(f.height)],
+        inset: [ra.paddingTop, aa.paddingTop, ra.paddingLeft, aa.paddingLeft],
+        // The textarea reaches the frame's inner corner (1px border), so its grip sits in the corner.
+        corner: [Math.round(f.right - a.right), Math.round(f.bottom - a.bottom)],
+      }
+    }, size)
+    expect(m.height[1], size).toBe(m.height[0])
+    expect(m.inset[1], size).toBe(m.inset[0])
+    expect(m.inset[3], size).toBe(m.inset[2])
+    expect(m.corner, size).toEqual([1, 1])
+  }
+})

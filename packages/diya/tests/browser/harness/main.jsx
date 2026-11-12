@@ -402,6 +402,14 @@ function ProvidersCase() {
       <diya.Field label="Region" framed><select id="framed-select"><option>North</option><option>South</option></select></diya.Field>
       <diya.Field label="Regions" framed><select id="framed-list" multiple><option>North</option><option>South</option><option>East</option></select></diya.Field>
       <diya.Field label="Notes" framed><textarea id="framed-notes" defaultValue={'one\ntwo\nthree'} /></diya.Field>
+      <div id="textareas" style={{ display: 'grid', gap: 16 }}>
+        {['small', 'medium', 'large'].map((size) => (
+          <div key={size} style={{ display: 'grid', gap: 16 }}>
+            <TextArea id={`ta-${size}`} label={`TextArea ${size}`} size={size} />
+            <diya.Field label={`Framed ${size}`} size={size} framed><textarea id={`fta-${size}`} /></diya.Field>
+          </div>
+        ))}
+      </div>
       <p id="blank" style={{ padding: 24 }}>Blank page</p>
     </div>
   )

@@ -1252,17 +1252,25 @@
 .diya-root .diya-field-frame > select:is([multiple], [size]:not([size='1'])) {
   height: auto;
 }
+/* A framed textarea has TextArea's box (H6): the frame wraps it with no padding, and the textarea
+   carries TextArea's inset and height (less the frame's 1px edges), so its grip sits in the
+   corner and the scrollbar hugs the edge. */
 .diya-root .diya-field-frame:has(> textarea) {
   height: auto;
-  padding-block: 12px;
+  padding: 0;
   align-items: stretch;
 }
 .diya-root .diya-field-frame > textarea {
   height: auto;
-  min-height: calc(1.6em * 3);
+  min-height: 110px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: inherit;
   line-height: 1.6;
   resize: vertical;
 }
+.diya-root .diya-field[data-size='small'] > .diya-field-frame > textarea { min-height: 86px; padding: 10px 12px; }
+.diya-root .diya-field[data-size='large'] > .diya-field-frame > textarea { min-height: 134px; padding: 14px 16px; }
 /* Whatever a provider hands over fills the frame (G1): Stripe's mount div, which holds an iframe
    sized width: 1px !important; min-width: 100% !important, or a bare iframe. */
 .diya-root .diya-field-frame > :not(input, select, textarea) {
