@@ -209,10 +209,12 @@ test.describe('<Toast> in the stack', () => {
     expect(await titles(page)).toEqual(isPhone(testInfo) ? ['Draft saved', 'Link copied'] : ['Draft saved', 'Link copied', 'Export started'])
   })
 
-  test('a <Toast> in a nested Dark provider shows in that provider\'s theme', async ({ page }, testInfo) => {
+  test('a <Toast> in a nested Dark provider shares the one stack, in that provider\'s theme', async ({ page }, testInfo) => {
     await openCase(page, testInfo, 'case=toasts&theme=light&nested=1')
-    await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list').length)).toBe(2)
-    const theme = await page.evaluate(() => [...document.querySelectorAll('.diya-toast-list > .diya-toast')].map((slot) => `${slot.querySelector('.diya-alert-title')?.textContent}:${slot.closest('.diya-root')?.getAttribute('data-theme')}`))
+    // One corner, one column (T4); each toast in its own provider's theme (B1).
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast .diya-alert').length)).toBe(3)
+    expect(await page.evaluate(() => document.querySelectorAll('.diya-toast-list').length)).toBe(1)
+    const theme = await page.evaluate(() => [...document.querySelectorAll('.diya-toast-list > .diya-toast')].map((slot) => `${slot.querySelector('.diya-alert-title')?.textContent}:${slot.querySelector('.diya-alert')!.closest('.diya-root')?.getAttribute('data-theme')}`))
     expect(theme.sort()).toEqual(['Draft saved:light', 'Link copied:light', 'Synced:dark'])
   })
 })

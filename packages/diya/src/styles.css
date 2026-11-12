@@ -1723,6 +1723,9 @@
 @media (max-width: 600px) { .diya-root .diya-toast-stack[popover] { inset: auto 20px 20px auto; } }
 .diya-root .diya-toast-list { display: flex; flex-direction: column; gap: 12px; }
 .diya-root .diya-toast { position: relative; z-index: 1; }
+/* A <Toast> portals into its slot's scope; from another provider the scope carries that
+   provider's look (it's a .diya-root) and takes no box of its own. */
+.diya-root .diya-toast-scope { display: contents; }
 /* Arriving, a toast sits under the older ones, so they slide off it. */
 .diya-root .diya-toast[data-entering] { z-index: 0; }
 /* A toast() with a title and no description: no empty line under the title. */
@@ -2193,6 +2196,10 @@
 /* Material values belong to each provider so nested appearances stay independent. */
 .diya-root {
   --diya-internal-control-line: color-mix(in srgb, var(--diya-color-muted) 70%, transparent);
+  /* Declared on every root, so a nested provider that isn't Glass never inherits an outer Glass
+     toast's see-through pane (light text on a light pane). Glass roots override both. */
+  --diya-internal-toast-fill: var(--diya-color-raised);
+  --diya-internal-toast-backdrop: none;
   --diya-internal-alert-alpha: 7%;
   --diya-internal-alert-fill: var(--diya-color-raised);
   --diya-internal-alert-backdrop: none;
@@ -2609,7 +2616,9 @@
     background: var(--diya-internal-text-lift);
     box-shadow: 0 0 10px 6px var(--diya-internal-text-lift);
   }
-  /* A toast floats; an inline alert is content. */
+  /* A toast floats; an inline alert is content. A Glass provider's <Toast> in the page's stack
+     is glass too, whatever the page's provider is. */
+  .diya-root .diya-toast-region .diya-root[data-glass='true'] .diya-alert,
   .diya-root[data-glass='true'] .diya-toast-region .diya-alert {
     --diya-internal-alert-fill: var(--diya-internal-toast-fill);
     --diya-internal-alert-backdrop: var(--diya-internal-toast-backdrop);

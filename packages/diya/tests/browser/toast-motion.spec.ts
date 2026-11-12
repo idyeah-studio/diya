@@ -151,3 +151,50 @@ test.describe('an exit copy starts where its toast was', () => {
     expect(Math.abs(first.copies.find((copy) => copy.title === 'Draft saved')!.top - rest)).toBeLessThanOrEqual(1)
   })
 })
+
+test.describe('toasts from several providers', () => {
+  test('two providers\' toasts never overlap: one corner, one column, 12px apart', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light&nested=1')
+    await page.evaluate(() => { (window as any).comps.add({ title: 'Draft saved', description: 'Saved a moment ago.' }) })
+    await settle(page)
+    await page.evaluate(() => { (window as any).nested.add({ title: 'Synced', description: 'From the dark region.' }) })
+    await settle(page)
+    if (!isPhone(testInfo)) {
+      await page.evaluate(() => (window as any).diya.toast({ title: 'Link copied', duration: 0 }))
+      await settle(page)
+    }
+    const boxes = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('.diya-alert')].filter((alert) => !alert.closest('[aria-hidden="true"]')).map((alert) => {
+      const box = alert.closest('.diya-toast')!.getBoundingClientRect()
+      return { title: alert.querySelector('.diya-alert-title')!.textContent, theme: alert.closest('.diya-root')!.getAttribute('data-theme'), top: box.top, bottom: box.bottom, left: box.left, right: box.right }
+    }).sort((a, b) => a.top - b.top))
+    expect(boxes.map((box) => box.title)).toEqual(isPhone(testInfo) ? ['Draft saved', 'Synced'] : ['Draft saved', 'Synced', 'Link copied'])
+    expect(boxes.find((box) => box.title === 'Synced')!.theme).toBe('dark')
+    for (let i = 1; i < boxes.length; i++) {
+      expect(Math.round(boxes[i].top - boxes[i - 1].bottom)).toBe(12)
+      expect(boxes[i].left).toBe(boxes[0].left)
+    }
+  })
+
+  test('a nested Dark provider\'s toast under an outer Glass provider reads at 4.5:1 or more', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light&glass=1&nested=1')
+    await page.evaluate(() => { (window as any).nested.add({ title: 'Synced', description: 'From the dark region.' }) })
+    await settle(page)
+    const ratio = await page.evaluate(() => {
+      const alert = [...document.querySelectorAll<HTMLElement>('.diya-toast-list .diya-alert')].find((node) => node.querySelector('.diya-alert-title')?.textContent === 'Synced')!
+      const rgb = (value: string) => {
+        const srgb = /color\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.e-]+))?\)/.exec(value)
+        if (srgb) return [Number(srgb[1]) * 255, Number(srgb[2]) * 255, Number(srgb[3]) * 255, srgb[4] === undefined ? 1 : Number(srgb[4])]
+        const m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(value)!
+        return [Number(m[1]), Number(m[2]), Number(m[3]), m[4] === undefined ? 1 : Number(m[4])]
+      }
+      const lum = ([r, g, b]: number[]) => [r, g, b].map((c) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 }).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0)
+      const fill = rgb(getComputedStyle(alert).backgroundColor)
+      // Over a white page, the worst case for light text on a see-through pane.
+      const shown = fill.slice(0, 3).map((c) => c * fill[3] + 255 * (1 - fill[3]))
+      const text = rgb(getComputedStyle(alert.querySelector('.diya-alert-title')!).color)
+      const [a, b] = [lum(text), lum(shown)].sort((x, y) => y - x)
+      return (a + 0.05) / (b + 0.05)
+    })
+    expect(ratio).toBeGreaterThanOrEqual(4.5)
+  })
+})

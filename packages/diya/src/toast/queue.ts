@@ -32,11 +32,37 @@ export type ToastEntry = Required<Pick<ToastOptions, 'title' | 'tone' | 'duratio
   status: 'waiting' | 'shown' | 'leaving'
 }
 
-export type ToastSnapshot = { readonly entries: readonly ToastEntry[]; readonly hosts: readonly object[] }
+/**
+ * How a <Toast> looks where it was written: its nearest provider's theme, Glass, motion, class
+ * and style. The page's one stack wraps the toast in it, so every toast shares one corner and one
+ * column while keeping its own provider's look (B1).
+ */
+export type ToastLook = { theme: string; glass: string; motion: string; className?: string; style?: Record<string, unknown> }
+
+/** A <Toast> in the stack: the stack renders its slot in arrival order and the <Toast> portals into it. */
+export type ToastSlot = {
+  key: string
+  order: number
+  hasAction: boolean
+  urgent: boolean
+  /** The provider the <Toast> sits in, and how it looks. */
+  owner: object
+  look: ToastLook
+  /** Ends the toast as its close button would (Escape on it in the stack). */
+  dismiss: () => void
+}
+
+export type ToastSnapshot = { readonly entries: readonly ToastEntry[]; readonly hosts: readonly object[]; readonly slots: readonly ToastSlot[]; readonly version: number }
 
 type Store = {
   entries: ToastEntry[]
   hosts: object[]
+  slots: ToastSlot[]
+  elements: Map<string, HTMLElement>
+  paused: boolean
+  copies: HTMLElement | null
+  focus: ((leaving: string, fallback?: HTMLElement | null) => void) | null
+  version: number
   listeners: Set<() => void>
   snapshot: ToastSnapshot
   count: number
@@ -50,11 +76,12 @@ type Store = {
 const KEY = Symbol.for('@idyeah/diya/toast@1')
 function store(): Store {
   const host = globalThis as unknown as Record<symbol, Store | undefined>
-  return (host[KEY] ??= { entries: [], hosts: [], listeners: new Set(), snapshot: { entries: [], hosts: [] }, count: 0, order: 0, dropping: false })
+  return (host[KEY] ??= { entries: [], hosts: [], slots: [], elements: new Map(), paused: false, copies: null, focus: null, version: 0, listeners: new Set(), snapshot: { entries: [], hosts: [], slots: [], version: 0 }, count: 0, order: 0, dropping: false })
 }
 
 function changed(state: Store) {
-  state.snapshot = { entries: state.entries, hosts: state.hosts }
+  state.version += 1
+  state.snapshot = { entries: state.entries, hosts: state.hosts, slots: state.slots, version: state.version }
   for (const listener of [...state.listeners]) listener()
 }
 
@@ -119,7 +146,7 @@ export function subscribeToasts(listener: () => void) {
   return () => { state.listeners.delete(listener) }
 }
 export const toastSnapshot = (): ToastSnapshot => store().snapshot
-export const EMPTY_TOASTS: ToastSnapshot = { entries: [], hosts: [] }
+export const EMPTY_TOASTS: ToastSnapshot = { entries: [], hosts: [], slots: [], version: 0 }
 
 /** A provider that can show toast() toasts. The first registered that's still registered is active. */
 export function registerHost(host: object) {
@@ -154,6 +181,57 @@ export function unregisterHost(host: object) {
 /** The next place in arrival order, shared by toast() toasts and <Toast>s. */
 export function nextToastOrder() {
   return ++store().order
+}
+
+// --- <Toast> slots: every provider's <Toast>s share the page's one stack ------------------
+
+let slotCount = 0
+export const nextToastSlotKey = () => `c${++slotCount}`
+export function addToastSlot(slot: ToastSlot) {
+  const state = store()
+  state.slots = [...state.slots.filter((item) => item.key !== slot.key), slot]
+  changed(state)
+}
+export function updateToastSlot(key: string, patch: Partial<Pick<ToastSlot, 'hasAction' | 'urgent' | 'look'>>) {
+  const state = store()
+  state.slots = state.slots.map((item) => (item.key === key ? { ...item, ...patch } : item))
+  changed(state)
+}
+export function removeToastSlot(key: string) {
+  const state = store()
+  if (!state.slots.some((item) => item.key === key)) return
+  state.slots = state.slots.filter((item) => item.key !== key)
+  state.elements.delete(key)
+  changed(state)
+}
+/** The element the stack made for this <Toast> to portal into, once it exists. */
+export const toastSlotElement = (key: string) => store().elements.get(key) ?? null
+export function setToastSlotElement(key: string, element: HTMLElement | null) {
+  const state = store()
+  if (element ? state.elements.get(key) === element : !state.elements.has(key)) return
+  if (element) state.elements.set(key, element)
+  else state.elements.delete(key)
+  changed(state)
+}
+/** A <Toast>'s words changed: the stack reads them again for its announcement. */
+export const touchToasts = () => changed(store())
+/** All timers pause while the pointer or focus is in the stack, <Toast>s' too. */
+export const toastsPaused = () => store().paused
+export function setToastsPaused(value: boolean) {
+  const state = store()
+  if (state.paused === value) return
+  state.paused = value
+  changed(state)
+}
+/** Where exits play: under the live toasts, in the stack's own layer. */
+export const toastCopies = () => store().copies
+export function setToastCopies(element: HTMLElement | null) { store().copies = element }
+/** The stack's focus chain, for a focused <Toast> that leaves (where F8 was pressed, and so on). */
+export function setToastFocus(focus: Store['focus']) { store().focus = focus }
+export function returnToastFocus(leaving: string, fallback?: HTMLElement | null) {
+  const focus = store().focus
+  if (focus) focus(leaving, fallback)
+  else fallback?.focus()
 }
 
 /** The entry is gone from the page: its exit has played. */

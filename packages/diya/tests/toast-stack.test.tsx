@@ -345,18 +345,21 @@ describe('<Toast> joins its provider\'s stack (1.2)', () => {
     await waitFor(() => expect(slots()).toEqual(['Uploading', 'Link copied', 'Export started']))
   })
 
-  it('a <Toast> in a nested Dark provider uses that provider\'s stack and theme', async () => {
+  it('a <Toast> in a nested Dark provider shares the page\'s one stack, in its own provider\'s look', async () => {
     const { Toast } = await import('../dist/index.js')
-    render(<DiyaProvider theme="light"><DiyaProvider theme="dark" className="nested"><Toast title="Synced" duration={0} onDismiss={() => {}}>Up to date.</Toast></DiyaProvider></DiyaProvider>)
-    await waitFor(() => expect(slots()).toEqual(['Synced']))
-    const slot = document.querySelector('.diya-toast-list > .diya-toast')!
-    expect(slot.closest('.diya-root')!.classList.contains('nested')).toBe(true)
-    expect(slot.closest('.diya-root')!.getAttribute('data-theme')).toBe('dark')
-    // toast() still shows in the outer provider.
-    act(() => { toast({ title: 'Draft saved' }) })
-    await waitFor(() => expect(document.querySelectorAll('.diya-toast-list')).toHaveLength(2))
-    const outer = [...document.querySelectorAll('.diya-toast-list')].find((list) => list.textContent?.includes('Draft saved'))!
-    expect(outer.closest('.diya-root')!.classList.contains('nested')).toBe(false)
+    render(<DiyaProvider theme="light"><Toast title="Draft saved" duration={0} onDismiss={() => {}}>Saved.</Toast><DiyaProvider theme="dark" className="nested" style={{ '--diya-color-accent': '#5fd0c8' } as never}><Toast title="Synced" duration={0} onDismiss={() => {}}>Up to date.</Toast></DiyaProvider></DiyaProvider>)
+    await waitFor(() => expect(slots()).toEqual(['Draft saved', 'Synced']))
+    // One corner, one column (T4)…
+    expect(document.querySelectorAll('.diya-toast-list')).toHaveLength(1)
+    expect(document.querySelectorAll('.diya-toast-host')).toHaveLength(1)
+    // …and each toast keeps its own provider's theme, class and style (B1).
+    const nested = [...document.querySelectorAll('.diya-toast-list > .diya-toast')][1].querySelector('.diya-alert')!.closest('.diya-root') as HTMLElement
+    expect(nested.getAttribute('data-theme')).toBe('dark')
+    expect(nested.classList.contains('nested')).toBe(true)
+    expect(nested.style.getPropertyValue('--diya-color-accent')).toBe('#5fd0c8')
+    const own = [...document.querySelectorAll('.diya-toast-list > .diya-toast')][0].querySelector('.diya-alert')!.closest('.diya-root') as HTMLElement
+    expect(own.getAttribute('data-theme')).toBe('light')
+    expect(own.querySelector('.diya-toast-list')).not.toBeNull()
   })
 
   it('names the close button "Dismiss: <title>" with a title, "Dismiss alert" without', async () => {

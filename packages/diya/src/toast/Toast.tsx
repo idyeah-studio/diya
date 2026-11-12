@@ -2,11 +2,11 @@
 import { forwardRef, useContext, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { Alert, AlertInStackContext, type AlertProps } from '../alert/Alert.js'
-import { ToastRegistryContext, useDiyaMessages } from '../DiyaProvider.js'
+import { ToastScopeContext, useDiyaMessages } from '../DiyaProvider.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { playOnCopy } from '../internal/presence.js'
 import { toastMessages } from './messages.js'
-import { nextToastOrder } from './queue.js'
+import { addToastSlot, nextToastOrder, nextToastSlotKey, removeToastSlot, subscribeToasts, toastCopies, toastSlotElement, toastsPaused, touchToasts, updateToastSlot } from './queue.js'
 
 declare module '../messages.js' {
   interface DiyaMessages {
@@ -22,8 +22,9 @@ const playExit = (node: HTMLElement | null, layer: HTMLElement | null) => playOn
   { opacity: 0, translate: `0 ${style.getPropertyValue('--diya-internal-motion-distance-edge').trim() || '0px'}` },
 ], { zIndex: 0 })
 
-const noSlot = () => () => {}
-const nothing = () => null
+const none = () => () => {}
+const noSlot = () => null
+const notPaused = () => false
 
 export type ToastProps = Omit<AlertProps, 'onDismiss'> & {
   /** Called once, straight away, when the toast goes (by timer, close button or Escape); unmount the toast here. Its exit then plays on its own. */
@@ -33,13 +34,14 @@ export type ToastProps = Omit<AlertProps, 'onDismiss'> & {
   /** Shows a close button; a toast with an `action` always has one. Defaults to true. */
   showClose?: boolean
 }
-/** A temporary Alert floated above the page that dismisses itself after a while; the host unmounts the toast in `onDismiss`. It joins its provider's stack, with any toast() toasts. `className`, `style` and the ref reach the Alert. */
+/** A temporary Alert floated above the page that dismisses itself after a while; the host unmounts the toast in `onDismiss`. It joins the page's one stack, with any toast() toasts, in its own provider's look. `className`, `style` and the ref reach the Alert. */
 export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onDismiss, duration = 8000, ...props }, ref) {
-  const registry = useContext(ToastRegistryContext)
+  const scope = useContext(ToastScopeContext)
   const t = useDiyaMessages('toast', toastMessages)
-  const [key] = useState(() => registry?.key() ?? 0)
-  const slot = useSyncExternalStore(registry ? registry.subscribe : noSlot, () => registry?.slot(key) ?? null, nothing)
-  const paused = useSyncExternalStore(registry ? registry.subscribe : noSlot, () => registry?.paused() ?? false, () => false)
+  const [key] = useState(nextToastSlotKey)
+  const subscribe = scope ? subscribeToasts : none
+  const slot = useSyncExternalStore(subscribe, () => toastSlotElement(key), noSlot)
+  const paused = useSyncExternalStore(subscribe, toastsPaused, notPaused)
   const [hidden, setHidden] = useState(false)
   const returnFocus = useRef<HTMLElement | null>(null)
   const remaining = useRef(duration)
@@ -49,11 +51,12 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
   // even if the host keeps it mounted afterwards.
   const dismissed = useRef(false)
   const slotRef = useRef<HTMLElement | null>(null)
-  slotRef.current = slot
+  // The slot is the stack's element; the exit copies the toast's whole place in the column.
+  slotRef.current = slot?.closest<HTMLElement>('.diya-toast') ?? slot
   const settle = () => {
     if (dismissed.current) return
     dismissed.current = true
-    playExit(slotRef.current, registry?.copies() ?? null)
+    playExit(slotRef.current, toastCopies())
     callback.current()
   }
   function dismiss() {
@@ -62,19 +65,22 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
   }
   const dismissRef = useRef(dismiss)
   dismissRef.current = dismiss
-  // A place in the stack, in arrival order, for as long as it's mounted.
+  // A place in the page's stack, in arrival order, for as long as it's mounted, in its own
+  // provider's look.
   useClientLayoutEffect(() => {
-    if (!registry) return
+    if (!scope) return
     returnFocus.current = document.activeElement as HTMLElement
-    registry.add({ key, order: nextToastOrder(), hasAction: !!props.action, urgent: !!props.urgent, dismiss: () => dismissRef.current() })
-    return () => registry.remove(key)
-  }, [registry, key])
+    addToastSlot({ key, order: nextToastOrder(), hasAction: !!props.action, urgent: !!props.urgent, owner: scope.owner, look: scope.look, dismiss: () => dismissRef.current() })
+    return () => removeToastSlot(key)
+  }, [!!scope, key])
+  const first = useRef(true)
   useClientLayoutEffect(() => {
-    registry?.update(key, { hasAction: !!props.action, urgent: !!props.urgent })
-  }, [!!props.action, !!props.urgent])
+    if (first.current) { first.current = false; return }
+    if (scope) updateToastSlot(key, { hasAction: !!props.action, urgent: !!props.urgent, look: scope.look })
+  }, [!!props.action, !!props.urgent, scope?.look])
   // Tell the stack the words changed, so it announces them.
   useClientLayoutEffect(() => {
-    if (slot) registry?.touch()
+    if (slot) touchToasts()
   }, [slot, props.title, props.tone, props.children, props.urgent])
   useEffect(() => {
     remaining.current = duration
