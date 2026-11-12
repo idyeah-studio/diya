@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ComponentProps, ComponentType, ReactNode } from 'react'
+import { useEffect, type ComponentProps, type ComponentType, type ReactNode } from 'react'
 import { DiyaProvider, toast } from '@idyeah/diya'
 import { AppearanceProvider, useAppearance } from '../app/Appearance'
 import { CatalogProvider } from '../components/CatalogProvider'
@@ -438,6 +438,26 @@ describe('each toast Screen raises its toast', () => {
     act(() => toast.dismiss())
     await act(async () => {})
     vi.useRealTimers()
+  })
+
+  it('renders like the preview frame: StrictMode around one DiyaProvider', () => {
+    // A toast fired from an effect would show twice in development under StrictMode, so the
+    // frame keeps StrictMode and every case below renders under it.
+    const frame = readFileSync(join(process.cwd(), 'screens-frame/src/main.tsx'), 'utf8')
+    expect(frame).toMatch(/render\(\s*<StrictMode>\s*<Frame \/>\s*<\/StrictMode>/)
+    expect(frame).toContain('<DiyaProvider theme={theme} glass={glass} className="screens-frame">')
+  })
+
+  it('would catch a Screen that toasts from an effect: under StrictMode it shows twice', async () => {
+    function Saved() {
+      useEffect(() => {
+        toast({ title: 'Synced' })
+      }, [])
+      return null
+    }
+    render(<DiyaProvider theme="light"><Saved /></DiyaProvider>, { reactStrictMode: true })
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' })
+    await waitFor(() => expect(within(region).getAllByText('Synced')).toHaveLength(2))
   })
 
   it('covers every Screen that imports toast', () => {
