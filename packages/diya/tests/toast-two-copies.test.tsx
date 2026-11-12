@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { act, render, waitFor } from '@testing-library/react'
+import { createElement } from 'react'
 import * as A from '../dist/index.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -65,7 +66,8 @@ describe('a page store made by another 1.x copy, without fields this copy adds (
   it('still shows toast() and <Toast>s, each in its own place', async () => {
     const listeners = new Set()
     // Only what every 1.x copy has: no <Toast> places, no slot count, no copy layer, no focus chain.
-    ;(globalThis as Record<symbol, unknown>)[KEY] = { entries: [], hosts: [], version: 0, listeners, snapshot: { entries: [], hosts: [], slots: [], version: 0 }, count: 0, order: 0, dropping: false, paused: false }
+    // One store per React (S3, DS-R3-01): this React's, under the page's key.
+    ;(globalThis as Record<symbol, unknown>)[KEY] = new WeakMap([[createElement, { entries: [], hosts: [], version: 0, listeners, snapshot: { entries: [], hosts: [], slots: [], version: 0 }, count: 0, order: 0, dropping: false, paused: false }]])
     render(
       <A.DiyaProvider theme="light">
         <A.Toast title="First" duration={0} onDismiss={() => {}} />

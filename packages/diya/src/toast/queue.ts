@@ -3,7 +3,7 @@
 // nothing there). The providers' stacks render what's queued here.
 //
 // The module is not named toast.ts: it would collide with Toast.tsx on a case-insensitive disk.
-import type { ReactNode } from 'react'
+import { createElement, type ReactNode } from 'react'
 import type { AlertTone } from '../alert/Alert.js'
 import { warnOnce } from '../internal/warn.js'
 
@@ -75,31 +75,44 @@ type Store = {
   slotCount: number
 }
 
-// One store per page, on globalThis under a versioned key: two copies of the package in one page
-// (peer variants, an injected workspace copy, a hot reload) still share one queue, and a future
-// incompatible store never mixes with this one. Made on first use, so nothing runs at import.
+// One store per React on the page, on globalThis under a versioned key: two copies of the
+// package on one React (peer variants, an injected workspace copy, a hot reload) still share one
+// queue and one stack, and a future incompatible store never mixes with this one. Made on first
+// use, so nothing runs at import.
 //
-// THE STORE IS A PROTOCOL BETWEEN VERSIONS (R9). Every 1.x copy of the package on a page shares
-// this one object, whichever copy made it, and the first copy's stack to mount draws every
-// copy's toasts. So its shape is a contract between any two 1.x versions, though nothing here
-// is exported:
+// THE STORE IS A PROTOCOL BETWEEN VERSIONS (R9). Every 1.x copy of the package on a page that
+// uses the same React shares one store, whichever copy made it, and the first of those copies'
+// stacks to mount draws every copy's toasts. So its shape is a contract between any two 1.x
+// versions, though nothing here is exported:
 // - The key's "@1" is the protocol's version. A change that an older 1.x copy can't read, such
 //   as renaming or removing a field or changing what one means, takes "@2": a separate store,
 //   and so a separate stack, never a broken one.
+// - ONE STORE PER REACT (S3). Under the key is a WeakMap from a React's createElement to that
+//   React's store. Entries hold that React's elements (a toast()'s description) and only that
+//   React can render them, so two Reacts on one page (micro-frontends mid-upgrade, React 18
+//   beside 19) get two stores and two stacks: 1.1's two corners in a rare setup, never one
+//   app's toast crashing the other app's tree.
 // - Within @1, only add fields, and only as optional. Read every field with a default (store()
 //   fills them), since an older copy may have made the store without it.
 // - Never change what an existing field means: `entries` (ToastEntry, and its `status`),
 //   `hosts` (in mount order; the first is the page's stack), `slots` (ToastSlot: `key`,
-//   `order`, `owner`, `look`, `dismiss`), `elements`, `paused`, `copies`, `focus`, `listeners`
-//   and `snapshot`; `version` counts changes (it is not the package's version); `count`,
-//   `order` and `slotCount` only go up.
-// - A newer copy may add behavior through optional fields (ToastSlot's `motion` is one); an
-//   older copy's stack ignores them, so that behavior is missing there, never broken.
+//   `order`, `owner`, `look`, `dismiss`), `elements`, `paused`, `copies`, `focus` (called with
+//   the leaving <Toast>'s slot key, a fallback element and whether a close button was used),
+//   `listeners` and `snapshot`; `version` counts changes (it is not the package's version);
+//   `count`, `order` and `slotCount` only go up.
+// - Only a provider with no DIYA provider (.diya-root) above it in the DOM registers in `hosts`
+//   (R8). Every copy applies that rule, or two copies would disagree about who hosts.
+// - A newer copy may add behavior through optional fields (ToastSlot's `motion` and `leaving`
+//   are two); an older copy's stack ignores them, so that behavior is missing there, never
+//   broken.
 // Sharing across copies is best effort, and isn't promised in the public docs.
 const KEY = Symbol.for('@idyeah/diya/toast@1')
 function store(): Store {
-  const host = globalThis as unknown as Record<symbol, Partial<Store> | undefined>
-  const state = (host[KEY] ??= {})
+  const host = globalThis as unknown as Record<symbol, WeakMap<object, Partial<Store>> | undefined>
+  const stores = (host[KEY] ??= new WeakMap())
+  // This copy's React, by its createElement: each React instance has its own.
+  let state = stores.get(createElement)
+  if (!state) stores.set(createElement, (state = {}))
   // Every field this copy reads, with its default: another copy may have made the store.
   state.entries ??= []
   state.hosts ??= []
