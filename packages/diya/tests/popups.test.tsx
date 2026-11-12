@@ -157,7 +157,8 @@ describe('scoped and anchored popups', () => {
   it('keeps tooltip and popover content scoped, runs callbacks and restores trigger focus', async () => {
     const user = userEvent.setup()
     const saved = vi.fn()
-    render(<DiyaProvider theme="dark" glass>
+    // motion="off": the tooltip shows on hover at once, as in 1.0, so the test can check it straight away.
+    render(<DiyaProvider theme="dark" glass motion="off">
       <Tooltip label="Explain settings" content="Customer-defined help">Help</Tooltip>
       <Popover label="Preferences">{(close) => <Button onClick={() => { saved(); close() }}>Done</Button>}</Popover>
     </DiyaProvider>)
@@ -191,7 +192,7 @@ describe('scoped and anchored popups', () => {
 
   it('keeps tooltip and popover controls in their enclosing native modal', async () => {
     const user = userEvent.setup()
-    render(<DiyaProvider><Dialog trigger={<Button>Open settings</Button>} title="Settings">
+    render(<DiyaProvider motion="off"><Dialog trigger={<Button>Open settings</Button>} title="Settings">
       <Tooltip label="Modal help" content="Inside this dialog">Help</Tooltip>
       <Popover label="Modal options">{(close) => <Button onClick={close}>Apply options</Button>}</Popover>
     </Dialog></DiyaProvider>)

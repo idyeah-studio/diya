@@ -1897,7 +1897,7 @@ h4 {
 }
 @media (prefers-reduced-motion: no-preference) {
   :where(html[data-catalog='true']) .resource-card .mini-app {
-    transition: transform var(--site-duration-slow) var(--site-ease-enter);
+    transition: transform var(--diya-duration-slow) var(--diya-ease-enter);
   }
   :where(html[data-catalog='true']) .poster-link:hover .mini-app {
     transform: translateY(4px);
@@ -1906,8 +1906,8 @@ h4 {
 :where(html[data-catalog='true']) 
   .rail-group button {
     transition:
-      background var(--site-duration-fast) var(--site-ease-move),
-      color var(--site-duration-fast) var(--site-ease-move);
+      background var(--diya-duration-fast) var(--diya-ease-move),
+      color var(--diya-duration-fast) var(--diya-ease-move);
   }
 }
 @media (min-width: 1500px) {

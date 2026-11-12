@@ -205,7 +205,7 @@ trigger focus; Tab leaves according to the trigger's document position.
 | Badge | `label` | `variant`: count/dot; `tone`, `size`, `count`, `max` (default 99, shows `99+`), `showZero`. |
 | Alert | `title`, children | `layout`: card/banner; `tone`: info/success/warning/error/brand; optional action and `onDismiss`; `urgent` for urgent announcements. |
 | Progress | `label`, optional `value` | `variant`: linear/circular; `showValue` (default on). Value is 0–100. Without a `value` it is indeterminate: working, amount unknown. `indeterminate` forces that state. |
-| Tooltip | `content`, your trigger as the child | Wraps one element, such as `<Button iconOnly aria-label="Delete">`, and wires hover, focus and its description. Or give `label` and noninteractive children for a built-in trigger. `placement`; closes with Escape. |
+| Tooltip | `content`, your trigger as the child | Wraps one element, such as `<Button iconOnly aria-label="Delete">`, and wires hover, focus and its description. Or give `label` and noninteractive children for a built-in trigger. `placement`; closes with Escape. A mouse rests 300ms before it shows; keyboard focus, a tap and `motion="off"` show it at once. |
 | Popover | `label`, children | Plain content, or `close => content` to close it from your own controls. `trigger` takes your own element; `open` with `onOpenChange` controls it. `placement`, `disabled`. |
 | Prose | children | Your own HTML in DIYA's type: headings, paragraphs, links, lists, quotes, code, tables and images. `size`: small (15px, inside an app)/medium (default, 17px, articles and docs)/large (20px, long reads). Renders a `div`. Needs no provider context. |
 | CodeBlock | `code` | `label` names it, such as `'TypeScript'` or `'app/page.tsx'`. Copy writes to the clipboard and announces the result; long lines scroll sideways in a region the keyboard can reach. No syntax colors. |
@@ -311,3 +311,6 @@ not communicate status. Icon-only buttons need their own `aria-label`.
 | Glass looks solid | Check the backdrop behind it, browser support and the reader's transparency setting. |
 | A button stays disabled or busy | Clear `loading` on success and on failure. |
 | An event handler errors in Next.js | Functions can't be passed from a Server Component. Move the component into a file that starts with `'use client'`. |
+| A menu or popover is still in the page right after closing | It's leaving, for about 110ms (a dialog or drawer, 160ms). Wait for it to go, use web-first assertions, or render tests with `motion="off"`. |
+| Screenshots catch a half-open popup | Render with `motion="off"`; the device's Reduce Motion setting still fades. |
+| Accordion sections open at once with Tailwind | Tailwind's base styles hide `[hidden]` with `!important`; add the `@layer base` rule from the README's Tailwind section. |

@@ -1,6 +1,6 @@
 # Files in the @idyeah/diya npm tarball. Regenerate with: pnpm snapshot:tarball
 # budget packed <= 516994 bytes
-# budget unpacked <= 1200000 bytes
+# budget unpacked <= 1300000 bytes
 CHANGELOG.md
 LICENSE
 NOTICE
@@ -86,8 +86,12 @@ dist/internal/brand.d.ts
 dist/internal/brand.js
 dist/internal/cx.d.ts
 dist/internal/cx.js
+dist/internal/layout-effect.d.ts
+dist/internal/layout-effect.js
 dist/internal/link.d.ts
 dist/internal/link.js
+dist/internal/presence.d.ts
+dist/internal/presence.js
 dist/internal/slot.d.ts
 dist/internal/slot.js
 dist/layout/Inline.d.ts

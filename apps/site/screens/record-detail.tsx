@@ -402,6 +402,7 @@ const css = `
 .record-detail-bone-lines { display: grid; gap: var(--diya-space-2); flex: 1; }
 .record-detail-bone-line { height: 14px; border-radius: 6px; }
 .record-detail-bone-sub { width: 28%; height: 12px; }
+/* DIYA's own loading rows pulse the same way (1.4s, ease-in-out); this copy keeps the file self-contained. */
 @keyframes record-detail-pulse { 50% { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .record-detail-bone { animation: none; } }
 @media (max-width: 1020px) {

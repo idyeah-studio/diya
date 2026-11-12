@@ -3,6 +3,7 @@ import { forwardRef, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Alert, type AlertProps } from '../alert/Alert.js'
 import { useDiyaMessages, useDiyaPortal } from '../DiyaProvider.js'
+import { playOnCopy } from '../internal/presence.js'
 import { toastMessages } from './messages.js'
 
 declare module '../messages.js' {
@@ -11,15 +12,22 @@ declare module '../messages.js' {
   }
 }
 
+// The toast leaves on a copy, so onDismiss can run at once and the host can unmount it or raise
+// the next one straight away: it sinks 12px and fades over two-thirds of the slow time.
+const playExit = (node: HTMLElement | null) => playOnCopy(node, node?.parentElement, 'exit-slow', (style, opacity) => [
+  { opacity, translate: '0 0' },
+  { opacity: 0, translate: `0 ${style.getPropertyValue('--diya-internal-motion-distance-edge').trim() || '0px'}` },
+])
+
 export type ToastProps = Omit<AlertProps, 'onDismiss'> & {
-  /** Called once when the toast goes, by timer, close button or Escape; unmount the toast here. */
+  /** Called once, straight away, when the toast goes (by timer, close button or Escape); unmount the toast here. Its exit then plays on its own. */
   onDismiss: () => void
   /** Milliseconds before it dismisses itself, paused while hovered, focused or the tab is hidden; 0 or less keeps it until dismissed. Toasts with an `action` never time out. Defaults to 8000. */
   duration?: number
   /** Shows a close button; a toast with an `action` always has one. Defaults to true. */
   showClose?: boolean
 }
-/** A temporary Alert floated above the page that dismisses itself after a while. `className`, `style` and the ref reach the Alert. */
+/** A temporary Alert floated above the page that dismisses itself after a while; the host unmounts the toast in `onDismiss`. `className`, `style` and the ref reach the Alert. */
 export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onDismiss, duration = 8000, ...props }, ref) {
   const portal = useDiyaPortal()
   const t = useDiyaMessages('toast', toastMessages)
@@ -38,6 +46,7 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
   const settle = () => {
     if (dismissed.current) return
     dismissed.current = true
+    playExit(region.current)
     callback.current()
   }
   useEffect(() => {

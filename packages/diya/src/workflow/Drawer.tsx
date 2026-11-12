@@ -4,6 +4,7 @@ import { Button } from '../button/Button.js'
 import { Icon } from '../Icon.js'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
+import { inertWhileExiting } from '../internal/presence.js'
 import { composeRefs } from '../internal/slot.js'
 import { drawerMessages } from './drawer-messages.js'
 
@@ -51,8 +52,15 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
     if (!node) return
     if (open && !node.open) {
       returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      node.inert = false
+      // Safari applies inert through style: read layout so it's lifted before showModal()
+      // picks what to focus, or a drawer reopened mid-exit opens with focus on <body>.
+      void node.offsetWidth
       node.showModal()
-    } else if (!open && node.open) node.close()
+    } else if (!open && node.open) {
+      node.close()
+      inertWhileExiting(node)
+    }
   }, [open])
   useEffect(() => {
     const node = dialog.current

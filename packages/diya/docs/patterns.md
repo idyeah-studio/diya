@@ -111,6 +111,7 @@ and loading controls.
 Drawer and Dialog use native modal focus behavior. Keep their open state in
 sync through `onOpenChange`; Escape requests dismissal and closing restores
 focus. Use labels and a clear close action. Avoid nesting modal dialogs.
+Keep them mounted and toggle `open`: unmounting one skips its exit.
 
 Wizard's `onStepChange` receives an attempted destination. Validate the current
 step before updating `activeStep`; leaving it unchanged keeps the user on that

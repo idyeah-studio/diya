@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
 
 /** A date range as ISO dates (YYYY-MM-DD); '' while a bound is unset. */
 export type DateRange = { start: string; end: string }
@@ -36,7 +37,6 @@ const weekdayNamesFor = (locale: string, start: number) => {
   const format = new Intl.DateTimeFormat(locale, { weekday: 'long' })
   return Array.from({ length: 7 }, (_, index) => format.format(new Date(2023, 0, 1 + ((start + index) % 7))))
 }
-export const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 /** Whether `day` falls before `min` or after `max`. */
 export const outsideLimits = (day: string, min?: string, max?: string) => (!!min && day < min) || (!!max && day > max)

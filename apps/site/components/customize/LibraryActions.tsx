@@ -9,6 +9,7 @@ import { LibraryDownload } from '../LibraryDownload'
 import { CustomizePanel, triggerId } from './CustomizePanel'
 import { useCustomizeUi, useItemAppearance } from './CustomizeContext'
 import { GetThemeDrawer } from './GetThemeDrawer'
+import { SlowMotionSwitch } from './SlowMotion'
 
 /**
  * Header actions for every catalog item: Customize (or Customized, marked
@@ -80,6 +81,7 @@ export function LibraryActions({
         </Button>
       )}
       <LibraryDownload id={id} glass={site.glass} theme={site.theme} />
+      <SlowMotionSwitch />
       <span role="status" className="customize-visually-hidden">
         {announcement}
       </span>

@@ -106,6 +106,7 @@ export function createDiyaMcpServer({ onSearch, onComponent }: McpCounters = {})
         glass: z.boolean().optional(),
         fontFamily: z.string().max(200).optional().describe('A CSS font-family stack'),
         corners: z.number().min(0).max(3).optional().describe('Corner scale: 0 square, 1 default, 2 round'),
+        motion: z.enum(['system', 'reduced', 'off']).optional().describe('"reduced" for fades only, "off" for none; "system" (the default) follows the device\'s Reduce Motion setting'),
       },
       annotations: readOnly,
     },

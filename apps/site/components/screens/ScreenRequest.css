@@ -96,7 +96,7 @@
   border-color: color-mix(in srgb, var(--diya-color-text) 22%, transparent);
   border-radius: 16px;
   text-align: start;
-  transition: background-color var(--site-duration-fast) var(--site-ease-move), border-color var(--site-duration-fast) var(--site-ease-move);
+  transition: background-color var(--diya-duration-fast) var(--diya-ease-move), border-color var(--diya-duration-fast) var(--diya-ease-move);
 }
 .screens-request-body .screens-request-upload .diya-workflow-symbol {
   grid-area: icon;

@@ -80,7 +80,12 @@ export function fontFamilyValue(id: FontId): string {
   return `'${web.family}', ${GENERIC.exec(font.family)?.[1] ?? 'sans-serif'}`
 }
 
-export type ProviderProp = { name: 'brandColor' | 'fontFamily' | 'glass'; value: string | true; jsx: string }
+export type ProviderProp = { name: 'brandColor' | 'fontFamily' | 'glass' | 'motion'; value: string | true; jsx: string }
+
+/** `motion="reduced"` or `motion="off"`; nothing when the theme follows the device. */
+export function motionAttribute(appearance: Appearance): string | null {
+  return appearance.motion === 'system' ? null : `motion="${appearance.motion}"`
+}
 
 /** Only the DiyaProvider props this theme changes. */
 export function providerProps(appearance: Appearance): ProviderProp[] {
@@ -92,6 +97,8 @@ export function providerProps(appearance: Appearance): ProviderProp[] {
     props.push({ name: 'fontFamily', value: family, jsx: `fontFamily="${family}"` })
   }
   if (appearance.translucent) props.push({ name: 'glass', value: true, jsx: 'glass' })
+  const motion = motionAttribute(appearance)
+  if (motion) props.push({ name: 'motion', value: appearance.motion, jsx: motion })
   return props
 }
 
@@ -159,6 +166,7 @@ export function contrastFix(brand: Overrides | null, issue: ContrastIssue): Cont
 
 const CORNER_NAMES: Record<number, string> = { 0: 'Square', 10: 'Soft', 16: 'Round' }
 const ELEVATION_NAMES = { flat: 'Flat', soft: 'Soft', lifted: 'Lifted' } as const
+export const MOTION_NAMES = { system: 'Match device', reduced: 'Reduced', off: 'Off' } as const
 
 export function themeSummary(appearance: Appearance) {
   const statusChanged = (['light', 'dark'] as Theme[]).some(
@@ -172,6 +180,7 @@ export function themeSummary(appearance: Appearance) {
     corners: CORNER_NAMES[appearance.corners] ?? `${appearance.corners}px`,
     elevation: ELEVATION_NAMES[appearance.elevation],
     glass: appearance.translucent,
+    motion: MOTION_NAMES[appearance.motion],
     status: statusChanged ? 'Your own' : 'DIYA defaults',
   }
 }

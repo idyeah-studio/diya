@@ -92,11 +92,212 @@ describe('tokens', () => {
 
   it('defines the scrim in Light and Dark, not only under Glass, and dims Dialog and Drawer with it', () => {
     // Unset, var(--diya-color-scrim) was empty outside Glass, so overlays and shadows built on it failed.
-    expect(dark['--diya-color-scrim']).toBe('#00000088')
-    expect(light['--diya-color-scrim']).toBe('#00000088')
+    expect(dark['--diya-color-scrim']).toBe('#0000009e')
+    expect(light['--diya-color-scrim']).toBe('#0000009e')
     for (const owner of ['diya-dialog', 'diya-drawer-modal']) {
       const backdrop = bare.match(new RegExp(`\\.diya-root \\.${owner}::backdrop \\{([^}]*)\\}`))?.[1]
       expect(backdrop?.replace(/\s/g, ''), owner).toContain('background:var(--diya-color-scrim,#0008)')
     }
+  })
+})
+
+// Motion. The rules that animate components arrive with them; these hold every one of them to
+// the house rules, and prove the off switch can't be undone from CSS.
+const motionDeclarations = [...bare.matchAll(/(?:^|[;{\s])((?:transition|animation)(?:-[a-z]+)?)\s*:\s*([^;{}]+)/g)]
+  .map(([, name, value]) => ({ name, value: value.trim() }))
+
+/** Every top-level rule and every rule inside an @media block, with its custom properties. */
+function customPropertyRules(css: string) {
+  const out: { selectors: string[]; media: string | null; values: Record<string, string> }[] = []
+  const stack: string[] = []
+  let buffer = ''
+  for (const char of css) {
+    if (char === '{') { stack.push(buffer.trim()); buffer = ''; continue }
+    if (char !== '}') { buffer += char; continue }
+    const prelude = stack.pop() ?? ''
+    const parent = stack.at(-1) ?? null
+    if (!prelude.startsWith('@') && (parent === null || parent.startsWith('@media'))) {
+      const values = Object.fromEntries([...buffer.matchAll(/(--diya-[\w-]+)\s*:\s*([^;]+)/g)].map(([, name, value]) => [name, value.trim()]))
+      out.push({ selectors: prelude.split(',').map(part => part.trim()), media: parent, values })
+    }
+    buffer = ''
+  }
+  return out
+}
+const propertyRules = customPropertyRules(bare)
+
+/** The custom properties on a provider root with this motion setting, after an app's own CSS. */
+function rootFor(motion: 'system' | 'reduced' | 'off', { reduce = false, app = {} as Record<string, string> } = {}) {
+  const values: Record<string, string> = {}
+  for (const rule of propertyRules) {
+    const matches = rule.selectors.includes('.diya-root') || rule.selectors.includes(`.diya-root[data-motion='${motion}']`)
+    const media = rule.media === null || (reduce && rule.media === '@media (prefers-reduced-motion: reduce)')
+    if (matches && media) Object.assign(values, rule.values)
+  }
+  // Unlayered app CSS beats every rule in @layer diya.
+  return { ...values, ...app }
+}
+
+/** A time in ms: var() substituted from `values` (or its fallback), then calc() worked out. */
+function milliseconds(expression: string, values: Record<string, string>): number {
+  let text = expression
+  for (let pass = 0; pass < 10 && text.includes('var('); pass++) {
+    text = text.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^()]+))?\)/g, (_, name: string, fallback?: string) => {
+      const value = values[name] ?? fallback
+      if (value === undefined) throw new Error(`${name} is not set`)
+      return `(${value})`
+    })
+  }
+  const arithmetic = text.replace(/calc\(/g, '(').replace(/(\d*\.?\d+)ms\b/g, '$1').replace(/(\d*\.?\d+)s\b/g, '($1*1000)')
+  if (!/^[\d\s.()*/+-]+$/.test(arithmetic)) throw new Error(`not arithmetic: ${arithmetic}`)
+  return Number(Function(`return (${arithmetic})`)())
+}
+const durations = ['--diya-duration-fast', '--diya-duration-medium', '--diya-duration-slow']
+// Motion rules read their times from these, declared once on the provider root.
+const step = (token: string) => token.replace('--diya-duration-', '')
+const enter = (token: string) => `var(--diya-internal-duration-${step(token)})`
+const exit = (token: string) => `var(--diya-internal-exit-${step(token)})`
+// Every time a motion rule uses, plus the six the root declares.
+const timeReferences = (value: string) => [...value.matchAll(/var\(--diya-internal-(?:duration|exit)-[\w-]+\)/g)].map(match => match[0])
+const gatedUses = [...new Set([
+  ...durations.flatMap(token => [enter(token), exit(token)]),
+  ...motionDeclarations.flatMap(({ value }) => timeReferences(value)),
+])]
+
+describe('motion tokens', () => {
+  it('declares three durations, a scale and three curves, and no page duration', () => {
+    expect(durations.map(token => dark[token])).toEqual([
+      'calc(120ms * var(--diya-duration-scale, 1))',
+      'calc(160ms * var(--diya-duration-scale, 1))',
+      'calc(240ms * var(--diya-duration-scale, 1))',
+    ])
+    expect(['enter', 'exit', 'move'].map(name => dark[`--diya-ease-${name}`])).toEqual([
+      'cubic-bezier(0.2, 0.7, 0.2, 1)', 'cubic-bezier(0.4, 0, 1, 1)', 'cubic-bezier(0.4, 0, 0.2, 1)',
+    ])
+    // Like --diya-corner-scale, the scale is read with a fallback, so an ancestor can set it.
+    expect(dark['--diya-duration-scale']).toBeUndefined()
+    expect(source).not.toContain('--diya-duration-page')
+  })
+
+  it('times enters and two-thirds exits from the tokens, scaled by --diya-duration-scale', () => {
+    const system = rootFor('system')
+    expect(durations.map(token => milliseconds(enter(token), system))).toEqual([120, 160, 240])
+    expect(durations.map(token => Math.round(milliseconds(exit(token), system)))).toEqual([80, 107, 160])
+    const slower = rootFor('system', { app: { '--diya-duration-scale': '1.5' } })
+    expect(durations.map(token => milliseconds(enter(token), slower))).toEqual([180, 240, 360])
+    const reduced = rootFor('reduced', { app: { '--diya-duration-scale': '0.5' } })
+    expect(durations.map(token => milliseconds(enter(token), reduced))).toEqual([60, 80, 120])
+    const none = rootFor('system', { app: { '--diya-duration-scale': '0' } })
+    for (const use of gatedUses) expect(milliseconds(use, none), use).toBe(0)
+  })
+
+  it('resolves every duration to 0 under motion="off", whatever tokens the app sets', () => {
+    const app = { '--diya-duration-scale': '2', '--diya-duration-fast': '300ms', '--diya-duration-medium': '0.5s', '--diya-duration-slow': '1s' }
+    for (const reduce of [false, true]) {
+      const off = rootFor('off', { reduce, app })
+      for (const use of gatedUses) expect(milliseconds(use, off), use).toBe(0)
+      // The same overrides do reach the durations when motion is on.
+      expect(milliseconds(enter('--diya-duration-medium'), rootFor('system', { reduce, app }))).toBe(500)
+    }
+  })
+
+  it('times every motion rule through the gated durations on the root, one form everywhere', () => {
+    // The six gated times: each is a public duration (an exit, two-thirds of it) times the gate.
+    for (const token of durations) {
+      expect(dark[`--diya-internal-duration-${step(token)}`]).toBe(`calc(var(${token}) * var(--diya-internal-motion))`)
+      expect(dark[`--diya-internal-exit-${step(token)}`]).toBe(`calc(var(${token}) * 2 / 3 * var(--diya-internal-motion))`)
+    }
+    for (const { name, value } of motionDeclarations) {
+      // No rule reads a public duration, or the gate, directly.
+      expect(value, `${name}: ${value}`).not.toMatch(/--diya-duration-|--diya-internal-motion\)/)
+      for (const reference of timeReferences(value)) expect(gatedUses, `${name}: ${reference}`).toContain(reference)
+    }
+    for (const reference of gatedUses) expect(dark[reference.slice(4, -1)], reference).toBeDefined()
+  })
+
+  it('derives exits from their enter: no transition is timed with a fixed value', () => {
+    for (const { name, value } of motionDeclarations.filter(({ name }) => name.startsWith('transition'))) {
+      const fixed = value.replace(/var\([^()]*\)/g, '').replace(/calc\([^;]*\)/g, '').match(/(?<![\w.-])(\d*\.?\d+)m?s\b/g) ?? []
+      expect(fixed.filter(time => parseFloat(time) !== 0), `${name}: ${value}`).toEqual([])
+    }
+  })
+
+  it('keeps fades but no travel or scale under reduced, under system with Reduce Motion, and off', () => {
+    const internals = ['travel', 'distance', 'distance-edge', 'scale', 'scale-dialog', 'scale-press'].map(name => `--diya-internal-motion-${name}`)
+    const read = (values: Record<string, string>) => internals.map(name => values[name])
+    expect(read(rootFor('system'))).toEqual(['1', '4px', '12px', '0.97', '0.98', '0.98'])
+    expect(read(rootFor('reduced', { reduce: false }))).toEqual(['0', '0px', '0px', '1', '1', '1'])
+    expect(read(rootFor('system', { reduce: true }))).toEqual(['0', '0px', '0px', '1', '1', '1'])
+    expect(read(rootFor('off'))).toEqual(['0', '0px', '0px', '1', '1', '1'])
+    // Only motion="off" closes the gate; Reduce Motion keeps fades.
+    expect([rootFor('system'), rootFor('system', { reduce: true }), rootFor('reduced'), rootFor('off')].map(values => values['--diya-internal-motion']))
+      .toEqual(['1', '1', '1', '0'])
+  })
+})
+
+describe('motion house rules', () => {
+  it('never transitions all', () => {
+    for (const { name, value } of motionDeclarations.filter(({ name }) => name === 'transition' || name === 'transition-property')) {
+      expect(value.split(',').map(part => part.trim().split(/\s+/)[0]), `${name}: ${value}`).not.toContain('all')
+    }
+  })
+
+  it('writes allow-discrete only in transition-behavior', () => {
+    const uses = [...bare.matchAll(/([\w-]+)\s*:[^;{}]*allow-discrete/g)].map(match => match[1])
+    expect(uses.filter(name => name !== 'transition-behavior')).toEqual([])
+  })
+
+  it('adds no !important', () => {
+    expect(bare.match(/!\s*important/g) ?? []).toEqual([])
+  })
+
+  it('never transitions filter, backdrop-filter or outline', () => {
+    for (const { name, value } of motionDeclarations.filter(({ name }) => name === 'transition' || name === 'transition-property')) {
+      const properties = value.split(/,(?![^()]*\))/).map(part => part.trim().split(/\s+/)[0])
+      for (const banned of ['filter', 'backdrop-filter', '-webkit-backdrop-filter', 'outline']) expect(properties, `${name}: ${value}`).not.toContain(banned)
+    }
+  })
+})
+
+describe('the dim behind Dialog and Drawer', () => {
+  it('has no blur in Light and Dark, keeps a still one under Glass, and never animates it', () => {
+    const backdrops = [...bare.matchAll(/([^{}]*::backdrop[^{}]*)\{([^}]*)\}/g)].map(([, selector, body]) => ({ selector: selector.trim(), body }))
+    const blurred = backdrops.filter(({ body }) => /backdrop-filter:\s*blur/.test(body)).map(({ selector }) => selector)
+    expect(blurred).toEqual([".diya-root[data-glass='true'] :is(.diya-dialog, .diya-drawer-modal)::backdrop"])
+    expect(bare).toMatch(/@supports \(backdrop-filter: blur\(14px\)\) \{[^@]*\.diya-root\[data-glass='true'\] :is\(\.diya-dialog, \.diya-drawer-modal\)::backdrop \{\s*backdrop-filter: blur\(5px\);/)
+    for (const { selector, body } of backdrops) expect(body, selector).not.toMatch(/transition[^;]*backdrop-filter/)
+    // Under Glass only the tint fades: the backdrop stays fully opaque, so the blur is at full
+    // strength from the first frame to the last.
+    expect(bare).toMatch(/\.diya-root\[data-glass='true'\] :is\(\.diya-dialog, \.diya-drawer-modal\)::backdrop \{\s*transition-property: background-color, display, overlay;\s*\}/)
+    expect(bare).toMatch(/\.diya-root\[data-glass='true'\] :is\(\.diya-dialog, \.diya-drawer-modal\):not\(\[open\]\)::backdrop \{\s*opacity: 1;\s*background-color: transparent;\s*\}/)
+    expect(bare).toMatch(/@starting-style \{\s*\.diya-root\[data-glass='true'\] :is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop \{\s*opacity: 1;\s*background-color: transparent;/)
+  })
+})
+
+describe('Drawer while it leaves', () => {
+  it('keeps its column layout through the exit, not only while open', () => {
+    // During the exit the dialog is no longer [open] but still displayed: a column layout tied
+    // to [open] put the header beside the body for the 160ms of the slide.
+    expect(bare).toMatch(/\.diya-root \.diya-drawer-modal \{ flex-direction:column; \}/)
+    expect(bare).not.toMatch(/\.diya-drawer-modal\[open\] \{[^}]*flex-direction/)
+  })
+})
+
+describe('enter styles', () => {
+  // @starting-style also fires for elements in the first HTML and whenever hidden content is
+  // shown again, so it's only for what mounts or opens on demand.
+  const startingRules = [...bare.matchAll(/@starting-style\s*\{([\s\S]*?\}\s*)\}/g)].flatMap(([, body]) => [...body.matchAll(/([^{}]+)\{/g)].map(([, selector]) => selector.trim()))
+
+  it('starts only popups, Toast, an opening Dialog or Drawer and the phone menu', () => {
+    expect(startingRules.length).toBeGreaterThan(0)
+    const allowed = /^\.diya-root(\[data-glass='true'\])? (\.diya-floating|\.diya-toast-region|\.diya-dialog\[open\]|\.diya-drawer-modal\[open\]|:is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop|\.diya-site-mobile-nav:not\(\[hidden\]\))$/
+    expect(startingRules.filter((selector) => !allowed.test(selector))).toEqual([])
+  })
+
+  it('passes @starting-style through, inside @layer diya', () => {
+    const built = buildStyles(source)
+    const layer = built.indexOf('@layer diya {')
+    expect(built.indexOf('@starting-style')).toBeGreaterThan(layer)
+    expect(built.match(/@starting-style/g)!.length).toBe(source.match(/@starting-style/g)!.length)
   })
 })

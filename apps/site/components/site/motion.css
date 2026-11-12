@@ -1,8 +1,9 @@
-/* The site's motion: the values DIYA 1.1 ships as public tokens
-   (--diya-duration-fast|medium|slow, --diya-ease-enter|exit|move), on :root
-   so the site chrome, the catalog and view transitions can all read them.
-   When 1.1 lands, these alias the package tokens and the site keeps no
-   timing of its own. The page duration stays site-only. */
+/* The site's motion. Inside a DiyaProvider (site chrome, the catalog, the landing) the site
+   uses the package's public tokens directly: --diya-duration-fast|medium|slow and
+   --diya-ease-enter|exit|move. These copies sit on :root for what lives outside any
+   provider, above all the catalog's view transitions, whose pseudo-elements hang off <html>.
+   tests/site-motion.test.ts keeps them equal to the package's values. The page duration is
+   the site's own. */
 :root {
   --site-duration-fast: 120ms;
   --site-duration-medium: 160ms;

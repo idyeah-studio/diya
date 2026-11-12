@@ -152,6 +152,13 @@
   /* Long names ("Content State only") wrap rather than truncate. */
   overflow-wrap: anywhere;
 }
+:where(html[data-catalog='true']) .customize-segmented--fit label {
+  flex: 1 1 auto;
+}
+:where(html[data-catalog='true']) .customize-segmented--fit span {
+  padding-inline: 12px;
+  white-space: nowrap;
+}
 :where(html[data-catalog='true']) .customize-segmented > div:has(span) {
   align-items: stretch;
 }
@@ -373,7 +380,7 @@
   border-radius: 50%;
   background: var(--swatch);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--diya-color-text) 22%, transparent);
-  transition: transform var(--site-duration-medium) var(--site-ease-move);
+  transition: transform var(--diya-duration-medium) var(--diya-ease-move);
 }
 :where(html[data-catalog='true']) .customize-brand-swatch:has(input:checked) {
   box-shadow: 0 0 0 2px var(--diya-color-text);
@@ -768,7 +775,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   :where(html[data-catalog='true']) .customize-inspector {
-    animation: customize-enter var(--site-duration-medium) var(--site-ease-enter);
+    animation: customize-enter var(--diya-duration-medium) var(--diya-ease-enter);
   }
   @keyframes customize-enter {
     from {
@@ -844,4 +851,22 @@
     max-height: 260px;
     margin-top: 8px;
   }
+}
+
+/* ---- slow motion, beside Customize and Get code ------------------------ */
+:where(html[data-catalog='true']) .component-document-actions {
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+:where(html[data-catalog='true']) .slow-motion {
+  display: flex;
+  align-items: center;
+  margin-inline-start: 0;
+}
+:where(html[data-catalog='true']) .diya-root .slow-motion .diya-switch-label {
+  font-size: 15px;
+  color: var(--diya-color-muted);
+}
+:where(html[data-catalog='true']) .diya-root .slow-motion[data-on] .diya-switch-label {
+  color: var(--diya-color-text);
 }

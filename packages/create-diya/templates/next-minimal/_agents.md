@@ -23,7 +23,8 @@ own, and read DIYA's docs before guessing at props.
   `brandColor`; don't override the accent tokens by hand.
 - `app/globals.css` names the CSS layer order, then imports DIYA's styles. Keep
   that `@layer` line first. Adding Tailwind v4? The order is already right:
-  put `@import "tailwindcss";` above the DIYA import.
+  put `@import "tailwindcss";` above the DIYA import, and add the `@layer base`
+  rule from DIYA's README (Tailwind CSS) so Accordion sections keep their motion.
 - Anything with a handler (`onClick`, `onValueChange`, a Table column's `render`)
   goes in a file that starts with `'use client'`. Plain props render fine from a
   Server Component.

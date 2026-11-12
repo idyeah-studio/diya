@@ -10,6 +10,8 @@ export type ApiProp = {
   required: boolean
   default?: unknown
   values?: string[]
+  /** The version that added the prop, when it came after its item. */
+  since?: string
 }
 /** Props that depend on a switch such as `multiple` or `range`: one entry per setting. */
 export type ApiMode = { when: Record<string, unknown>; default?: boolean; props: Record<string, ApiProp> }
@@ -21,7 +23,7 @@ type ApiItem = {
   since: string
   exports: { entry: string; name: string }[]
 }
-type ApiToken = { defaults?: { light?: string; dark?: string }; group?: string; kind?: string; setBy?: string }
+type ApiToken = { defaults?: { light?: string; dark?: string }; group?: string; kind?: string; setBy?: string; since?: string }
 type Api = {
   schemaVersion: number
   package: string

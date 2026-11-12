@@ -5,6 +5,7 @@ import { display, iso, monthOf, outsideLimits, useMonthGrid, type DateRange } fr
 import { adjacentTabStop, useAnchoredPopover } from '../combobox/useAnchoredPopover.js'
 import { useDiyaLocale, useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
+import { usePresence } from '../internal/presence.js'
 import { useFormReset, useMergedRef } from '../text-input/native-field.js'
 import { datePickerMessages } from './messages.js'
 
@@ -95,9 +96,12 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(functio
   const isOpen = open && !disabled
   const popupContent = useMemo(() => ({ month, range, size }), [month, range, size])
   const portal = useAnchoredPopover(isOpen, trigger, calendar, 300, popupContent)
+  // Closes the reader didn't cause in place (a scroll, a resize, being disabled) skip the exit.
+  const quiet = useRef(false)
+  const { present, closing } = usePresence(isOpen, calendar, quiet.current || disabled)
   useFormReset(trigger, () => { if (!controlled) setUncontrolled(initial()) })
   const monthGrid = useMonthGrid({ locale, month, onMonthChange: setMonth, value, range, choosingEnd, min, max, isDateUnavailable, active: isOpen, strings: t, onChoose: choose })
-  function close() { setOpen(false); setChoosingEnd(false) }
+  function close(quietly = false) { quiet.current = quietly; setOpen(false); setChoosingEnd(false) }
   function escape(event: KeyboardEvent<HTMLElement>) {
     if (event.key !== 'Escape' || !isOpen) return
     event.preventDefault()
@@ -113,7 +117,7 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(functio
     }
     const resize = () => {
       if (calendar.current?.contains(document.activeElement)) trigger.current?.focus()
-      close()
+      close(true)
     }
     const scroll = (event: Event) => { if (!calendar.current?.contains(event.target as Node)) resize() }
     document.addEventListener('pointerdown', outside)
@@ -166,7 +170,7 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(functio
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M7 3v4m10-4v4M3 10h18" /></svg>
     </button>
     {(error || helperText) && <p id={`${id}-help`} className="diya-field-help">{error && <span aria-hidden="true">!</span>}{error || helperText}</p>}
-    {isOpen && portal && createPortal(<div ref={calendar} id={`${id}-calendar`} className="diya-calendar"
+    {present && portal && createPortal(<div ref={calendar} id={`${id}-calendar`} className="diya-calendar diya-floating" data-side="bottom" data-exiting={closing ? 'true' : undefined}
       role="group" aria-label={t.chooseDate} onKeyDown={(event) => {
         escape(event)
         if (event.key !== 'Tab') return

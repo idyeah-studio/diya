@@ -1,7 +1,14 @@
 'use client'
 import { forwardRef, useId, useRef, type HTMLAttributes, type ReactNode, type KeyboardEvent } from 'react'
 import { Badge, type BadgeProps } from '../badge/Badge.js'
+import { countLabel } from '../badge/badge-utils.js'
+import { useDiyaMotion } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
+
+// A selection made this recently slides the indicator; anything else (the first placement, a
+// font arriving, a resize, a hidden panel shown again) moves it at once.
+const SLIDE_MS = 300
 
 export type TabItem = {
   /** Unique key for the tab; `value` and `onValueChange` use it. */
@@ -39,6 +46,64 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs({ items,
   const buttons = useRef<(HTMLButtonElement | null)[]>([])
   const selected = items.findIndex((item) => item.value === value && !item.disabled)
   const active = selected >= 0 ? selected : items.findIndex((item) => !item.disabled)
+  // One indicator per tab list slides between tabs (D3). The server can't measure, so each tab's
+  // own mark shows until this has measured and set data-indicator on the list. With motion off
+  // there is no indicator at all: the per-tab marks are 1.0's.
+  const motion = useDiyaMotion()
+  const sliding = motion !== 'off'
+  const list = useRef<HTMLDivElement>(null)
+  const copies = useRef<(HTMLSpanElement | null)[]>([])
+  const placed = useRef(active)
+  const changedAt = useRef(Number.NEGATIVE_INFINITY)
+  useClientLayoutEffect(() => {
+    const node = list.current
+    if (!sliding || !node) return
+    if (placed.current !== active) {
+      placed.current = active
+      changedAt.current = performance.now()
+    }
+    let frame = 0
+    const measure = () => {
+      frame = 0
+      const tab = buttons.current[active]
+      // Inside a hidden panel a tab measures 0: the per-tab mark stays until it's shown again.
+      if (!tab || !tab.offsetWidth) {
+        delete node.dataset.indicator
+        return
+      }
+      // Every read first, then every write: a read between writes would apply the new position
+      // before data-indicator says to slide, and the indicator would jump.
+      const box = (button: HTMLElement) => ({ left: button.offsetLeft, top: button.offsetTop, width: button.offsetWidth, height: button.offsetHeight })
+      const selectedBox = box(tab)
+      const boxes = copies.current.map((copy, index) => (copy && buttons.current[index] ? box(buttons.current[index]!) : null))
+      node.dataset.indicator = performance.now() - changedAt.current < SLIDE_MS ? 'move' : 'still'
+      // Physical left plus translate, from offsetLeft: right to left and scrolled lists line up too.
+      node.style.setProperty('--diya-internal-tab-indicator-x', `${selectedBox.left}px`)
+      node.style.setProperty('--diya-internal-tab-indicator-y', `${selectedBox.top}px`)
+      node.style.setProperty('--diya-internal-tab-indicator-width', `${selectedBox.width}px`)
+      node.style.setProperty('--diya-internal-tab-indicator-height', `${selectedBox.height}px`)
+      // Pill labels: a copy of every label sits exactly over its tab, inside the indicator, so the
+      // selected label rides along in the fill's own color and never fades mid-slide (VIS-01).
+      copies.current.forEach((copy, index) => {
+        const place = boxes[index]
+        if (!copy || !place) return
+        copy.style.left = `${place.left}px`
+        copy.style.top = `${place.top}px`
+        copy.style.width = `${place.width}px`
+        copy.style.height = `${place.height}px`
+      })
+    }
+    measure()
+    // Fonts arriving, labels changing and the list resizing all re-measure, once a frame. Only
+    // the indicator and its copies are written, so nothing observed changes size.
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { if (!frame) frame = requestAnimationFrame(measure) }) : null
+    observer?.observe(node)
+    for (const button of buttons.current) if (button) observer?.observe(button)
+    return () => {
+      observer?.disconnect()
+      cancelAnimationFrame(frame)
+    }
+  }, [active, items, variant, size, sliding])
   function navigate(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
     event.preventDefault()
@@ -52,7 +117,17 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs({ items,
   }
   return (
     <div {...props} ref={ref} className={cx('diya-tabs', className)} data-variant={variant} data-size={size}>
-      <div className="diya-tab-list" role="tablist" aria-label={label} aria-orientation="horizontal">
+      <div ref={list} className="diya-tab-list" role="tablist" aria-label={label} aria-orientation="horizontal">
+        {sliding && <span className="diya-tab-indicator" aria-hidden="true">
+          {variant === 'pill' && <span className="diya-tab-indicator-labels">
+            {items.map((item, index) => <span key={item.value} ref={(node) => { copies.current[index] = node }} className="diya-tab">
+              {item.icon && <span className="diya-tab-icon">{item.icon}</span>}
+              {/* Drawn from data-label, so the copy adds no text: getByText still finds one. */}
+              <span className="diya-tab-label" data-label={item.label} />
+              {item.badge && <BadgeCopy {...item.badge} />}
+            </span>)}
+          </span>}
+        </span>}
         {items.map((item, index) => (
           <button key={item.value} ref={(node) => { buttons.current[index] = node }}
             className="diya-tab" type="button" role="tab" id={`${id}-tab-${index}`}
@@ -60,7 +135,8 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs({ items,
             tabIndex={index === active && !disabled ? 0 : -1} disabled={disabled || item.disabled}
             onClick={() => onValueChange(item.value)} onKeyDown={(event) => navigate(event, index)}>
             {item.icon && <span className="diya-tab-icon" aria-hidden="true">{item.icon}</span>}
-            <span>{item.label}</span>
+            {/* The bold width is reserved, so an underline tab doesn't grow when selected (VIS-07). */}
+            <span className="diya-tab-label" data-label={item.label}>{item.label}</span>
             {item.badge && <Badge {...item.badge} size="small" />}
           </button>
         ))}
@@ -74,3 +150,15 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs({ items,
     </div>
   )
 })
+
+/** A pill indicator's picture of a tab's Badge: the count is drawn, not text, like the label. */
+function BadgeCopy({ variant, tone = 'neutral', count = 0, max = 99, showZero = false, className }: Omit<BadgeProps, 'size'>) {
+  if (variant === 'dot') return <span className={cx('diya-badge', className)} data-variant="dot" data-size="small" data-color={tone} />
+  const value = countLabel(count, max)
+  if (value.count === 0 && !showZero) return null
+  return (
+    <span className={cx('diya-badge', className)} data-variant="count" data-size="small" data-color={tone} data-multiple={value.text.length > 1 ? true : undefined}>
+      <span data-label={value.text} />
+    </span>
+  )
+}

@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { describe, expect, it } from 'vitest'
-import { render } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, render } from '@testing-library/react'
 import { DiyaProvider, Progress } from '../dist/index.js'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -29,5 +29,32 @@ describe('Progress under Reduce Motion', () => {
 
   it('uses no !important, so an app can still restyle the bar', () => {
     expect(block).not.toContain('!important')
+  })
+})
+
+describe('Progress under motion="reduced"', () => {
+  // The real stylesheet in the document, so the computed values come from the cascade.
+  const sheet = () => {
+    const style = document.createElement('style')
+    style.textContent = readFileSync(resolve(root, 'src/styles.css'), 'utf8')
+    document.head.append(style)
+    return style
+  }
+  afterEach(() => cleanup())
+
+  it('breathes in place, as the device setting does, and "off" keeps it moving', () => {
+    const style = sheet()
+    const computed = (motion: 'reduced' | 'off' | undefined) => {
+      const view = render(<DiyaProvider motion={motion}><Progress label="Syncing" /><Progress variant="circular" label="Saving" /></DiyaProvider>)
+      const bar = getComputedStyle(view.container.querySelector('.diya-progress-track > span')!)
+      const ring = getComputedStyle(view.container.querySelector('.diya-progress svg')!)
+      const result = { width: bar.width, bar: bar.animation.split(' ')[0], ring: ring.animation.split(' ')[0] }
+      view.unmount()
+      return result
+    }
+    expect(computed('reduced')).toEqual({ width: '100%', bar: 'diya-progress-breathe', ring: 'none' })
+    expect(computed('off')).toEqual({ width: '35%', bar: 'diya-progress-travel', ring: 'diya-progress-spin' })
+    expect(computed(undefined)).toEqual({ width: '35%', bar: 'diya-progress-travel', ring: 'diya-progress-spin' })
+    style.remove()
   })
 })

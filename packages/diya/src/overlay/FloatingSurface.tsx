@@ -3,7 +3,6 @@ import {
   forwardRef,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -16,8 +15,9 @@ import {
 import { createPortal } from 'react-dom'
 import { Button } from '../button/Button.js'
 import { useDiyaPortal } from '../DiyaProvider.js'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
+import { usePresence } from '../internal/presence.js'
 import { composeRefs, mergeSlotProps, renderSlot } from '../internal/slot.js'
-const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 // Scrolls this soon after opening only reposition, even if the trigger is briefly out of view:
 // the browser may still be bringing it in after focus moved to it.
@@ -165,8 +165,16 @@ export const FloatingSurface = forwardRef<HTMLButtonElement, FloatingSurfaceProp
   latest.current = { controlled: controlledOpen !== undefined, onOpenChange }
   const openedAt = useRef(0)
   const last = useRef(focusLast)
-  const modal = open ? trigger.current?.closest<HTMLDialogElement>('dialog[open]') : null
-  const portal = modal && !modal.contains(providerPortal) ? modal : providerPortal
+  // Closes the reader didn't cause in place (the trigger scrolled away, or was disabled) skip the exit.
+  const quiet = useRef(false)
+  const { present, closing } = usePresence(open, panel, quiet.current)
+  // The outlet is chosen while open and kept through the exit, so a closing panel stays put.
+  const outlet = useRef<HTMLElement | null>(null)
+  if (open) {
+    const modal = trigger.current?.closest<HTMLDialogElement>('dialog[open]')
+    outlet.current = modal && !modal.contains(providerPortal) ? modal : providerPortal
+  }
+  const portal = present ? outlet.current ?? providerPortal : null
   function setOpen(next: boolean) {
     if (next === current.current) return
     current.current = next
@@ -179,17 +187,23 @@ export const FloatingSurface = forwardRef<HTMLButtonElement, FloatingSurfaceProp
   }
   // Anchors the panel to the trigger, flipping above it or clamping so it stays on screen.
   // Written straight to the panel's style, so following a scroll doesn't re-render the content.
+  // The panel is measured by its layout size: while it scales in, its rectangle is smaller.
   function place() {
     const node = panel.current
     const anchor = trigger.current?.getBoundingClientRect()
     if (!node || !anchor) return
-    const box = node.getBoundingClientRect()
-    let top = placement === 'top' ? anchor.top - box.height - 10 : anchor.bottom + 10
-    if (top + box.height > window.innerHeight - 12) top = anchor.top - box.height - 10
-    if (top < 12) top = 12
-    const left = Math.max(12, Math.min(anchor.left + (anchor.width - box.width) / 2, window.innerWidth - box.width - 12))
+    const width = node.offsetWidth
+    const height = node.offsetHeight
+    let side = placement
+    let top = side === 'top' ? anchor.top - height - 10 : anchor.bottom + 10
+    if (top + height > window.innerHeight - 12) { side = 'top'; top = anchor.top - height - 10 }
+    if (top < 12) { side = 'bottom'; top = 12 }
+    const left = Math.max(12, Math.min(anchor.left + (anchor.width - width) / 2, window.innerWidth - width - 12))
     node.style.left = `${left}px`
     node.style.top = `${top}px`
+    node.dataset.side = side
+    // It grows from the trigger's center, on the edge nearest the trigger.
+    node.style.setProperty('--diya-internal-overlay-origin', `${Math.round(anchor.left + anchor.width / 2 - left)}px ${side === 'top' ? '100%' : '0'}`)
   }
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.defaultPrevented) return
@@ -217,6 +231,7 @@ export const FloatingSurface = forwardRef<HTMLButtonElement, FloatingSurfaceProp
   }
   useClientLayoutEffect(() => {
     if (!open || !trigger.current || !panel.current) return
+    quiet.current = false
     openedAt.current = performance.now()
     place()
     const targets = role === 'dialog' && panel.current ? tabStops(panel.current)
@@ -247,6 +262,7 @@ export const FloatingSurface = forwardRef<HTMLButtonElement, FloatingSurfaceProp
       frame = 0
       const anchor = trigger.current?.getBoundingClientRect()
       if (anchor && !inViewport(anchor, window) && performance.now() - openedAt.current > OPEN_SETTLE_MS) {
+        quiet.current = true
         close(!!panel.current?.contains(document.activeElement))
         return
       }
@@ -274,7 +290,10 @@ export const FloatingSurface = forwardRef<HTMLButtonElement, FloatingSurfaceProp
     }
   }, [open, placement])
   useEffect(() => {
-    if (disabled && open) close(false)
+    if (disabled && open) {
+      quiet.current = true
+      close(false)
+    }
   }, [disabled, open])
   const triggerProps = {
     ...(triggerElement ? rest : {}),
@@ -311,8 +330,7 @@ export const FloatingSurface = forwardRef<HTMLButtonElement, FloatingSurfaceProp
             {triggerIcon ?? label}
           </Button>}
       </span>
-      {open &&
-        portal &&
+      {portal &&
         createPortal(
           <div
             ref={panel}
@@ -320,7 +338,9 @@ export const FloatingSurface = forwardRef<HTMLButtonElement, FloatingSurfaceProp
             role={role}
             aria-label={label}
             tabIndex={-1}
-            className={`diya-floating-surface diya-floating-${role}`}
+            className={`diya-floating-surface diya-floating diya-floating-${role}`}
+            data-side={placement}
+            data-exiting={closing ? 'true' : undefined}
             onKeyDown={handleKeyDown}
             onBlur={(event) => {
               if (

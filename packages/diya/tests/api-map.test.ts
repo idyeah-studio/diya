@@ -9,7 +9,7 @@ import { exportSources, styleTokens } from './style-tokens'
 const root = process.cwd()
 const work = mkdtempSync(join(tmpdir(), 'diya-api-'))
 
-type Prop = { type: string; required: boolean; description?: string; values?: (string | number)[]; default?: unknown }
+type Prop = { type: string; required: boolean; description?: string; values?: (string | number)[]; default?: unknown; since?: string }
 type Mode = { when: Record<string, unknown>; default?: true; props: Record<string, Prop> }
 type Accepts = 'any' | string[]
 type Slot = { accepts: Accepts; content?: string[]; multiple?: boolean; as?: string }
@@ -34,7 +34,7 @@ type Api = {
   items: Record<string, Item>
   components: Record<string, { entry: string; props: Record<string, Prop>; modes?: Mode[]; extendsDom?: string }>
   types: Record<string, string>
-  tokens: Record<string, { group: string; kind: string; pairsWith: string[]; defaults: { light: string | null; dark: string | null }; setBy?: string }>
+  tokens: Record<string, { group: string; kind: string; pairsWith: string[]; defaults: { light: string | null; dark: string | null }; setBy?: string; since?: string }>
   messages: Record<string, Record<string, { kind: string; args?: string[]; default: string }>>
 }
 
@@ -297,7 +297,23 @@ describe('API map', () => {
     expect(api.tokens['--diya-space-4'].defaults).toEqual({ light: '16px', dark: '16px' })
     expect(api.tokens['--diya-font'].setBy).toBe('DiyaProvider.fontFamily')
     expect(api.tokens['--diya-corner-scale'].defaults).toEqual({ light: '1', dark: '1' })
-    expect(api.tokens['--diya-color-scrim'].defaults).toEqual({ light: '#00000088', dark: '#00000088' })
+    expect(api.tokens['--diya-color-scrim'].defaults).toEqual({ light: '#0000009e', dark: '#0000009e' })
+  })
+
+  it('describes the motion tokens, new in 1.1, with no setBy', () => {
+    const both = (value: string) => ({ light: value, dark: value })
+    const motion = Object.fromEntries(Object.entries(api.tokens).filter(([, token]) => token.group === 'motion'))
+    expect(motion).toEqual({
+      '--diya-duration-fast': { group: 'motion', kind: 'duration', pairsWith: [], since: '1.1.0', defaults: both('calc(120ms * var(--diya-duration-scale, 1))') },
+      '--diya-duration-medium': { group: 'motion', kind: 'duration', pairsWith: [], since: '1.1.0', defaults: both('calc(160ms * var(--diya-duration-scale, 1))') },
+      '--diya-duration-slow': { group: 'motion', kind: 'duration', pairsWith: [], since: '1.1.0', defaults: both('calc(240ms * var(--diya-duration-scale, 1))') },
+      '--diya-duration-scale': { group: 'motion', kind: 'number', pairsWith: [], since: '1.1.0', defaults: both('1') },
+      '--diya-ease-enter': { group: 'motion', kind: 'easing', pairsWith: [], since: '1.1.0', defaults: both('cubic-bezier(0.2, 0.7, 0.2, 1)') },
+      '--diya-ease-exit': { group: 'motion', kind: 'easing', pairsWith: [], since: '1.1.0', defaults: both('cubic-bezier(0.4, 0, 1, 1)') },
+      '--diya-ease-move': { group: 'motion', kind: 'easing', pairsWith: [], since: '1.1.0', defaults: both('cubic-bezier(0.4, 0, 0.2, 1)') },
+    })
+    // Only tokens added after 1.0.0 carry since.
+    expect(Object.keys(api.tokens).filter(name => api.tokens[name].since)).toEqual(Object.keys(motion))
   })
 
   it('describes every messages namespace and key', async () => {
@@ -378,6 +394,12 @@ describe('API map', () => {
     expect(props.theme.values).toEqual(['light', 'dark', 'system'])
     expect(props.theme.default).toBe('system')
     expect(props.surface.default).toBe(true)
+    // Inherited, like locale: values, no default, and the version that added it.
+    expect(props.motion).toMatchObject({ type: '"system" | "reduced" | "off"', required: false, values: ['system', 'reduced', 'off'], since: '1.1.0' })
+    expect(props.motion).not.toHaveProperty('default')
+    expect(props.locale).not.toHaveProperty('default')
+    expect(Object.entries(props).filter(([, prop]) => prop.since).map(([name]) => name)).toEqual(['motion'])
+    expect(api.types.DiyaAppearance).toContain('motion: "full" | "reduced" | "off";')
   })
 
   // Regenerates the map from the TypeScript program, which is slow on shared CI runners.

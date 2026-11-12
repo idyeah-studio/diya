@@ -3,7 +3,8 @@ import { forwardRef, useId, useMemo, useRef, useState, type HTMLAttributes } fro
 import { useDiyaLocale, useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { calendarMessages } from './messages.js'
-import { iso, monthOf, useClientLayoutEffect, useMonthGrid, useToday, type DateRange } from './month.js'
+import { iso, monthOf, useMonthGrid, useToday, type DateRange } from './month.js'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
 
 declare module '../messages.js' {
   interface DiyaMessages {

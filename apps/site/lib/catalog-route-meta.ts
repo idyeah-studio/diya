@@ -19,6 +19,7 @@ export function screenPath(id: string | null) {
 export function catalogTitle(route: CatalogRoute) {
   if (route.area === 'skills') return 'Skills & Prompts — DIYA'
   if (route.area === 'pro') return 'Relight — DIYA'
+  if (route.area === 'motion') return 'Motion — DIYA'
   if (route.area === 'screens') {
     const screen = screenById(route.id)
     return screen ? `${screen.name}: Screens — DIYA` : 'Screens — DIYA'

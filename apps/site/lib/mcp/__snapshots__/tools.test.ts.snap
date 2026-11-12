@@ -93,7 +93,7 @@ Catalog: https://diya13.ai/explore?area=components&component=switch"
 `;
 
 exports[`what an agent reads, word for word > get_setup: next + tailwind 1`] = `
-"# Set up @idyeah/diya 1.0.1 in Next.js (App Router)
+"# Set up @idyeah/diya 1.1.0 in Next.js (App Router)
 
 ## 1. Install
 \`\`\`sh
@@ -146,12 +146,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 - DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.
 - Charts import from \`@idyeah/diya/charts\` and need \`echarts@6\` installed.
 - Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
+- DIYA animates popups, dialogs, toggles and selection, and follows the device's Reduce Motion setting. \`motion="reduced"\` (fades only) or \`"off"\` on DiyaProvider changes it for everything inside; nested providers inherit it. Tune the speed with \`--diya-duration-scale\`. In browser tests, render with \`motion="off"\`.
 
-These notes describe 1.0.1. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
+These notes describe 1.1.0. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
 `;
 
 exports[`what an agent reads, word for word > get_setup: vite 1`] = `
-"# Set up @idyeah/diya 1.0.1 in Vite
+"# Set up @idyeah/diya 1.1.0 in Vite
 
 ## 1. Install
 \`\`\`sh
@@ -186,12 +187,13 @@ createRoot(document.getElementById('root')!).render(
 - DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.
 - Charts import from \`@idyeah/diya/charts\` and need \`echarts@6\` installed.
 - Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
+- DIYA animates popups, dialogs, toggles and selection, and follows the device's Reduce Motion setting. \`motion="reduced"\` (fades only) or \`"off"\` on DiyaProvider changes it for everything inside; nested providers inherit it. Tune the speed with \`--diya-duration-scale\`. In browser tests, render with \`motion="off"\`.
 
-These notes describe 1.0.1. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
+These notes describe 1.1.0. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
 `;
 
 exports[`what an agent reads, word for word > get_theme: #1F4E7A + glass 1`] = `
-"# Theme for @idyeah/diya 1.0.1
+"# Theme for @idyeah/diya 1.1.0
 
 \`\`\`tsx
 <DiyaProvider brandColor="#1F4E7A" glass>
@@ -219,7 +221,7 @@ That's the whole theme. DIYA works out the rest, so don't set these tokens yours
 `;
 
 exports[`what an agent reads, word for word > get_theme: #F5C542 1`] = `
-"# Theme for @idyeah/diya 1.0.1
+"# Theme for @idyeah/diya 1.1.0
 
 \`\`\`tsx
 <DiyaProvider brandColor="#F5C542">
@@ -247,7 +249,7 @@ That's the whole theme. DIYA works out the rest, so don't set these tokens yours
 `;
 
 exports[`what an agent reads, word for word > list_tokens: space 1`] = `
-"# Public tokens · @idyeah/diya 1.0.1 · space
+"# Public tokens · @idyeah/diya 1.1.0 · space
 Set them on \`.diya-root\`, or in \`style\` on DiyaProvider. Values are Light / Dark.
 
 ## space
@@ -262,15 +264,15 @@ Set them on \`.diya-root\`, or in \`style\` on DiyaProvider. Values are Light / 
 `;
 
 exports[`what an agent reads, word for word > search: carousel 1`] = `
-"@idyeah/diya 1.0.1 · nothing for "carousel of testimonials"
+"@idyeah/diya 1.1.0 · nothing for "carousel of testimonials"
 
-No carousel in DIYA 1.0.1.
+No carousel in DIYA 1.1.0.
 
 Nothing in DIYA fits that yet. Build it from Stack and Inline, or ask for it: https://diya13.ai/ask"
 `;
 
 exports[`what an agent reads, word for word > search: toggle 1`] = `
-"@idyeah/diya 1.0.1 · 4 for "toggle for email notifications"
+"@idyeah/diya 1.1.0 · 4 for "toggle for email notifications"
 
 1. Switch · \`import { Switch } from '@idyeah/diya'\`
    For a setting that takes effect the moment it flips, like notifications.
@@ -282,7 +284,7 @@ exports[`what an agent reads, word for word > search: toggle 1`] = `
    For a message about the page or a task: saved, needs attention, failed. Toast is the same message, floated and temporary.
    Not quite? Something that needs a decision before going on? Dialog.
 4. Toast · \`import { Toast } from '@idyeah/diya'\`
-   A temporary Alert floated above the page that dismisses itself after a while. \`className\`, \`style\` and the ref reach the Alert.
+   A temporary Alert floated above the page that dismisses itself after a while; the host unmounts the toast in \`onDismiss\`. \`className\`, \`style\` and the ref reach the Alert.
 
 Next: get_component with a name, for its props and a complete file."
 `;

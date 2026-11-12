@@ -376,6 +376,7 @@ const css = `
 .profile-bone { display: block; height: 14px; border-radius: 6px; background: color-mix(in srgb, var(--diya-color-text) 8%, transparent); animation: profile-pulse 1.4s ease-in-out infinite; }
 .profile-bone-short { width: 28%; height: 12px; }
 .profile-bone-round { width: 40px; height: 40px; flex: none; border-radius: 50%; }
+/* DIYA's own loading rows pulse the same way (1.4s, ease-in-out); this copy keeps the file self-contained. */
 @keyframes profile-pulse { 50% { opacity: 0.5; } }
 @media (prefers-reduced-motion: reduce) { .profile-bone { animation: none; } }
 

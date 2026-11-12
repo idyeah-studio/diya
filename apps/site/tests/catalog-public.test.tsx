@@ -50,7 +50,7 @@ describe('catalog sidebar foot', () => {
 
   it('marks Relight as the current page on its own page, and search never hides it', async () => {
     const user = userEvent.setup()
-    sidebar(<AtomicSidebar pro />)
+    sidebar(<AtomicSidebar page="pro" />)
     expect(proEntry().getAttribute('aria-current')).toBe('page')
     expect(screen.getByRole('navigation', { name: 'Choose a component' }).querySelector('[aria-current]')).toBeNull()
     await user.type(screen.getByRole('searchbox', { name: 'Search components' }), 'no such thing')

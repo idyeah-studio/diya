@@ -14,6 +14,7 @@ import {
   type Appearance,
   type AppearancePath,
   type Elevation,
+  type Motion,
   type FontId,
   type Overrides,
   type Theme,
@@ -43,6 +44,7 @@ export function settingName(path: string) {
   if (path === 'corners') return 'Corners'
   if (path === 'elevation') return 'Elevation'
   if (path === 'translucent') return 'Glass'
+  if (path === 'motion') return 'Motion'
   const [group, theme, name] = path.split('.')
   const label =
     group === 'status'
@@ -495,6 +497,38 @@ export function CustomizePanel({
             </div>
             <Switch hideLabel label="Glass" checked={shown.translucent} onCheckedChange={(on) => set('translucent', on)} />
           </div>
+          <div className="customize-field-group" data-path="motion">
+            <div className="customize-color-text">
+              <span>Motion</span>
+              {ownMark('motion', 'Motion')}
+            </div>
+            <Segmented
+              legend="Motion"
+              hideLegend
+              fit
+              value={shown.motion}
+              onChange={(v: Motion) => set('motion', v)}
+              options={[
+                { value: 'system', label: 'Match device' },
+                { value: 'reduced', label: 'Reduced' },
+                { value: 'off', label: 'Off' },
+              ]}
+            />
+          </div>
+          <p className="customize-help" data-testid="customize-motion-hint">
+            {shown.motion === 'system' ? (
+              <>Your theme follows the device’s Reduce Motion setting.</>
+            ) : shown.motion === 'reduced' ? (
+              <>
+                Your theme sets <code>motion="reduced"</code>: fades, nothing slides.
+              </>
+            ) : (
+              <>
+                Your theme turns motion off with <code>motion="off"</code>.
+              </>
+            )}{' '}
+            Open a menu or switch tabs in the preview to see it.
+          </p>
         </section>
 
         {extra && (

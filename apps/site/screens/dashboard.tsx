@@ -466,6 +466,7 @@ const css = `
 .dashboard-bone-figure { width: 75%; height: 40px; }
 .dashboard-bone-change { width: 45%; height: 24px; }
 .dashboard-bone-chart { height: 337px; }
+/* DIYA's own loading rows pulse the same way (1.4s, ease-in-out); this copy keeps the file self-contained. */
 @keyframes dashboard-pulse { 50% { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .dashboard-bone { animation: none; } }
 

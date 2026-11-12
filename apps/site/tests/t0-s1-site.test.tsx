@@ -13,7 +13,7 @@ vi.mock('next/link', () => ({
 }))
 
 describe('the phone catalog sheet', () => {
-  it('opens the full list as a named modal dialog, and Escape returns focus to its key', async () => {
+  it('opens the full list in a Drawer, a named modal dialog, and Escape returns focus to its key', async () => {
     const user = userEvent.setup()
     render(
       <DiyaProvider>
@@ -25,7 +25,10 @@ describe('the phone catalog sheet', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
     await user.click(key)
     const sheet = screen.getByRole('dialog', { name: 'Components' })
-    expect(sheet.getAttribute('aria-modal')).toBe('true')
+    expect(sheet.tagName).toBe('DIALOG')
+    expect((sheet as HTMLDialogElement).open).toBe(true)
+    expect(sheet.classList.contains('diya-drawer-modal')).toBe(true)
+    expect(sheet.getAttribute('data-side')).toBe('left')
     expect(within(within(sheet).getByRole('navigation', { name: 'Choose a component' })).getAllByRole('link')).toHaveLength(29)
     expect(document.activeElement).toBe(within(sheet).getByRole('searchbox', { name: 'Search components' }))
     expect(document.documentElement.dataset.catalogSheet).toBe('open')
@@ -43,11 +46,49 @@ describe('the phone catalog sheet', () => {
       </DiyaProvider>
     )
     await user.click(screen.getByRole('button', { name: 'All components' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close drawer' }))
     expect(screen.queryByRole('dialog')).toBeNull()
     await user.click(screen.getByRole('button', { name: 'All components' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('link', { name: 'Switch' }))
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+})
+
+describe('the phone catalog sheet while it closes', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it('stays mounted while the Drawer\'s exit runs, then goes', async () => {
+    let finish!: () => void
+    const finished = new Promise<void>((done) => { finish = done })
+    // The Drawer's exit, as a browser reports it once the dialog has closed.
+    // happy-dom has no Web Animations: give elements the one call the sheet makes.
+    Object.defineProperty(HTMLElement.prototype, 'getAnimations', {
+      configurable: true,
+      value(this: HTMLElement) {
+        return this.matches('dialog.catalog-sheet:not([open])') ? [{ finished } as unknown as Animation] : []
+      },
+    })
+    const user = userEvent.setup()
+    render(<DiyaProvider><AtomicSidebar current="button" /></DiyaProvider>)
+    await user.click(screen.getByRole('button', { name: 'All components' }))
+    await user.keyboard('{Escape}')
+    const sheet = document.querySelector('dialog.catalog-sheet')
+    expect(sheet).not.toBeNull()
+    expect((sheet as HTMLDialogElement).open).toBe(false)
+    await act(async () => { finish(); await finished })
+    expect(document.querySelector('dialog.catalog-sheet')).toBeNull()
+    delete (HTMLElement.prototype as { getAnimations?: unknown }).getAnimations
+  })
+
+  it('returns focus to All components even when the press never focused it, as in Safari', async () => {
+    render(<DiyaProvider><AtomicSidebar current="button" /></DiyaProvider>)
+    const key = screen.getByRole('button', { name: 'All components' })
+    // fireEvent.click doesn't focus the button, which is what Safari does with a click.
+    act(() => { key.dispatchEvent(new MouseEvent('click', { bubbles: true })) })
+    expect(document.activeElement).not.toBe(key)
+    const sheet = screen.getByRole('dialog', { name: 'Components' })
+    await act(async () => { within(sheet).getByRole('button', { name: 'Close drawer' }).click() })
+    expect(document.activeElement).toBe(key)
   })
 })
 

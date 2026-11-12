@@ -10,7 +10,7 @@ import type { ItemId } from '../customize/registry'
  * guidance and the same complete files Get code hands out.
  */
 
-export type McpProp = { type: string; description?: string; required: boolean; default?: unknown; values?: (string | number)[] }
+export type McpProp = { type: string; description?: string; required: boolean; default?: unknown; values?: (string | number)[]; since?: string }
 export type McpSlot = { accepts: 'any' | string[]; content?: string[]; multiple?: boolean; as?: string }
 type McpChildren = { allowed: boolean } & Partial<McpSlot>
 type McpComponent = {
@@ -40,6 +40,7 @@ type McpToken = {
   pairsWith: string[]
   defaults: { light: string | null; dark: string | null }
   setBy?: string
+  since?: string
 }
 export type McpApi = {
   package: string

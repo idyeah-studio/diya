@@ -133,6 +133,26 @@
   .catalog-frame .site-foot { padding-inline: 16px; }
 }
 
+/* A page's title never shrinks under its actions: when the two don't fit side by side in the
+   page column, the actions move under the title (a container query, so the sidebar's width
+   counts too). */
+:root[data-catalog='true'] .catalog-frame .component-document {
+  container: component-document / inline-size;
+}
+:root[data-catalog='true'] .catalog-frame .component-document-heading {
+  grid-template-columns: minmax(max-content, 1fr) auto;
+}
+@container component-document (max-width: 860px) {
+  :root[data-catalog='true'] .catalog-frame .component-document-heading { grid-template-columns: minmax(0, 1fr); row-gap: 6px; }
+  :root[data-catalog='true'] .catalog-frame .component-document-heading > .component-document-actions {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    transform: none;
+  }
+  :root[data-catalog='true'] .catalog-frame .component-document-heading > p { grid-row: 3; }
+}
+
 /* Phones: a page's actions sit under its title rather than squeezing it. */
 @media (max-width: 560px) {
   :root[data-catalog='true'] .catalog-frame .component-document-heading { grid-template-columns: minmax(0, 1fr); row-gap: 6px; }

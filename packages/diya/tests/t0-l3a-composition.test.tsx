@@ -237,7 +237,8 @@ describe('Tooltip wraps a child trigger', () => {
     const user = userEvent.setup()
     const ref = createRef<HTMLButtonElement>()
     const clicked = vi.fn()
-    render(<DiyaProvider><Tooltip ref={ref} content="Deletes it for everyone"><Button iconOnly aria-label="Delete" aria-describedby="hint" onClick={clicked}>×</Button></Tooltip><p id="hint">Hint</p></DiyaProvider>)
+    // motion="off": hovering shows the bubble at once, as in 1.0, so the test can check it straight away.
+    render(<DiyaProvider motion="off"><Tooltip ref={ref} content="Deletes it for everyone"><Button iconOnly aria-label="Delete" aria-describedby="hint" onClick={clicked}>×</Button></Tooltip><p id="hint">Hint</p></DiyaProvider>)
     const button = screen.getByRole('button', { name: 'Delete' })
     expect(ref.current).toBe(button)
     expect(button.parentElement?.classList.contains('diya-tooltip-anchor')).toBe(false)

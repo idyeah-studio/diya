@@ -84,6 +84,10 @@ presses Continue.
 `Stack` lays things out top to bottom and `Inline` side by side, with even
 space between them. See [Layout](#layout).
 
+New in 1.1: popups, dialogs and toggles move a little, and follow the
+device's Reduce Motion setting. To slow that down or turn it off, see
+[Motion](#motion).
+
 Props, behavior and examples for every piece are in the
 [component guide](https://github.com/idyeah-studio/diya/blob/main/packages/diya/docs/components.md)
 and the [pattern guide](https://github.com/idyeah-studio/diya/blob/main/packages/diya/docs/patterns.md).
@@ -324,6 +328,19 @@ Tailwind's styles. If you'd rather import DIYA's styles from JavaScript, keep
 the `@layer` line at the top of your CSS and import `@idyeah/diya/styles.css`
 before it.
 
+Tailwind's base styles hide every `[hidden]` element with `!important`, which
+stops Accordion sections from growing and shrinking: they open and close at
+once. To keep their motion, add this after `@import "tailwindcss"`:
+
+```css
+/* Let DIYA keep its closing sections laid out. */
+@layer base {
+  .diya-root .diya-accordion-content[hidden] { display: grid !important; }
+}
+```
+
+The Site Header's phone menu still opens with its motion, but closes at once.
+
 ## Links and routers
 
 Anything DIYA renders from an `href` (Button, Menu items, Breadcrumbs, Side
@@ -453,8 +470,9 @@ Get theme: you get one `diya-theme.css` file to import after the styles, and a
 few props.
 
 A nested `DiyaProvider` can give one region its own look. It inherits
-`locale`, `messages` and `linkComponent` from the provider around it, but not
-`theme`, `glass`, `brandColor` or `fontFamily`, so set those on each provider.
+`locale`, `messages`, `linkComponent` and `motion` from the provider around
+it, but not `theme`, `glass`, `brandColor` or `fontFamily`, so set those on
+each provider.
 
 ## Glass
 
@@ -469,6 +487,87 @@ and tabs get a translucent, blurred surface. Glass wants something behind it:
 over a flat background it looks solid. Where the browser can't blur, or the
 reader has asked for less transparency, DIYA uses its solid surfaces instead.
 Keep the backdrop quiet enough that text stays readable.
+
+## Motion
+
+New in 1.1. DIYA moves a little: popups grow out of the control that opened
+them, a dialog settles into place, a drawer slides in from its edge and the
+tabs' indicator follows your choice. With no code, it follows the device's
+Reduce Motion setting (Reduce Motion on Apple devices, Animation effects on
+Windows, Remove animations on Android): nothing slides or scales then, and
+fades stay, so every change is still visible.
+
+**Turn it off for the whole app:** add `motion="off"` to your `DiyaProvider`.
+Everything changes at once, as in 1.0; loading indicators still move, because
+they show progress.
+
+```tsx
+<DiyaProvider motion="off">
+  {children}
+</DiyaProvider>
+```
+
+**Fades only, for everyone:** add `motion="reduced"`. Nothing slides or
+scales, but changes still ease in and out.
+
+```tsx
+<DiyaProvider motion="reduced">
+  {children}
+</DiyaProvider>
+```
+
+**One part of the app** gets its own setting from a nested provider; without
+`motion`, a nested provider inherits the one around it.
+
+```tsx
+<DiyaProvider motion="reduced">
+  <LiveFeed />
+</DiyaProvider>
+```
+
+**Faster, slower or off in CSS:** `--diya-duration-scale` multiplies every
+duration (`0.5` is twice as fast, `0` is off). Set durations and the scale on
+the provider (its `style` or `className`) or above it; on an element inside
+the provider they have no effect. For one region, use a nested `DiyaProvider`.
+
+```css
+.diya-root { --diya-duration-scale: 0.5; }
+```
+
+**In unit tests,** render inside `motion="off"`: closing popups leave at once
+and a tooltip shows on hover without its 300ms wait. In jsdom and happy-dom,
+popups already close at once, and `fireEvent.mouseEnter` shows a tooltip at
+once, as in 1.0.
+
+```tsx
+render(
+  <DiyaProvider motion="off">
+    <Settings />
+  </DiyaProvider>
+)
+```
+
+**In end-to-end tests,** closing popups stay up to 160ms with
+`data-exiting="true"`, and Playwright's `getByRole` still finds them. Use
+web-first assertions (`await expect(menu).toBeHidden()`), not `isVisible()`
+or `count()`, or render `motion="off"` in your test build. Playwright's
+`reducedMotion: 'reduce'` isn't enough, since things still fade.
+
+```tsx
+<DiyaProvider motion={process.env.NEXT_PUBLIC_E2E ? 'off' : undefined}>
+  {children}
+</DiyaProvider>
+```
+
+**Rather keep 1.0 exactly?** Pin the 1.0 line:
+
+```sh
+npm install @idyeah/diya@~1.0.1
+```
+
+`useDiyaAppearance().motion` tells your own code which applies: `'full'`,
+`'reduced'` or `'off'`. There's no `motion="full"`: DIYA never overrides a
+reader who asked for less motion.
 
 ## Translation
 
@@ -520,12 +619,13 @@ header edges, are worked out once per provider from these tokens.
 | Destructive actions | `--diya-color-destructive` |
 | Statuses | For each of `success`, `warning`, `error` and `info`: `--diya-color-{status}` for text and icons on a surface, `--diya-color-{status}-surface` behind them, and `--diya-color-{status}-fill` with `--diya-color-{status}-on-fill` for solid badges. `--diya-color-error` also colors error messages, the border of every invalid field and a falling Metric. |
 | Neutral badge | `--diya-color-neutral-fill`, `--diya-color-neutral-on-fill` |
-| Glass and overlays | `--diya-color-glass` (the translucent fill when Glass is on), `--diya-color-scrim` (the dimming behind dialogs and drawers, and for your own overlays; `#00000088`, lighter under Glass) |
+| Glass and overlays | `--diya-color-glass` (the translucent fill when Glass is on), `--diya-color-scrim` (the dimming behind dialogs and drawers, and for your own overlays; `#0000009e`, lighter under Glass, where the page also blurs) |
 | Font | `--diya-font`, set by `DiyaProvider` from `fontFamily` |
 | Type scale | `--diya-text-caption`, `--diya-text-body`, `--diya-text-large`, `--diya-text-title`, `--diya-text-heading`, `--diya-text-display`, `--diya-text-hero` |
 | Line height | `--diya-leading-tight`, `--diya-leading-body` |
 | Space | `--diya-space-1` to `--diya-space-8`: 4, 8, 12, 16, 24, 32, 48 and 64px |
 | Shape and depth | `--diya-corner-scale`; `--diya-radius-control`, the one corner every control shares; `--diya-radius-surface`, the one corner every in-page surface shares; `--diya-shadow-raised` for cards, dialogs, drawers, toasts, menus and popups; `--diya-elevation` scales table, tooltip and floating chat shadows (`0` removes them). For a flat look, set `--diya-shadow-raised: none` as well |
+| Motion | `--diya-duration-fast`, `--diya-duration-medium` and `--diya-duration-slow` (120, 160 and 240ms; exits take two-thirds), `--diya-duration-scale` (`0` turns motion off), and the curves `--diya-ease-enter`, `--diya-ease-exit` and `--diya-ease-move`. See [Motion](#motion) |
 
 ```tsx
 <DiyaProvider
@@ -564,10 +664,10 @@ major version:
 
 Not covered, so don't build on them: `.diya-*` class names, DOM structure,
 the `data-*` attributes components set on their own elements (the provider's
-`data-theme` is covered), anything named `--diya-internal-*`, file paths inside
-`dist`, and anything marked `"stability": "experimental"` in `api.json`, with
-its own messages and types. In 1.0 that's Chatbot and the charts (`DataViz`
-and `Chart`).
+`data-theme` and `data-motion` are covered), anything named
+`--diya-internal-*`, file paths inside `dist`, and anything marked
+`"stability": "experimental"` in `api.json`, with its own messages and types.
+In 1.0 that's Chatbot and the charts (`DataViz` and `Chart`).
 
 ## License and fonts
 

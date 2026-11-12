@@ -1,8 +1,7 @@
 'use client'
-import { useEffect, useLayoutEffect, useState, type RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { useDiyaPortal } from '../DiyaProvider.js'
-
-const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 const tabbableSelector = 'a[href], area[href], button, input:not([type="hidden"]), select, textarea, iframe, object, embed, audio[controls], video[controls], summary, [contenteditable], [tabindex]'
 
@@ -55,9 +54,14 @@ export function useAnchoredPopover<T extends HTMLElement>(
   contentKey: unknown,
 ) {
   const providerPortal = useDiyaPortal()
-  const modal = anchor.current?.closest<HTMLDialogElement>('dialog[open]')
   // A provider inside the dialog already has a safe outlet; otherwise stay in the modal subtree.
-  const portal = modal && !modal.contains(providerPortal) ? modal : providerPortal
+  // Chosen while open and kept through the exit, so a closing popup stays where it was.
+  const outlet = useRef<HTMLElement | null>(null)
+  if (open || !outlet.current) {
+    const modal = anchor.current?.closest<HTMLDialogElement>('dialog[open]')
+    outlet.current = modal && !modal.contains(providerPortal) ? modal : providerPortal
+  }
+  const portal = outlet.current
   const [nativePopover, setNativePopover] = useState(false)
   useEffect(() => {
     setNativePopover(typeof HTMLElement !== 'undefined' && typeof HTMLElement.prototype.showPopover === 'function')
@@ -81,9 +85,15 @@ export function useAnchoredPopover<T extends HTMLElement>(
     const maximum = Number.parseFloat(view.getComputedStyle(node).maxHeight)
     node.style.maxHeight = `${Math.min(Number.isFinite(maximum) ? maximum : availableHeight, availableHeight)}px`
     node.style.overflowY = 'auto'
-    const height = node.getBoundingClientRect().height
-    node.style.left = `${Math.max(12, Math.min(box.left, view.innerWidth - node.getBoundingClientRect().width - 12))}px`
-    node.style.top = `${Math.max(12, box.bottom + height + 8 > view.innerHeight ? box.top - height - 8 : box.bottom + 8)}px`
+    // Layout size, not the rectangle: while the popup scales in, its rectangle is smaller.
+    const height = node.offsetHeight
+    const left = Math.max(12, Math.min(box.left, view.innerWidth - node.offsetWidth - 12))
+    const above = box.bottom + height + 8 > view.innerHeight
+    node.style.left = `${left}px`
+    node.style.top = `${Math.max(12, above ? box.top - height - 8 : box.bottom + 8)}px`
+    node.dataset.side = above ? 'top' : 'bottom'
+    // It grows from the field's center, on the edge nearest the field.
+    node.style.setProperty('--diya-internal-overlay-origin', `${Math.round(box.left + box.width / 2 - left)}px ${above ? '100%' : '0'}`)
   }, [open, portal, nativePopover, anchor, popup, width, contentKey])
   return portal
 }

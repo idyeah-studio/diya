@@ -41,6 +41,7 @@ const SYNONYMS: Record<string, string[]> = {
   anchor: ['text-link'], crumbs: ['breadcrumbs'], pager: ['pagination'], filter: ['search'], layout: ['stack', 'inline'],
   column: ['stack'], row: ['inline'], flex: ['stack', 'inline'], gap: ['stack', 'inline'], spacing: ['stack', 'inline'],
   theme: ['diya-provider'], provider: ['diya-provider'], dark: ['diya-provider'], brand: ['diya-provider'],
+  motion: ['diya-provider'], animation: ['diya-provider'], transition: ['diya-provider'], reduce: ['diya-provider'],
   settings: ['form', 'switch', 'choice'], profile: ['form', 'avatar'], login: ['form', 'text-input'], signup: ['form', 'text-input'],
   user: ['avatar'], dashboard: ['metric', 'data-viz', 'table', 'side-navigation'], action: ['button'], cta: ['button'],
   submit: ['button', 'form'], save: ['button'], tile: ['card'], star: ['rating'], stars: ['rating'], review: ['rating'],
@@ -137,7 +138,7 @@ export function componentIdFor(name: string): string | null {
 
 const quoteDefault = (value: unknown) => (typeof value === 'string' ? `'${value}'` : JSON.stringify(value))
 const propLine = ([name, prop]: [string, McpProp]) =>
-  `- \`${name}${prop.required ? '' : '?'}: ${prop.type}${prop.default === undefined ? '' : ` = ${quoteDefault(prop.default)}`}\`${prop.description ? ` ${prop.description}` : ''}`
+  `- \`${name}${prop.required ? '' : '?'}: ${prop.type}${prop.default === undefined ? '' : ` = ${quoteDefault(prop.default)}`}\`${prop.description ? ` ${prop.description}` : ''}${prop.since ? ` Since ${prop.since}.` : ''}`
 const sortProps = (props: Record<string, McpProp>) =>
   Object.entries(props).sort((a, b) => Number(b[1].required) - Number(a[1].required) || a[0].localeCompare(b[0]))
 
@@ -174,7 +175,7 @@ const EXTRA_EXAMPLES: Record<string, string> = {
     '```tsx\n<Stack gap={5} as="section">\n  <PageHeader title="Billing" />\n  <Inline gap={2} justify="end">\n    <Button variant="outline">Cancel</Button>\n    <Button>Save</Button>\n  </Inline>\n</Stack>\n```\n`gap` takes a step from 0 to 8 (0, 4, 8, 12, 16, 24, 32, 48 and 64px) or any CSS length.',
   Inline:
     '```tsx\n<Inline gap={2} justify="end">\n  <Button variant="outline">Cancel</Button>\n  <Button>Save</Button>\n</Inline>\n```\nCenters its children and wraps them onto the next line when the row runs out of room.',
-  DiyaProvider: 'get_setup has the app root; get_theme has brandColor, glass and fonts.',
+  DiyaProvider: 'get_setup has the app root; get_theme has brandColor, glass, fonts and motion.',
   Toast: 'Render it where the message belongs; it floats above the page and dismisses itself.',
 }
 
@@ -306,15 +307,18 @@ export type ThemeArgs = {
   glass?: boolean
   fontFamily?: string
   corners?: number
+  /** Only a choice away from the device's own setting becomes a prop. */
+  motion?: 'system' | 'reduced' | 'off'
 }
 
 /** The provider line get_theme recommends, as JSX. Also type-checked by the tests. */
-export function themeProviderLine({ brandColor, theme, glass, fontFamily, corners }: ThemeArgs) {
+export function themeProviderLine({ brandColor, theme, glass, fontFamily, corners, motion }: ThemeArgs) {
   const props: string[] = []
   if (typeof brandColor === 'string') props.push(`brandColor="${normalizeHex(brandColor)}"`)
   else if (brandColor) props.push(`brandColor={{ light: '${normalizeHex(brandColor.light)}', dark: '${normalizeHex(brandColor.dark)}' }}`)
   if (theme && theme !== 'system') props.push(`theme="${theme}"`)
   if (glass) props.push('glass')
+  if (motion && motion !== 'system') props.push(`motion="${motion}"`)
   if (fontFamily) {
     // JSX attribute strings take no escapes: quote with whichever mark the stack doesn't use.
     props.push(!fontFamily.includes("'") ? `fontFamily='${fontFamily}'` : !fontFamily.includes('"') ? `fontFamily="${fontFamily}"` : `fontFamily={${JSON.stringify(fontFamily)}}`)
@@ -408,8 +412,9 @@ export function listTokens({ group }: { group?: string }) {
     out.push('', `## ${name}`)
     for (const [token, meta] of rows) {
       const setBy = meta.setBy ? ` · set by \`${meta.setBy}\`, not directly` : ''
+      const since = meta.since ? ` · since ${meta.since}` : ''
       const pairs = meta.pairsWith.length ? ` · change with ${meta.pairsWith.map((other) => `\`${other}\``).join(', ')}` : ''
-      out.push(`- \`${token}\` ${value(meta.defaults)}${setBy}${pairs}`)
+      out.push(`- \`${token}\` ${value(meta.defaults)}${since}${setBy}${pairs}`)
     }
   }
   return out.join('\n')

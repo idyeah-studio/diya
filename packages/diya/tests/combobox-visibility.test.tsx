@@ -31,6 +31,14 @@ function listGeometry() {
   vi.spyOn(HTMLElement.prototype, 'clientTop', 'get').mockImplementation(function () {
     return this.getAttribute('role') === 'listbox' ? 2 : 0
   })
+  // The same rows as layout offsets inside the list's padding box (100 + 2 border = 102).
+  const row = (element: HTMLElement) => element.getAttribute('role') === 'option' ? Array.from(element.parentElement!.children).indexOf(element) : -1
+  vi.spyOn(HTMLElement.prototype, 'offsetTop', 'get').mockImplementation(function () {
+    return row(this) >= 0 ? 4 + row(this) * 30 : 0
+  })
+  vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function () {
+    return row(this) >= 0 ? 30 : 0
+  })
 }
 
 function expectVisible(input: HTMLElement, list: HTMLElement) {

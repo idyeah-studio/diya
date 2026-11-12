@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, render, screen } from '@testing-library/react'
 import { useActiveCatalogItem } from '../components/useActiveCatalogItem'
@@ -13,9 +13,9 @@ class MockResizeObserver {
 }
 
 const layout = { height: 500 }
-function Navigation({ current = 'chart', query = '' }: { current?: string; query?: string }) {
+function Navigation({ current = 'chart', query = '', list }: { current?: string; query?: string; list?: string }) {
   const nav = useRef<HTMLElement>(null)
-  useActiveCatalogItem(nav, current, query)
+  useActiveCatalogItem(nav, current, query, list)
   return <nav ref={nav} aria-label="Catalog items">
     <a href="#chart" aria-current={current === 'chart' ? 'page' : undefined} data-offset="280">Data Viz</a>
     <a href="#empty" aria-current={current === 'empty' ? 'page' : undefined} data-offset="900">Content State</a>
@@ -132,6 +132,38 @@ describe('active catalog navigation visibility', () => {
     const replacement = observers.at(-1)!
     unmount()
     expect(replacement.disconnect).toHaveBeenCalledOnce()
+  })
+
+  it('keeps a list where the reader scrolled it when a page change mounts a new sidebar', () => {
+    layout.height = 700
+    const first = render(<Navigation list="components" />)
+    act(() => {
+      nav().scrollTop = 300
+      nav().dispatchEvent(new Event('scroll'))
+    })
+    first.unmount()
+    // The next page's sidebar: its selected row (offset 900, at 700 on screen) is in view.
+    render(<Navigation list="components" current="empty" />)
+    expect(nav().scrollTop).toBe(300)
+    expectActiveVisible()
+  })
+
+  it('restores the scroll before paint, so a page transition captures the sidebar in place', () => {
+    const seen: number[] = []
+    function Capture() {
+      // A sibling's layout effect runs after the hook's: the scroll is already restored.
+      useLayoutEffect(() => { seen.push(nav().scrollTop) })
+      return null
+    }
+    layout.height = 600
+    const first = render(<Navigation list="patterns" />)
+    act(() => {
+      nav().scrollTop = 240
+      nav().dispatchEvent(new Event('scroll'))
+    })
+    first.unmount()
+    render(<><Navigation list="patterns" /><Capture /></>)
+    expect(seen).toEqual([240])
   })
 
   it('uses window resize when ResizeObserver is unavailable and removes its listener', () => {

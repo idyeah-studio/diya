@@ -1,7 +1,6 @@
 'use client'
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ForwardedRef, type RefObject } from 'react'
-
-const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
+import { useCallback, useEffect, useRef, useState, type ForwardedRef, type RefObject } from 'react'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
 
 /** Points a forwarded ref and DIYA's own ref at the same node. */
 export function useMergedRef<T>(forwarded: ForwardedRef<T>, own: { current: T | null }) {

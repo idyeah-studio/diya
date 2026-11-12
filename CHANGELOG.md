@@ -4,6 +4,138 @@ All notable changes to `@idyeah/diya` are documented here. The format is based
 on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-11
+
+On the `next` tag. Becomes 1.1.0 after the preview check.
+
+### Added
+
+- Motion, on by default. Menu, Popover, Tooltip and the Combobox and Date
+  Picker popups grow from their trigger. Dialog fades in and settles, Drawer
+  slides in from its side, and the dimmed page fades with them. Toast rises
+  from its edge; a floating Chatbot opens and closes like a popup, and new
+  chat messages rise in. The Tabs indicator slides to the selected tab.
+  Accordion sections grow open and shrink closed. Site Header's phone menu
+  opens like a popup. Switch's thumb slides and Choice marks grow in. Progress
+  eases to each new value. Buttons ease their hover and press, and fields,
+  rows, tabs, calendar days and navigation items ease their colors.
+  - Focus rings never animate.
+  - Input never waits for an animation.
+  - Nothing moves on page load, or when hidden content is shown again.
+- Button press: a Button shrinks to 0.98 while pressed, and a wide one by at
+  most about 2px a side; it lands at once and eases back. Under Reduce Motion
+  a pressed Solid or Destructive Button moves toward its label color instead.
+- `DiyaProvider` `motion`:
+  - `"system"`, the default, animates and follows the device's Reduce Motion
+    setting (Reduce Motion on Apple devices, Animation effects on Windows,
+    Remove animations on Android);
+  - `"reduced"` never slides or scales, only fades; indeterminate Progress
+    breathes in place, as it does under the device setting;
+  - `"off"` changes everything at once, with 1.0's timing; loading indicators
+    still move.
+
+  A nested provider inherits it. There is no `"full"`: DIYA never overrides a
+  reader who asked for less motion.
+- Every provider renders `data-motion`: its own `motion`, else its parent's,
+  else `"system"`. Like `data-theme`, it's covered by semver.
+- Public motion tokens, in a new `motion` group:
+  - durations `--diya-duration-fast` (120ms), `--diya-duration-medium` (160ms)
+    and `--diya-duration-slow` (240ms); exits take two-thirds of their enter;
+  - `--diya-duration-scale` (`1`): `0.5` is twice as fast, `0` turns motion off
+    from CSS alone, Tooltip's hover wait included;
+  - curves `--diya-ease-enter`, `--diya-ease-exit` and `--diya-ease-move`.
+
+  Set them on the provider (its `style`, or `.diya-root`) or above it; on an
+  element inside a provider the durations have no effect. An override never
+  brings motion back under `motion="off"`.
+- `useDiyaAppearance().motion`: `"full"`, `"reduced"` or `"off"`, the motion in
+  effect. Under `"system"` it reads `"full"` on the server and follows the
+  device's Reduce Motion setting from mount, as `theme` does. The
+  `DiyaAppearance` type gains this required field, so a mock typed as
+  `DiyaAppearance` needs it.
+- `api.json`:
+  - token kinds `duration` and `easing`;
+  - an optional `since` on props and tokens added after their item or after
+    1.0.0 (`DiyaProvider` `motion` and the seven motion tokens say `1.1.0`);
+  - each item's `tokens` list names the motion tokens its styles use.
+
+  All of this is additive: `schemaVersion` stays 1.
+
+### Changed
+
+- Closing popups stay on the page briefly while they leave. Menu, Popover,
+  Tooltip and the Combobox and Date Picker popups stay up to about 110ms;
+  Dialog and Drawer stay up to 160ms (Firefox closes Dialog and Drawer at
+  once). While they leave they are inert: no focus, clicks or screen reader.
+  `onOpenChange` and the return of focus still happen at once. A close caused
+  by scrolling, resizing or the trigger leaving the screen skips the exit.
+  Unmounting a Dialog or Drawer instead of setting `open={false}` skips it too.
+- Tests:
+  - In unit tests, render inside `<DiyaProvider motion="off">`: closing
+    popups leave at once and a tooltip shows on hover without its 300ms wait.
+    In jsdom and happy-dom, popups already close at once, and
+    `fireEvent.mouseEnter` shows a tooltip at once, as in 1.0.
+  - In end-to-end tests, closing popups stay up to 160ms with
+    `data-exiting="true"`, and Playwright's `getByRole` still finds them. Use
+    web-first assertions (`await expect(menu).toBeHidden()`), not
+    `isVisible()` or `count()`, or render `motion="off"` in your test build
+    (for example `motion={process.env.NEXT_PUBLIC_E2E ? 'off' : undefined}`).
+    Playwright's `reducedMotion: 'reduce'` isn't enough, since things still
+    fade.
+- Tooltip waits for a mouse to rest on its trigger for 300ms before it shows,
+  so passing over a toolbar shows nothing. It shows at once on keyboard focus,
+  on a tap, when moving from one tooltip to the next (the two swap at once,
+  never overlapping), and with `motion="off"` or a duration scale of `0`. A
+  mouse click on the trigger no longer shows it by itself. The bubble can
+  still be hovered, to read it.
+- Toast: `onDismiss` timing is unchanged; it's called at once, as in 1.0. Its
+  exit then plays on an inert, unannounced copy, so the host unmounts the toast
+  in `onDismiss` and can raise the next one straight away.
+- Dialog and Drawer: in Light and Dark the dimmed page behind them is no
+  longer blurred, so it can fade without showing the page twice. Glass keeps
+  its blur at full strength from the first frame, still and never animated,
+  and only its own lighter dim fades. `--diya-color-scrim` goes from
+  `#00000088` to `#0000009e` in Light and Dark, to keep the page set back
+  without the blur.
+- Button: hover moves a Solid or Destructive fill 10% toward its label color,
+  so it shows in Light and Dark, and the label stays at full strength. 1.0
+  dimmed the whole button with a filter, label included. The hover is a layer
+  over the fill, drawn with the Button's `::after`, so a Button whose
+  background you set yourself (through `className` or `style`) still changes
+  on hover.
+- Underline Tabs no longer nudge their neighbors when the selection changes:
+  each tab reserves the width of its bold label, so unselected underline tabs
+  are slightly wider than in 1.0.
+- Table's loading rows pulse gently (opacity 1 to 0.55 and back, 1.4s). The
+  pulse keeps running under Reduce Motion and with `motion="off"`, as loading
+  indicators do.
+- When the provider's theme changes, transitions pause for that frame, so
+  controls change with the page. A `theme="system"` change that comes from the
+  device can't be paused in Chromium and WebKit.
+- With Tailwind v4, its base styles hide `[hidden]` with `!important`, so
+  Accordion sections open and close at once unless you add the one
+  `@layer base` rule in the README's Tailwind section.
+- DOM, which isn't covered by semver, so snapshot tests may change:
+  - Tabs adds an `aria-hidden` indicator inside its tab list (none with
+    `motion="off"`) and wraps each label in a `diya-tab-label` span. In pill
+    Tabs the indicator holds a drawn copy of every tab's icon, label and
+    badge, with no text of its own, so text queries still find each label
+    once;
+  - Accordion wraps each section's content in a `diya-accordion-body`
+    element, its chevron is one path that turns, and a closed section keeps
+    `hidden` but stays laid out at zero height, invisible and inert;
+  - popups carry the class `diya-floating` and `data-side`, and closing ones
+    `data-exiting="true"`;
+  - the provider carries `data-theme-change` for the frames that paint a new
+    theme.
+
+### Package
+
+- The tarball's unpacked budget is now 1,300,000 bytes. 1.1 unpacks to about
+  1,274,000 bytes (1.0.1: 1,199,458) and packs to about 495,000. `styles.css`
+  grows about 25 KB, 5.5 KB gzipped, and ships readable, with its comments;
+  your bundler minifies it.
+
 ## [1.0.1] - 2026-11-11
 
 ### Fixed
@@ -328,5 +460,6 @@ change in any release. The README lists the public tokens.
 - Chatbot and Data Viz (`DataViz`, `Chart`) are `experimental`: outside semver
   until their API settles.
 
+[1.1.0]: https://github.com/idyeah-studio/diya/releases/tag/v1.1.0
 [1.0.1]: https://github.com/idyeah-studio/diya/releases/tag/v1.0.1
 [1.0.0]: https://github.com/idyeah-studio/diya/releases/tag/v1.0.0

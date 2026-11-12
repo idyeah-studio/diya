@@ -12,6 +12,9 @@ export const statusNames = ['success', 'warning', 'error', 'info'] as const
 export type Status = (typeof statusNames)[number]
 export const elevations = ['flat', 'soft', 'lifted'] as const
 export type Elevation = (typeof elevations)[number]
+/** DiyaProvider's `motion`. 'system', the default, follows the device and is never written out. */
+export const motions = ['system', 'reduced', 'off'] as const
+export type Motion = (typeof motions)[number]
 
 export type Appearance = {
   schemaVersion: 2
@@ -28,6 +31,8 @@ export type Appearance = {
   elevation: Elevation
   /** Export default for the library's glass material. */
   translucent: boolean
+  /** How much the theme's app moves: DiyaProvider's `motion`. */
+  motion: Motion
 }
 
 /**
@@ -77,6 +82,7 @@ export const DEFAULT_APPEARANCE: Appearance = Object.freeze({
   corners: CORNERS_DEFAULT,
   elevation: 'soft',
   translucent: false,
+  motion: 'system',
 }) as Appearance
 
 /** Every customizable leaf, as a dotted path. Overrides are stored by path. */
@@ -87,6 +93,7 @@ export const appearancePaths = [
   'corners',
   'elevation',
   'translucent',
+  'motion',
 ] as const
 export type AppearancePath = (typeof appearancePaths)[number]
 export type Overrides = Partial<Record<AppearancePath, string | number | boolean>>
@@ -103,6 +110,7 @@ function validLeaf(path: AppearancePath, value: unknown): boolean {
   if (path === 'corners') return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= CORNERS_MAX
   if (path === 'elevation') return typeof value === 'string' && (elevations as readonly string[]).includes(value)
   if (path === 'translucent') return typeof value === 'boolean'
+  if (path === 'motion') return typeof value === 'string' && (motions as readonly string[]).includes(value)
   return isHex(value)
 }
 

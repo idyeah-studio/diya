@@ -50,3 +50,13 @@ it('server-renders List marks, Side Navigation counts and a full-page Chatbot', 
   expect(html).toContain('Design review<span class="diya-sr-only">, <!-- -->unread</span>')
   expect(html).toContain('data-presentation="full-page"')
 })
+
+it('renders the motion setting on every provider; a nested provider inherits it', () => {
+  const motion = (html: string) => [...html.matchAll(/class="diya-root"[^>]*?data-motion="(\w+)"/g)].map(match => match[1])
+  expect(motion(renderToString(createElement(core.DiyaProvider, null, 'Text')))).toEqual(['system'])
+  const nested = renderToString(createElement(core.DiyaProvider, { motion: 'off' },
+    createElement(core.DiyaProvider, { theme: 'dark' }, 'Inherits'),
+    createElement(core.DiyaProvider, { motion: 'reduced' }, 'Its own'),
+  ))
+  expect(motion(nested)).toEqual(['off', 'off', 'reduced'])
+})

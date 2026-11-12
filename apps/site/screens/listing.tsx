@@ -388,6 +388,7 @@ const css = `
 .listing-tile.listing-ghost { border-radius: var(--diya-radius-surface); }
 .listing-ghost-line { width: 70%; height: 18px; }
 .listing-ghost-short { width: 40%; height: 18px; }
+/* DIYA's own loading rows pulse the same way (1.4s, ease-in-out); this copy keeps the file self-contained. */
 @keyframes listing-pulse { 50% { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .listing-ghost { animation: none; } }
 .listing-empty { padding-block: var(--diya-space-8); }
