@@ -189,3 +189,16 @@ test.describe('the framed select’s chevron (H1)', () => {
     expect(['none', 'normal']).toContain(after)
   })
 })
+
+// H4 (VIS-G-01): a component child that mounts a hosted iframe (React Stripe Elements'
+// <CardElement />) gets the frame's ring, as a DOM child does, in all three engines.
+test('a framed component child that mounts an iframe shows the ring when focus is in it (H4)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=providers&theme=light')
+  const card = page.frameLocator('iframe[title="Component card"]').locator('#card')
+  await card.waitFor()
+  const frame = page.locator('.diya-field-frame').filter({ has: page.locator('iframe[title="Component card"]') })
+  await card.click()
+  await expect(frame).toHaveAttribute('data-focused', '')
+  await page.locator('#blank').click()
+  await expect(frame).not.toHaveAttribute('data-focused', '')
+})

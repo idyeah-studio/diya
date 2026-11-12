@@ -91,7 +91,9 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field({ lab
     setFocusedState(next)
     if (next && !reachable) setArrived((count) => count + 1)
   }
-  const hasFrame = kind === 'iframe' || kind === 'other'
+  // A control that may live in an iframe: a DOM iframe or mount div, or, framed, any child, since a
+  // component may render a mount div and an iframe into it (React Stripe Elements; H4).
+  const hasFrame = framed || kind === 'iframe' || kind === 'other'
   useEffect(() => {
     const node = wrapper.current
     if (!node) return

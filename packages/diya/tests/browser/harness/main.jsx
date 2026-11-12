@@ -353,6 +353,21 @@ function FieldCase() {
   )
 }
 
+// React Stripe Elements' pattern: a component renders its own mount div and mounts the hosted
+// iframe into it once mounted (<CardElement />).
+function CardElement({ name }) {
+  const mount = useRef(null)
+  useEffect(() => {
+    const frame = document.createElement('iframe')
+    frame.title = name
+    frame.src = `${location.protocol}//127.0.0.1:${location.port}/card.html?component`
+    frame.setAttribute('style', 'border: none !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; height: 19.2px;')
+    mount.current.append(frame)
+    return () => frame.remove()
+  }, [])
+  return <div ref={mount} className="StripeElement" />
+}
+
 // Real hosted-field patterns inside Field framed (the front-end review, steps 5–6): Stripe's
 // mount div holding an iframe with !important inline sizing, a bare iframe, split card fields
 // (number, expiry), a native select and a textarea; plus a Dialog that mounts on its opener's
@@ -380,6 +395,7 @@ function ProvidersCase() {
       <Button id="later-open" onClick={() => { setMounted(true); setLater(true) }}>Open later</Button>
       {mounted && <Dialog title="Later" open={later} onOpenChange={setLater}><p>Body</p></Dialog>}
       <diya.Field label="Card (mount div)" framed><div id="stripe-mount" ref={stripe} /></diya.Field>
+      <diya.Field label="Card (component)" framed><CardElement name="Component card" /></diya.Field>
       <diya.Field label="Card (bare iframe)" framed><iframe title="Bare card" src={cross('bare')} /></diya.Field>
       <diya.Field label="Card number" framed><iframe title="Split number" src={cross('a')} /></diya.Field>
       <diya.Field label="Expiry" framed error={query.get('error') ? 'Enter the expiry date.' : undefined}><iframe title="Split expiry" src={cross('b')} /></diya.Field>
