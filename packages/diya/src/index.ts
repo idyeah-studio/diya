@@ -1,6 +1,6 @@
 export { Button, type ButtonProps } from './button/Button.js'
 export { PageHeader, type PageHeaderProps } from './page-header/PageHeader.js'
-export { DiyaProvider, useDiyaAppearance, type DiyaProviderProps, type DiyaAppearance } from './DiyaProvider.js'
+export { DiyaProvider, useDiyaAppearance, useDiyaPortalContainer, type DiyaProviderProps, type DiyaAppearance } from './DiyaProvider.js'
 export type { DiyaBrandTokens } from './internal/brand.js'
 export { Stack, type StackProps } from './layout/Stack.js'
 export { Inline, type InlineProps } from './layout/Inline.js'

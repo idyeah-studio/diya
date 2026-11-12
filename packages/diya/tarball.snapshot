@@ -90,10 +90,16 @@ dist/internal/layout-effect.d.ts
 dist/internal/layout-effect.js
 dist/internal/link.d.ts
 dist/internal/link.js
+dist/internal/modal-stack.d.ts
+dist/internal/modal-stack.js
 dist/internal/presence.d.ts
 dist/internal/presence.js
 dist/internal/slot.d.ts
 dist/internal/slot.js
+dist/internal/stray-popups.d.ts
+dist/internal/stray-popups.js
+dist/internal/warn.d.ts
+dist/internal/warn.js
 dist/layout/Inline.d.ts
 dist/layout/Inline.js
 dist/layout/Stack.d.ts

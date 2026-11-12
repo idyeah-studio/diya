@@ -1,10 +1,13 @@
 'use client'
-import { forwardRef, useEffect, useId, useMemo, useRef, type DialogHTMLAttributes, type ReactNode, type Ref } from 'react'
+import { forwardRef, useEffect, useId, useMemo, useRef, useState, type DialogHTMLAttributes, type ReactNode, type Ref } from 'react'
 import { Button } from '../button/Button.js'
 import { Icon } from '../Icon.js'
-import { useDiyaMessages } from '../DiyaProvider.js'
+import { PortalContainerContext, useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
+import { pushModal, removeModal } from '../internal/modal-stack.js'
 import { inertWhileExiting } from '../internal/presence.js'
+import { watchForStrayPopups } from '../internal/stray-popups.js'
 import { composeRefs } from '../internal/slot.js'
 import { drawerMessages } from './drawer-messages.js'
 
@@ -39,7 +42,9 @@ export type DrawerProps = Omit<DialogHTMLAttributes<HTMLDialogElement>, 'title' 
 export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer({ open, onOpenChange, title, headingLevel = 3, description, children, footer, side = 'right', showClose = true, className, onCancel, onClose, onClick, ...props }, ref) {
   const t = useDiyaMessages('drawer', drawerMessages)
   const dialog = useRef<HTMLDialogElement>(null)
-  const setDialog = useMemo(() => composeRefs<HTMLDialogElement>(dialog, ref as Ref<HTMLDialogElement>), [ref])
+  // The element in state too, so popups inside learn where to render once it exists.
+  const [element, setElement] = useState<HTMLDialogElement | null>(null)
+  const setDialog = useMemo(() => composeRefs<HTMLDialogElement>(dialog, setElement, ref as Ref<HTMLDialogElement>), [ref])
   const Heading = `h${headingLevel}` as const
   const returnFocus = useRef<HTMLElement | null>(null)
   const id = useId()
@@ -57,7 +62,10 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
       // picks what to focus, or a drawer reopened mid-exit opens with focus on <body>.
       void node.offsetWidth
       node.showModal()
+      pushModal(node)
+      if (process.env.NODE_ENV !== 'production') watchForStrayPopups(node.ownerDocument)
     } else if (!open && node.open) {
+      removeModal(node)
       node.close()
       inertWhileExiting(node)
     }
@@ -66,8 +74,14 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
     const node = dialog.current
     return () => { if (node?.open) node.close(); restoreFocus() }
   }, [])
+  // A layout cleanup runs before React removes the dialog's node, so whatever follows the modal
+  // stack (the toast stack) leaves it while it's still in the page.
+  useClientLayoutEffect(() => {
+    const node = dialog.current
+    return () => removeModal(node)
+  }, [])
   return <dialog {...props} ref={setDialog} className={cx('diya-workflow-surface diya-drawer-modal', className)} data-side={side} aria-labelledby={`${id}-title`} aria-describedby={description ? `${id}-description` : undefined}
-    onCancel={event => { onCancel?.(event); if (event.defaultPrevented) return; event.preventDefault(); onOpenChange(false) }} onClose={event => { onClose?.(event); if (event.currentTarget.open) return; restoreFocus(); if (open) onOpenChange(false) }}
+    onCancel={event => { onCancel?.(event); if (event.defaultPrevented) return; event.preventDefault(); onOpenChange(false) }} onClose={event => { onClose?.(event); if (event.currentTarget.open) return; removeModal(event.currentTarget); restoreFocus(); if (open) onOpenChange(false) }}
     onClick={event => {
       onClick?.(event)
       // A click on the dimmed page (the dialog's backdrop) closes it, as it does a Dialog.
@@ -75,8 +89,10 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
       const box = event.currentTarget.getBoundingClientRect()
       if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) onOpenChange(false)
     }}>
-    <header><div><Heading id={`${id}-title`} className="diya-drawer-title">{title}</Heading>{description && <p id={`${id}-description`}>{description}</p>}</div>{showClose && <Button variant="quiet" iconOnly aria-label={t.close} onClick={() => onOpenChange(false)}><Icon name="close" /></Button>}</header>
-    <div className="diya-drawer-body">{children}</div>
-    {footer && <footer>{footer}</footer>}
+    <PortalContainerContext.Provider value={element}>
+      <header><div><Heading id={`${id}-title`} className="diya-drawer-title">{title}</Heading>{description && <p id={`${id}-description`}>{description}</p>}</div>{showClose && <Button variant="quiet" iconOnly aria-label={t.close} onClick={() => onOpenChange(false)}><Icon name="close" /></Button>}</header>
+      <div className="diya-drawer-body">{children}</div>
+      {footer && <footer>{footer}</footer>}
+    </PortalContainerContext.Provider>
   </dialog>
 })

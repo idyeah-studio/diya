@@ -29,6 +29,17 @@ type MotionSetting = 'system' | 'reduced' | 'off'
 // The motion setting in effect, which a nested provider inherits.
 const MotionContext = createContext<MotionSetting>('system')
 export function useDiyaPortal() { return useContext(PortalContext) }
+// Where other libraries' popups should render: the provider's portal, or an open Dialog or
+// Drawer's own element, which they set for their children. The nearest one wins.
+export const PortalContainerContext = createContext<HTMLElement | null>(null)
+/**
+ * Where a popup from another library should render so it works here: inside an open Dialog or
+ * Drawer, that modal's element; anywhere else, the nearest DiyaProvider's portal, so popups
+ * follow its theme. Null outside a provider and until the provider has mounted, which popup
+ * libraries treat as document.body.
+ * @since 1.2.0
+ */
+export function useDiyaPortalContainer(): HTMLElement | null { return useContext(PortalContainerContext) }
 /** The nearest provider's resolved theme, Glass, font, brand accent and motion. */
 export function useDiyaAppearance() { return useContext(AppearanceContext) }
 /** How much DIYA moves inside the nearest provider: 'full', 'reduced' or 'off'. */
@@ -132,7 +143,7 @@ export const DiyaProvider = forwardRef<HTMLDivElement, DiyaProviderProps>(functi
     ...style,
   } as CSSProperties
   return <div {...rest} ref={ref} className={cx('diya-root', className)} data-theme={theme} data-theme-change={changing ? '' : undefined} data-glass={String(glass)} data-surface={String(surface)} data-motion={motionSetting} style={tokens}>
-    <AppearanceContext.Provider value={appearance}><MotionContext.Provider value={motionSetting}><MessagesContext.Provider value={text}><PortalContext.Provider value={portal}><LinkComponentContext.Provider value={linkComponent ?? parentLink}>{children}</LinkComponentContext.Provider><div className="diya-portal-root" ref={setPortal} /></PortalContext.Provider></MessagesContext.Provider></MotionContext.Provider></AppearanceContext.Provider>
+    <AppearanceContext.Provider value={appearance}><MotionContext.Provider value={motionSetting}><MessagesContext.Provider value={text}><PortalContext.Provider value={portal}><PortalContainerContext.Provider value={portal}><LinkComponentContext.Provider value={linkComponent ?? parentLink}>{children}</LinkComponentContext.Provider></PortalContainerContext.Provider><div className="diya-portal-root" ref={setPortal} /></PortalContext.Provider></MessagesContext.Provider></MotionContext.Provider></AppearanceContext.Provider>
   </div>
 })
 
