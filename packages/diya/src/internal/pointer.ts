@@ -5,14 +5,21 @@
 
 type Watch = { users: number; pressed: Element | null; waiting: Set<() => void>; stop: () => void }
 const watches = new WeakMap<Document, Watch>()
+// A touch press lasts past pointerup until its click: on touch, the field blurs at the
+// compatibility mousedown, which comes after pointerup (G3). At most this long, if no click comes.
+const TOUCH_CLICK_MS = 700
 
 /** Starts watching presses in `document` for one user; returns its release. */
 export function watchPointer(document: Document) {
   let watch = watches.get(document)
   if (!watch) {
     const created: Watch = { users: 0, pressed: null, waiting: new Set(), stop: () => {} }
-    const down = (event: Event) => { created.pressed = event.target as Element | null }
-    const up = () => {
+    let touch = false
+    let wait: ReturnType<typeof setTimeout> | undefined
+    const release = () => {
+      if (wait) clearTimeout(wait)
+      wait = undefined
+      touch = false
       created.pressed = null
       if (!created.waiting.size) return
       // Every waiting field runs in one task, after the click that follows the release, so a
@@ -21,13 +28,28 @@ export function watchPointer(document: Document) {
       created.waiting.clear()
       setTimeout(() => { for (const callback of run) callback() }, 0)
     }
+    const down = (event: PointerEvent) => {
+      if (wait) release()
+      created.pressed = event.target as Element | null
+      touch = event.pointerType !== 'mouse'
+    }
+    const up = (event: PointerEvent) => {
+      if (!created.pressed) return
+      // A tap's click (and the blur before it) comes after pointerup: hold until then.
+      if (touch && event.type === 'pointerup') wait = setTimeout(release, TOUCH_CLICK_MS)
+      else release()
+    }
+    const click = () => { if (wait) release() }
     document.addEventListener('pointerdown', down, true)
     document.addEventListener('pointerup', up, true)
     document.addEventListener('pointercancel', up, true)
+    document.addEventListener('click', click, true)
     created.stop = () => {
+      if (wait) clearTimeout(wait)
       document.removeEventListener('pointerdown', down, true)
       document.removeEventListener('pointerup', up, true)
       document.removeEventListener('pointercancel', up, true)
+      document.removeEventListener('click', click, true)
     }
     watches.set(document, created)
     watch = created

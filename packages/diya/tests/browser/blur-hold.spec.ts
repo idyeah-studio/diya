@@ -44,3 +44,27 @@ test('a TextInput: a click pressed 8, 20 and 32px into the submit button submits
     await expect(page.locator('#paid-ti')).toHaveText(String(submitted))
   }
 })
+
+// G3 (FE-02, UX-S56-01): on touch, the field blurs at the compatibility mousedown, after
+// pointerup, so the hold has to last until the tap's click. Chromium and WebKit with touch.
+test.describe('touch', () => {
+  test.use({ hasTouch: true, isMobile: true })
+  test.skip(({ browserName }) => browserName === 'firefox', 'Playwright has no touch or mobile emulation for Firefox')
+  for (const [form, field, submit, paid] of [['#pay', '#cvc', '#submit', '#paid'], ['#pay-ti', '#cvc-ti', '#submit-ti', '#paid-ti']] as const) {
+    test(`a tap 8, 20 and 32px into Pay right after typing submits 3 of 3 (${form === '#pay' ? 'Field' : 'TextInput'})`, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, 'case=field&theme=light')
+      let submitted = 0
+      for (const depth of [8, 20, 32]) {
+        await page.locator(field).fill('123')
+        await page.locator(field).evaluate((node) => (node as HTMLInputElement).blur())
+        await expect(page.locator(`${form} .diya-text-field-description`)).toBeHidden()
+        await page.locator(field).fill('1')
+        const button = (await page.locator(submit).boundingBox())!
+        await page.touchscreen.tap(button.x + button.width / 2, button.y + depth)
+        await expect(page.locator(`${form} .diya-text-field-description`)).toBeVisible()
+        submitted += 1
+        await expect(page.locator(paid)).toHaveText(String(submitted))
+      }
+    })
+  }
+})
