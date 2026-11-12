@@ -60,3 +60,31 @@ it('renders the motion setting on every provider; a nested provider inherits it'
   ))
   expect(motion(nested)).toEqual(['off', 'off', 'reduced'])
 })
+
+// 1.2 adds a toast host, live regions and a modal registry to the provider, all created in
+// effects: the server markup must stay exactly what 1.1.1 rendered.
+it('provider server markup matches 1.1.1', async () => {
+  const { readFileSync, writeFileSync } = await import('node:fs')
+  const { resolve } = await import('node:path')
+  const { version } = await import('react')
+  const children = () => [
+    createElement(core.Button, { key: 'b', loading: true }, 'Save'),
+    createElement(core.TextInput, { key: 't', label: 'Name', value: 'Ada', onValueChange: () => {} }),
+    createElement(core.Dialog, { key: 'd', title: 'Edit project', trigger: createElement(core.Button, null, 'Edit') }, 'Body'),
+    createElement(core.Drawer, { key: 'r', title: 'Filters', open: false, onOpenChange: () => {} }, 'Body'),
+    createElement(core.Toast, { key: 'o', title: 'Saved', onDismiss: () => {} }, 'Draft saved.'),
+    createElement(core.Menu, { key: 'm', label: 'More', items: [{ id: 'a', label: 'Rename', onSelect: () => {} }] }),
+    createElement(core.Tooltip, { key: 'p', content: 'Saves the file' }, createElement(core.Button, null, 'Save')),
+  ]
+  const cases: Record<string, ReturnType<typeof createElement>> = {
+    default: createElement(core.DiyaProvider, null, children()),
+    light: createElement(core.DiyaProvider, { theme: 'light' }, children()),
+    dark: createElement(core.DiyaProvider, { theme: 'dark', glass: true, motion: 'off' }, children()),
+    branded: createElement(core.DiyaProvider, { theme: 'system', brandColor: { light: '#0e5f63', dark: '#5fd0c8' }, style: { '--diya-color-focus': '#0f6b70' } as never, className: 'app' }, children()),
+    nested: createElement(core.DiyaProvider, { theme: 'light' }, createElement(core.DiyaProvider, { theme: 'dark', motion: 'reduced' }, createElement(core.DiyaProvider, { theme: 'system', glass: true }, children()))),
+  }
+  const html = Object.fromEntries(Object.entries(cases).map(([name, element]) => [name, renderToString(element)]))
+  const writeTo = process.env.DIYA_WRITE_FIXTURES
+  if (writeTo) writeFileSync(resolve(writeTo, `${version}-provider.json`), `${JSON.stringify(html, null, 2)}\n`)
+  else expect(html).toEqual(JSON.parse(readFileSync(resolve(process.cwd(), 'tests/fixtures/provider-ssr-1.1.1.json'), 'utf8'))[version])
+})
