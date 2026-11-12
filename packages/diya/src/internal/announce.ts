@@ -5,10 +5,10 @@ import { createElement } from 'react'
 
 const KEY = Symbol.for('@idyeah/diya/toast@1')
 
-/** Says `text` politely through the page stack's live region; with no stack, nothing. */
-export function announcePolite(text: string) {
+/** Says `text` politely through the page stack's live region; with no stack, nothing. `node` is the field it's about: inside the app's own modal dialog, the region follows it there. */
+export function announcePolite(text: string, node?: Element | null) {
   if (typeof window === 'undefined') return
   const stores = (globalThis as unknown as Record<symbol, unknown>)[KEY]
-  const store = stores instanceof WeakMap ? (stores.get(createElement) as { say?: ((text: string) => void) | null } | undefined) : undefined
-  store?.say?.(text)
+  const store = stores instanceof WeakMap ? (stores.get(createElement) as { say?: ((text: string, options?: { node?: Element | null }) => void) | null } | undefined) : undefined
+  store?.say?.(text, { node })
 }

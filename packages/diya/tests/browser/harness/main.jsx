@@ -290,6 +290,7 @@ function ProbeCase() {
   const [dialog, setDialog] = useState(false)
   const native = useRef(null)
   const [nativeToast, setNativeToast] = useState(false)
+  const [couponError, setCouponError] = useState()
   useEffect(() => {
     window.diya = diya
     window.openDialog = () => flushSync(() => setDialog(true))
@@ -308,6 +309,7 @@ function ProbeCase() {
         <Button onClick={() => diya.toast({ title: 'Saved in the dialog', duration: 0 })}>Toast inside</Button>
       </Dialog>
       <dialog ref={native} id="native" style={{ padding: 24 }}>
+        <TextInput id="coupon" label="Coupon code" error={couponError} onBlur={(event) => setCouponError(event.target.value.length < 6 ? 'Enter all 6 characters of the code.' : undefined)} />
         <button id="native-save" onClick={() => setNativeToast(true)}>Save</button>
         <button id="native-close" onClick={() => native.current.close()}>Close</button>
         {nativeToast && <Toast title="Saved in native" duration={0} action={{ label: 'Undo native', onClick: () => note('undo-native') }} onDismiss={() => setNativeToast(false)}>Saved in the app's own dialog.</Toast>}

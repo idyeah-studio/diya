@@ -140,7 +140,12 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     // A field's error announcement speaks through this stack's polite region, with any toast
     // said in the same frame (step 5).
     let said = 0
-    setToastSay((text) => voices.current?.polite.say(`field:${++said}`, text))
+    setToastSay((text, options) => {
+      // Said from inside the app's own modal dialog: the region moves there first, where a
+      // screen reader can reach it, as a toast's does (G9).
+      followRef.current(options?.node)
+      voices.current?.polite.say(`field:${++said}`, text)
+    })
     // A <Toast> leaving, by its slot's key.
     setToastFocus((leaving, fallback, adjacent) => (adjacent ? closeFocusRef.current(`slot:${leaving}`, fallback) : returnFocusRef.current(`slot:${leaving}`, fallback)))
     return () => {
@@ -456,16 +461,23 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   // Any toast arriving counts, a <Toast> as much as a toast() (1.1's <Toast> rendered in the open
   // dialog that held focus; T5).
   const newestOrder = items.length ? Math.max(...items.map((item) => item.order)) : undefined
-  useEffect(() => {
-    if (!host || newestOrder === undefined) return
+  /** If `inside` is in a native modal that isn't DIYA's, the stack (and its live regions) moves into it until it closes. */
+  const followNativeModal = (inside: Element | null | undefined) => {
+    if (!host || !inside) return
     const document = host.root.ownerDocument
     let modal: HTMLDialogElement | null = null
-    try { modal = document.activeElement?.closest<HTMLDialogElement>('dialog:modal') ?? null } catch { modal = document.activeElement?.closest<HTMLDialogElement>('dialog[open]') ?? null }
+    try { modal = inside.closest<HTMLDialogElement>('dialog:modal') } catch { modal = inside.closest<HTMLDialogElement>('dialog[open]') }
     if (!modal || modal === nativeModal.current || topModal(document) === modal) return
     nativeModal.current = modal
     placeRef.current()
     const closed = () => { if (nativeModal.current === modal) nativeModal.current = null; placeRef.current() }
     modal.addEventListener('close', closed, { once: true })
+  }
+  const followRef = useRef(followNativeModal)
+  followRef.current = followNativeModal
+  useEffect(() => {
+    if (!host || newestOrder === undefined) return
+    followNativeModal(host.root.ownerDocument.activeElement)
   }, [host, newestOrder])
 
   /** Focuses a place to return to, if it can take focus now: not behind the topmost modal, not

@@ -75,8 +75,8 @@ type Store = {
   slotCount: number
   /** The provider elements on this React, so a provider can tell whether one of its own React's is above it (S5). */
   roots: WeakSet<Element>
-  /** The page stack's polite voice, for a field's error announcement (step 5): set by the active stack. */
-  say: ((text: string) => void) | null
+  /** The page stack's polite voice, for a field's error announcement (step 5): set by the active stack. `node` is the field, so the stack can follow it into the app's own modal dialog (G9). */
+  say: ((text: string, options?: { node?: Element | null }) => void) | null
 }
 
 // One store per React on the page, on globalThis under a versioned key: two copies of the

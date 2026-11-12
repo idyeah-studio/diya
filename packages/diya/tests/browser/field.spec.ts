@@ -155,3 +155,14 @@ test.describe('the ring follows focus across hosted iframes (G5)', () => {
     await expect(page.locator('.diya-toast-host > [aria-live=polite]')).toHaveText('Expiry: Enter the expiry date.')
   })
 })
+
+// G9 (UX-S56-02): a field's error inside the app's own showModal() dialog is said inside that
+// dialog, where a screen reader can reach it (everything outside a modal is inert).
+test("a field error in the app's own modal dialog is said inside it (G9)", async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=probe&theme=light')
+  await page.evaluate(() => (window as any).openNative())
+  await page.locator('#coupon').fill('AB1')
+  await page.keyboard.press('Tab')
+  await expect(page.locator('#coupon')).toHaveAttribute('aria-invalid', 'true')
+  await expect(page.locator('dialog#native .diya-toast-host > [aria-live=polite]')).toHaveText('Coupon code: Enter all 6 characters of the code.')
+})

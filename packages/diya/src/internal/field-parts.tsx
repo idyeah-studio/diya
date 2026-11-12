@@ -71,19 +71,20 @@ export function useShownError(error: string | undefined, wrapper: RefObject<HTML
 
 // Errors that appear in one task are counted per document: one is spoken; several (a submit)
 // say nothing, and the field that receives focus reads its own.
-const batches = new WeakMap<Document, string[]>()
-function speak(document: Document, text: string) {
+const batches = new WeakMap<Document, { text: string; node: Element }[]>()
+function speak(node: Element, text: string) {
+  const document = node.ownerDocument
   let batch = batches.get(document)
   if (!batch) {
-    const created: string[] = []
+    const created: { text: string; node: Element }[] = []
     batches.set(document, created)
     batch = created
     setTimeout(() => {
       batches.delete(document)
-      if (created.length === 1) announcePolite(created[0])
+      if (created.length === 1) announcePolite(created[0].text, created[0].node)
     }, 0)
   }
-  batch.push(text)
+  batch.push({ text, node })
 }
 
 /** Whether focus is in the field, or in the popup it controls (DatePicker's calendar). */
@@ -112,11 +113,11 @@ export function useErrorAnnouncement(label: string, shown: string | undefined, w
     const before = said.current
     said.current = shown
     if (!node || !shown || shown === before || focusWithin(node)) return
-    speak(node.ownerDocument, t.errorAnnouncement(label, shown))
+    speak(node, t.errorAnnouncement(label, shown))
   }, [shown])
   useEffect(() => {
     const node = wrapper.current
     if (!arrived || !node || !said.current) return
-    speak(node.ownerDocument, t.errorAnnouncement(label, said.current))
+    speak(node, t.errorAnnouncement(label, said.current))
   }, [arrived])
 }
