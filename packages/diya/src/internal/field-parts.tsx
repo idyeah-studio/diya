@@ -6,7 +6,7 @@
 import { useEffect, useId, useRef, useState, type HTMLAttributes, type RefObject } from 'react'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { fieldMessages } from '../field/messages.js'
-import { announcePolite } from './announce.js'
+import { announcePolite, forgetPolite } from './announce.js'
 import { useClientLayoutEffect } from './layout-effect.js'
 import { afterRelease, pressedIn, watchPointer } from './pointer.js'
 
@@ -71,21 +71,23 @@ export function useShownError(error: string | undefined, wrapper: RefObject<HTML
 
 // Errors that appear in one task are counted per document: one is spoken; several (a submit)
 // say nothing, and the field that receives focus reads its own.
-const batches = new WeakMap<Document, { text: string; node: Element }[]>()
-function speak(node: Element, text: string) {
+type Said = { text: string; node: Element; key: string }
+const batches = new WeakMap<Document, Said[]>()
+function speak(node: Element, text: string, key: string) {
   const document = node.ownerDocument
   let batch = batches.get(document)
   if (!batch) {
-    const created: { text: string; node: Element }[] = []
+    const created: Said[] = []
     batches.set(document, created)
     batch = created
     setTimeout(() => {
       batches.delete(document)
-      if (created.length === 1) announcePolite(created[0].text, created[0].node)
+      if (created.length === 1) announcePolite(created[0].text, created[0].node, created[0].key)
     }, 0)
   }
-  batch.push({ text, node })
+  batch.push({ text, node, key })
 }
+let spoken = 0
 
 /** Whether focus is in the field, or in the popup it controls (DatePicker's calendar). */
 function focusWithin(node: HTMLElement) {
@@ -108,16 +110,21 @@ function focusWithin(node: HTMLElement) {
 export function useErrorAnnouncement(label: string, shown: string | undefined, wrapper: RefObject<HTMLElement | null>, arrived = 0) {
   const t = useDiyaMessages('field', fieldMessages)
   const said = useRef(shown)
+  // The name of this field's words in the region, so they go when the error does (G10).
+  const [key] = useState(() => `field:${++spoken}`)
   useEffect(() => {
     const node = wrapper.current
     const before = said.current
     said.current = shown
+    // Cleared or changed: the old words leave the region at once, as a toast's do when it goes.
+    if (before && shown !== before) forgetPolite(key)
     if (!node || !shown || shown === before || focusWithin(node)) return
-    speak(node, t.errorAnnouncement(label, shown))
+    speak(node, t.errorAnnouncement(label, shown), key)
   }, [shown])
   useEffect(() => {
     const node = wrapper.current
     if (!arrived || !node || !said.current) return
-    speak(node, t.errorAnnouncement(label, said.current))
+    speak(node, t.errorAnnouncement(label, said.current), key)
   }, [arrived])
+  useEffect(() => () => forgetPolite(key), [])
 }

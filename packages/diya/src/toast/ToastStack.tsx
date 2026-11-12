@@ -15,7 +15,7 @@ import { motionTiming, playOnCopy } from '../internal/presence.js'
 import { createAnnouncer, createToastHost, lowerToastHost, raiseToastHost, type ToastHost } from './host.js'
 import { elapsed, live as playing, moved, offsetY, overlaps, remaining as timeLeft, RIDE_ANIMATION, SHIFT_ANIMATION, showingCopies, type Shift, type Span } from './motion.js'
 import { toastMessages } from './messages.js'
-import { EMPTY_TOASTS, leaveToast, providerAbove, registerHost, removeToast, setToastCopies, setToastFocus, setToastSay, setToastSlotElement, setToastsPaused, settleToasts, subscribeToasts, toastSnapshot, unregisterHost, type ToastEntry, type ToastSlot } from './queue.js'
+import { EMPTY_TOASTS, leaveToast, providerAbove, registerHost, removeToast, setToastCopies, setToastFocus, setToastSay, setToastUnsay, setToastSlotElement, setToastsPaused, settleToasts, subscribeToasts, toastSnapshot, unregisterHost, type ToastEntry, type ToastSlot } from './queue.js'
 
 const LIMIT = 3
 const PHONE_LIMIT = 2
@@ -144,14 +144,16 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       // Said from inside the app's own modal dialog: the region moves there first, where a
       // screen reader can reach it, as a toast's does (G9).
       followRef.current(options?.node)
-      voices.current?.polite.say(`field:${++said}`, text)
+      voices.current?.polite.say(options?.key ?? `field:${++said}`, text)
     })
+    setToastUnsay((key) => voices.current?.polite.forget(key))
     // A <Toast> leaving, by its slot's key.
     setToastFocus((leaving, fallback, adjacent) => (adjacent ? closeFocusRef.current(`slot:${leaving}`, fallback) : returnFocusRef.current(`slot:${leaving}`, fallback)))
     return () => {
       setToastCopies(null)
       setToastFocus(null)
       setToastSay(null)
+      setToastUnsay(null)
     }
   }, [active, host])
 

@@ -76,7 +76,9 @@ type Store = {
   /** The provider elements on this React, so a provider can tell whether one of its own React's is above it (S5). */
   roots: WeakSet<Element>
   /** The page stack's polite voice, for a field's error announcement (step 5): set by the active stack. `node` is the field, so the stack can follow it into the app's own modal dialog (G9). */
-  say: ((text: string, options?: { node?: Element | null }) => void) | null
+  say: ((text: string, options?: { node?: Element | null; key?: string }) => void) | null
+  /** Takes a field's words back out of the region (`key` as given to `say`): its error cleared or changed, or it went (G10). Set by the active stack. */
+  unsay: ((key: string) => void) | null
 }
 
 // One store per React on the page, on globalThis under a versioned key: two copies of the
@@ -111,8 +113,8 @@ type Store = {
 //   mounted inside this one's provider still hosts its own toasts. Every copy applies that
 //   rule, or two copies would disagree about who hosts.
 // - A newer copy may add behavior through optional fields (ToastSlot's `motion` and `leaving`
-//   are two, and the store's `say`, read by internal/announce.ts for a field's error
-//   announcement); an older copy's stack
+//   are two, and the store's `say` and `unsay`, read by internal/announce.ts for a field's
+//   error announcement); an older copy's stack
 //   ignores them, so that behavior is missing there, never broken.
 // Sharing across copies is best effort, and isn't promised in the public docs.
 const KEY = Symbol.for('@idyeah/diya/toast@1')
@@ -141,6 +143,7 @@ function store(): Store {
   state.slotCount ??= 0
   state.roots ??= new WeakSet()
   state.say ??= null
+  state.unsay ??= null
   return state as Store
 }
 
@@ -258,6 +261,8 @@ export function providerAbove(element: Element) {
 
 /** The active stack's voice for a field's error announcement (internal/announce.ts reads it by this protocol), or null when it stops being the page's stack. */
 export function setToastSay(say: Store['say']) { store().say = say }
+/** The active stack's way to take a field's words back (internal/announce.ts reads it), or null. */
+export function setToastUnsay(unsay: Store['unsay']) { store().unsay = unsay }
 
 /** The next place in arrival order, shared by toast() toasts and <Toast>s. */
 export function nextToastOrder() {
