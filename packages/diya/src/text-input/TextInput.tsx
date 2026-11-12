@@ -1,6 +1,6 @@
 'use client'
-import { forwardRef, useId, useRef, type InputHTMLAttributes, type ReactNode } from 'react'
-import { markField } from '../internal/field-parts.js'
+import { forwardRef, useRef, type InputHTMLAttributes, type ReactNode } from 'react'
+import { markField, renderDescription, useErrorAnnouncement, useFieldIds, useShownError } from '../internal/field-parts.js'
 import { Icon } from '../Icon.js'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
@@ -60,10 +60,11 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function T
   'aria-describedby': describedBy,
   ...props
 }, ref) {
-  const generatedId = useId()
-  const inputId = id ?? generatedId
-  const description = error || helperText
-  const descriptionId = `${inputId}-description`
+  const { id: inputId, descriptionId } = useFieldIds(id, 'description')
+  const wrapper = useRef<HTMLDivElement | null>(null)
+  const shown = useShownError(error, wrapper)
+  useErrorAnnouncement(label, shown, wrapper)
+  const description = shown || helperText
   const input = useRef<HTMLInputElement | null>(null)
   const inputRef = useMergedRef(ref, input)
   const controlled = value !== undefined
@@ -73,11 +74,12 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function T
   const t = useDiyaMessages('textInput', textInputMessages)
   return (
     <div
+      ref={wrapper}
       className={cx('diya-text-field', className)}
       style={style}
       data-size={size}
       data-disabled={disabled || undefined}
-      data-invalid={!!error || undefined}
+      data-invalid={!!shown || undefined}
     >
       <label htmlFor={inputId} className={hideLabel ? 'diya-sr-only' : undefined}>
         {label}
@@ -100,7 +102,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function T
           }}
           disabled={disabled}
           readOnly={readOnly}
-          aria-invalid={error ? true : ariaInvalid}
+          aria-invalid={shown ? true : ariaInvalid}
           aria-describedby={
             [describedBy, description ? descriptionId : undefined].filter(Boolean).join(' ') ||
             undefined
@@ -123,12 +125,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function T
           </button>
         )}
       </div>
-      {description && (
-        <p id={descriptionId} className="diya-text-field-description">
-          {error && <span aria-hidden="true">!</span>}
-          {description}
-        </p>
-      )}
+      {renderDescription({ id: descriptionId, className: 'diya-text-field-description', error: shown, helperText })}
     </div>
   )
 })

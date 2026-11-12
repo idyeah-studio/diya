@@ -1,6 +1,6 @@
 'use client'
-import { forwardRef, useId, type ReactNode, type SelectHTMLAttributes } from 'react'
-import { markField } from '../internal/field-parts.js'
+import { forwardRef, useRef, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { markField, renderDescription, useErrorAnnouncement, useFieldIds, useShownError } from '../internal/field-parts.js'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { selectMessages } from './messages.js'
@@ -68,18 +68,20 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   'aria-describedby': describedBy,
   ...props
 }, ref) {
-  const generated = useId()
+  const { id: fieldId, descriptionId } = useFieldIds(id, 'description')
   const t = useDiyaMessages('select', selectMessages)
-  const fieldId = id ?? generated
-  const description = error || helperText
-  const descriptionId = `${fieldId}-description`
+  const wrapper = useRef<HTMLDivElement | null>(null)
+  const shown = useShownError(error, wrapper)
+  useErrorAnnouncement(label, shown, wrapper)
+  const description = shown || helperText
   return (
     <div
+      ref={wrapper}
       className={cx('diya-text-field diya-select-field', className)}
       style={style}
       data-size={size}
       data-disabled={disabled || undefined}
-      data-invalid={!!error || undefined}
+      data-invalid={!!shown || undefined}
     >
       <label htmlFor={fieldId} className={hideLabel ? 'diya-sr-only' : undefined}>
         {label}
@@ -100,7 +102,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
             onChange?.(event)
             onValueChange?.(event.target.value)
           }}
-          aria-invalid={error ? true : ariaInvalid}
+          aria-invalid={shown ? true : ariaInvalid}
           aria-describedby={
             [describedBy, description ? descriptionId : undefined].filter(Boolean).join(' ') ||
             undefined
@@ -128,12 +130,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           <path d="m6 9 6 6 6-6" />
         </svg>
       </div>
-      {description && (
-        <p id={descriptionId} className="diya-text-field-description">
-          {error && <span aria-hidden="true">!</span>}
-          {description}
-        </p>
-      )}
+      {renderDescription({ id: descriptionId, className: 'diya-text-field-description', error: shown, helperText })}
     </div>
   )
 })

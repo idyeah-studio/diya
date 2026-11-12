@@ -322,6 +322,8 @@ function ProbeCase() {
 function FieldCase() {
   const [error, setError] = useState()
   const [paid, setPaid] = useState(0)
+  const [errorTi, setErrorTi] = useState()
+  const [paidTi, setPaidTi] = useState(0)
   const cross = `${location.protocol}//127.0.0.1:${location.port}/card.html`
   return (
     <div style={{ display: 'grid', gap: 24, padding: 24, width: query.get('narrow') ? 'auto' : 360 }}>
@@ -335,6 +337,11 @@ function FieldCase() {
         <diya.Field label="Security code" error={error}><input id="cvc" onBlur={(event) => setError(event.target.value.length < 3 ? 'Enter the 3 digits on the back.' : undefined)} /></diya.Field>
         <Button type="submit" id="submit">Pay</Button>
         <output id="paid">{paid}</output>
+      </form>
+      <form id="pay-ti" onSubmit={(event) => { event.preventDefault(); setPaidTi((count) => count + 1) }} style={{ display: 'grid', gap: 16 }}>
+        <TextInput id="cvc-ti" label="Security code" error={errorTi} onBlur={(event) => setErrorTi(event.target.value.length < 3 ? 'Enter the 3 digits on the back.' : undefined)} />
+        <Button type="submit" id="submit-ti">Pay</Button>
+        <output id="paid-ti">{paidTi}</output>
       </form>
     </div>
   )

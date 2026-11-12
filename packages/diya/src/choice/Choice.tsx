@@ -1,6 +1,6 @@
 'use client'
-import { forwardRef, useId, useRef, type ChangeEventHandler, type FieldsetHTMLAttributes, type FocusEventHandler, type ReactNode } from 'react'
-import { markField } from '../internal/field-parts.js'
+import { forwardRef, useRef, type ChangeEventHandler, type FieldsetHTMLAttributes, type FocusEventHandler, type ReactNode } from 'react'
+import { markField, renderDescription, useErrorAnnouncement, useFieldIds, useShownError } from '../internal/field-parts.js'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { useFormReset, useNativeMirror } from '../text-input/native-field.js'
@@ -76,7 +76,7 @@ export type ChoiceProps = ChoiceSingleProps | ChoiceMultipleProps
 const sameList = (a: string[], b: string[]) => a.length === b.length && a.every((value, index) => value === b[index])
 /** A labeled group of radios for one choice, or checkboxes for several with `multiple`. The ref reaches the inputs: a callback ref gets each one, an object ref the first. */
 export const Choice = forwardRef<HTMLInputElement, ChoiceProps>(function Choice(props, ref) {
-  const id = useId()
+  const { id, descriptionId } = useFieldIds(undefined, 'help')
   const t = useDiyaMessages('choice', choiceMessages)
   const {
     label,
@@ -100,7 +100,10 @@ export const Choice = forwardRef<HTMLInputElement, ChoiceProps>(function Choice(
     ...rest
   } = props
   const multiple = props.multiple === true
-  const description = error || helperText
+  const wrapper = useRef<HTMLFieldSetElement | null>(null)
+  const shown = useShownError(error, wrapper)
+  useErrorAnnouncement(label, shown, wrapper)
+  const description = shown || helperText
   const inputs = useRef<Array<HTMLInputElement | null>>([])
   const first = useRef<HTMLInputElement | null>(null)
   const controlled = props.value !== undefined
@@ -137,11 +140,12 @@ export const Choice = forwardRef<HTMLInputElement, ChoiceProps>(function Choice(
   return (
     <fieldset
       {...rest}
+      ref={wrapper}
       className={cx('diya-choice', className)}
       data-size={size}
       disabled={disabled}
-      aria-invalid={error ? true : props['aria-invalid']}
-      aria-describedby={[describedBy, description ? `${id}-help` : undefined].filter(Boolean).join(' ') || undefined}
+      aria-invalid={shown ? true : props['aria-invalid']}
+      aria-describedby={[describedBy, description ? descriptionId : undefined].filter(Boolean).join(' ') || undefined}
     >
       <legend className={hideLabel ? 'diya-sr-only' : undefined}>{label}</legend>
       <div className="diya-choice-items">
@@ -190,12 +194,7 @@ export const Choice = forwardRef<HTMLInputElement, ChoiceProps>(function Choice(
           </label>
         ))}
       </div>
-      {description && (
-        <p id={`${id}-help`} className="diya-text-field-description">
-          {error && <span aria-hidden="true">!</span>}
-          {description}
-        </p>
-      )}
+      {renderDescription({ id: descriptionId, className: 'diya-text-field-description', error: shown, helperText })}
     </fieldset>
   )
 })
