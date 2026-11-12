@@ -315,7 +315,9 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
 
   // A native modal that isn't DIYA's and holds focus when a toast arrives: the stack shows in it
   // until it closes.
-  const newestOrder = live.at(-1)?.order
+  // Any toast arriving counts, a <Toast> as much as a toast() (1.1's <Toast> rendered in the open
+  // dialog that held focus; T5).
+  const newestOrder = items.length ? Math.max(...items.map((item) => item.order)) : undefined
   useEffect(() => {
     if (!host || newestOrder === undefined) return
     const document = host.root.ownerDocument

@@ -198,3 +198,33 @@ test.describe('toasts from several providers', () => {
     expect(ratio).toBeGreaterThanOrEqual(4.5)
   })
 })
+
+test.describe("a <Toast> in an app's own showModal() dialog", () => {
+  for (const first of [false, true]) {
+    test(`is inside the dialog, topmost, clickable and reachable by F8${first ? ', with a toast already showing' : ''}`, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, 'case=probe&theme=light')
+      if (first) {
+        await page.evaluate(() => (window as any).diya.toast({ title: 'Link copied', duration: 0 }))
+        await settle(page)
+      }
+      await page.evaluate(() => (window as any).openNative())
+      await page.locator('#native-save').click()
+      const undo = page.getByRole('button', { name: 'Undo native' })
+      await undo.waitFor()
+      await settle(page)
+      expect(await undo.evaluate((node) => !!node.closest('dialog#native'))).toBe(true)
+      expect(await page.evaluate(() => !!document.querySelector('dialog#native .diya-toast-host > [aria-live]'))).toBe(true)
+      const box = (await undo.boundingBox())!
+      expect(await undo.evaluate((node, [x, y]) => { const top = document.elementFromPoint(x, y); return !!top && node.contains(top) }, [box.x + box.width / 2, box.y + box.height / 2])).toBe(true)
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+      await expect.poll(() => page.evaluate(() => (window as any).__log.some((entry: { event: string }) => entry.event === 'undo-native'))).toBe(true)
+      // F8 reaches the toast inside the dialog.
+      await page.evaluate(() => { (window as any).__log.length = 0 })
+      await page.locator('#native-save').click()
+      await page.getByRole('button', { name: 'Undo native' }).waitFor()
+      await page.focus('#native-save')
+      await page.keyboard.press('F8')
+      await expect(page.getByRole('button', { name: 'Undo native' })).toBeFocused()
+    })
+  }
+})
