@@ -1,10 +1,12 @@
 'use client'
-import { createContext, forwardRef, useContext, useMemo, useState, useSyncExternalStore, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react'
+import { createContext, forwardRef, useContext, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react'
 import type { DiyaMessages, DiyaMessagesInput } from './messages.js'
 import { LinkComponentContext, type DiyaLinkComponent } from './internal/link.js'
 import { cx } from './internal/cx.js'
 import { resolveBrand, type DiyaBrandTokens } from './internal/brand.js'
 import { useClientLayoutEffect } from './internal/layout-effect.js'
+import { composeRefs } from './internal/slot.js'
+import { motionTokens } from './toast/host.js'
 import { ToastStack } from './toast/ToastStack.js'
 import type { ToastLook } from './toast/queue.js'
 
@@ -32,8 +34,8 @@ type MotionSetting = 'system' | 'reduced' | 'off'
 const MotionContext = createContext<MotionSetting>('system')
 // Whether a DIYA provider is above: toast() shows in the outermost one.
 const NestedContext = createContext(false)
-/** Internal: the nearest provider, and how it looks, for its <Toast>s in the page's one stack. */
-export const ToastScopeContext = createContext<{ owner: object; look: ToastLook } | null>(null)
+/** Internal: the nearest provider, how it looks and how it moves, for its <Toast>s in the page's one stack. */
+export const ToastScopeContext = createContext<{ owner: object; look: ToastLook; motion: () => Record<string, string> | undefined } | null>(null)
 export function useDiyaPortal() { return useContext(PortalContext) }
 // Where other libraries' popups should render: the provider's portal, or an open Dialog or
 // Drawer's own element, which they set for their children. The nearest one wins.
@@ -122,6 +124,11 @@ export type DiyaProviderProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'>
 export const DiyaProvider = forwardRef<HTMLDivElement, DiyaProviderProps>(function DiyaProvider({ children, theme = 'system', surface = true, glass = false, brandColor, fontFamily = DEFAULT_FONT_FAMILY, messages, locale, motion, linkComponent, className, style, ...rest }, ref) {
   const [portal, setPortal] = useState<HTMLDivElement | null>(null)
   const [owner] = useState(() => ({}))
+  const self = useRef<HTMLDivElement | null>(null)
+  const setRoot = useMemo(() => composeRefs<HTMLDivElement>(self, ref), [ref])
+  // How this provider moves, as resolved here (its motion setting, its duration scale and any set
+  // above it), for its <Toast>s, which animate in the page's one stack (R2).
+  const [motionOf] = useState(() => () => motionTokens(self.current))
   const parent = useContext(MessagesContext)
   const parentLink = useContext(LinkComponentContext)
   const text = useMemo(() => ({ overrides: mergeMessages(parent.overrides, messages), locale: locale ?? parent.locale }), [parent, messages, locale])
@@ -151,8 +158,8 @@ export const DiyaProvider = forwardRef<HTMLDivElement, DiyaProviderProps>(functi
     ...style,
   } as CSSProperties
   const styleKey = JSON.stringify(tokens)
-  const scope = useMemo(() => ({ owner, look: { theme, glass: String(glass), motion: motionSetting, className, style: tokens as Record<string, unknown> } }), [owner, theme, glass, motionSetting, className, styleKey])
-  return <div {...rest} ref={ref} className={cx('diya-root', className)} data-theme={theme} data-theme-change={changing ? '' : undefined} data-glass={String(glass)} data-surface={String(surface)} data-motion={motionSetting} style={tokens}>
+  const scope = useMemo(() => ({ owner, look: { theme, glass: String(glass), motion: motionSetting, className, style: tokens as Record<string, unknown> }, motion: motionOf }), [owner, theme, glass, motionSetting, className, styleKey])
+  return <div {...rest} ref={setRoot} className={cx('diya-root', className)} data-theme={theme} data-theme-change={changing ? '' : undefined} data-glass={String(glass)} data-surface={String(surface)} data-motion={motionSetting} style={tokens}>
     <AppearanceContext.Provider value={appearance}><MotionContext.Provider value={motionSetting}><MessagesContext.Provider value={text}><PortalContext.Provider value={portal}><PortalContainerContext.Provider value={portal}><LinkComponentContext.Provider value={linkComponent ?? parentLink}><NestedContext.Provider value={true}><ToastScopeContext.Provider value={scope}>{children}</ToastScopeContext.Provider></NestedContext.Provider></LinkComponentContext.Provider></PortalContainerContext.Provider><div className="diya-portal-root" ref={setPortal}><ToastStack portal={portal} outermost={!nested} owner={owner} /></div></PortalContext.Provider></MessagesContext.Provider></MotionContext.Provider></AppearanceContext.Provider>
   </div>
 })

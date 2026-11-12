@@ -362,3 +362,37 @@ test.describe('Tab without F8 (R1)', () => {
     expect(order).toEqual(['Dismiss: Older', 'Undo', 'Dismiss: Newer', 'After the app'])
   })
 })
+
+// A <Toast> keeps its own provider's motion in the page's one stack, as it did in 1.1.1: its
+// enter, its exit copy and its duration scale. The column's shifts are the page's (R2).
+test.describe("a nested provider's motion reaches its <Toast> (R2)", () => {
+  const add = "window.nested.add({ title: 'Synced', description: 'From the dark region.' })"
+  test('motion="off": opaque and in place on its first frame, and no exit copy', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light&nested=1&nestedmotion=off')
+    const track = await frames(page, add, 300)
+    const seen = track.filter((frame) => frame.live.some((box) => box.title === 'Synced'))
+    const rest = seen.at(-1)!.live.find((box) => box.title === 'Synced')!.top
+    const first = seen[0].live.find((box) => box.title === 'Synced')!
+    expect(first.opacity).toBeGreaterThan(0.99)
+    expect(Math.abs(first.top - rest)).toBeLessThan(0.5)
+    const leave = await frames(page, "document.querySelector('[aria-label=\"Dismiss: Synced\"]').click()", 200)
+    expect(leave.every((frame) => frame.copies.length === 0)).toBe(true)
+  })
+
+  test('motion="reduced": fades in place, with no rise', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light&nested=1&nestedmotion=reduced')
+    const track = await frames(page, add, 400)
+    const seen = track.filter((frame) => frame.live.some((box) => box.title === 'Synced')).map((frame) => frame.live.find((box) => box.title === 'Synced')!)
+    const rest = seen.at(-1)!.top
+    expect(Math.max(...seen.map((box) => Math.abs(box.top - rest)))).toBeLessThan(0.5)
+    expect(seen[0].opacity).toBeLessThan(0.9)
+  })
+
+  test('a duration scale of 4 on the nested provider: its enter takes about four times as long', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light&nested=1&nestedscale=4')
+    const track = await frames(page, add, 1200)
+    const opaque = track.find((frame) => (frame.live.find((box) => box.title === 'Synced')?.opacity ?? 0) > 0.99)
+    // At the page's own speed it's opaque by about 240ms; at 4× about 960ms.
+    expect(opaque?.t ?? Infinity).toBeGreaterThan(700)
+  })
+})

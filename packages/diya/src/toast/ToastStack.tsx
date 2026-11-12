@@ -204,8 +204,8 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       const lift = was === undefined ? 0 : was - edge(slot, height)
       const played = playOnCopy(slot, host.copies, 'exit-slow', exitFrames, { zIndex: 0, offsetY: lift })
       const copy = played ? host.copies.lastElementChild as HTMLElement | null : null
-      if (copy && lift > 0) {
-        const { duration, easing, style } = motionTiming(slot, 'duration-slow', 'move')
+      if (copy && lift > 0 && node) {
+        const { duration, easing, style } = motionTiming(node, 'duration-slow', 'move')
         const travel = parseFloat(style?.getPropertyValue('--diya-internal-motion-travel') ?? '1') || 0
         if (duration && travel) copy.animate([{ transform: 'none' }, { transform: `translateY(${-lift}px)` }], { duration: duration * travel, easing, composite: 'add', fill: 'forwards' })
       } else if (played) gapDelay = true
@@ -233,8 +233,9 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
         continue
       }
       const dy = before - bottom
-      if (!dy || typeof slot.animate !== 'function' || slot.ownerDocument.hidden || host.region.dataset.still !== undefined) continue
-      const { duration, easing, style } = motionTiming(slot, 'duration-slow', 'move')
+      if (!dy || !node || typeof slot.animate !== 'function' || slot.ownerDocument.hidden || host.region.dataset.still !== undefined) continue
+      // One column, one shift: on this stack's provider's motion, whoever's toast it is.
+      const { duration, easing, style } = motionTiming(node, 'duration-slow', 'move')
       const travel = parseFloat(style?.getPropertyValue('--diya-internal-motion-travel') ?? '1') || 0
       if (!duration || !travel) continue
       shifted = true
@@ -519,7 +520,9 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     >
       {items.map((item) => item.kind === 'slot'
         ? (
-          <div key={item.id} className="diya-toast" data-toast={item.id} data-order={item.order}>
+          // From another provider, its place in the column moves the way that provider does:
+          // its enter and its exit copy read these (R2). The column's shifts are this stack's.
+          <div key={item.id} className="diya-toast" data-toast={item.id} data-order={item.order} style={item.slot.owner === owner ? undefined : item.slot.motion?.() as CSSProperties | undefined}>
             {/* The <Toast> portals in here. From another provider, this carries that provider's
                 look (theme, Glass, motion, class and style) and takes no box of its own. */}
             {item.slot.owner === owner

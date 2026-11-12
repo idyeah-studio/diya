@@ -267,7 +267,8 @@ function ToastsCase() {
 // stack and move a real pointer onto a toast. window.diya is the package; window.comps adds and
 // removes <Toast>s; window.nested does it in a nested Dark provider; window.openDialog opens a
 // DIYA Dialog; window.openNative opens an app's own showModal() dialog with a <Toast> button.
-// bg=1 puts a busy backdrop behind the corner, so Glass shows what's under it.
+// bg=1 puts a busy backdrop behind the corner, so Glass shows what's under it. nestedmotion and
+// nestedscale set the nested provider's motion and duration scale.
 function Comps({ store, prefix }) {
   const [list, setList] = useState([])
   useEffect(() => {
@@ -310,7 +311,7 @@ function ProbeCase() {
         {nativeToast && <Toast title="Saved in native" duration={0} action={{ label: 'Undo native', onClick: () => note('undo-native') }} onDismiss={() => setNativeToast(false)}>Saved in the app's own dialog.</Toast>}
       </dialog>
       <Comps store="comps" prefix="k" />
-      {query.get('nested') === '1' && <DiyaProvider theme="dark" glass={query.get('nestedglass') === '1'}><div id="nested-region"><Comps store="nested" prefix="n" /></div></DiyaProvider>}
+      {query.get('nested') === '1' && <DiyaProvider theme="dark" glass={query.get('nestedglass') === '1'} motion={query.get('nestedmotion') ?? undefined} style={query.get('nestedscale') ? { '--diya-duration-scale': query.get('nestedscale') } : undefined}><div id="nested-region"><Comps store="nested" prefix="n" /></div></DiyaProvider>}
     </div>
   )
 }

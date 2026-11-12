@@ -72,7 +72,7 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
   useClientLayoutEffect(() => {
     if (!scope) return
     returnFocus.current = document.activeElement as HTMLElement
-    addToastSlot({ key, order: nextToastOrder(), hasAction: !!props.action, urgent: !!props.urgent, owner: scope.owner, look: scope.look, dismiss: () => dismissRef.current() })
+    addToastSlot({ key, order: nextToastOrder(), hasAction: !!props.action, urgent: !!props.urgent, owner: scope.owner, look: scope.look, motion: scope.motion, dismiss: () => dismissRef.current() })
     return () => removeToastSlot(key)
   }, [!!scope, key])
   const first = useRef(true)

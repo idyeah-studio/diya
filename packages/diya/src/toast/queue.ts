@@ -48,6 +48,8 @@ export type ToastSlot = {
   /** The provider the <Toast> sits in, and how it looks. */
   owner: object
   look: ToastLook
+  /** How its own provider moves, as CSS variables for its place in the stack (optional). */
+  motion?: () => Record<string, string> | undefined
   /** Ends the toast as its close button would (Escape on it in the stack). */
   dismiss: () => void
 }

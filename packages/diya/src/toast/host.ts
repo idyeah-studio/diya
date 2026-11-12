@@ -120,3 +120,29 @@ export function createAnnouncer(region: HTMLElement) {
     },
   }
 }
+
+// What a toast's own animations read: its enter (CSS), its delayed enter, and its exit copy.
+const MOTION_TOKENS = [
+  '--diya-internal-motion', '--diya-internal-motion-travel', '--diya-internal-motion-distance', '--diya-internal-motion-distance-edge',
+  '--diya-internal-duration-fast', '--diya-internal-duration-medium', '--diya-internal-duration-slow',
+  '--diya-internal-exit-fast', '--diya-internal-exit-medium', '--diya-internal-exit-slow',
+  '--diya-ease-enter', '--diya-ease-exit', '--diya-ease-move',
+]
+
+/**
+ * A provider's motion as resolved on its own element: its setting (off, reduced, or the device's
+ * Reduce Motion), its duration scale and anything set above it. A <Toast> from a nested provider
+ * carries these on its place in the page's stack, so it enters and leaves the way its own
+ * provider moves, as it did in 1.1.1 (R2).
+ */
+export function motionTokens(element: HTMLElement | null): Record<string, string> | undefined {
+  const view = element?.ownerDocument.defaultView
+  if (!element || !element.isConnected || !view) return undefined
+  const style = view.getComputedStyle(element)
+  const out: Record<string, string> = {}
+  for (const name of MOTION_TOKENS) {
+    const value = style.getPropertyValue(name).trim()
+    if (value) out[name] = value
+  }
+  return out
+}
