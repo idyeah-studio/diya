@@ -462,15 +462,38 @@ describe('the live regions (T7, T11)', () => {
     await waitFor(() => expect(liveText()).toBe('Success: Draft saved. Saved. Info: Link copied. Paste it anywhere.|'))
   })
 
-  it('the words are cleared about a second after they were set', async () => {
+  // F5 (founders, Nov 12) changes this test's timing: the words stay 5 seconds, not 1.
+  it('the words are cleared 5 seconds after they were set: still there at 4s, gone at 5s', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
     render(<DiyaProvider><p>App</p></DiyaProvider>)
-    act(() => { toast({ title: 'Draft saved', description: 'Your changes are live.' }) })
-    await waitFor(() => expect(liveText()).toBe('Info: Draft saved. Your changes are live.|'))
+    act(() => { toast({ title: 'Draft saved', description: 'Your changes are live.', duration: 0 }) })
+    await act(async () => {})
+    await frame()
+    expect(liveText()).toBe('Info: Draft saved. Your changes are live.|')
     // While fresh, a regular expression finds the toast and the live region, so tests look in the region.
     expect(within(screen.getByRole('region', { name: 'Notifications (F8)' })).getAllByText(/draft saved/i)).toHaveLength(1)
-    await waitFor(() => expect(liveText()).toBe('|'), { timeout: 2000 })
+    act(() => { vi.advanceTimersByTime(4000) })
+    expect(liveText()).toBe('Info: Draft saved. Your changes are live.|')
+    act(() => { vi.advanceTimersByTime(1000) })
+    expect(liveText()).toBe('|')
     expect(screen.getAllByText(/draft saved/i)).toHaveLength(1)
     expect(screen.getAllByText(/changes are live/)).toHaveLength(1)
+    vi.useRealTimers()
+  })
+
+  it('a toast that leaves before 5 seconds takes its words at once (F5)', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+    render(<DiyaProvider motion="off"><p>App</p></DiyaProvider>)
+    act(() => { toast({ id: 'kept', title: 'Draft saved', duration: 0 }) })
+    await act(async () => {})
+    await frame()
+    expect(liveText()).toBe('Info: Draft saved.|')
+    act(() => { vi.advanceTimersByTime(2000) })
+    expect(liveText()).toBe('Info: Draft saved.|')
+    act(() => toast.dismiss('kept'))
+    await act(async () => {})
+    expect(liveText()).toBe('|')
+    vi.useRealTimers()
   })
 
   it('a toast that leaves takes its words with it (QA C-T22, C-T23)', async () => {

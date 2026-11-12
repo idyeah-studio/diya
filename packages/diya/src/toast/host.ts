@@ -74,10 +74,11 @@ export function lowerToastHost(host: ToastHost) {
   }
 }
 
-/** How long an announcement stays in its live region once set: long enough to be read, then
- *  cleared, so the words don't linger in the accessibility tree or match a test's text query
- *  after the toast has gone (T7). */
-export const ANNOUNCEMENT_MS = 1000
+/** How long an announcement stays in its live region once set: 5 seconds, so a screen reader
+ *  that queues it behind what it's already saying (VoiceOver) still finds it, then cleared, so
+ *  the words don't linger in the accessibility tree. It goes at once when its toast leaves
+ *  (T7; the founders' F5, Nov 12: "when its toast leaves or after 5 seconds"). */
+export const ANNOUNCEMENT_MS = 5000
 
 /**
  * A live region's voice. Everything said within one frame is read as one text node, in order,
