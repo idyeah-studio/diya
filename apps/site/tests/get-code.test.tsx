@@ -56,7 +56,7 @@ describe('Get code', () => {
     expect(within(drawer).getByRole('textbox', { name: 'Styles and provider' }).textContent).toBe(
       "import '@idyeah/diya/styles.css'\nimport { DiyaProvider } from '@idyeah/diya'\n\n<DiyaProvider theme=\"light\">\n  {children}\n</DiyaProvider>",
     )
-    expect(within(drawer).getByText(/@idyeah\/diya/, { selector: 'b' }).parentElement!.textContent).toBe('@idyeah/diya 1.1.0 · MIT')
+    expect(within(drawer).getByText(/@idyeah\/diya/, { selector: 'b' }).parentElement!.textContent).toBe('@idyeah/diya 1.1.1 · MIT')
     expect(within(drawer).getByRole('link', { name: 'README' }).getAttribute('href')).toBe('https://github.com/idyeah-studio/diya#readme')
     expect(within(drawer).getByRole('link', { name: 'GitHub' }).getAttribute('href')).toBe('https://github.com/idyeah-studio/diya')
     expect(drawer.textContent).not.toMatch(/\bPro\b|preview only|Internal|Evaluation|ZIP|Download/)

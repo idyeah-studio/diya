@@ -18,7 +18,7 @@ import { useFocusDrawerTitle } from './code/useFocusDrawerTitle'
 import { useCustomizeState } from './customize/CustomizeContext'
 import './GetCodeDrawer.css'
 
-export const DIYA_VERSION = '1.1.0'
+export const DIYA_VERSION = '1.1.1'
 export const DIYA_REPOSITORY = 'https://github.com/idyeah-studio/diya'
 /** Set once someone copies an install or setup step; steps 1–2 fold from then on. */
 export const SETUP_COPIED_KEY = 'diya:setup-copied'

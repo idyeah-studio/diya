@@ -47,8 +47,9 @@ describe('the changelog reader', () => {
   it('reads the real CHANGELOG.md: versions, sections, lists and tables, without its own H1', () => {
     const headings = changelog.blocks.filter((block) => block.type === 'heading')
     expect(headings.some((block) => block.type === 'heading' && block.text === 'Changelog')).toBe(false)
-    expect(headings.find((block) => block.type === 'heading' && block.level === 2)).toMatchObject({ id: 'v1.1.0' })
+    expect(headings.find((block) => block.type === 'heading' && block.level === 2)).toMatchObject({ id: 'v1.1.1' })
     expect(changelog.blocks.filter((block) => block.type === 'table').length).toBeGreaterThanOrEqual(3)
+    expect(changelog.links['1.1.1']).toBe('https://github.com/idyeah-studio/diya/releases/tag/v1.1.1')
     expect(changelog.links['1.1.0']).toBe('https://github.com/idyeah-studio/diya/releases/tag/v1.1.0')
     expect(changelog.links['1.0.1']).toBe('https://github.com/idyeah-studio/diya/releases/tag/v1.0.1')
     expect(changelog.links['1.0.0']).toBe('https://github.com/idyeah-studio/diya/releases/tag/v1.0.0')
