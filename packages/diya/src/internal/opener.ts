@@ -7,6 +7,12 @@
 const controls = 'button, a[href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])'
 const pressed = new WeakMap<Document, { target: HTMLElement | null }>()
 
+/** Whether `element` is a control a person was using (it takes typing or a press), rather than
+ *  <body>, a dialog or another container that a click in Safari focuses instead (H3). */
+export function isControl(element: Element | null | undefined) {
+  return !!element && element !== element.ownerDocument.body && (element.matches(controls) || (element as HTMLElement).isContentEditable)
+}
+
 /** Starts remembering presses in this document (once per document; it stays for the page's life). */
 export function watchPresses(document: Document) {
   if (pressed.has(document)) return

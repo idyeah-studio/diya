@@ -11,6 +11,7 @@ import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { subscribeModals, topModal } from '../internal/modal-stack.js'
+import { isControl } from '../internal/opener.js'
 import { motionTiming, playOnCopy } from '../internal/presence.js'
 import { createAnnouncer, createToastHost, lowerToastHost, raiseToastHost, type ToastHost } from './host.js'
 import { elapsed, live as playing, moved, offsetY, overlaps, remaining as timeLeft, RIDE_ANIMATION, SHIFT_ANIMATION, showingCopies, type Shift, type Span } from './motion.js'
@@ -532,8 +533,9 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     const slots = reachable()
     const slot = slots.find((item) => item.dataset.key === id)
     if (!document || !slot) return
-    // A click on × in Safari leaves focus on <body>: back by the chain, where the person was (UX-R3-01).
-    if (document.activeElement === document.body || !document.activeElement) { returnFocus(id, fallback); return }
+    // A click on × in Safari leaves focus on <body>, or on the Dialog around the stack: back by the
+    // chain, where the person was (UX-R3-01, H3).
+    if (!slot.contains(document.activeElement) && !isControl(document.activeElement)) { returnFocus(id, fallback); return }
     if (!slot.contains(document.activeElement)) return
     const index = slots.indexOf(slot)
     const neighbor = slots[index - 1] ?? slots[index + 1]

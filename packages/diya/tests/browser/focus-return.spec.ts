@@ -128,3 +128,18 @@ test.describe('an earlier visit to the stack is forgotten (H2)', () => {
   })
 })
 
+// H3 (UX-G-02): in Safari a click on × inside a Dialog focuses the dialog itself, not <body>;
+// that counts as "focus isn't anywhere useful" too, so the chain returns it to the field.
+test('× on a <Toast> in a Dialog while typing in the Dialog keeps your typing (H3)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=probe&theme=light')
+  await page.locator('#open-dialog').click()
+  const task = page.getByRole('textbox', { name: 'Task name' })
+  await task.click()
+  await page.evaluate(() => { (window as any).comps.add({ title: 'Saved' }) })
+  await task.click()
+  await page.keyboard.press('End')
+  await page.keyboard.type(' v2')
+  await page.getByRole('button', { name: 'Dismiss: Saved' }).click()
+  await page.keyboard.type('!')
+  await expect(task).toHaveValue('Write the brief v2!')
+})
