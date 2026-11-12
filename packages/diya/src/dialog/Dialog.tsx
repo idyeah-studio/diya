@@ -44,7 +44,7 @@ export type DialogProps = Omit<DialogHTMLAttributes<HTMLDialogElement>, 'title' 
   dismissLabel?: string
   /** Disables the confirm button; defaults to false. */
   confirmDisabled?: boolean
-  /** Shows a spinner on the confirm button and blocks confirming; defaults to false. */
+  /** Shows the confirm button's working indicator and blocks confirming; defaults to false. */
   loading?: boolean
   /** Draws a line above the buttons; defaults to false. */
   divided?: boolean
