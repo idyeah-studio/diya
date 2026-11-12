@@ -166,3 +166,26 @@ test("a field error in the app's own modal dialog is said inside it (G9)", async
   await expect(page.locator('#coupon')).toHaveAttribute('aria-invalid', 'true')
   await expect(page.locator('dialog#native .diya-toast-host > [aria-live=polite]')).toHaveText('Coupon code: Enter all 6 characters of the code.')
 })
+
+// H1 (FE G-01, VIS-G-03): the framed select's chevron sits over the select, as Select's does, so a
+// click on it opens the select; a list-box select (multiple, or size > 1) has none.
+test.describe('the framed select’s chevron (H1)', () => {
+  test('a click on the chevron reaches the select', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=providers&theme=light')
+    const frame = (await page.locator('#framed-select').locator('..').boundingBox())!
+    const point = { x: frame.x + frame.width - 20, y: frame.y + frame.height / 2 }
+    expect(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.id, point)).toBe('framed-select')
+    await page.mouse.click(point.x, point.y)
+    await page.keyboard.press('Escape')
+    // A click on a select focuses it in Chromium and Firefox; Safari's clicks don't focus, but
+    // the click lands on the select all the same (above).
+    if (testInfo.project.name.startsWith('webkit')) return
+    await expect(page.locator('#framed-select')).toBeFocused()
+  })
+
+  test('a list-box select has no chevron', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=providers&theme=light')
+    const after = await page.locator('#framed-list').evaluate((node) => getComputedStyle(node.parentElement!, '::after').content)
+    expect(['none', 'normal']).toContain(after)
+  })
+})

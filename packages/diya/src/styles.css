@@ -1221,17 +1221,36 @@
   color: var(--diya-color-muted);
   opacity: 1;
 }
-/* A framed native select keeps a menu indicator: Select's chevron, drawn by the frame (G2). A
-   framed textarea grows the frame to its lines instead of clipping them to one. */
-.diya-root .diya-field-frame:has(> select)::after {
+/* A framed native select keeps a menu indicator: Select's chevron, drawn over the select's own
+   right edge, as Select does, so a click on it opens the select (G2, H1). A list-box select
+   (multiple, or size above 1) has no chevron. A framed textarea grows the frame to its lines
+   instead of clipping them to one. */
+.diya-root .diya-field-frame:has(> select:not([multiple], [size]:not([size='1']))) {
+  position: relative;
+  padding-inline-end: 0;
+}
+.diya-root .diya-field-frame > select:not([multiple], [size]:not([size='1'])) {
+  padding-inline-end: 40px;
+  cursor: pointer;
+}
+.diya-root .diya-field-frame:has(> select:not([multiple], [size]:not([size='1'])))::after {
   content: '';
-  flex: none;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 14px;
   height: 14px;
   background-color: var(--diya-color-muted);
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
   pointer-events: none;
+}
+.diya-root .diya-field-frame:has(> select:is([multiple], [size]:not([size='1']))) {
+  height: auto;
+}
+.diya-root .diya-field-frame > select:is([multiple], [size]:not([size='1'])) {
+  height: auto;
 }
 .diya-root .diya-field-frame:has(> textarea) {
   height: auto;

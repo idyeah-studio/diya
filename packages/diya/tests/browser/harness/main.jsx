@@ -382,6 +382,7 @@ function ProvidersCase() {
       <diya.Field label="Card number" framed><iframe title="Split number" src={cross('a')} /></diya.Field>
       <diya.Field label="Expiry" framed error={query.get('error') ? 'Enter the expiry date.' : undefined}><iframe title="Split expiry" src={cross('b')} /></diya.Field>
       <diya.Field label="Region" framed><select id="framed-select"><option>North</option><option>South</option></select></diya.Field>
+      <diya.Field label="Regions" framed><select id="framed-list" multiple><option>North</option><option>South</option><option>East</option></select></diya.Field>
       <diya.Field label="Notes" framed><textarea id="framed-notes" defaultValue={'one\ntwo\nthree'} /></diya.Field>
       <p id="blank" style={{ padding: 24 }}>Blank page</p>
     </div>
