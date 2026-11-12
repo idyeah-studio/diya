@@ -2,7 +2,7 @@
 // oldest toast without an action, timers that pause while read, F8 and Escape, one announcement
 // per toast, and no roles that collide with an app's own queries.
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { StrictMode, useEffect, useState } from 'react'
 import { Button, DiyaProvider, toast } from '../dist/index.js'
 import { toastSnapshot } from '../dist/toast/queue.js'
@@ -412,5 +412,51 @@ describe('Testing Library pauses a toast as in 1.1 (T6)', () => {
     fireEvent.mouseLeave(screen.getByText('Draft saved'))
     act(() => { vi.advanceTimersByTime(3100) })
     expect(shown()).toEqual([])
+  })
+})
+
+describe('the live regions (T7, T11)', () => {
+  it('two toasts raised in one handler are both in one announcement', async () => {
+    render(<DiyaProvider><p>App</p></DiyaProvider>)
+    act(() => { toast({ title: 'Invoice sent', tone: 'success' }); toast({ title: 'Reminder scheduled' }) })
+    await waitFor(() => expect(liveText()).toBe('Success: Invoice sent. Info: Reminder scheduled.|'))
+    const polite = document.querySelector('.diya-toast-host > [aria-live=polite]')!
+    expect(polite.childNodes).toHaveLength(1)
+  })
+
+  it('two <Toast>s mounting together are both announced', async () => {
+    const { Toast } = await import('../dist/index.js')
+    render(<DiyaProvider><Toast title="Draft saved" tone="success" duration={0} onDismiss={() => {}}>Saved.</Toast><Toast title="Link copied" duration={0} onDismiss={() => {}}>Paste it anywhere.</Toast></DiyaProvider>)
+    await waitFor(() => expect(liveText()).toBe('Success: Draft saved. Saved. Info: Link copied. Paste it anywhere.|'))
+  })
+
+  it('the words are cleared about a second after they were set', async () => {
+    render(<DiyaProvider><p>App</p></DiyaProvider>)
+    act(() => { toast({ title: 'Draft saved', description: 'Your changes are live.' }) })
+    await waitFor(() => expect(liveText()).toBe('Info: Draft saved. Your changes are live.|'))
+    // While fresh, a regular expression finds the toast and the live region, so tests look in the region.
+    expect(within(screen.getByRole('region', { name: 'Notifications (F8)' })).getAllByText(/draft saved/i)).toHaveLength(1)
+    await waitFor(() => expect(liveText()).toBe('|'), { timeout: 2000 })
+    expect(screen.getAllByText(/draft saved/i)).toHaveLength(1)
+    expect(screen.getAllByText(/changes are live/)).toHaveLength(1)
+  })
+
+  it('a toast that leaves takes its words with it (QA C-T22, C-T23)', async () => {
+    const { Toast } = await import('../dist/index.js')
+    function Host() {
+      const [on, setOn] = useState(true)
+      return <>{on && <Toast title="Draft saved" duration={0} onDismiss={() => setOn(false)}>Saved a moment ago.</Toast>}</>
+    }
+    render(<DiyaProvider motion="off"><Host /></DiyaProvider>)
+    await waitFor(() => expect(liveText()).toContain('Draft saved'))
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss: Draft saved' }))
+    await act(async () => {})
+    expect(screen.queryByText(/draft saved/i)).toBeNull()
+    expect(screen.queryAllByText(/saved/)).toHaveLength(0)
+    act(() => { toast({ title: 'Link copied', duration: 0 }) })
+    await waitFor(() => expect(liveText()).toContain('Link copied'))
+    act(() => toast.dismiss())
+    await act(async () => {})
+    expect(screen.queryByText(/link copied/i)).toBeNull()
   })
 })

@@ -12,7 +12,7 @@ import { cx } from '../internal/cx.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { subscribeModals, topModal } from '../internal/modal-stack.js'
 import { motionTiming, playOnCopy } from '../internal/presence.js'
-import { announce, createToastHost, lowerToastHost, raiseToastHost, type ToastHost } from './host.js'
+import { createAnnouncer, createToastHost, lowerToastHost, raiseToastHost, type ToastHost } from './host.js'
 import { toastMessages } from './messages.js'
 import { EMPTY_TOASTS, leaveToast, registerHost, removeToast, setToastCopies, setToastFocus, setToastSlotElement, setToastsPaused, settleToasts, subscribeToasts, toastSnapshot, unregisterHost, type ToastEntry, type ToastSlot } from './queue.js'
 
@@ -59,6 +59,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   const t = useDiyaMessages('toast', toastMessages)
   const alertText = useDiyaMessages('alert', alertMessages)
   const [host, setHost] = useState<ToastHost | null>(null)
+  const voices = useRef<{ polite: ReturnType<typeof createAnnouncer>; assertive: ReturnType<typeof createAnnouncer> } | null>(null)
   const [token] = useState(() => ({}))
   const snapshot = useSyncExternalStore(host ? subscribeToasts : noHost, toastSnapshot, () => EMPTY_TOASTS)
   const phone = useSyncExternalStore(narrow.subscribe, narrow.matches, serverFalse)
@@ -106,8 +107,12 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       ? new view.MutationObserver(() => { if (!made.copies.childElementCount && !made.region.querySelector('.diya-toast-list > .diya-toast')) lowerToastHost(made) })
       : null
     observer?.observe(made.copies, { childList: true })
+    voices.current = { polite: createAnnouncer(made.polite), assertive: createAnnouncer(made.assertive) }
     setHost(made)
     return () => {
+      voices.current?.polite.stop()
+      voices.current?.assertive.stop()
+      voices.current = null
       observer?.disconnect()
       made.root.remove()
       setHost(null)
@@ -186,6 +191,8 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       const lift = was === undefined ? 0 : was - (slot.offsetTop - height0)
       playOnCopy(slot, host.copies, 'exit-slow', exitFrames, { zIndex: 0, offsetY: lift })
       announced.current.delete(id)
+      voices.current?.polite.forget(id)
+      voices.current?.assertive.forget(id)
       remaining.current.delete(id)
       removeToast(id)
     }
@@ -226,7 +233,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       // A same-id update speaks again only when its title, words or tone changed.
       if (announced.current.get(entry.id) === key) continue
       announced.current.set(entry.id, key)
-      announce(entry.urgent ? host.assertive : host.polite, words)
+      ;(entry.urgent ? voices.current?.assertive : voices.current?.polite)?.say(entry.id, words)
     }
     // <Toast>s too: their words are whatever they rendered.
     for (const component of components) {
@@ -243,7 +250,15 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       const key = `${tone}|${title}|${description}`
       if (announced.current.get(component.key) === key) continue
       announced.current.set(component.key, key)
-      announce(component.urgent ? host.assertive : host.polite, words)
+      ;(component.urgent ? voices.current?.assertive : voices.current?.polite)?.say(component.key, words)
+    }
+    // A toast that has left takes its words with it.
+    const present = new Set([...live.map((entry) => entry.id), ...components.map((component) => component.key)])
+    for (const id of [...announced.current.keys()]) {
+      if (present.has(id)) continue
+      announced.current.delete(id)
+      voices.current?.polite.forget(id)
+      voices.current?.assertive.forget(id)
     }
   })
 

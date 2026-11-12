@@ -74,11 +74,49 @@ export function lowerToastHost(host: ToastHost) {
   }
 }
 
-/** Says one line through a live region: cleared, then set on the next frame, so it's read again. */
-export function announce(region: HTMLElement, text: string) {
+/** How long an announcement stays in its live region once set: long enough to be read, then
+ *  cleared, so the words don't linger in the accessibility tree or match a test's text query
+ *  after the toast has gone (T7). */
+export const ANNOUNCEMENT_MS = 1000
+
+/**
+ * A live region's voice. Everything said within one frame is read as one text node, in order,
+ * so two toasts raised together are both heard (T11). The region is cleared, then set on the next
+ * frame, so it's read again; then cleared once read, or as soon as its toast leaves.
+ */
+export function createAnnouncer(region: HTMLElement) {
   const view = region.ownerDocument.defaultView
-  region.textContent = ''
-  const set = () => { region.textContent = text }
-  if (view && typeof view.requestAnimationFrame === 'function') view.requestAnimationFrame(set)
-  else set()
+  let pending: { id: string; text: string }[] = []
+  let speaking = new Set<string>()
+  let frame = 0
+  let clear: ReturnType<typeof setTimeout> | undefined
+  const flush = () => {
+    frame = 0
+    if (!pending.length) return
+    region.textContent = pending.map((item) => item.text).join(' ')
+    speaking = new Set(pending.map((item) => item.id))
+    pending = []
+    if (clear) clearTimeout(clear)
+    clear = setTimeout(() => { region.textContent = ''; speaking.clear() }, ANNOUNCEMENT_MS)
+  }
+  return {
+    say(id: string, text: string) {
+      pending = [...pending.filter((item) => item.id !== id), { id, text }]
+      if (frame) return
+      region.textContent = ''
+      if (view && typeof view.requestAnimationFrame === 'function') frame = view.requestAnimationFrame(flush)
+      else flush()
+    },
+    /** The toast left: its words go too. */
+    forget(id: string) {
+      pending = pending.filter((item) => item.id !== id)
+      if (!speaking.has(id)) return
+      speaking.clear()
+      region.textContent = ''
+    },
+    stop() {
+      if (frame && view) view.cancelAnimationFrame(frame)
+      if (clear) clearTimeout(clear)
+    },
+  }
 }
