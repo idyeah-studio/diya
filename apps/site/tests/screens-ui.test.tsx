@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, render, screen, within } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ComponentProps, ReactNode } from 'react'
+import type { ComponentProps, ComponentType, ReactNode } from 'react'
+import { DiyaProvider, toast } from '@idyeah/diya'
 import { AppearanceProvider, useAppearance } from '../app/Appearance'
 import { CatalogProvider } from '../components/CatalogProvider'
 import { CatalogSearchProvider } from '../components/CatalogSearchProvider'
@@ -14,6 +15,27 @@ import { builtWith, namedImports, readScreenSource } from '../components/screens
 import { CATEGORIES, screenById, screens, type ScreenEntry } from '../components/screens/screens-data'
 import { resetStoreForTests } from '../lib/customize/store'
 import { smallFontSizes } from './screens-rules'
+import ActivityScreen from '../screens/activity'
+import AgendaScreen from '../screens/agenda'
+import AiScreen from '../screens/ai'
+import ApiKeysScreen from '../screens/api-keys'
+import BillingScreen from '../screens/billing'
+import BookScreen from '../screens/book'
+import ChangelogScreen from '../screens/changelog'
+import DashboardScreen from '../screens/dashboard'
+import FileManagerScreen from '../screens/file-manager'
+import GettingStartedScreen from '../screens/getting-started'
+import InboxScreen from '../screens/inbox'
+import InvoiceScreen from '../screens/invoice'
+import PricingScreen from '../screens/pricing'
+import ProductScreen from '../screens/product'
+import ProfileScreen from '../screens/profile'
+import RecordDetailScreen from '../screens/record-detail'
+import ResourceTableScreen from '../screens/resource-table'
+import SettingsScreen from '../screens/settings'
+import TaskListScreen from '../screens/task-list'
+import TeamScreen from '../screens/team'
+import WaitlistScreen from '../screens/waitlist'
 
 vi.mock('next/link', () => ({
   default: ({ children, ...props }: ComponentProps<'a'>) => <a {...props}>{children}</a>,
@@ -267,5 +289,190 @@ describe('Screens CSS', () => {
     const phone = css.slice(css.indexOf('@media (max-width: 640px)'))
     expect(phone).toMatch(/\.screens-grid \{\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/)
     expect(phone).toMatch(/\.screens-card-text p \{ display: none; \}/)
+  })
+})
+
+/*
+ * E6: the 21 Screens that kept their own toast state call toast() instead. Each
+ * one is rendered the way the preview frame renders it (StrictMode, one
+ * DiyaProvider), driven to its toast, and the toast is looked for in the page's
+ * one stack: exactly once, so a toast fired from an effect (twice under
+ * StrictMode) would fail here.
+ */
+type User = ReturnType<typeof userEvent.setup>
+type Raise = { id: string; Screen: ComponentType; title: string | RegExp; raise: (user: User) => Promise<void>; action?: string }
+
+const LONG = { timeout: 4000 }
+const openDialog = () => document.querySelector<HTMLDialogElement>('dialog[open]')!
+/** Waits for a button that's ready to press: there, enabled and not busy. */
+async function ready(name: string | RegExp, within: HTMLElement = document.body) {
+  let found: HTMLElement | undefined
+  await waitFor(() => {
+    found = screen.getAllByRole('button', { name }).find((button) => within.contains(button) && !(button as HTMLButtonElement).disabled && button.getAttribute('aria-disabled') !== 'true' && button.getAttribute('aria-busy') !== 'true')
+    expect(found).toBeTruthy()
+  }, LONG)
+  return found!
+}
+const confirmIn = async (user: User, name: string | RegExp) => user.click(await ready(name, openDialog()))
+
+const RAISES: Raise[] = [
+  { id: 'activity', Screen: ActivityScreen, title: 'Audit log exported', raise: async (user) => {
+    await user.click(screen.getByRole('tab', { name: 'Audit log' }))
+    await user.click(await ready(/Export CSV/))
+  } },
+  { id: 'agenda', Screen: AgendaScreen, title: 'Booking canceled', raise: async (user) => {
+    await waitFor(() => expect(document.querySelector('.agenda-row[data-status="confirmed"]')).toBeTruthy())
+    await user.click(document.querySelector<HTMLElement>('.agenda-row[data-status="confirmed"]')!)
+    await user.click(await ready('Cancel booking'))
+    await user.click(await ready('Cancel booking'))
+  } },
+  { id: 'ai', Screen: AiScreen, title: 'Chat deleted', raise: async (user) => {
+    await user.click(screen.getAllByText('A toast for Ana’s wedding')[0])
+    await user.click(screen.getByRole('button', { name: 'Chat options' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Delete' }))
+    await confirmIn(user, 'Delete chat')
+  } },
+  { id: 'api-keys', Screen: ApiKeysScreen, title: /^Test event (delivered|failed)$/, raise: async (user) => {
+    await user.click(screen.getByRole('tab', { name: /Webhooks/ }))
+    await user.click(await ready(/Send test event/))
+  } },
+  { id: 'billing', Screen: BillingScreen, title: 'Your plan is canceled', raise: async (user) => {
+    await user.click(await ready('Cancel plan'))
+    await confirmIn(user, 'Cancel plan')
+  } },
+  { id: 'book', Screen: BookScreen, title: 'Downloaded', raise: async (user) => {
+    await waitFor(() => expect(document.querySelectorAll('.book-slot').length).toBeGreaterThan(1), LONG)
+    await user.click([...document.querySelectorAll<HTMLElement>('.book-slot')].at(-1)!)
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Ana Lima')
+    await user.type(screen.getByRole('textbox', { name: 'Email' }), 'ana@example.com')
+    await user.click(await ready('Book it'))
+    await user.click(await ready(/Add to calendar/))
+  } },
+  { id: 'changelog', Screen: ChangelogScreen, title: 'Idea sent', raise: async (user) => {
+    await user.click(screen.getByRole('tab', { name: 'Roadmap' }))
+    await user.click(await ready('Suggest an idea'))
+    await user.type(within(openDialog()).getByRole('textbox', { name: 'Your idea' }), 'Dark mode for the mobile app')
+    await confirmIn(user, 'Send idea')
+  } },
+  { id: 'dashboard', Screen: DashboardScreen, title: 'Export on its way', raise: async (user) => {
+    await user.click(await ready(/^Export$/))
+  } },
+  { id: 'file-manager', Screen: FileManagerScreen, title: 'Created Receipts', raise: async (user) => {
+    await user.click(await ready(/New folder/))
+    const name = within(openDialog()).getByRole('textbox', { name: 'Name' })
+    await user.clear(name)
+    await user.type(name, 'Receipts')
+    await confirmIn(user, 'Create folder')
+  } },
+  { id: 'getting-started', Screen: GettingStartedScreen, title: 'First doc, written', raise: async (user) => {
+    await user.click(await ready(/^Write your first doc/))
+    await user.click(await ready('Open the brief', openDialog()))
+  } },
+  { id: 'inbox', Screen: InboxScreen, title: 'Marked as unread', raise: async (user) => {
+    await user.click(await ready('Mark unread'))
+  } },
+  { id: 'invoice', Screen: InvoiceScreen, title: 'INV-2047 is paid', raise: async (user) => {
+    await user.click(await ready(/Mark as paid/))
+    await confirmIn(user, 'Mark as paid')
+  } },
+  { id: 'pricing', Screen: PricingScreen, title: 'Message sent', raise: async (user) => {
+    await user.click(screen.getAllByRole('button', { name: 'Talk to sales' })[0])
+    const dialog = openDialog()
+    await user.type(within(dialog).getByRole('textbox', { name: 'Name' }), 'Ana Lima')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Work email' }), 'ana@example.com')
+    await user.selectOptions(within(dialog).getByRole('combobox', { name: 'Company size' }), '50-100')
+    await confirmIn(user, 'Send')
+  } },
+  { id: 'product', Screen: ProductScreen, title: 'Added to your bag', action: 'View bag', raise: async (user) => {
+    await user.click(await ready('Add to bag'))
+  } },
+  { id: 'profile', Screen: ProfileScreen, title: 'Profile saved', raise: async (user) => {
+    await user.click(await ready(/Edit profile/))
+    const name = within(openDialog()).getByRole('textbox', { name: 'Name' })
+    await user.type(name, ' Jr.')
+    await user.click(await ready('Save changes', openDialog()))
+  } },
+  { id: 'record-detail', Screen: RecordDetailScreen, title: 'Customer ID copied', raise: async (user) => {
+    await user.click(screen.getByRole('button', { name: /^More actions for / }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Copy customer ID' }))
+  } },
+  { id: 'resource-table', Screen: ResourceTableScreen, title: /^Exported 1 order$/, raise: async (user) => {
+    await waitFor(() => expect(screen.getAllByRole('checkbox', { name: /^Select Order / }).length).toBeGreaterThan(0), LONG)
+    await user.click(screen.getAllByRole('checkbox', { name: /^Select Order / })[0])
+    await user.click(await ready('Export'))
+  } },
+  { id: 'settings', Screen: SettingsScreen, title: 'Profile saved', raise: async (user) => {
+    await user.type(screen.getByRole('textbox', { name: 'Full name' }), ' Jr.')
+    await user.click(await ready('Save changes'))
+  } },
+  { id: 'task-list', Screen: TaskListScreen, title: /” is done$/, action: 'Undo', raise: async (user) => {
+    await user.click(screen.getAllByRole('checkbox').find((box) => !(box as HTMLInputElement).checked)!)
+  } },
+  { id: 'team', Screen: TeamScreen, title: 'Invite sent again', raise: async (user) => {
+    await user.click(screen.getAllByRole('button', { name: /^Resend invite to / })[0])
+  } },
+  { id: 'waitlist', Screen: WaitlistScreen, title: 'Link copied', raise: async (user) => {
+    await user.type(screen.getByRole('textbox', { name: 'Email address' }), 'ana@example.com')
+    await user.click(await ready('Join the waitlist'))
+    await user.click(await ready(/Copy link/))
+  } },
+]
+
+describe('each toast Screen raises its toast', () => {
+  beforeEach(() => {
+    // A fixed weekday, so every screen's sample dates and openings are the same on each run.
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-11-12T17:00:00Z') })
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:sample')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: vi.fn().mockResolvedValue(undefined) } })
+    // As in browsers, a dialog's close event comes a task after close(), so StrictMode's
+    // rehearsal unmount (close, then showModal again) doesn't read as the person closing it.
+    vi.spyOn(Object.getPrototypeOf(document.createElement('dialog')), 'close').mockImplementation(function (this: HTMLDialogElement) {
+      if (!this.open) return
+      this.open = false
+      setTimeout(() => this.dispatchEvent(new Event('close')))
+    })
+  })
+  afterEach(async () => {
+    act(() => toast.dismiss())
+    await act(async () => {})
+    vi.useRealTimers()
+  })
+
+  it('covers every Screen that imports toast', () => {
+    const using = screens.filter((entry) => entry.status !== 'poster' && /\btoast\b/.test(namedImports(readScreenSource(entry.id) ?? '', '@idyeah/diya').join(' ')))
+    expect(RAISES.map((entry) => entry.id)).toEqual(using.map((entry) => entry.id).sort())
+    expect(RAISES).toHaveLength(21)
+  })
+
+  it.each(RAISES.map((entry) => [entry.id, entry] as const))('%s', async (_, { Screen, title, raise, action }) => {
+    const user = userEvent.setup()
+    render(<DiyaProvider theme="light"><Screen /></DiyaProvider>, { reactStrictMode: true })
+    await act(async () => {})
+    expect(screen.queryByRole('region', { name: 'Notifications (F8)' }), 'nothing toasts on load').toBeNull()
+    await raise(user)
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' }, LONG)
+    await waitFor(() => expect(within(region).getAllByText(title)).toHaveLength(1), LONG)
+    // Raised with toast(), not a <Toast> element the screen renders.
+    const shown = within(region).getByText(title)
+    expect(shown.closest('.diya-toast')!.getAttribute('data-kind')).toBe('toast')
+    // Every toast() toast has a close button named for it, and an action where the screen has one.
+    expect(within(region).getByRole('button', { name: `Dismiss: ${shown.textContent}` })).toBeTruthy()
+    if (action) expect(within(region).getByRole('button', { name: action })).toBeTruthy()
+  }, 20_000)
+
+  it('task-list: Undo is the toast’s action, and puts the task back', async () => {
+    const user = userEvent.setup()
+    render(<DiyaProvider theme="light"><TaskListScreen /></DiyaProvider>, { reactStrictMode: true })
+    const box = screen.getAllByRole('checkbox').find((item) => !(item as HTMLInputElement).checked) as HTMLInputElement
+    const name = box.closest('label')!.textContent!.trim()
+    await user.click(box)
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' })
+    within(region).getByText(`“${name}” is done`)
+    await user.click(within(region).getByRole('button', { name: 'Undo' }))
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Notifications (F8)' })).toBeNull(), LONG)
+    expect((screen.getByRole('checkbox', { name }) as HTMLInputElement).checked).toBe(false)
+    expect(screen.getByRole('status').textContent).toBe(`“${name}” is back in To do.`)
   })
 })
