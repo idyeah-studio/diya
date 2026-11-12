@@ -221,7 +221,34 @@ function Tokens() {
   )
 }
 
-const cases = { buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens }
+// toast() and its stack: buttons that raise toasts, and a Dialog and Drawer to open over them.
+// nopopover=1 takes the Popover API away first, the way Safari before 17 has it.
+if (query.get('nopopover') === '1') delete HTMLElement.prototype.showPopover
+function StackCase() {
+  const [dialog, setDialog] = useState(false)
+  const [drawer, setDrawer] = useState(false)
+  const undo = { label: 'Undo', onClick: () => note('undo') }
+  return (
+    <div style={{ display: 'flex', gap: 12, padding: 24, flexWrap: 'wrap', alignItems: 'start' }}>
+      <Button onClick={() => diya.toast({ title: 'Draft saved', tone: 'success', duration: 0 })}>Save</Button>
+      <Button onClick={() => diya.toast({ title: '3 emails archived', action: undo })}>Archive</Button>
+      <Button onClick={() => diya.toast({ title: 'Link copied', duration: 0 })}>Copy link</Button>
+      <Button onClick={() => diya.toast({ title: 'Export started', description: "We'll email you when it's ready.", duration: 0 })}>Export</Button>
+      <Button onClick={() => diya.toast({ title: "Couldn't sync", tone: 'error', urgent: true, duration: 0, action: { label: 'Try again', onClick: () => note('retry') } })}>Sync</Button>
+      <Button id="open-dialog" onClick={() => setDialog(true)}>Open dialog</Button>
+      <Button id="open-drawer" onClick={() => setDrawer(true)}>Open drawer</Button>
+      <Dialog title="Edit task" open={dialog} onOpenChange={setDialog}>
+        <TextInput label="Task name" defaultValue="Write the brief" />
+        <Button onClick={() => diya.toast({ title: 'Saved in the dialog', duration: 0 })}>Toast inside</Button>
+      </Dialog>
+      <Drawer title="Filters" open={drawer} onOpenChange={setDrawer}>
+        <Button onClick={() => diya.toast({ title: 'Saved in the drawer', duration: 0 })}>Toast inside</Button>
+      </Drawer>
+    </div>
+  )
+}
+
+const cases = { buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; }'
