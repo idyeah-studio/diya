@@ -76,10 +76,44 @@ type Store = {
 // One store per page, on globalThis under a versioned key: two copies of the package in one page
 // (peer variants, an injected workspace copy, a hot reload) still share one queue, and a future
 // incompatible store never mixes with this one. Made on first use, so nothing runs at import.
+//
+// THE STORE IS A PROTOCOL BETWEEN VERSIONS (R9). Every 1.x copy of the package on a page shares
+// this one object, whichever copy made it, and the first copy's stack to mount draws every
+// copy's toasts. So its shape is a contract between any two 1.x versions, though nothing here
+// is exported:
+// - The key's "@1" is the protocol's version. A change that an older 1.x copy can't read, such
+//   as renaming or removing a field or changing what one means, takes "@2": a separate store,
+//   and so a separate stack, never a broken one.
+// - Within @1, only add fields, and only as optional. Read every field with a default (store()
+//   fills them), since an older copy may have made the store without it.
+// - Never change what an existing field means: `entries` (ToastEntry, and its `status`),
+//   `hosts` (in mount order; the first is the page's stack), `slots` (ToastSlot: `key`,
+//   `order`, `owner`, `look`, `dismiss`), `elements`, `paused`, `copies`, `focus`, `listeners`
+//   and `snapshot`; `version` counts changes (it is not the package's version); `count`,
+//   `order` and `slotCount` only go up.
+// - A newer copy may add behavior through optional fields (ToastSlot's `motion` is one); an
+//   older copy's stack ignores them, so that behavior is missing there, never broken.
+// Sharing across copies is best effort, and isn't promised in the public docs.
 const KEY = Symbol.for('@idyeah/diya/toast@1')
 function store(): Store {
-  const host = globalThis as unknown as Record<symbol, Store | undefined>
-  return (host[KEY] ??= { entries: [], hosts: [], slots: [], elements: new Map(), paused: false, copies: null, focus: null, version: 0, listeners: new Set(), snapshot: { entries: [], hosts: [], slots: [], version: 0 }, count: 0, order: 0, dropping: false, slotCount: 0 })
+  const host = globalThis as unknown as Record<symbol, Partial<Store> | undefined>
+  const state = (host[KEY] ??= {})
+  // Every field this copy reads, with its default: another copy may have made the store.
+  state.entries ??= []
+  state.hosts ??= []
+  state.slots ??= []
+  state.elements ??= new Map()
+  state.paused ??= false
+  state.copies ??= null
+  state.focus ??= null
+  state.version ??= 0
+  state.listeners ??= new Set()
+  state.snapshot ??= { entries: state.entries, hosts: state.hosts, slots: state.slots, version: state.version }
+  state.count ??= 0
+  state.order ??= 0
+  state.dropping ??= false
+  state.slotCount ??= 0
+  return state as Store
 }
 
 function changed(state: Store) {
