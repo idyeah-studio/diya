@@ -37,7 +37,7 @@ export type WizardProps = Omit<HTMLAttributes<HTMLElement>, 'children'> & {
   orientation?: 'horizontal' | 'vertical'
   /** Shows "Step N of M" above the buttons; defaults to true. */
   showStepCount?: boolean
-  /** Shows a spinner on the forward button and blocks navigation; defaults to false. */
+  /** Shows the forward button's working indicator and blocks navigation; defaults to false. */
   loading?: boolean
   /** Accessible name for the whole wizard (not shown); defaults to "Wizard". */
   label?: string

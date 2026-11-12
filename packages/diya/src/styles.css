@@ -3327,10 +3327,13 @@
 .diya-root :is(.diya-dialog, .diya-drawer-modal):not([open]) {
   pointer-events: none;
 }
+/* Open, the panel rests with no transform at all: any scale or translate, even 1 or 0, makes it
+   the frame its fixed-position popups (Menu, Popover, Tooltip) are placed against, so they'd
+   open off screen. The enter still animates from @starting-style to none. */
 .diya-root :is(.diya-dialog, .diya-drawer-modal)[open] {
   opacity: 1;
-  scale: 1;
-  translate: 0 0;
+  scale: none;
+  translate: none;
   transition-duration: var(--diya-internal-duration-slow);
   transition-timing-function: var(--diya-ease-enter);
 }

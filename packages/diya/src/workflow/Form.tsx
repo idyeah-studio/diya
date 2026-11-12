@@ -30,7 +30,7 @@ export type FormProps = Omit<FormHTMLAttributes<HTMLFormElement>, 'title' | 'onS
   submitLabel?: string
   /** Cancel button text; defaults to "Cancel". */
   cancelLabel?: string
-  /** Shows a spinner on Submit, disables Cancel and blocks resubmission; defaults to false. */
+  /** Shows Submit's working indicator, disables Cancel and blocks resubmission; defaults to false. */
   loading?: boolean
 }
 
