@@ -213,8 +213,19 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       const was = positions.current.get(key)
       const lift = was === undefined ? 0 : was - edge(slot, height)
       const above = slots.slice(0, slots.indexOf(slot)).some((other) => other.style.display !== 'none' && (other.dataset.kind === 'slot' ? !!other.querySelector('.diya-alert') : entries.find((item) => item.id === other.dataset.toast)?.status === 'shown'))
-      const played = playOnCopy(slot, host.copies, 'exit-slow', exitFrames, { zIndex: 0, offsetY: lift })
+      // A slide already under way (a <Toast> arrives in two commits: its empty place, then its
+      // content) goes on on the copy, from where the toast's place is, so the copy keeps up with
+      // the toasts below it (R10).
+      const sliding = animate ? slot.getAnimations().filter((animation) => animation.id === SHIFT_ANIMATION && playing(animation)) : []
+      const now = sliding.length ? offsetY(slot) : 0
+      const played = playOnCopy(slot, host.copies, 'exit-slow', exitFrames, { zIndex: 0, offsetY: lift - now })
       const copy = played ? host.copies.lastElementChild as HTMLElement | null : null
+      for (const animation of copy ? sliding : []) {
+        const effect = animation.effect as KeyframeEffect
+        const timing = effect.getTiming()
+        const carried = copy!.animate(effect.getKeyframes(), { duration: timing.duration, easing: timing.easing, delay: timing.delay, composite: effect.composite, fill: timing.fill })
+        carried.currentTime = animation.currentTime
+      }
       if (copy && lift > 0 && !above && column?.duration && travel) {
         copy.animate([{ transform: 'none' }, { transform: `translateY(${-lift}px)` }], { duration: column.duration * travel, easing: column.easing, composite: 'add', fill: 'forwards' }).id = RIDE_ANIMATION
       }

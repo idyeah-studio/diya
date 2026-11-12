@@ -563,3 +563,22 @@ test('Escape closes a toast() whose id starts with "c", and returns focus (R7)',
   await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast').length)).toBe(0)
   await expect(page.getByRole('textbox', { name: 'Project name' })).toBeFocused()
 })
+
+// Round 2. A <Toast> arrives in two commits (its empty place, then its content), so the toast
+// pushed out to make room has already started sliding when its copy is made. The copy carries
+// that slide on, with the stack (MOT-R2-04; new in 1.2: 1.1.1 has no limit and no stack; R10).
+test.describe('a <Toast> arriving into a full stack (R10)', () => {
+  for (const theme of ['light', 'dark']) {
+    test(`the riding copy keeps up with the stack, in Glass ${theme}`, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, `case=probe&theme=${theme}&glass=1&bg=1`)
+      const full = isPhone(testInfo) ? ['Draft saved', 'Link copied'] : ['Draft saved', 'Link copied', 'Export started']
+      for (const title of full) {
+        await page.evaluate((title) => (window as any).diya.toast({ title, description: 'One line under it.', duration: 0 }), title)
+        await settle(page)
+      }
+      const track = await frames(page, "window.comps.add({ title: 'Comment posted', description: 'Everyone on the thread can see it.' })", 500)
+      seeThrough(track, 'Comment posted')
+      for (const title of full.slice(1)) oneWay(track, title)
+    })
+  }
+})
