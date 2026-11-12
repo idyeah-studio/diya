@@ -46,6 +46,7 @@ export type FieldProps = Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'id'>
 }
 
 type AnyProps = Record<string, unknown>
+const lazyType = Symbol.for('react.lazy')
 const reachableTags = new Set(['input', 'select', 'textarea'])
 const focusable = 'iframe, input:not([type=hidden]):not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled), [href], [tabindex]:not([tabindex="-1"])'
 
@@ -55,7 +56,10 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field({ lab
   const wrapper = useRef<HTMLDivElement | null>(null)
   const setWrapper = useMemo(() => composeRefs<HTMLDivElement>(wrapper, ref), [ref])
   const shown = useShownError(error, wrapper)
-  const child = typeof children === 'function' ? null : (() => { try { return onlyChild(children) } catch { return null } })()
+  // One element, or a Server Component's lazy element (unwrapped on React 19, which may suspend:
+  // never inside a try, or the suspend is swallowed and the control never renders; G6).
+  const lazy = !!children && typeof children === 'object' && (children as { $$typeof?: symbol }).$$typeof === lazyType
+  const child = typeof children === 'function' ? null : isValidElement(children) || lazy ? onlyChild(children) : null
   const element = isValidElement(child) ? (child as ReactElement<AnyProps>) : null
   const tag = typeof element?.type === 'string' ? element.type : null
   // How Field reaches the control (api.md §2): a native input, select or textarea, or a
@@ -126,7 +130,9 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field({ lab
     // cloneElement keeps the child's own ref, on React 18 and 19.
     content = cloneElement(element, merged)
   } else if (element && kind === 'iframe') content = cloneElement(element, { 'aria-labelledby': (element.props['aria-labelledby'] as string | undefined) ?? labelId })
-  else content = element
+  // Not one control (text, several elements): render what was given, so nothing vanishes; the
+  // development warning names the problem.
+  else content = element ?? (kind === 'none' ? (children as ReactNode) : null)
 
   return (
     <div

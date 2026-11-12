@@ -1,8 +1,8 @@
 // Field (1.2): a label, helper text and error around a control DIYA doesn't make. How it wires
 // each kind of child (api.md §2), its warnings, `framed`, and refs. React 18 and 19.
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
-import { createRef, forwardRef, version, type ComponentProps } from 'react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { Suspense, createRef, forwardRef, version, type ComponentProps } from 'react'
 import { DiyaProvider, Field, TextInput, type FieldControlProps } from '../dist/index.js'
 
 afterEach(() => { vi.restoreAllMocks() })
@@ -126,5 +126,23 @@ describe('Field', () => {
     document.querySelector('.diya-field > label')!.dispatchEvent(click)
     expect(click.defaultPrevented).toBe(false)
     fireEvent.click(document.querySelector('.diya-field > label')!)
+  })
+})
+
+// G6 (FE-06): a Server Component child still streaming in suspends the Field, then renders; a
+// try/catch must not swallow React 19's suspend.
+describe('Field with a pending Server Component child (G6)', () => {
+  it.runIf(Number(version.split('.')[0]) >= 19)('a pending lazy child suspends, then renders the control', async () => {
+    const errors: string[] = []
+    vi.spyOn(console, 'error').mockImplementation((...args) => { errors.push(args.map(String).join(' ')) })
+    let resolve!: (value: unknown) => void
+    const promise = new Promise((done) => { resolve = done })
+    const lazy = { $$typeof: Symbol.for('react.lazy'), _payload: promise, _init: () => { throw promise } }
+    // A suspending render is awaited, as React asks.
+    await act(async () => { render(<DiyaProvider><Suspense fallback={<p>Loading</p>}><Field label="Name">{lazy as unknown as React.ReactElement}</Field></Suspense></DiyaProvider>) })
+    expect(screen.getByText('Loading')).toBeTruthy()
+    await act(async () => { resolve(<input id="late" />); await promise; await new Promise((done) => setTimeout(done, 30)) })
+    expect(screen.getByLabelText('Name').id).toBe('late')
+    expect(errors.filter((message) => /try\/catch/.test(message))).toEqual([])
   })
 })
