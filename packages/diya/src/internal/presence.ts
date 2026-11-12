@@ -107,7 +107,7 @@ export function motionTiming(node: HTMLElement, time: string, curve: string) {
  * the Web Animations API (jsdom, happy-dom) or in a hidden tab. `frames` gets the copy's computed
  * style, for the motion distances, and the node's opacity at that moment.
  */
-export function playOnCopy(node: HTMLElement | null | undefined, parent: Element | null | undefined, time: string, frames: (style: CSSStyleDeclaration, opacity: string) => Keyframe[], { zIndex = 1200, onDone }: { zIndex?: number; onDone?: () => void } = {}) {
+export function playOnCopy(node: HTMLElement | null | undefined, parent: Element | null | undefined, time: string, frames: (style: CSSStyleDeclaration, opacity: string) => Keyframe[], { zIndex = 1200, onDone, offsetY = 0 }: { zIndex?: number; onDone?: () => void; offsetY?: number } = {}) {
   if (!node || !parent || typeof node.animate !== 'function' || node.ownerDocument.hidden) return false
   const view = node.ownerDocument.defaultView
   if (!view) return
@@ -120,7 +120,7 @@ export function playOnCopy(node: HTMLElement | null | undefined, parent: Element
   copy.setAttribute('aria-hidden', 'true')
   copy.inert = true
   Object.assign(copy.style, {
-    position: 'fixed', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`,
+    position: 'fixed', left: `${box.left}px`, top: `${box.top + offsetY}px`, width: `${box.width}px`, height: `${box.height}px`,
     right: 'auto', bottom: 'auto', margin: '0', zIndex: String(zIndex), pointerEvents: 'none', transition: 'none',
   })
   parent.append(copy)

@@ -163,14 +163,19 @@ export function ToastStack({ portal, outermost, registry }: { portal: HTMLElemen
     // In the top layer before anything is measured: a popover that isn't open lays out as nothing,
     // so a toast measured there would seem to have moved its whole height (T1).
     if (slots.some((slot) => slot.firstElementChild && !slot.hasAttribute('data-leaving')) && host.popover && !host.region.matches(':popover-open')) raiseToastHost(host)
+    const height0 = node?.clientHeight ?? 0
     // Leaving: the exit plays on a copy under the live toasts, then the entry goes.
     for (const slot of slots) {
       const id = slot.dataset.toast!
       const entry = entries.find((item) => item.id === id)
       if (entry?.status !== 'leaving') continue
       if (slot.contains(slot.ownerDocument.activeElement)) returnFocus(id)
-      // Under the live toasts (z-index 1), inside the stack's own layer.
-      playOnCopy(slot, host.copies, 'exit-slow', exitFrames, { zIndex: 0 })
+      // Under the live toasts (z-index 1), inside the stack's own layer, where the toast was on
+      // screen: if a toast arrived in this same commit, the leaving one has already moved up by
+      // the newcomer's height (T3).
+      const was = positions.current.get(id)
+      const lift = was === undefined ? 0 : was - (slot.offsetTop - height0)
+      playOnCopy(slot, host.copies, 'exit-slow', exitFrames, { zIndex: 0, offsetY: lift })
       announced.current.delete(id)
       remaining.current.delete(id)
       removeToast(id)

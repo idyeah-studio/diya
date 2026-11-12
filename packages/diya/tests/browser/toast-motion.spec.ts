@@ -136,3 +136,18 @@ test.describe('timers after the last toast goes', () => {
     await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast').length), { timeout: 4000 }).toBe(0)
   })
 })
+
+test.describe('an exit copy starts where its toast was', () => {
+  test('a full stack plus one: the leaving toast\'s copy starts at its resting top', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    const full = isPhone(testInfo) ? ['Draft saved', 'Link copied'] : ['Draft saved', 'Link copied', 'Export started']
+    for (const title of full) {
+      await page.evaluate((title) => (window as any).diya.toast({ title, duration: 0 }), title)
+      await settle(page)
+    }
+    const rest = await restTop(page, 'Draft saved')
+    const track = await frames(page, "window.diya.toast({ title: 'Invite sent', duration: 0 })", 120)
+    const first = track.find((frame) => frame.copies.some((copy) => copy.title === 'Draft saved'))!
+    expect(Math.abs(first.copies.find((copy) => copy.title === 'Draft saved')!.top - rest)).toBeLessThanOrEqual(1)
+  })
+})
