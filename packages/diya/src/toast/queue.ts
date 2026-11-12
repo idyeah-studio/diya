@@ -48,6 +48,8 @@ export type ToastSlot = {
   /** The provider the <Toast> sits in, and how it looks. */
   owner: object
   look: ToastLook
+  /** Dismissed: its exit is playing and its host is about to unmount it. It no longer counts toward the limit (optional). */
+  leaving?: boolean
   /** How its own provider moves, as CSS variables for its place in the stack (optional). */
   motion?: () => Record<string, string> | undefined
   /** Ends the toast as its close button would (Escape on it in the stack). */
@@ -235,6 +237,13 @@ export function addToastSlot(slot: ToastSlot) {
 export function updateToastSlot(key: string, patch: Partial<Pick<ToastSlot, 'hasAction' | 'urgent' | 'look'>>) {
   const state = store()
   state.slots = state.slots.map((item) => (item.key === key ? { ...item, ...patch } : item))
+  changed(state)
+}
+/** A <Toast> was dismissed: it leaves now, before its host re-renders, so a toast() raised in the same tick has its room (S1). */
+export function leaveToastSlot(key: string) {
+  const state = store()
+  if (!state.slots.some((item) => item.key === key && !item.leaving)) return
+  state.slots = state.slots.map((item) => (item.key === key ? { ...item, leaving: true } : item))
   changed(state)
 }
 export function removeToastSlot(key: string) {

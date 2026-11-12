@@ -174,8 +174,9 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   // Fit the queue to this stack: at most 3 (2 under 600px wide), counting its <Toast>s, which
   // always show.
   useClientLayoutEffect(() => {
-    if (active) settleToasts((phone ? PHONE_LIMIT : LIMIT) - components.length)
-  }, [active, phone, snapshot, components.length])
+    // A <Toast> already dismissed doesn't count: it's leaving (S1).
+    if (active) settleToasts((phone ? PHONE_LIMIT : LIMIT) - components.filter((slot) => !slot.leaving).length)
+  }, [active, phone, snapshot, components])
 
   // All timers pause while the pointer or focus is in the stack, <Toast>s' too.
   useEffect(() => { if (active) setToastsPaused(pointer || focusInside) }, [active, pointer, focusInside])
@@ -212,7 +213,10 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       // fades where it is instead, so it never slides up under that toast (R4).
       const was = positions.current.get(key)
       const lift = was === undefined ? 0 : was - edge(slot, height)
+      // An exit copy still showing above it counts too: a copy never rides up into another (S1).
+      const top = slot.getBoundingClientRect().top + lift
       const above = slots.slice(0, slots.indexOf(slot)).some((other) => other.style.display !== 'none' && (other.dataset.kind === 'slot' ? !!other.querySelector('.diya-alert') : entries.find((item) => item.id === other.dataset.toast)?.status === 'shown'))
+        || (animate && showingCopies(host.copies).some((shown) => shown.span.bottom <= top + 1))
       // A slide already under way (a <Toast> arrives in two commits: its empty place, then its
       // content) goes on on the copy, from where the toast's place is, so the copy keeps up with
       // the toasts below it (R10).

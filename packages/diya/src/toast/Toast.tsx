@@ -6,7 +6,7 @@ import { ToastScopeContext, useDiyaMessages } from '../DiyaProvider.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { playOnCopy } from '../internal/presence.js'
 import { toastMessages } from './messages.js'
-import { addToastSlot, nextToastOrder, nextToastSlotKey, removeToastSlot, returnToastFocus, subscribeToasts, toastCopies, toastSlotElement, toastsPaused, touchToasts, updateToastSlot } from './queue.js'
+import { addToastSlot, leaveToastSlot, nextToastOrder, nextToastSlotKey, removeToastSlot, returnToastFocus, subscribeToasts, toastCopies, toastSlotElement, toastsPaused, touchToasts, updateToastSlot } from './queue.js'
 
 declare module '../messages.js' {
   interface DiyaMessages {
@@ -57,6 +57,7 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
     if (dismissed.current) return
     dismissed.current = true
     playExit(slotRef.current, toastCopies())
+    leaveToastSlot(key)
     callback.current()
   }
   // Focus follows the stack's chain, as for toast() (T12): Escape goes back to where F8 was

@@ -666,3 +666,46 @@ test.describe('an arrival under each motion setting (R11)', () => {
     })
   }
 })
+
+// Round 3. A <Toast> closed in the same tick as a toast() (the shape of an action handler: close
+// this, say so) leaves at once: it never counts toward the limit, so no toast with room is pushed
+// out, and no exit copy slides up through another copy that's still fading (VIS-R3-01; S1).
+test.describe('a <Toast> closed in the same tick as a toast() (S1)', () => {
+  const copiesApart = (track: Awaited<ReturnType<typeof frames>>) => {
+    for (const frame of track) {
+      const shown = frame.copies.filter((copy) => copy.opacity > 0.05)
+      for (let i = 0; i < shown.length; i++) for (let j = i + 1; j < shown.length; j++) expect(overlap(shown[i], shown[j]), `copies of ${shown[i].title} and ${shown[j].title} at ${Math.round(frame.t)}ms`).toBe(0)
+    }
+  }
+  const setup = async (page: Page, testInfo: Parameters<Parameters<typeof test>[1]>[1], theme: string, action: boolean) => {
+    await openCase(page, testInfo, `case=probe&theme=${theme}&glass=1&bg=1`)
+    // The <Toast>'s action closes it and raises a toast(), as an app's handler would.
+    await page.evaluate((action) => {
+      const comps = (window as any).comps
+      const key = comps.add({ title: 'Settings saved', ...(action ? { action: { label: 'Undo', onClick: () => { comps.remove(key); (window as any).diya.toast({ title: '3 emails archived', duration: 0 }) } } } : {}) })
+    }, action)
+    await settle(page)
+    await page.evaluate(() => (window as any).diya.toast({ title: 'Draft saved', duration: 0 }))
+    await settle(page)
+  }
+  const titles = (page: Page) => page.evaluate(() => [...document.querySelectorAll('.diya-toast-list > .diya-toast .diya-alert-title')].map((node) => node.textContent))
+  for (const theme of ['light', 'dark']) {
+    test(`closed with its close button: the other toast stays, and no copy passes over another, in Glass ${theme}`, async ({ page }, testInfo) => {
+      await setup(page, testInfo, theme, false)
+      const track = await frames(page, "document.querySelector('[aria-label=\"Dismiss: Settings saved\"]').click(); window.diya.toast({ title: '3 emails archived', duration: 0 })", 650)
+      seeThrough(track, '3 emails archived')
+      copiesApart(track)
+      await settle(page)
+      expect(await titles(page)).toEqual(['Draft saved', '3 emails archived'])
+    })
+
+    test(`closed by its own action, which raises a toast(): the other toast stays, in Glass ${theme}`, async ({ page }, testInfo) => {
+      await setup(page, testInfo, theme, true)
+      const track = await frames(page, "[...document.querySelectorAll('button')].find((button) => button.textContent === 'Undo').click()", 650)
+      seeThrough(track, '3 emails archived')
+      copiesApart(track)
+      await settle(page)
+      expect(await titles(page)).toEqual(['Draft saved', '3 emails archived'])
+    })
+  }
+})
