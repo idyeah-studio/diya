@@ -73,6 +73,12 @@ const APPEARANCES = {
 async function settle(page) {
   await page.evaluate(async () => {
     for (const image of document.querySelectorAll('img')) image.loading = 'eager'
+    // Walk down the page and back, so anything drawn when it comes into view (charts) is drawn.
+    for (let y = 0; y < document.documentElement.scrollHeight; y += innerHeight) {
+      scrollTo(0, y)
+      await new Promise(done => setTimeout(done, 120))
+    }
+    scrollTo(0, 0)
     await document.fonts.ready
     await Promise.all([...document.querySelectorAll('img')].map(image => (image.complete ? image.decode().catch(() => {}) : new Promise(done => { image.onload = image.onerror = done }))))
     await new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done)))
