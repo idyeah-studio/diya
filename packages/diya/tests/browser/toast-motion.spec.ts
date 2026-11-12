@@ -489,3 +489,42 @@ test.describe('two changes close together (R3)', () => {
     })
   }
 })
+
+// Round 2. The toast pushed out to make room isn't always the top one: action toasts never time
+// out and are never pushed out, so the oldest without one often sits under them, or is the
+// newest. Its copy fades where it is, and the newcomer waits for it (R4).
+test.describe('a toast pushed out from under an action toast (R4)', () => {
+  const undo = "{ label: 'Undo', onClick() {} }"
+  for (const theme of ['light', 'dark']) {
+    test(`the newest toast pushed out: no double image, in Glass ${theme}`, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, `case=probe&theme=${theme}&glass=1&bg=1`)
+      // Phone (2): Undo, then a plain toast. Desktop (3): two with Undo, then a plain one.
+      const actions = isPhone(testInfo) ? 1 : 2
+      await page.evaluate(([actions, undo]) => {
+        const { toast } = (window as any).diya
+        for (let i = 0; i < Number(actions); i++) toast({ title: `${i + 3} emails archived`, action: new Function(`return ${undo}`)() })
+        toast({ title: 'Link copied', description: 'Paste it anywhere.', duration: 0 })
+      }, [actions, undo] as const)
+      await settle(page)
+      const track = await frames(page, "window.diya.toast({ title: 'Export started', description: 'We\\'ll email you when it\\'s ready.', duration: 0 })", 650)
+      seeThrough(track, 'Export started')
+      for (let i = 0; i < actions; i++) oneWay(track, `${i + 3} emails archived`)
+    })
+
+    test(`a toast pushed out from between action toasts: its copy doesn't ride up under them, in Glass ${theme}`, async ({ page }, testInfo) => {
+      test.skip(isPhone(testInfo), 'two toasts fit on a phone; the newest-pushed-out case covers it')
+      await openCase(page, testInfo, `case=probe&theme=${theme}&glass=1&bg=1`)
+      await page.evaluate((undo) => {
+        const { toast } = (window as any).diya
+        toast({ title: '3 emails archived', action: new Function(`return ${undo}`)() })
+        toast({ title: 'Link copied', duration: 0 })
+        toast({ title: 'Report filed', action: new Function(`return ${undo}`)() })
+      }, undo)
+      await settle(page)
+      const track = await frames(page, "window.diya.toast({ title: 'Invoice sent', duration: 0 })", 650)
+      seeThrough(track, 'Invoice sent')
+      oneWay(track, '3 emails archived')
+      oneWay(track, 'Report filed')
+    })
+  }
+})

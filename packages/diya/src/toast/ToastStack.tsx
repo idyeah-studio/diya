@@ -200,12 +200,15 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       if (slot.contains(slot.ownerDocument.activeElement)) returnFocus(id)
       // Under the live toasts (z-index 1), inside the stack's own layer, where the toast was on
       // screen: if a toast arrived in this same commit, the leaving one has already moved up by
-      // the newcomer's height (T3). One that left to make room rides up with the stack.
+      // the newcomer's height (T3). One that left to make room from the top rides up with the
+      // stack; with a live toast still above it (one with an action, which never times out), it
+      // fades where it is instead, so it never slides up under that toast (R4).
       const was = positions.current.get(id)
       const lift = was === undefined ? 0 : was - edge(slot, height)
+      const above = slots.slice(0, slots.indexOf(slot)).some((other) => other.style.display !== 'none' && (other.dataset.toast!.startsWith('c') ? !!other.querySelector('.diya-alert') : entries.find((item) => item.id === other.dataset.toast)?.status === 'shown'))
       const played = playOnCopy(slot, host.copies, 'exit-slow', exitFrames, { zIndex: 0, offsetY: lift })
       const copy = played ? host.copies.lastElementChild as HTMLElement | null : null
-      if (copy && lift > 0 && column?.duration && travel) {
+      if (copy && lift > 0 && !above && column?.duration && travel) {
         copy.animate([{ transform: 'none' }, { transform: `translateY(${-lift}px)` }], { duration: column.duration * travel, easing: column.easing, composite: 'add', fill: 'forwards' }).id = RIDE_ANIMATION
       }
       // Out of the layout now, so the others move in this same pass.
@@ -253,12 +256,18 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       else if (now) obstacles.push({ span: moved(span(slot), now), clear: Math.max(0, ...kept.map((shift) => timeLeft(shift.animation))) })
     }
     // A shift whose path crosses an exit copy fading where it is waits until the copy has mostly
-    // faded, so a see-through toast never slides over it (T9). The column moves together.
+    // faded, so a see-through toast never slides over it (T9). A copy sinks as it fades, so one
+    // that a toast rises into from below waits until the copy has gone (R4). The column moves
+    // together.
     const copies = animate ? showingCopies(host.copies) : []
     let wait = 0
     for (const mover of movers) {
       const path = { top: mover.span.top + Math.min(0, mover.dy), bottom: mover.span.bottom + Math.max(0, mover.dy) }
-      for (const copy of copies) if (!copy.ride && overlaps(path, copy.span)) wait = Math.max(wait, slow / 2 - copy.age)
+      for (const copy of copies) {
+        if (copy.ride || !overlaps(path, copy.span)) continue
+        const rising = mover.dy > 0 && copy.span.top < mover.span.top + mover.dy
+        wait = Math.max(wait, rising ? copy.left : slow / 2 - copy.age)
+      }
     }
     for (const mover of movers) {
       if (!column || !slow || !travel) continue
