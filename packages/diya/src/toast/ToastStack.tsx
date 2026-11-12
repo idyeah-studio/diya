@@ -127,7 +127,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   useClientLayoutEffect(() => {
     if (!active || !host) return
     setToastCopies(host.copies)
-    setToastFocus((leaving, fallback) => returnFocusRef.current(leaving, fallback))
+    setToastFocus((leaving, fallback, adjacent) => (adjacent ? closeFocusRef.current(leaving, fallback) : returnFocusRef.current(leaving, fallback)))
     return () => {
       setToastCopies(null)
       setToastFocus(null)
@@ -395,20 +395,63 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
 
   const returnFocusRef = useRef(returnFocus)
   returnFocusRef.current = returnFocus
+  const closeFocusRef = useRef((id: string, fallback?: HTMLElement | null) => closeFocus(id, fallback))
+  closeFocusRef.current = (id, fallback) => closeFocus(id, fallback)
 
   /** The close button, clicked while focused: focus moves to the next toast, else back. */
   function close(id: string) {
-    const document = host?.root.ownerDocument
-    const slot = list.current?.querySelector<HTMLElement>(`:scope > .diya-toast[data-toast="${CSS.escape(id)}"]`)
-    if (document && slot?.contains(document.activeElement)) {
-      const nextToast = Array.from(list.current!.querySelectorAll<HTMLElement>(':scope > .diya-toast')).find((item) => item !== slot)?.querySelector<HTMLElement>(focusable)
-      if (nextToast) nextToast.focus()
-      else returnFocus(id)
-    }
+    closeFocus(id)
     leaveToast(id)
   }
 
+  /** The toasts a person can reach, oldest first (the DOM's order and the screen's, top down). */
+  const reachable = () => Array.from(list.current?.querySelectorAll<HTMLElement>(':scope > .diya-toast:not([data-leaving])') ?? [])
+    .filter((slot) => slot.style.display !== 'none' && slot.querySelector(focusable))
+  const controls = (slot: HTMLElement) => Array.from(slot.querySelectorAll<HTMLElement>(focusable))
+
+  /** A focused toast's close button: focus moves to the toast next to it (the older one, else the newer), else back by the chain. */
+  function closeFocus(id: string, fallback?: HTMLElement | null) {
+    const document = host?.root.ownerDocument
+    const slots = reachable()
+    const slot = slots.find((item) => item.dataset.toast === id)
+    if (!document || !slot?.contains(document.activeElement)) return
+    const index = slots.indexOf(slot)
+    const neighbor = slots[index - 1] ?? slots[index + 1]
+    if (neighbor) controls(neighbor)[0].focus()
+    else returnFocus(id, fallback)
+  }
+
+  /** Back to where F8 was pressed, else the last place focused outside the stack. */
+  function leaveStack() {
+    for (const candidate of [origin.current, outside.current]) {
+      if (isConnectedFocusable(candidate)) { candidate.focus(); return true }
+    }
+    return false
+  }
+
   function onKeyDown(event: globalThis.KeyboardEvent) {
+    // Tab walks the stack from the newest toast to the oldest, then back to where F8 was pressed;
+    // Shift+Tab goes the other way (T12). Within a toast, its own controls keep their order.
+    if (event.key === 'Tab' && !event.defaultPrevented) {
+      const target = event.target as HTMLElement
+      const slots = reachable()
+      const slot = slots.find((item) => item.contains(target))
+      if (!slot) return
+      const own = controls(slot)
+      const index = slots.indexOf(slot)
+      if (!event.shiftKey && own.at(-1) === target) {
+        event.preventDefault()
+        const older = slots[index - 1]
+        if (older) controls(older)[0].focus()
+        else leaveStack()
+      } else if (event.shiftKey && own[0] === target) {
+        event.preventDefault()
+        const newer = slots[index + 1]
+        if (newer) controls(newer).at(-1)!.focus()
+        else leaveStack()
+      }
+      return
+    }
     if (event.key !== 'Escape') return
     const slot = (event.target as HTMLElement).closest<HTMLElement>('.diya-toast')
     const id = slot?.dataset.toast

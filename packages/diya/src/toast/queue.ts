@@ -61,7 +61,7 @@ type Store = {
   elements: Map<string, HTMLElement>
   paused: boolean
   copies: HTMLElement | null
-  focus: ((leaving: string, fallback?: HTMLElement | null) => void) | null
+  focus: ((leaving: string, fallback?: HTMLElement | null, adjacent?: boolean) => void) | null
   version: number
   listeners: Set<() => void>
   snapshot: ToastSnapshot
@@ -228,9 +228,10 @@ export const toastCopies = () => store().copies
 export function setToastCopies(element: HTMLElement | null) { store().copies = element }
 /** The stack's focus chain, for a focused <Toast> that leaves (where F8 was pressed, and so on). */
 export function setToastFocus(focus: Store['focus']) { store().focus = focus }
-export function returnToastFocus(leaving: string, fallback?: HTMLElement | null) {
+/** `adjacent`: a close button, so focus prefers the toast next to the one leaving. */
+export function returnToastFocus(leaving: string, fallback?: HTMLElement | null, adjacent = false) {
   const focus = store().focus
-  if (focus) focus(leaving, fallback)
+  if (focus) focus(leaving, fallback, adjacent)
   else fallback?.focus()
 }
 

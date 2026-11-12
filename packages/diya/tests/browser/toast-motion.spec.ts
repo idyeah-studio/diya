@@ -274,3 +274,46 @@ test('a same-id update that grows: the updated toast gets no shift of its own', 
   const track = await frames(page, "window.diya.toast({ id: 'upload', title: 'Uploaded', description: 'All 12 files are in Billing, ready to share.', duration: 0 })", 300)
   expect(track.every((frame) => (frame.live.find((item) => item.title === 'Uploaded')?.waapi ?? 0) === 0)).toBe(true)
 })
+
+test.describe('the keyboard in the stack (T12)', () => {
+  const focused = (page: Page) => page.evaluate(() => { const node = document.activeElement as HTMLElement; return node === document.body ? 'BODY' : node instanceof HTMLInputElement ? `input:${node.value}` : node.getAttribute('aria-label') ?? node.textContent })
+  test('after F8, Tab walks the toasts newest to oldest, then back to where F8 was pressed', async ({ page }, testInfo) => {
+    test.skip(engine(testInfo) === 'webkit', 'WebKit\'s Tab skips buttons unless the user turns it on')
+    test.skip(isPhone(testInfo), 'three toasts need the desktop limit')
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.evaluate(() => { const { toast } = (window as any).diya; toast({ title: 'Draft saved', duration: 0 }); toast({ title: '3 emails archived', action: { label: 'Undo', onClick() {} } }) })
+    await page.evaluate(() => { (window as any).comps.add({ title: 'Comment posted' }) })
+    await settle(page)
+    await page.getByRole('textbox', { name: 'Project name' }).focus()
+    await page.keyboard.press('F8')
+    const order = [await focused(page)]
+    for (let i = 0; i < 4; i++) { await page.keyboard.press('Tab'); order.push(await focused(page)) }
+    expect(order).toEqual(['Dismiss: Comment posted', 'Undo', 'Dismiss: 3 emails archived', 'Dismiss: Draft saved', 'input:Atlas'])
+    await page.keyboard.press('F8')
+    await page.keyboard.press('Shift+Tab')
+    expect(await focused(page)).toBe('input:Atlas')
+  })
+
+  test('Escape on a <Toast> goes back to where F8 was pressed, not where the toast was raised', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.focus('#open-dialog')
+    await page.evaluate(() => { (window as any).comps.add({ title: 'Row deleted', action: { label: 'Undo', onClick() {} } }) })
+    await settle(page)
+    await page.getByRole('textbox', { name: 'Project name' }).focus()
+    await page.keyboard.press('F8')
+    await expect(page.getByRole('button', { name: 'Undo' })).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('textbox', { name: 'Project name' })).toBeFocused()
+  })
+
+  test('closing a focused toast moves focus to the toast beside it', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.evaluate(() => { const { toast } = (window as any).diya; for (const title of ['Draft saved', 'Link copied', 'Export started']) toast({ title, duration: 0 }) })
+    await settle(page)
+    await page.getByRole('textbox', { name: 'Project name' }).focus()
+    await page.keyboard.press('F8')
+    await expect(page.getByRole('button', { name: 'Dismiss: Export started' })).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(page.getByRole('button', { name: 'Dismiss: Link copied' })).toBeFocused()
+  })
+})

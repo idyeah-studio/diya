@@ -6,7 +6,7 @@ import { ToastScopeContext, useDiyaMessages } from '../DiyaProvider.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { playOnCopy } from '../internal/presence.js'
 import { toastMessages } from './messages.js'
-import { addToastSlot, nextToastOrder, nextToastSlotKey, removeToastSlot, subscribeToasts, toastCopies, toastSlotElement, toastsPaused, touchToasts, updateToastSlot } from './queue.js'
+import { addToastSlot, nextToastOrder, nextToastSlotKey, removeToastSlot, returnToastFocus, subscribeToasts, toastCopies, toastSlotElement, toastsPaused, touchToasts, updateToastSlot } from './queue.js'
 
 declare module '../messages.js' {
   interface DiyaMessages {
@@ -59,8 +59,10 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
     playExit(slotRef.current, toastCopies())
     callback.current()
   }
-  function dismiss() {
-    if (slotRef.current?.contains(document.activeElement)) returnFocus.current?.focus()
+  // Focus follows the stack's chain, as for toast() (T12): Escape goes back to where F8 was
+  // pressed, a close button to the toast beside it; where the toast was raised is a fallback.
+  function dismiss(adjacent = false) {
+    if (slotRef.current?.contains(document.activeElement)) returnToastFocus(key, returnFocus.current, adjacent)
     settle()
   }
   const dismissRef = useRef(dismiss)
@@ -113,13 +115,13 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
             ? {
                 ...alertProps.action,
                 onClick: () => {
-                  returnFocus.current?.focus()
+                  if (slotRef.current?.contains(document.activeElement)) returnToastFocus(key, returnFocus.current)
                   alertProps.action?.onClick()
                 },
               }
             : undefined
         }
-        onDismiss={showClose || props.action ? dismiss : undefined}
+        onDismiss={showClose || props.action ? () => dismiss(true) : undefined}
       />
     </AlertInStackContext.Provider>,
     slot
