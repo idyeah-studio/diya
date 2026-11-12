@@ -230,7 +230,8 @@ describe('notification timing', () => {
     render(<DiyaProvider theme="dark"><Toast duration={100} onDismiss={close} action={{ label: 'Retry upload', onClick: action }}>Upload failed</Toast></DiyaProvider>)
     await act(async () => { vi.advanceTimersByTime(5000) })
     expect(close).not.toHaveBeenCalled()
-    expect(screen.getByRole('status').closest('.diya-root')?.getAttribute('data-theme')).toBe('dark')
+    // B4: inside the stack the toast has no status role of its own; find it by the region.
+    expect(screen.getByRole('region', { name: 'Notifications (F8)' }).closest('.diya-root')?.getAttribute('data-theme')).toBe('dark')
     fireEvent.click(screen.getByRole('button', { name: 'Retry upload' }))
     expect(action).toHaveBeenCalledOnce()
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss alert' }))

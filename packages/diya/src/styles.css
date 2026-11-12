@@ -3371,24 +3371,10 @@
   transition-timing-function: var(--diya-ease-exit);
 }
 
-/* Toast rises 12px from its edge. Its exit plays on a copy, once onDismiss has run. */
-.diya-root .diya-toast-region {
-  transition-property: opacity, translate;
-  transition-duration: var(--diya-internal-duration-slow);
-  transition-timing-function: var(--diya-ease-enter);
-}
-@starting-style {
-  .diya-root .diya-toast-region {
-    opacity: 0;
-    translate: 0 var(--diya-internal-motion-distance-edge);
-  }
-}
-/* In the stack (1.2), each toast enters on its own and the stack itself holds still; others
-   shift to make room through the Web Animations API (ToastStack), additively, on move. Moving
-   the stack into or out of a modal replays nothing. */
-.diya-root .diya-toast-stack {
-  transition-property: none;
-}
+/* A toast rises 12px from its edge; its exit plays on a copy, once onDismiss has run. Each toast
+   enters on its own and the stack holds still; others shift to make room through the Web
+   Animations API (ToastStack), additively, on move. Moving the stack into or out of a modal
+   replays nothing. */
 .diya-root .diya-toast {
   transition-property: opacity, translate;
   transition-duration: var(--diya-internal-duration-slow);

@@ -1,8 +1,9 @@
 'use client'
 // A provider's toast stack: one region in today's spot, newest nearest the corner, 12px apart.
-// The outermost provider's stack shows toast() toasts. It follows the topmost open modal, sits in
-// the top layer, announces each toast once, pauses while read, and answers F8 and Escape.
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FocusEvent, type KeyboardEvent } from 'react'
+// The outermost provider's stack shows toast() toasts; every provider's stack holds its own
+// <Toast>s, in slots they portal into. It follows the topmost open modal, sits in the top layer,
+// announces each toast once, pauses while read, and answers F8 and Escape.
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type RefCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Alert, AlertInStackContext } from '../alert/Alert.js'
 import { alertMessages } from '../alert/messages.js'
@@ -13,6 +14,7 @@ import { motionTiming, playOnCopy } from '../internal/presence.js'
 import { announce, createToastHost, lowerToastHost, raiseToastHost, type ToastHost } from './host.js'
 import { toastMessages } from './messages.js'
 import { EMPTY_TOASTS, leaveToast, registerHost, removeToast, settleToasts, subscribeToasts, toastSnapshot, unregisterHost, type ToastEntry } from './queue.js'
+import type { ToastRegistry, ToastSlotEntry } from './registry.js'
 
 const LIMIT = 3
 const PHONE_LIMIT = 2
@@ -46,7 +48,9 @@ function spoken(tone: string, title: string, description: string, hint: string |
 const isConnectedFocusable = (element: Element | null | undefined): element is HTMLElement =>
   !!element && element.isConnected && typeof (element as HTMLElement).focus === 'function' && !element.closest('.diya-toast-region') && element !== element.ownerDocument.body
 
-export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; outermost: boolean }) {
+type Item = { kind: 'queue'; id: string; order: number; entry: ToastEntry } | { kind: 'slot'; id: string; order: number; slot: ToastSlotEntry }
+
+export function ToastStack({ portal, outermost, registry }: { portal: HTMLElement | null; outermost: boolean; registry: ToastRegistry }) {
   const t = useDiyaMessages('toast', toastMessages)
   const alertText = useDiyaMessages('alert', alertMessages)
   const [host, setHost] = useState<ToastHost | null>(null)
@@ -56,37 +60,69 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
   const [pointer, setPointer] = useState(false)
   const [focusInside, setFocusInside] = useState(false)
   const [hidden, setHidden] = useState(false)
-  const active = !!host && snapshot.hosts[0] === token
+  const components = useSyncExternalStore(registry.subscribe, registry.entries, registry.entries)
+  // A touch (a <Toast>'s words changed) re-renders the stack, so it announces them.
+  useSyncExternalStore(registry.subscribe, registry.version, registry.version)
+  // Every provider gets a stack once it holds a <Toast>; the outermost has one from the start.
+  const [wanted, setWanted] = useState(outermost)
+  if (!wanted && (outermost || components.length > 0)) setWanted(true)
+  const active = !!host && outermost && snapshot.hosts[0] === token
   const entries = useMemo(() => (active ? snapshot.entries.filter((entry) => entry.status !== 'waiting').sort((a, b) => a.order - b.order) : []), [active, snapshot])
   const live = entries.filter((entry) => entry.status === 'shown')
+  const items: Item[] = [
+    ...entries.map((entry) => ({ kind: 'queue' as const, id: entry.id, order: entry.order, entry })),
+    ...components.map((slot) => ({ kind: 'slot' as const, id: `c${slot.key}`, order: slot.order, slot })),
+  ].sort((a, b) => a.order - b.order)
+  const showing = live.length + components.length > 0
+  // Stable ref callbacks, one per <Toast>, so slots don't detach and reattach on every render.
+  const slotRefs = useRef(new Map<number, RefCallback<HTMLDivElement>>())
+  const slotRef = (key: number) => {
+    let callback = slotRefs.current.get(key)
+    if (!callback) {
+      callback = (element) => {
+        registry.setSlot(key, element)
+        if (!element) slotRefs.current.delete(key)
+      }
+      slotRefs.current.set(key, callback)
+    }
+    return callback
+  }
   const list = useRef<HTMLDivElement | null>(null)
   const positions = useRef(new Map<string, number>())
   const announced = useRef(new Map<string, string>())
   const remaining = useRef(new Map<string, { version: number; left: number }>())
   const origin = useRef<HTMLElement | null>(null)
   const outside = useRef<HTMLElement | null>(null)
-  const copiesPlaying = useRef(0)
   const nativeModal = useRef<HTMLDialogElement | null>(null)
 
   // The host: made in the browser only, so the server markup is unchanged.
   useClientLayoutEffect(() => {
-    if (!portal || !outermost) return
+    if (!portal || !wanted) return
     const made = createToastHost(portal.ownerDocument)
     portal.append(made.root)
+    registry.setCopies(made.copies)
+    // Out of the top layer once the last exit has played and nothing shows.
+    const view = portal.ownerDocument.defaultView
+    const observer = view && typeof view.MutationObserver === 'function'
+      ? new view.MutationObserver(() => { if (!made.copies.childElementCount && !made.region.querySelector('.diya-toast-list > .diya-toast')) lowerToastHost(made) })
+      : null
+    observer?.observe(made.copies, { childList: true })
     setHost(made)
     return () => {
+      observer?.disconnect()
+      registry.setCopies(null)
       made.root.remove()
       setHost(null)
     }
-  }, [portal, outermost])
+  }, [portal, wanted, registry])
 
   // toast() uses the first-mounted outermost provider that's still mounted.
   useEffect(() => {
-    if (!host) return
+    if (!host || !outermost) return
     registerHost(token)
     // A passive cleanup: a layout swap unregisters and registers in one commit (see queue.ts).
     return () => unregisterHost(token)
-  }, [host, token])
+  }, [host, token, outermost])
 
   // Where the stack lives: the topmost open modal, a native modal that held focus when a toast
   // arrived, or the provider's portal. Moving shows nothing new: no replay, no jump.
@@ -97,7 +133,7 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
     if (host.root.parentElement === target) return
     host.region.dataset.still = ''
     target.append(host.root)
-    if (entries.length || copiesPlaying.current) raiseToastHost(host)
+    if (items.length || host.copies.childElementCount) raiseToastHost(host)
     const view = document.defaultView
     view?.requestAnimationFrame(() => view.requestAnimationFrame(() => { delete host.region.dataset.still }))
   }
@@ -109,10 +145,14 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
     return subscribeModals(portal.ownerDocument, () => placeRef.current())
   }, [host, portal])
 
-  // Fit the queue to this stack: at most 3 (2 under 600px wide).
+  // Fit the queue to this stack: at most 3 (2 under 600px wide), counting its <Toast>s, which
+  // always show.
   useClientLayoutEffect(() => {
-    if (active) settleToasts(phone ? PHONE_LIMIT : LIMIT)
-  }, [active, phone, snapshot])
+    if (active) settleToasts((phone ? PHONE_LIMIT : LIMIT) - components.length)
+  }, [active, phone, snapshot, components.length])
+
+  // All timers pause while the pointer or focus is in the stack, <Toast>s' too.
+  useEffect(() => { registry.setPaused(pointer || focusInside) }, [pointer, focusInside, registry])
 
   // After each commit: exits for leaving toasts, the shift for the others, the enter order, the
   // top layer, and what a screen reader hears.
@@ -126,16 +166,8 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
       const entry = entries.find((item) => item.id === id)
       if (entry?.status !== 'leaving') continue
       if (slot.contains(slot.ownerDocument.activeElement)) returnFocus(id)
-      copiesPlaying.current += 1
-      const played = playOnCopy(slot, host.copies, 'exit-slow', exitFrames, {
-        // Under the live toasts (z-index 1), inside the stack's own layer.
-        zIndex: 0,
-        onDone: () => {
-          copiesPlaying.current -= 1
-          if (!copiesPlaying.current && !list.current?.querySelector(':scope > .diya-toast')) lowerToastHost(host)
-        },
-      })
-      if (!played) copiesPlaying.current -= 1
+      // Under the live toasts (z-index 1), inside the stack's own layer.
+      playOnCopy(slot, host.copies, 'exit-slow', exitFrames, { zIndex: 0 })
       announced.current.delete(id)
       remaining.current.delete(id)
       removeToast(id)
@@ -145,7 +177,7 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
     const height = node?.clientHeight ?? 0
     for (const slot of slots) {
       const id = slot.dataset.toast!
-      if (entries.find((item) => item.id === id)?.status !== 'shown') continue
+      if (id.startsWith('c') ? !slot.firstElementChild : entries.find((item) => item.id === id)?.status !== 'shown') continue
       const top = slot.offsetTop - height
       next.set(id, top)
       const before = positions.current.get(id)
@@ -166,9 +198,8 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
     }
     positions.current = next
     // In the top layer while it holds a toast or an exit copy.
-    const showing = next.size > 0
-    if (showing && host.popover && !host.region.matches(':popover-open')) raiseToastHost(host)
-    if (!showing && !copiesPlaying.current) lowerToastHost(host)
+    if (next.size && host.popover && !host.region.matches(':popover-open')) raiseToastHost(host)
+    if (!next.size && !host.copies.childElementCount) lowerToastHost(host)
     // Each toast is read once, from the always-present live region, as one text node.
     for (const entry of live) {
       const slot = slots.find((item) => item.dataset.toast === entry.id)
@@ -179,6 +210,23 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
       if (announced.current.get(entry.id) === key) continue
       announced.current.set(entry.id, key)
       announce(entry.urgent ? host.assertive : host.polite, words)
+    }
+    // <Toast>s too: their words are whatever they rendered.
+    for (const component of components) {
+      const slot = slots.find((item) => item.dataset.toast === `c${component.key}`)
+      const alert = slot?.querySelector<HTMLElement>('.diya-alert')
+      if (!alert) continue
+      const tone = alert.dataset.tone ?? 'info'
+      const title = alert.querySelector('.diya-alert-title')?.textContent?.trim() ?? ''
+      const description = alert.querySelector('.diya-alert-description')?.textContent?.trim() ?? ''
+      const action = alert.querySelector('.diya-alert-action')?.textContent?.trim()
+      const words = title
+        ? spoken(alertText[tone as keyof typeof alertText] as string, title, description, action ? t.actionHint(action) : undefined)
+        : [`${(alertText[tone as keyof typeof alertText] as string).replace(/^./, (first) => first.toLocaleUpperCase())}:`, description, action ? t.actionHint(action) : ''].filter(Boolean).join(' ')
+      const key = `${tone}|${title}|${description}`
+      if (announced.current.get(`c${component.key}`) === key) continue
+      announced.current.set(`c${component.key}`, key)
+      announce(component.urgent ? host.assertive : host.polite, words)
     }
   })
 
@@ -217,7 +265,7 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
   // While toasts show: F8 reaches the newest one, and focus outside the stack is remembered so
   // Escape can return it. The listeners exist only then.
   useEffect(() => {
-    if (!host || !live.length) return
+    if (!host || !showing) return
     const document = host.root.ownerDocument
     const remember = (event: Event) => { if (isConnectedFocusable(event.target as Element)) outside.current = event.target as HTMLElement }
     const keydown = (event: globalThis.KeyboardEvent) => {
@@ -236,7 +284,7 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
       document.removeEventListener('focusin', remember, true)
       document.removeEventListener('keydown', keydown)
     }
-  }, [host, live.length > 0])
+  }, [host, showing])
 
   // A native modal that isn't DIYA's and holds focus when a toast arrives: the stack shows in it
   // until it closes.
@@ -278,7 +326,7 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
     leaveToast(id)
   }
 
-  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+  function onKeyDown(event: globalThis.KeyboardEvent) {
     if (event.key !== 'Escape') return
     const slot = (event.target as HTMLElement).closest<HTMLElement>('.diya-toast')
     const id = slot?.dataset.toast
@@ -286,28 +334,51 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
     // Only the toast: a Dialog around the stack doesn't also close.
     event.preventDefault()
     event.stopPropagation()
+    if (id.startsWith('c')) {
+      components.find((item) => `c${item.key}` === id)?.dismiss()
+      return
+    }
     returnFocus(id)
     leaveToast(id)
   }
 
-  function onBlur(event: FocusEvent<HTMLDivElement>) {
-    if (!event.currentTarget.contains(event.relatedTarget as Node)) setFocusInside(false)
-  }
+  // The list's own DOM listeners, not React props: a <Toast>'s content is portalled into its slot
+  // from elsewhere in the React tree, so React would bubble its events past the list.
+  const handlers = useRef({ onKeyDown })
+  handlers.current = { onKeyDown }
+  useEffect(() => {
+    const node = list.current
+    if (!host || !node) return
+    const enter = () => setPointer(true)
+    const leave = () => setPointer(false)
+    const focusIn = () => setFocusInside(true)
+    const focusOut = (event: globalThis.FocusEvent) => { if (!node.contains(event.relatedTarget as Node)) setFocusInside(false) }
+    const keydown = (event: globalThis.KeyboardEvent) => handlers.current.onKeyDown(event)
+    node.addEventListener('mouseenter', enter)
+    node.addEventListener('mouseleave', leave)
+    node.addEventListener('focusin', focusIn)
+    node.addEventListener('focusout', focusOut)
+    node.addEventListener('keydown', keydown)
+    return () => {
+      node.removeEventListener('mouseenter', enter)
+      node.removeEventListener('mouseleave', leave)
+      node.removeEventListener('focusin', focusIn)
+      node.removeEventListener('focusout', focusOut)
+      node.removeEventListener('keydown', keydown)
+    }
+  }, [host])
 
   if (!host) return null
   return createPortal(
     <div
       ref={list}
       className="diya-toast-list"
-      role={entries.length ? 'region' : undefined}
-      aria-label={entries.length ? t.label : undefined}
-      onMouseEnter={() => setPointer(true)}
-      onMouseLeave={() => setPointer(false)}
-      onFocus={() => setFocusInside(true)}
-      onBlur={onBlur}
-      onKeyDown={onKeyDown}
+      role={items.length ? 'region' : undefined}
+      aria-label={items.length ? t.label : undefined}
     >
-      {entries.map((entry: ToastEntry) => (
+      {items.map((item) => item.kind === 'slot'
+        ? <div key={item.id} ref={slotRef(item.slot.key)} className="diya-toast" data-toast={item.id} data-order={item.order} />
+        : (({ entry }) => (
         <div key={entry.id} className="diya-toast" data-toast={entry.id} data-order={entry.order} data-leaving={entry.status === 'leaving' ? '' : undefined}>
           <AlertInStackContext.Provider value={{ announce: false, dismissLabel: t.dismiss(entry.title) }}>
             <Alert
@@ -321,7 +392,7 @@ export function ToastStack({ portal, outermost }: { portal: HTMLElement | null; 
             </Alert>
           </AlertInStackContext.Provider>
         </div>
-      ))}
+      ))(item))}
     </div>,
     host.region,
   )

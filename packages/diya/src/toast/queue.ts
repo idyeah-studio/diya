@@ -151,6 +151,11 @@ export function unregisterHost(host: object) {
   })
 }
 
+/** The next place in arrival order, shared by toast() toasts and <Toast>s. */
+export function nextToastOrder() {
+  return ++store().order
+}
+
 /** The entry is gone from the page: its exit has played. */
 export function removeToast(id: string) {
   const state = store()

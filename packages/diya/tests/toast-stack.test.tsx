@@ -315,3 +315,70 @@ describe('roles and words', () => {
     expect(document.querySelector('.diya-toast-copies')!.children).toHaveLength(0)
   })
 })
+
+describe('<Toast> joins its provider\'s stack (1.2)', () => {
+  const slots = () => [...document.querySelectorAll('.diya-toast-list > .diya-toast')].map((slot) => slot.querySelector('.diya-alert-title')?.textContent ?? slot.querySelector('.diya-alert-description')?.textContent)
+
+  it('two <Toast>s in one provider share one stack, in arrival order, instead of overlapping', async () => {
+    const { Toast } = await import('../dist/index.js')
+    function App() {
+      const [two, setTwo] = useState(false)
+      return <DiyaProvider><Button onClick={() => setTwo(true)}>More</Button><Toast title="Draft saved" duration={0} onDismiss={() => {}}>Saved a moment ago.</Toast>{two && <Toast title="Link copied" duration={0} onDismiss={() => {}}>Paste it anywhere.</Toast>}</DiyaProvider>
+    }
+    render(<App />)
+    await waitFor(() => expect(slots()).toEqual(['Draft saved']))
+    fireEvent.click(screen.getByRole('button', { name: 'More' }))
+    await waitFor(() => expect(slots()).toEqual(['Draft saved', 'Link copied']))
+    expect(document.querySelectorAll('.diya-toast-list')).toHaveLength(1)
+    expect(document.querySelectorAll('.diya-toast-region')).toHaveLength(1)
+  })
+
+  it('a <Toast> and a toast() share one stack and one limit', async () => {
+    const { Toast } = await import('../dist/index.js')
+    render(<DiyaProvider><Toast title="Uploading" duration={0} onDismiss={() => {}}>2 of 5</Toast></DiyaProvider>)
+    await waitFor(() => expect(slots()).toEqual(['Uploading']))
+    act(() => { toast({ title: 'Draft saved' }); toast({ title: 'Link copied' }) })
+    await waitFor(() => expect(slots()).toEqual(['Uploading', 'Draft saved', 'Link copied']))
+    act(() => { toast({ title: 'Export started' }) })
+    // The <Toast> always shows; the oldest toast() without an action makes room.
+    await waitFor(() => expect(slots()).toEqual(['Uploading', 'Link copied', 'Export started']))
+  })
+
+  it('a <Toast> in a nested Dark provider uses that provider\'s stack and theme', async () => {
+    const { Toast } = await import('../dist/index.js')
+    render(<DiyaProvider theme="light"><DiyaProvider theme="dark" className="nested"><Toast title="Synced" duration={0} onDismiss={() => {}}>Up to date.</Toast></DiyaProvider></DiyaProvider>)
+    await waitFor(() => expect(slots()).toEqual(['Synced']))
+    const slot = document.querySelector('.diya-toast-list > .diya-toast')!
+    expect(slot.closest('.diya-root')!.classList.contains('nested')).toBe(true)
+    expect(slot.closest('.diya-root')!.getAttribute('data-theme')).toBe('dark')
+    // toast() still shows in the outer provider.
+    act(() => { toast({ title: 'Draft saved' }) })
+    await waitFor(() => expect(document.querySelectorAll('.diya-toast-list')).toHaveLength(2))
+    const outer = [...document.querySelectorAll('.diya-toast-list')].find((list) => list.textContent?.includes('Draft saved'))!
+    expect(outer.closest('.diya-root')!.classList.contains('nested')).toBe(false)
+  })
+
+  it('names the close button "Dismiss: <title>" with a title, "Dismiss alert" without', async () => {
+    const { Toast } = await import('../dist/index.js')
+    render(<DiyaProvider><Toast title="Draft saved" duration={0} onDismiss={() => {}}>Saved.</Toast><Toast duration={0} onDismiss={() => {}}>Saved without a title.</Toast></DiyaProvider>)
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Dismiss: Draft saved' })).toBeTruthy())
+    expect(screen.getByRole('button', { name: 'Dismiss alert' })).toBeTruthy()
+  })
+
+  it('a <Toast> is announced once from the live region, with its tone and F8 hint', async () => {
+    const { Toast } = await import('../dist/index.js')
+    render(<DiyaProvider><Toast tone="success" title="3 emails archived" duration={0} onDismiss={() => {}} action={{ label: 'Undo', onClick: () => {} }}>Moved to Archive.</Toast></DiyaProvider>)
+    await waitFor(() => expect(liveText()).toBe('Success: 3 emails archived. Moved to Archive. Press F8 to reach Undo.|'))
+    expect(screen.queryAllByRole('status')).toEqual([])
+  })
+
+  it('Escape on a focused <Toast> calls its onDismiss', async () => {
+    const { Toast } = await import('../dist/index.js')
+    const dismissed = vi.fn()
+    render(<DiyaProvider><Toast title="Draft saved" duration={0} onDismiss={dismissed}>Saved.</Toast></DiyaProvider>)
+    const close = await screen.findByRole('button', { name: 'Dismiss: Draft saved' })
+    close.focus()
+    fireEvent.keyDown(close, { key: 'Escape' })
+    expect(dismissed).toHaveBeenCalledOnce()
+  })
+})
