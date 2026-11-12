@@ -38,6 +38,19 @@ const CORNER_PRESETS = [
   { value: '16', label: 'Round' },
 ] as const
 
+/** 1.2's theming tokens, by their setting's name. */
+const TOKEN_LABEL = {
+  focus: 'Focus ring',
+  heading: 'Headings',
+  field: 'Field fill',
+  fieldLine: 'Field edge',
+  heightSmall: 'Small control height',
+  heightMedium: 'Medium control height',
+  heightLarge: 'Large control height',
+  radiusPopup: 'Popup corners',
+  radiusModal: 'Dialog corners',
+} as const
+
 /** Plain names for settings, for messages and the brand summary. */
 export function settingName(path: string) {
   if (path === 'font') return 'Font'
@@ -46,6 +59,7 @@ export function settingName(path: string) {
   if (path === 'translucent') return 'Glass'
   if (path === 'motion') return 'Motion'
   const [group, theme, name] = path.split('.')
+  if (group === 'tokens') return name ? `${TOKEN_LABEL[name as keyof typeof TOKEN_LABEL]} (${theme === 'light' ? 'Light' : 'Dark'})` : TOKEN_LABEL[theme as keyof typeof TOKEN_LABEL]
   const label =
     group === 'status'
       ? STATUS_LABEL[name as keyof typeof STATUS_LABEL]

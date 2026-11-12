@@ -15,6 +15,26 @@ export type Elevation = (typeof elevations)[number]
 /** DiyaProvider's `motion`. 'system', the default, follows the device and is never written out. */
 export const motions = ['system', 'reduced', 'off'] as const
 export type Motion = (typeof motions)[number]
+/**
+ * 1.2's per-theme theming tokens: `--diya-color-focus`, `--diya-color-heading`,
+ * `--diya-color-field` and `--diya-color-field-line`. Unset, each follows DIYA's own
+ * default (focus and heading follow the text color).
+ */
+export const tokenColorNames = ['focus', 'heading', 'field', 'fieldLine'] as const
+export type TokenColor = (typeof tokenColorNames)[number]
+/** 1.2's shared theming tokens, in px: the three control heights and the popup and modal corners. */
+export const tokenLengthNames = ['heightSmall', 'heightMedium', 'heightLarge', 'radiusPopup', 'radiusModal'] as const
+export type TokenLength = (typeof tokenLengthNames)[number]
+/** What each length is when unset (the corners at a corner scale of 1), and the token it writes. */
+export const TOKEN_LENGTHS: Record<TokenLength, { token: `--diya-${string}`; fallback: number; min: number; max: number }> = {
+  heightSmall: { token: '--diya-height-control-small', fallback: 32, min: 24, max: 64 },
+  heightMedium: { token: '--diya-height-control-medium', fallback: 40, min: 24, max: 64 },
+  heightLarge: { token: '--diya-height-control-large', fallback: 48, min: 24, max: 64 },
+  radiusPopup: { token: '--diya-radius-popup', fallback: 16, min: 0, max: 40 },
+  radiusModal: { token: '--diya-radius-modal', fallback: 22, min: 0, max: 40 },
+}
+/** The 1.2 tokens a theme sets; anything left out keeps DIYA's default. */
+export type ThemingTokens = Partial<Record<Theme, Partial<Record<TokenColor, string>>>> & Partial<Record<TokenLength, number>>
 
 export type Appearance = {
   schemaVersion: 2
@@ -33,6 +53,8 @@ export type Appearance = {
   translucent: boolean
   /** How much the theme's app moves: DiyaProvider's `motion`. */
   motion: Motion
+  /** 1.2's theming tokens that are set; DIYA's own defaults apply to the rest. */
+  tokens?: ThemingTokens
 }
 
 /**
@@ -94,12 +116,15 @@ export const appearancePaths = [
   'elevation',
   'translucent',
   'motion',
+  ...themes.flatMap((t) => tokenColorNames.map((n) => `tokens.${t}.${n}`)),
+  ...tokenLengthNames.map((n) => `tokens.${n}`),
 ] as const
 export type AppearancePath = (typeof appearancePaths)[number]
 export type Overrides = Partial<Record<AppearancePath, string | number | boolean>>
 
+/** A leaf's value; an unset theming token is undefined. */
 export function getPath(appearance: Appearance, path: AppearancePath): string | number | boolean {
-  return path.split('.').reduce<unknown>((at, key) => (at as Record<string, unknown>)[key], appearance) as
+  return path.split('.').reduce<unknown>((at, key) => (at as Record<string, unknown> | undefined)?.[key], appearance) as
     | string
     | number
     | boolean
@@ -111,6 +136,8 @@ function validLeaf(path: AppearancePath, value: unknown): boolean {
   if (path === 'elevation') return typeof value === 'string' && (elevations as readonly string[]).includes(value)
   if (path === 'translucent') return typeof value === 'boolean'
   if (path === 'motion') return typeof value === 'string' && (motions as readonly string[]).includes(value)
+  const length = TOKEN_LENGTHS[path.replace(/^tokens\./, '') as TokenLength]
+  if (length) return typeof value === 'number' && Number.isInteger(value) && value >= length.min && value <= length.max
   return isHex(value)
 }
 
@@ -126,7 +153,8 @@ export function withOverrides(base: Appearance, overrides: Overrides): Appearanc
       throw new Error(`Invalid customization value at ${path}`)
     const keys = path.split('.')
     let at = next as unknown as Record<string, unknown>
-    for (const key of keys.slice(0, -1)) at = at[key] as Record<string, unknown>
+    // Theming tokens start unset, so their branch is made on first use.
+    for (const key of keys.slice(0, -1)) at = (at[key] ??= {}) as Record<string, unknown>
     at[keys[keys.length - 1]] = normalizeLeaf(value)
   }
   return next
