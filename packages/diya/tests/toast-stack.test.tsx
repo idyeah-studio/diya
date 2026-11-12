@@ -146,6 +146,24 @@ describe('timing', () => {
     expect(shown()).toEqual([])
   })
 
+  // Testing Library's focus event doesn't move focus; it paused toasts in 1.1, and still does (R6).
+  it('fireEvent.focus pauses a toast() and fireEvent.blur resumes it, with the time left', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: false, toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+    render(<DiyaProvider motion="off"><p>App</p></DiyaProvider>)
+    act(() => { toast({ title: 'Draft saved', duration: 1000 }) })
+    await act(async () => {})
+    act(() => { vi.advanceTimersByTime(600) })
+    const list = document.querySelector('.diya-toast-list')!
+    fireEvent.focus(list.querySelector('button')!)
+    act(() => { vi.advanceTimersByTime(5000) })
+    expect(shown()).toEqual(['Draft saved'])
+    fireEvent.blur(list.querySelector('button')!)
+    act(() => { vi.advanceTimersByTime(390) })
+    expect(shown()).toEqual(['Draft saved'])
+    act(() => { vi.advanceTimersByTime(20) })
+    expect(shown()).toEqual([])
+  })
+
   it('action toasts never time out', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
     render(<DiyaProvider motion="off"><p>App</p></DiyaProvider>)
@@ -397,6 +415,20 @@ describe('Testing Library pauses a toast as in 1.1 (T6)', () => {
     act(() => { vi.advanceTimersByTime(10000) })
     expect(onDismiss).not.toHaveBeenCalled()
     fireEvent.mouseLeave(screen.getByText('Draft saved'))
+    act(() => { vi.advanceTimersByTime(3100) })
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+  })
+
+  it('fireEvent.focus on a <Toast>\'s close button pauses it; blur resumes (R6)', async () => {
+    const { Toast } = await import('../dist/index.js')
+    vi.useFakeTimers()
+    const onDismiss = vi.fn()
+    render(<DiyaProvider><Toast title="Draft saved" duration={3000} onDismiss={onDismiss}>Body</Toast></DiyaProvider>)
+    const close = screen.getByRole('button', { name: /dismiss/i })
+    fireEvent.focus(close)
+    act(() => { vi.advanceTimersByTime(10000) })
+    expect(onDismiss).not.toHaveBeenCalled()
+    fireEvent.blur(close)
     act(() => { vi.advanceTimersByTime(3100) })
     expect(onDismiss).toHaveBeenCalledTimes(1)
   })

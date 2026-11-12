@@ -96,6 +96,8 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   // An F8 walk is under way: only then does the stack take Tab over (R1).
   const walking = useRef(false)
   const outside = useRef<HTMLElement | null>(null)
+  // The element in the stack that focus last went to.
+  const focused = useRef<Element | null>(null)
   const nativeModal = useRef<HTMLDialogElement | null>(null)
   // Each toast's shifts, so one still waiting to start can fold into the next (R3).
   const moving = useRef(new WeakMap<HTMLElement, Shift[]>())
@@ -340,7 +342,9 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
 
   // The pointer and focus flags, and an F8 walk, never outlive the toasts that set them: closing the last toast
   // with the pointer hides the list without a mouseleave, and WebKit and Firefox send no focusout
-  // when a focused button is removed. Stale, either would freeze every later toast (T2).
+  // when a focused button is removed. Stale, either would freeze every later toast (T2). The
+  // focus flag follows the element focus went to, not where focus is now: Testing Library's
+  // fireEvent.focus doesn't move focus, and pauses toasts as it did in 1.1 (R6).
   useClientLayoutEffect(() => {
     if (!showing) {
       // Where focus was is forgotten too: by the next toast it may be behind a modal (R5).
@@ -349,7 +353,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       outside.current = null
       if (pointer) setPointer(false)
       if (focusInside) setFocusInside(false)
-    } else if (focusInside && !list.current?.contains(list.current.ownerDocument.activeElement)) setFocusInside(false)
+    } else if (focusInside && !(focused.current?.isConnected && list.current?.contains(focused.current))) setFocusInside(false)
   })
 
   // Timers run only while a toast shows, and all pause while the pointer or focus is in the
@@ -539,7 +543,10 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     // Testing Library's fireEvent.mouseEnter on a toast's text pauses it as it did in 1.1 (T6).
     const enter = () => setPointer(true)
     const leave = (event: MouseEvent) => { if (!node.contains(event.relatedTarget as Node | null)) setPointer(false) }
-    const focusIn = () => setFocusInside(true)
+    const focusIn = (event: globalThis.FocusEvent) => {
+      focused.current = event.target as Element
+      setFocusInside(true)
+    }
     const focusOut = (event: globalThis.FocusEvent) => {
       if (node.contains(event.relatedTarget as Node)) return
       setFocusInside(false)
