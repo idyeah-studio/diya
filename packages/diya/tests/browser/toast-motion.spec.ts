@@ -656,7 +656,9 @@ test.describe('an arrival under each motion setting (R11)', () => {
     expect(newcomer.find((item) => item.box!.opacity > 0.05)!.t).toBeLessThan(110)
   })
 
-  for (const [scale, from, to] of [[2, 200, 300], [0.5, 40, 100]] as const) {
+  // Windows that tell the scaled wait from the 1x one (120ms) with room for a late frame under
+  // load (Firefox at 10 CPU burners sampled 102ms at 0.5).
+  for (const [scale, from, to] of [[2, 200, 300], [0.5, 40, 116]] as const) {
     test(`a duration scale of ${scale}: the newcomer waits ${120 * scale}ms for the slide, not 120ms`, async ({ page }, testInfo) => {
       await openCase(page, testInfo, `case=probe&theme=light&scale=${scale}`)
       const { newcomer } = await arrive(page)
