@@ -128,10 +128,11 @@ describe('timing', () => {
     fireEvent.mouseLeave(list)
     act(() => { vi.advanceTimersByTime(300) })
     expect(shown()).toEqual(['Draft saved'])
-    fireEvent.focus(list.querySelector('button')!)
+    // Real focus: the stack checks where focus is, so a focus event alone doesn't count.
+    act(() => { list.querySelector('button')!.focus() })
     act(() => { vi.advanceTimersByTime(5000) })
     expect(shown()).toEqual(['Draft saved'])
-    fireEvent.blur(list.querySelector('button')!)
+    act(() => { list.querySelector('button')!.blur() })
     Object.defineProperty(document, 'hidden', { configurable: true, get: () => true })
     act(() => { document.dispatchEvent(new Event('visibilitychange')) })
     act(() => { vi.advanceTimersByTime(5000) })

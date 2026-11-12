@@ -92,3 +92,47 @@ test.describe('toast motion from an empty stack', () => {
     expect(f8.every((frame) => frame.live.every((toast) => toast.waapi === 0 && Math.abs(toast.top - restF8) < 0.5))).toBe(true)
   })
 })
+
+test.describe('timers after the last toast goes', () => {
+  test('closing the last toast with the pointer leaves later toasts timing out', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.evaluate(() => (window as any).diya.toast({ title: 'Link copied', duration: 0 }))
+    await settle(page)
+    const close = page.getByRole('button', { name: 'Dismiss: Link copied' })
+    const box = (await close.boundingBox())!
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 3 })
+    await page.mouse.down()
+    await page.mouse.up()
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast').length)).toBe(0)
+    await page.mouse.move(5, 5, { steps: 3 })
+    await page.evaluate(() => (window as any).diya.toast({ title: 'Settings saved', duration: 1500 }))
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast').length), { timeout: 4000 }).toBe(1)
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast').length), { timeout: 4000 }).toBe(0)
+  })
+
+  test('a focused toast button that disappears leaves later toasts timing out', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.evaluate(() => (window as any).diya.toast({ title: '3 emails archived', action: { label: 'Undo', onClick() {} } }))
+    await settle(page)
+    await page.keyboard.press('F8')
+    await expect(page.getByRole('button', { name: 'Undo' })).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast').length)).toBe(0)
+    await page.evaluate(() => (window as any).diya.toast({ title: 'Settings saved', duration: 1500 }))
+    await page.waitForTimeout(300)
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast').length), { timeout: 4000 }).toBe(0)
+  })
+
+  test('a <Toast> its app unmounts from its own action leaves later toasts timing out', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.evaluate(() => { const comps = (window as any).comps; const key = comps.add({ title: 'Comment deleted', action: { label: 'Undo', onClick: () => setTimeout(() => comps.remove(key)) } }) })
+    await settle(page)
+    await page.keyboard.press('F8')
+    await expect(page.getByRole('button', { name: 'Undo' })).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast').length)).toBe(0)
+    await page.evaluate(() => (window as any).diya.toast({ title: 'Settings saved', duration: 1500 }))
+    await page.waitForTimeout(300)
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast').length), { timeout: 4000 }).toBe(0)
+  })
+})

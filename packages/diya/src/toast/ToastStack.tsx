@@ -233,6 +233,16 @@ export function ToastStack({ portal, outermost, registry }: { portal: HTMLElemen
     }
   })
 
+  // The pointer and focus flags never outlive the toasts that set them: closing the last toast
+  // with the pointer hides the list without a mouseleave, and WebKit and Firefox send no focusout
+  // when a focused button is removed. Stale, either would freeze every later toast (T2).
+  useClientLayoutEffect(() => {
+    if (!showing) {
+      if (pointer) setPointer(false)
+      if (focusInside) setFocusInside(false)
+    } else if (focusInside && !list.current?.contains(list.current.ownerDocument.activeElement)) setFocusInside(false)
+  })
+
   // Timers run only while a toast shows, and all pause while the pointer or focus is in the
   // stack or the tab is hidden. A toast with an action never times out.
   const paused = pointer || focusInside || hidden
