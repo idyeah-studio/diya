@@ -93,6 +93,16 @@ for (const where of ['dialog', 'drawer'] as const) {
       expect(await lastClicked(page)).toBe(`tp-ref-${where}`)
     })
 
+    test('a third-party popup given useDiyaPortalContainer() works', async ({ page }) => {
+      await page.click(`#tp-hook-${where}-trigger`)
+      const item = page.locator(`#tp-hook-${where}-item`)
+      await item.waitFor()
+      expect(await item.evaluate((node) => !!node.closest('dialog[open]'))).toBe(true)
+      expect(await isTopAtCenter(page, item)).toBe(true)
+      await item.click()
+      expect(await lastClicked(page)).toBe(`tp-hook-${where}`)
+    })
+
     test('Esc closes one layer at a time, then focus returns to the opener', async ({ page }) => {
       await page.getByRole('button', { name: `Menu ${where}` }).focus()
       await page.keyboard.press('Enter')
@@ -107,3 +117,40 @@ for (const where of ['dialog', 'drawer'] as const) {
     })
   })
 }
+
+test('outside a modal, useDiyaPortalContainer() is the provider portal', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=popups&page=1')
+  await page.click('#tp-hook-page-trigger')
+  const item = page.locator('#tp-hook-page-item')
+  await item.waitFor()
+  expect(await item.evaluate((node) => !!node.closest('.diya-portal-root'))).toBe(true)
+  await item.click()
+  expect(await lastClicked(page)).toBe('tp-hook-page')
+})
+
+test('in development, a popup portalled outside an open modal warns once', async ({ page }, testInfo) => {
+  const warnings: string[] = []
+  page.on('console', (message) => { if (message.type() === 'warning' && message.text().startsWith('DIYA:')) warnings.push(message.text()) })
+  await openCase(page, testInfo, 'case=popups', { dev: true })
+  await page.focus('#open-dialog')
+  await page.keyboard.press('Enter')
+  await page.locator('dialog[open]').waitFor()
+  await page.click('#tp-hook-dialog-trigger')
+  await page.locator('#tp-hook-dialog-item').waitFor()
+  expect(warnings).toEqual([])
+  await page.click('#tp-body-dialog-trigger', { force: true })
+  await expect.poll(() => warnings.length).toBe(1)
+  expect(warnings[0]).toBe("DIYA: a popup opened outside the open Dialog, so it can't be clicked. Pass useDiyaPortalContainer() to your popup library as its portal container.")
+})
+
+test('in production builds the warning is gone', async ({ page }, testInfo) => {
+  const warnings: string[] = []
+  page.on('console', (message) => { if (message.text().startsWith('DIYA:')) warnings.push(message.text()) })
+  await openCase(page, testInfo, 'case=popups')
+  await page.focus('#open-dialog')
+  await page.keyboard.press('Enter')
+  await page.locator('dialog[open]').waitFor()
+  await page.click('#tp-body-dialog-trigger', { force: true })
+  await page.waitForTimeout(300)
+  expect(warnings).toEqual([])
+})

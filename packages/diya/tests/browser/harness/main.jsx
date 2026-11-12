@@ -144,6 +144,7 @@ function Popups() {
     <div style={{ display: 'flex', gap: 16, padding: 24 }}>
       <Button id="open-dialog" onClick={() => setDialog(true)}>Open dialog</Button>
       <Button id="open-drawer" onClick={() => setDrawer(true)}>Open drawer</Button>
+      {query.get('page') === '1' && diya.useDiyaPortalContainer && <HookedThirdParty where="page" />}
       <Dialog ref={dialogRef} title="In a dialog" open={dialog} onOpenChange={setDialog} size="large"><PopupsBody where="dialog" modal={dialogRef} /></Dialog>
       <Drawer ref={drawerRef} title="In a drawer" open={drawer} onOpenChange={setDrawer}><PopupsBody where="drawer" modal={drawerRef} /></Drawer>
     </div>
