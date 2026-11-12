@@ -386,3 +386,31 @@ describe('<Toast> joins its provider\'s stack (1.2)', () => {
     expect(dismissed).toHaveBeenCalledOnce()
   })
 })
+
+describe('Testing Library pauses a toast as in 1.1 (T6)', () => {
+  it('fireEvent.mouseEnter on a <Toast>\'s text pauses it; mouseLeave resumes', async () => {
+    const { Toast } = await import('../dist/index.js')
+    vi.useFakeTimers()
+    const onDismiss = vi.fn()
+    render(<DiyaProvider><Toast title="Draft saved" duration={3000} onDismiss={onDismiss}>Body</Toast></DiyaProvider>)
+    fireEvent.mouseEnter(screen.getByText('Draft saved'))
+    act(() => { vi.advanceTimersByTime(10000) })
+    expect(onDismiss).not.toHaveBeenCalled()
+    fireEvent.mouseLeave(screen.getByText('Draft saved'))
+    act(() => { vi.advanceTimersByTime(3100) })
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+  })
+
+  it('fireEvent.mouseEnter on a toast()\'s text pauses it; mouseLeave resumes', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+    render(<DiyaProvider motion="off"><p>App</p></DiyaProvider>)
+    act(() => { toast({ title: 'Draft saved', duration: 3000 }) })
+    await act(async () => {})
+    fireEvent.mouseEnter(screen.getByText('Draft saved'))
+    act(() => { vi.advanceTimersByTime(10000) })
+    expect(shown()).toEqual(['Draft saved'])
+    fireEvent.mouseLeave(screen.getByText('Draft saved'))
+    act(() => { vi.advanceTimersByTime(3100) })
+    expect(shown()).toEqual([])
+  })
+})

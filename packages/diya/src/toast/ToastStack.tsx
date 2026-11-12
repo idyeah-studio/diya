@@ -381,19 +381,21 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   useEffect(() => {
     const node = list.current
     if (!host || !node) return
+    // mouseover and mouseout bubble from any toast, the way React builds onMouseEnter, so
+    // Testing Library's fireEvent.mouseEnter on a toast's text pauses it as it did in 1.1 (T6).
     const enter = () => setPointer(true)
-    const leave = () => setPointer(false)
+    const leave = (event: MouseEvent) => { if (!node.contains(event.relatedTarget as Node | null)) setPointer(false) }
     const focusIn = () => setFocusInside(true)
     const focusOut = (event: globalThis.FocusEvent) => { if (!node.contains(event.relatedTarget as Node)) setFocusInside(false) }
     const keydown = (event: globalThis.KeyboardEvent) => handlers.current.onKeyDown(event)
-    node.addEventListener('mouseenter', enter)
-    node.addEventListener('mouseleave', leave)
+    node.addEventListener('mouseover', enter)
+    node.addEventListener('mouseout', leave)
     node.addEventListener('focusin', focusIn)
     node.addEventListener('focusout', focusOut)
     node.addEventListener('keydown', keydown)
     return () => {
-      node.removeEventListener('mouseenter', enter)
-      node.removeEventListener('mouseleave', leave)
+      node.removeEventListener('mouseover', enter)
+      node.removeEventListener('mouseout', leave)
       node.removeEventListener('focusin', focusIn)
       node.removeEventListener('focusout', focusOut)
       node.removeEventListener('keydown', keydown)
