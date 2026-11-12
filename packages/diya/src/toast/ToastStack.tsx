@@ -343,8 +343,10 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   // when a focused button is removed. Stale, either would freeze every later toast (T2).
   useClientLayoutEffect(() => {
     if (!showing) {
+      // Where focus was is forgotten too: by the next toast it may be behind a modal (R5).
       walking.current = false
       origin.current = null
+      outside.current = null
       if (pointer) setPointer(false)
       if (focusInside) setFocusInside(false)
     } else if (focusInside && !list.current?.contains(list.current.ownerDocument.activeElement)) setFocusInside(false)
@@ -424,12 +426,24 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     modal.addEventListener('close', closed, { once: true })
   }, [host, newestOrder])
 
-  /** Where focus goes when a focused toast leaves: where F8 was pressed, else the last place focused outside the stack, else the next toast, else the topmost modal. Never the page's body. */
+  /** Focuses a place to return to, if it can take focus now: not behind the topmost modal, not
+   *  inert. Behind a modal, focus() does nothing, so the next place in the chain is tried (R5). */
+  function takesFocus(candidate: Element | null | undefined) {
+    if (!isConnectedFocusable(candidate) || candidate.closest('[inert]')) return false
+    const modal = topModal(candidate.ownerDocument)
+    if (modal && !modal.contains(candidate)) return false
+    candidate.focus()
+    return candidate.ownerDocument.activeElement === candidate
+  }
+
+  /** Where focus goes when a focused toast leaves: where F8 was pressed, else (a <Toast>) where it was raised, else the last place focused outside the stack, else the next toast, else the topmost modal. Never the page's body. */
   function returnFocus(leaving: string, fallback?: HTMLElement | null) {
     const document = host?.root.ownerDocument
     if (!document) return
-    for (const candidate of [origin.current, outside.current, fallback]) {
-      if (isConnectedFocusable(candidate)) { candidate.focus(); origin.current = null; return }
+    // A <Toast>'s own place (where it was raised, as in 1.1.1) comes before the last place
+    // focused outside the stack, which a click in Safari can leave on a Dialog itself (R5).
+    for (const candidate of [origin.current, fallback, outside.current]) {
+      if (takesFocus(candidate)) { origin.current = null; return }
     }
     const nextToast = Array.from(document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')).find((slot) => slot.dataset.toast !== leaving)?.querySelector<HTMLElement>(focusable)
     if (nextToast) { nextToast.focus(); return }
@@ -471,7 +485,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     const candidates = [origin.current, outside.current]
     origin.current = null
     for (const candidate of candidates) {
-      if (isConnectedFocusable(candidate)) { candidate.focus(); return true }
+      if (takesFocus(candidate)) return true
     }
     return false
   }

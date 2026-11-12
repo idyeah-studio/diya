@@ -528,3 +528,26 @@ test.describe('a toast pushed out from under an action toast (R4)', () => {
     })
   }
 })
+
+// Round 2. The places focus returns to are forgotten when the stack empties, and one that can't
+// take focus now (behind a modal) is skipped: a <Toast>'s action in a DIYA Dialog returns focus
+// inside the Dialog, and Escape then closes the Dialog (QA's reproduction; R5).
+test('after an earlier toast, a <Toast> action in a Dialog returns focus there, and Escape closes the Dialog (R5)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=probe&theme=light')
+  // A toast shows while the page's field has focus, then is closed with its close button.
+  await page.evaluate(() => { (window as any).comps.add({ title: 'First' }) })
+  await settle(page)
+  await page.getByRole('textbox', { name: 'Project name' }).click()
+  await page.getByRole('button', { name: 'Dismiss: First' }).click()
+  await expect.poll(() => page.evaluate(() => document.querySelectorAll('.diya-toast-list > .diya-toast').length)).toBe(0)
+  // In the Dialog: the field, then a <Toast> with Undo, clicked.
+  await page.locator('#open-dialog').click()
+  const field = page.getByRole('textbox', { name: 'Task name' })
+  await field.click()
+  await page.evaluate(() => { (window as any).comps.add({ title: 'Saved', action: { label: 'Undo', onClick() {} } }) })
+  await settle(page)
+  await page.getByRole('button', { name: 'Undo' }).click()
+  await expect(field).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(page.locator('dialog[open]')).toHaveCount(0)
+})

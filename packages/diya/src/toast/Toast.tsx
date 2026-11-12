@@ -115,7 +115,8 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
             ? {
                 ...alertProps.action,
                 onClick: () => {
-                  if (slotRef.current?.contains(document.activeElement)) returnToastFocus(key, returnFocus.current)
+                  // As in 1.1.1, an action returns focus whether or not a click focused it (Safari's doesn't).
+                  returnToastFocus(key, returnFocus.current)
                   alertProps.action?.onClick()
                 },
               }
