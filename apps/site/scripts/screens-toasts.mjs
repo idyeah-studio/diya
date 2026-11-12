@@ -90,7 +90,7 @@ export const FLOWS = {
     await ready(page, /^Write your first doc/).click()
     await ready(page, 'Open the brief', modal(page)).click()
   } },
-  inbox: { title: 'Marked as unread', run: async (page) => {
+  inbox: { title: /^Marked \S+’s conversation as unread$/, run: async (page) => {
     // On a phone the list comes first; open a conversation.
     if (!(await page.getByRole('button', { name: 'Mark unread' }).first().isVisible()))
       await page.getByRole('list', { name: /conversations$/ }).locator('button, a').first().click()

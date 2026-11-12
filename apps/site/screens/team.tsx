@@ -176,7 +176,7 @@ export default function TeamScreen() {
     await api('/invites/resend', { id: invite.id })
     setBusy(undefined)
     setInvites((list) => list.map((item) => (item.id === invite.id ? { ...item, sent: 'Just now, by you' } : item)))
-    toast({ tone: 'success', title: 'Invite sent again', description: `${invite.email} has a fresh link, good for 7 days.`, duration: 6000 })
+    toast({ id: `team-resend-${invite.id}`, tone: 'success', title: 'Invite sent again', description: `${invite.email} has a fresh link, good for 7 days.`, duration: 6000 })
   }
 
   async function revoke(invite: Invite) {

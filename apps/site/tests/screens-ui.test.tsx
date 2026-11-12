@@ -368,7 +368,7 @@ const RAISES: Raise[] = [
     await user.click(await ready(/^Write your first doc/))
     await user.click(await ready('Open the brief', openDialog()))
   } },
-  { id: 'inbox', Screen: InboxScreen, title: 'Marked as unread', raise: async (user) => {
+  { id: 'inbox', Screen: InboxScreen, title: /^Marked \S+’s conversation as unread$/, raise: async (user) => {
     await user.click(await ready('Mark unread'))
   } },
   { id: 'invoice', Screen: InvoiceScreen, title: 'INV-2047 is paid', raise: async (user) => {
@@ -480,6 +480,25 @@ describe('each toast Screen raises its toast', () => {
     // Every toast() toast has a close button named for it, and an action where the screen has one.
     expect(within(region).getByRole('button', { name: `Dismiss: ${shown.textContent}` })).toBeTruthy()
     if (action) expect(within(region).getByRole('button', { name: action })).toBeTruthy()
+  }, 20_000)
+
+  // UX-SITE-01: doing the same thing again updates its toast in place; it never stacks a twin.
+  const exportHistory: Raise = { id: 'record-detail', Screen: RecordDetailScreen, title: 'Export on its way', raise: async (user) => {
+    await user.click(screen.getByRole('button', { name: /^More actions for / }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Export history' }))
+  } }
+  it.each(['inbox', 'team', 'record-detail', 'activity', 'dashboard'])('%s: pressing again shows one toast, not two', async (id) => {
+    const { Screen, title, raise } = id === 'record-detail' ? exportHistory : RAISES.find((entry) => entry.id === id)!
+    const user = userEvent.setup()
+    render(<DiyaProvider theme="light"><Screen /></DiyaProvider>, { reactStrictMode: true })
+    await act(async () => {})
+    await raise(user)
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' }, LONG)
+    await waitFor(() => expect(within(region).getAllByText(title)).toHaveLength(1), LONG)
+    await raise(user)
+    // Let the second press finish its stubbed request and raise its toast.
+    await act(() => new Promise((done) => setTimeout(done, 1500)))
+    expect(within(screen.getByRole('region', { name: 'Notifications (F8)' })).getAllByText(title)).toHaveLength(1)
   }, 20_000)
 
   it('task-list: Undo is the toast’s action, and puts the task back', async () => {

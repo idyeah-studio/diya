@@ -155,7 +155,7 @@ export default function RecordDetailScreen() {
                   <Menu label={`More actions for ${c.name}`} trigger={<Button variant="outline" iconOnly aria-label={`More actions for ${c.name}`}><Ellipsis /></Button>} items={[
                     { id: 'copy', label: 'Copy customer ID', icon: <Copy />, onSelect: copyId },
                     { id: 'billing', label: 'Open in billing system', icon: <CreditCard />, href: `/billing/customers/${c.ref}` },
-                    { id: 'export', label: 'Export history', icon: <Download />, onSelect: () => toast({ tone: 'success', title: 'Export on its way', description: `We’ll email ${c.id}-history.csv to you in a minute.`, duration: 6000 }) },
+                    { id: 'export', label: 'Export history', icon: <Download />, onSelect: () => toast({ id: 'record-detail-export', tone: 'success', title: 'Export on its way', description: `We’ll email ${c.id}-history.csv to you in a minute.`, duration: 6000 }) },
                     { id: 'delete', label: 'Delete customer', icon: <Trash />, destructive: true, separatorBefore: true, onSelect: () => setDeleting(true) },
                   ]} />
                 </div>

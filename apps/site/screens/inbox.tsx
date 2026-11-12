@@ -155,7 +155,7 @@ export default function InboxScreen() {
     if (!current) return
     change(current.id, { unread: true })
     void api('/conversations/read', { id: current.id, unread: true })
-    toast({ tone: 'success', title: 'Marked as unread', duration: 4000 })
+    toast({ id: `inbox-unread-${current.id}`, tone: 'success', title: `Marked ${firstName(current.name)}’s conversation as unread`, duration: 4000 })
     if (narrow()) back()
   }
 
