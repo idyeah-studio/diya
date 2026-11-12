@@ -3,7 +3,7 @@
 // Next.js: save as app/bookings/page.tsx. Vite: save as src/Agenda.tsx and render it inside your DiyaProvider.
 import { useState, useSyncExternalStore, type ReactNode } from 'react'
 import {
-  Alert, Avatar, Button, Calendar, ContentState, DatePicker, Dialog, Drawer, List, Select, SiteHeader, Stack, Tag, TextArea, TextInput, Toast,
+  Alert, Avatar, Button, Calendar, ContentState, DatePicker, Dialog, Drawer, List, Select, SiteHeader, Stack, Tag, TextArea, TextInput, toast,
   useDiyaAppearance, type Tone,
 } from '@idyeah/diya'
 import { CalendarCheck, CalendarX2, ChevronLeft, ChevronRight, LucideProvider, Plus, UserCheck } from 'lucide-react'
@@ -117,8 +117,6 @@ function clash(bookings: Booking[], draft: Pick<Booking, 'day' | 'start' | 'serv
 }
 const clashText = (b: Booking) => `${first(person(b.staff))} is with ${b.client} from ${span(b.start, service(b.service).minutes)}. Pick another time or another stylist.`
 
-type Notice = { id: number; title: string; text: string }
-
 export default function AgendaScreen() {
   const { glass } = useDiyaAppearance()
   const today = useToday()
@@ -130,9 +128,7 @@ export default function AgendaScreen() {
   const [staff, setStaff] = useState('all')
   const [openId, setOpenId] = useState<string>()
   const [adding, setAdding] = useState(false)
-  const [notice, setNotice] = useState<Notice>()
 
-  const say = (title: string, text: string) => setNotice({ id: Date.now(), title, text })
   const update = (id: string, change: Partial<Booking>) => setBookings((now = sampleFor(today)) => now.map((b) => (b.id === id ? { ...b, ...change } : b)))
   const onDay = bookings.filter((b) => b.day === day).sort((a, b) => a.start - b.start)
   const shown = onDay.filter((b) => staff === 'all' || b.staff === staff)
@@ -219,13 +215,15 @@ export default function AgendaScreen() {
 
         {open && (
           <BookingDrawer key={open.id} today={today} booking={open} bookings={bookings} onClose={() => setOpenId(undefined)}
-            onSaved={(change, title, text) => { update(open.id, change); say(title, text) }} />
+            onSaved={(change, title, text) => { update(open.id, change); toast({ tone: 'success', title, description: text, duration: 6000 }) }} />
         )}
         {adding && (
           <NewBooking today={today} day={day} bookings={bookings} onClose={() => setAdding(false)}
-            onAdded={(b) => { setBookings((now = sampleFor(today)) => [...now, b]); setDay(b.day); setStaff('all'); say('Booked', `${b.client}, ${shortDay(b.day)} at ${clock(b.start)} with ${first(person(b.staff))}.`) }} />
+            onAdded={(b) => {
+              setBookings((now = sampleFor(today)) => [...now, b]); setDay(b.day); setStaff('all')
+              toast({ tone: 'success', title: 'Booked', description: `${b.client}, ${shortDay(b.day)} at ${clock(b.start)} with ${first(person(b.staff))}.`, duration: 6000 })
+            }} />
         )}
-        {notice && <Toast key={notice.id} tone="success" title={notice.title} onDismiss={() => setNotice(undefined)} duration={6000}>{notice.text}</Toast>}
       </div>
     </LucideProvider>
   )

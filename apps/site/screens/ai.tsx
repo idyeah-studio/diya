@@ -2,7 +2,7 @@
 // AI assistant: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/assistant/page.tsx. Vite: save as src/Assistant.tsx and render it inside your DiyaProvider.
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { Avatar, Button, Chatbot, Dialog, Drawer, Menu, Select, TextInput, Toast, type ChatMessage } from '@idyeah/diya'
+import { Avatar, Button, Chatbot, Dialog, Drawer, Menu, Select, TextInput, toast, type ChatMessage } from '@idyeah/diya'
 import { CircleAlert, Ellipsis, LucideProvider, PanelRight, Pencil, Sparkles, SquarePen, Trash } from 'lucide-react'
 
 // Your assistant, its models, and the chats it remembers.
@@ -140,7 +140,6 @@ export default function AssistantScreen() {
   const [status, setStatus] = useState<Status>('ready')
   const [dialog, setDialog] = useState<'rename' | 'delete' | 'clear'>()
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [toast, setToast] = useState('')
   const run = useRef<Run>(undefined)
   const removed = useRef<string[]>([])
   const settle = useRef(false)
@@ -223,7 +222,7 @@ export default function AssistantScreen() {
     if (!ids.length) return
     removed.current = []
     setChats((list) => list.filter((entry) => !ids.includes(entry.id)))
-    setToast(ids.length > 1 ? 'All chats cleared.' : 'Chat deleted.')
+    toast({ tone: 'success', title: ids.length > 1 ? 'All chats cleared' : 'Chat deleted', duration: 4000 })
     settle.current = true
     open('')
   }
@@ -302,7 +301,7 @@ export default function AssistantScreen() {
             onSave={async (title) => {
               await api('/chats/rename', { id: chat.id, title })
               setChats((list) => list.map((entry) => (entry.id === chat.id ? { ...entry, title } : entry)))
-              setToast('Chat renamed.')
+              toast({ tone: 'success', title: 'Chat renamed', duration: 4000 })
             }} />
         )}
         <Dialog
@@ -320,7 +319,6 @@ export default function AssistantScreen() {
           confirmLabel={dialog === 'clear' ? 'Clear all' : 'Delete chat'}
           onConfirm={() => remove(dialog === 'clear' ? chats.map((entry) => entry.id) : [openId])}
         />
-        {toast && <Toast tone="success" duration={4000} onDismiss={() => setToast('')}>{toast}</Toast>}
       </div>
     </LucideProvider>
   )

@@ -2,7 +2,7 @@
 // Product detail: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/products/[id]/page.tsx. Vite: save as src/ProductDetail.tsx and render it inside your DiyaProvider.
 import { useId, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from 'react'
-import { Accordion, Alert, Badge, Breadcrumbs, Button, Choice, Progress, Rating, Select, SiteHeader, TextInput, Toast } from '@idyeah/diya'
+import { Accordion, Alert, Badge, Breadcrumbs, Button, Choice, Progress, Rating, Select, SiteHeader, TextInput, toast } from '@idyeah/diya'
 import { LucideProvider, Minus, Plus, ShoppingBag, Truck } from 'lucide-react'
 
 // Your store and the product on show.
@@ -66,7 +66,6 @@ export default function ProductDetailScreen() {
   const [quantity, setQuantity] = useState('1')
   const [busy, setBusy] = useState(false)
   const [refused, setRefused] = useState<number>()
-  const [added, setAdded] = useState<string>()
   const [bag, setBag] = useState(BAG_START)
 
   const chosen = GLAZES.find((g) => g.value === glaze)!
@@ -77,13 +76,17 @@ export default function ProductDetailScreen() {
   async function add(amount = count) {
     setQuantity(String(amount))
     setRefused(undefined)
-    setAdded(undefined)
+    toast.dismiss('product-added')
     setBusy(true)
     const result = await addToBag({ glaze, size, quantity: amount })
     setBusy(false)
     if (!result.ok) return setRefused(result.left)
     setBag(bag + amount)
-    setAdded(`${PRODUCT.name}, ${chosen.label}, ${sized.label.split(',')[0].toLowerCase()}. Quantity ${amount}.`)
+    toast({
+      id: 'product-added', tone: 'success', title: 'Added to your bag',
+      description: `${PRODUCT.name}, ${chosen.label}, ${sized.label.split(',')[0].toLowerCase()}. Quantity ${amount}.`,
+      action: { label: 'View bag', onClick: () => window.location.assign('/bag') },
+    })
   }
 
   const step = (by: number) => {
@@ -207,12 +210,6 @@ export default function ProductDetailScreen() {
 
           <Reviews />
         </main>
-
-        {added && (
-          <Toast tone="success" title="Added to your bag" action={{ label: 'View bag', onClick: () => window.location.assign('/bag') }} onDismiss={() => setAdded(undefined)}>
-            {added}
-          </Toast>
-        )}
       </div>
     </LucideProvider>
   )

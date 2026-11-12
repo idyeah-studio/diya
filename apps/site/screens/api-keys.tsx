@@ -3,8 +3,8 @@
 // Next.js: save as app/settings/api-keys/page.tsx. Vite: save as src/ApiKeys.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
-  Alert, Avatar, Badge, Button, Card, Choice, ContentState, Dialog, List, Select, Tabs, Tag, TextInput, TextLink, Toast,
-  type AlertTone, type TableColumn, Table,
+  Alert, Avatar, Badge, Button, Card, Choice, ContentState, Dialog, List, Select, Tabs, Tag, TextInput, TextLink, toast,
+  type TableColumn, Table,
 } from '@idyeah/diya'
 import { DataViz } from '@idyeah/diya/charts'
 import { Check, Copy, KeyRound, LucideProvider, Plus, Send, Server, Webhook } from 'lucide-react'
@@ -82,15 +82,11 @@ async function addEndpoint(url: string) {
 async function sendTest(endpoint: Endpoint) { await wait(1100); return endpoint.status !== 'failing' }
 async function setConnection(id: string, on: boolean, settings: Record<string, string> = {}) { await wait(); void settings; return { id, on } }
 
-type Notice = { id: number; tone: AlertTone; title: string; text: string }
-
 export default function ApiKeysScreen() {
   const [env, setEnv] = useState<Env>('live')
   const [tab, setTab] = useState('keys')
   const [keys, setKeys] = useState<Record<Env, Key[]>>({ live: KEYS, test: [] })
   const [endpoints, setEndpoints] = useState<Record<Env, Endpoint[]>>({ live: ENDPOINTS, test: [] })
-  const [notice, setNotice] = useState<Notice>()
-  const notify = (tone: AlertTone, title: string, text: string) => setNotice({ id: Date.now(), tone, title, text })
   const failing = endpoints[env].filter((e) => e.status === 'failing').length
 
   return (
@@ -117,25 +113,20 @@ export default function ApiKeysScreen() {
           </header>
           <Tabs className="api-keys-tabs" label="Developer settings" value={tab} onValueChange={setTab} items={[
             { value: 'keys', label: 'API keys', content: (
-              <KeysPanel key={env} env={env} keys={keys[env]} onChange={(next) => setKeys({ ...keys, [env]: next })} notify={notify} />
+              <KeysPanel key={env} env={env} keys={keys[env]} onChange={(next) => setKeys({ ...keys, [env]: next })} />
             ) },
             { value: 'webhooks', label: 'Webhooks', badge: failing ? { variant: 'count', count: failing, tone: 'error', label: 'failing' } : undefined,
               // Mounted only while open, so the chart measures a visible box.
-              content: tab === 'webhooks' && <WebhooksPanel key={env} endpoints={endpoints[env]} onChange={(next) => setEndpoints({ ...endpoints, [env]: next })} notify={notify} /> },
-            { value: 'integrations', label: 'Integrations', content: <IntegrationsPanel notify={notify} /> },
+              content: tab === 'webhooks' && <WebhooksPanel key={env} endpoints={endpoints[env]} onChange={(next) => setEndpoints({ ...endpoints, [env]: next })} /> },
+            { value: 'integrations', label: 'Integrations', content: <IntegrationsPanel /> },
           ]} />
         </main>
-        {notice && (
-          <Toast key={notice.id} tone={notice.tone} title={notice.title} onDismiss={() => setNotice(undefined)} duration={6000}>{notice.text}</Toast>
-        )}
       </div>
     </LucideProvider>
   )
 }
 
-type Notify = (tone: AlertTone, title: string, text: string) => void
-
-function KeysPanel({ env, keys, onChange, notify }: { env: Env; keys: Key[]; onChange: (keys: Key[]) => void; notify: Notify }) {
+function KeysPanel({ env, keys, onChange }: { env: Env; keys: Key[]; onChange: (keys: Key[]) => void }) {
   const [creating, setCreating] = useState(false)
   const [revoking, setRevoking] = useState<Key>()
   const masked = (key: Key) => `sk_${env}_…${key.last4}`
@@ -203,7 +194,7 @@ function KeysPanel({ env, keys, onChange, notify }: { env: Env; keys: Key[]; onC
           if (!revoking) return
           await revokeKey(revoking.id)
           onChange(keys.map((k) => (k.id === revoking.id ? { ...k, revoked: fullDate(new Date()) } : k)))
-          notify('success', 'Key revoked', `${revoking.name} no longer works. Requests that use it get a 401.`)
+          toast({ tone: 'success', title: 'Key revoked', description: `${revoking.name} no longer works. Requests that use it get a 401.`, duration: 6000 })
         }}>
         {revoking?.lastUsed.includes('minute') && (
           <Alert tone="warning">This key was used {revoking.lastUsed}. Make sure its replacement is live first.</Alert>
@@ -320,7 +311,7 @@ const STATUS: Record<Status, { text: string; tone: 'success' | 'error' | 'neutra
   pending: { text: 'No deliveries yet', tone: 'neutral' },
 }
 
-function WebhooksPanel({ endpoints, onChange, notify }: { endpoints: Endpoint[]; onChange: (endpoints: Endpoint[]) => void; notify: Notify }) {
+function WebhooksPanel({ endpoints, onChange }: { endpoints: Endpoint[]; onChange: (endpoints: Endpoint[]) => void }) {
   const [selected, setSelected] = useState(endpoints[0]?.id)
   const [adding, setAdding] = useState(false)
   const [testing, setTesting] = useState(false)
@@ -331,9 +322,13 @@ function WebhooksPanel({ endpoints, onChange, notify }: { endpoints: Endpoint[];
     setTesting(true)
     const ok = await sendTest(endpoint)
     setTesting(false)
-    if (!ok) return notify('error', 'Test event failed', `${endpoint.url} answered ${endpoint.error}. Check that your server is up.`)
+    const id = `api-keys-test-${endpoint.id}`
+    if (!ok) {
+      toast({ id, tone: 'error', title: 'Test event failed', description: `${endpoint.url} answered ${endpoint.error}. Check that your server is up.`, duration: 6000 })
+      return
+    }
     if (endpoint.status === 'pending') onChange(endpoints.map((e) => (e.id === endpoint.id ? { ...e, status: 'healthy' } : e)))
-    notify('success', 'Test event delivered', `${endpoint.url} answered 200 OK in 182 ms.`)
+    toast({ id, tone: 'success', title: 'Test event delivered', description: `${endpoint.url} answered 200 OK in 182 ms.`, duration: 6000 })
   }
 
   return (
@@ -379,7 +374,7 @@ function WebhooksPanel({ endpoints, onChange, notify }: { endpoints: Endpoint[];
       <AddEndpointDialog open={adding} onOpenChange={setAdding} onAdded={(e) => {
         onChange([...endpoints, e])
         setSelected(e.id)
-        notify('success', 'Endpoint added', 'Send it a test event to make sure it answers.')
+        toast({ tone: 'success', title: 'Endpoint added', description: 'Send it a test event to make sure it answers.', duration: 6000 })
       }} />
     </section>
   )
@@ -436,7 +431,7 @@ function AddEndpointDialog({ open, onOpenChange, onAdded }: { open: boolean; onO
   )
 }
 
-function IntegrationsPanel({ notify }: { notify: Notify }) {
+function IntegrationsPanel() {
   const [apps, setApps] = useState(INTEGRATIONS)
   const [busy, setBusy] = useState<string>()
   const [setup, setSetup] = useState<Integration>()
@@ -449,7 +444,7 @@ function IntegrationsPanel({ notify }: { notify: Notify }) {
     await setConnection(app.id, true, settings)
     setBusy(undefined)
     setApps((all) => all.map((a) => (a.id === app.id ? { ...a, connected: 'Connected today' } : a)))
-    notify('success', `${app.name} connected`, 'Events start flowing within a minute.')
+    toast({ tone: 'success', title: `${app.name} connected`, description: 'Events start flowing within a minute.', duration: 6000 })
   }
 
   return (
@@ -494,7 +489,7 @@ function IntegrationsPanel({ notify }: { notify: Notify }) {
           if (!leaving) return
           await setConnection(leaving.id, false)
           setApps((all) => all.map((a) => (a.id === leaving.id ? { ...a, connected: undefined } : a)))
-          notify('success', `${leaving.name} disconnected`, 'Nothing more goes to it.')
+          toast({ tone: 'success', title: `${leaving.name} disconnected`, description: 'Nothing more goes to it.', duration: 6000 })
         }} />
     </section>
   )

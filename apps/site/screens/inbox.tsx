@@ -2,7 +2,7 @@
 // Inbox: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/inbox/page.tsx. Vite: save as src/Inbox.tsx and render it inside your DiyaProvider.
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { Alert, Avatar, Button, ContentState, Drawer, List, Menu, SideNavigation, Tag, TextArea, Toast, Tooltip, useDiyaAppearance } from '@idyeah/diya'
+import { Alert, Avatar, Button, ContentState, Drawer, List, Menu, SideNavigation, Tag, TextArea, toast, Tooltip, useDiyaAppearance } from '@idyeah/diya'
 import { Archive, ArrowLeft, FileImage, FileText, FolderInput, Hourglass, Inbox, LucideProvider, Mail, MailDot, PanelRight, Paperclip, Send, ShieldAlert } from 'lucide-react'
 
 // Your help desk, who's signed in, and the conversations in each folder.
@@ -85,7 +85,6 @@ export default function InboxScreen() {
   const [view, setView] = useState<'list' | 'detail'>('list')
   const [foldersOpen, setFoldersOpen] = useState(false)
   const [drafts, setDrafts] = useState<Record<string, string>>({})
-  const [toast, setToast] = useState<{ id: number; text: string }>()
   const listTitle = useRef<HTMLHeadingElement>(null)
   const readTitle = useRef<HTMLHeadingElement>(null)
   const list = useRef<HTMLUListElement>(null)
@@ -99,7 +98,6 @@ export default function InboxScreen() {
   const current = shown.find((entry) => entry.id === openId)
   const unread = (id: FolderId) => mail.filter((entry) => entry.folder === id && entry.unread).length
   const currentRow = () => list.current?.querySelector<HTMLElement>('[aria-current="true"]')
-  const say = (text: string) => setToast({ id: Date.now(), text })
 
   const change = (id: string, patch: Partial<Conversation>) =>
     setMail((all) => all.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)))
@@ -142,7 +140,7 @@ export default function InboxScreen() {
     const next = rest[index] ?? rest[index - 1]
     change(current.id, { folder: to })
     void api('/conversations/move', { id: current.id, to })
-    say(to === 'archive' ? 'Conversation archived.' : `Moved to ${FOLDERS.find((entry) => entry.id === to)?.label}.`)
+    toast({ tone: 'success', title: to === 'archive' ? 'Conversation archived' : `Moved to ${FOLDERS.find((entry) => entry.id === to)?.label}`, duration: 4000 })
     if (next && !narrow()) {
       open(next.id)
       focus(() => readTitle.current)
@@ -157,7 +155,7 @@ export default function InboxScreen() {
     if (!current) return
     change(current.id, { unread: true })
     void api('/conversations/read', { id: current.id, unread: true })
-    say('Marked as unread.')
+    toast({ tone: 'success', title: 'Marked as unread', duration: 4000 })
     if (narrow()) back()
   }
 
@@ -166,7 +164,7 @@ export default function InboxScreen() {
       entry.id === id ? { ...entry, when: 'Just now', notes: [...entry.notes, { from: ME, time: 'Just now', body: text }] } : entry
     ))
     setDrafts((all) => ({ ...all, [id]: '' }))
-    say(`Reply sent to ${firstName(mail.find((entry) => entry.id === id)?.name ?? '')}.`)
+    toast({ tone: 'success', title: `Reply sent to ${firstName(mail.find((entry) => entry.id === id)?.name ?? '')}`, duration: 4000 })
   }
 
   function step(event: KeyboardEvent<HTMLUListElement>) {
@@ -297,7 +295,6 @@ export default function InboxScreen() {
         <Drawer className="inbox-drawer" open={foldersOpen} onOpenChange={setFoldersOpen} onClose={settled} side="right" title="Folders">
           <SideNavigation className="inbox-nav inbox-nav-sheet" label="Folders" showGroups={false} groups={groups} value={folder} onValueChange={goTo} />
         </Drawer>
-        {toast && <Toast key={toast.id} tone="success" duration={4000} onDismiss={() => setToast(undefined)}>{toast.text}</Toast>}
       </div>
     </LucideProvider>
   )

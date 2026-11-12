@@ -2,7 +2,7 @@
 // Team & roles: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/settings/team/page.tsx. Vite: save as src/Team.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { Avatar, Button, Card, ContentState, Dialog, Menu, Progress, Select, SideNavigation, Stack, Table, Tag, TextInput, TextLink, Toast, type AlertTone } from '@idyeah/diya'
+import { Avatar, Button, Card, ContentState, Dialog, Menu, Progress, Select, SideNavigation, Stack, Table, Tag, TextInput, TextLink, toast } from '@idyeah/diya'
 import { Bell, Check, CreditCard, Ellipsis, LucideProvider, Menu as MenuIcon, Minus, Palette, Shield, UserPlus, UserRound, Users } from 'lucide-react'
 
 // Your product, the workspace, and what the demo account shows. You are Priya, the only owner.
@@ -73,8 +73,6 @@ const first = (name: string) => name.split(' ')[0]
 const roleLabel = (role: Role) => ROLES.find((item) => item.value === role)?.label ?? role
 const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`
 
-type Notice = { tone: AlertTone; title: string; text: string; id: number }
-
 export default function TeamScreen() {
   const [members, setMembers] = useState(MEMBERS)
   const [invites, setInvites] = useState(INVITES)
@@ -87,14 +85,12 @@ export default function TeamScreen() {
   const [problem, setProblem] = useState<string>()
   const [busy, setBusy] = useState<string>()
   const [left, setLeft] = useState(false)
-  const [notice, setNotice] = useState<Notice>()
   const membersRef = useRef<HTMLDivElement>(null)
   const pendingRef = useRef<HTMLHeadingElement>(null)
   const leftRef = useRef<HTMLHeadingElement>(null)
   const focus = useFocusAfterRender()
   const owners = members.filter((member) => member.role === 'owner')
   const seatsLeft = SEATS - members.length - invites.length
-  const notify = (tone: AlertTone, title: string, text: string) => setNotice({ tone, title, text, id: Date.now() })
   const doomed = members.filter((member) => removing?.includes(member.id))
 
   useEffect(() => {
@@ -113,14 +109,14 @@ export default function TeamScreen() {
     setMembers(members.filter((member) => !removing.includes(member.id)))
     if (removing.includes(ME)) return setLeft(true)
     focus(membersRef.current)
-    notify('success', doomed.length === 1 ? `${doomed[0].name} was removed` : `${plural(doomed.length, 'person', 'people')} removed`, `Their projects and files stay with ${WORKSPACE}, and ${plural(doomed.length, 'seat')} opened up.`)
+    toast({ tone: 'success', title: doomed.length === 1 ? `${doomed[0].name} was removed` : `${plural(doomed.length, 'person', 'people')} removed`, description: `Their projects and files stay with ${WORKSPACE}, and ${plural(doomed.length, 'seat')} opened up.`, duration: 6000 })
   }
 
   async function changeRole(member: Member, next: Role) {
     if (member.role === 'owner' && next !== 'owner' && owners.length === 1) return setBlocked(member)
     setMembers((list) => list.map((item) => (item.id === member.id ? { ...item, role: next } : item)))
     await api('/members/role', { id: member.id, role: next })
-    notify('success', `${member.id === ME ? 'You’re' : `${first(member.name)} is`} now ${next === 'owner' || next === 'admin' ? 'an' : 'a'} ${roleLabel(next).toLowerCase()}`, ROLES.find((item) => item.value === next)?.hint ?? '')
+    toast({ id: `team-role-${member.id}`, tone: 'success', title: `${member.id === ME ? 'You’re' : `${first(member.name)} is`} now ${next === 'owner' || next === 'admin' ? 'an' : 'a'} ${roleLabel(next).toLowerCase()}`, description: ROLES.find((item) => item.value === next)?.hint ?? '', duration: 6000 })
   }
 
   // Splits typed or pasted text into addresses. Good ones become tags; the rest stay in the field with a reason.
@@ -172,7 +168,7 @@ export default function TeamScreen() {
       return false
     }
     setInvites([...next.map((email) => ({ id: email, email, role, sent: 'Just now, by you' })), ...invites])
-    notify('success', next.length === 1 ? 'Invite sent' : `${next.length} invites sent`, `${next.join(', ')} can join as ${roleLabel(role).toLowerCase()}${next.length === 1 ? '' : 's'}. The link works for 7 days.`)
+    toast({ tone: 'success', title: next.length === 1 ? 'Invite sent' : `${next.length} invites sent`, description: `${next.join(', ')} can join as ${roleLabel(role).toLowerCase()}${next.length === 1 ? '' : 's'}. The link works for 7 days.`, duration: 6000 })
   }
 
   async function resend(invite: Invite) {
@@ -180,7 +176,7 @@ export default function TeamScreen() {
     await api('/invites/resend', { id: invite.id })
     setBusy(undefined)
     setInvites((list) => list.map((item) => (item.id === invite.id ? { ...item, sent: 'Just now, by you' } : item)))
-    notify('success', 'Invite sent again', `${invite.email} has a fresh link, good for 7 days.`)
+    toast({ tone: 'success', title: 'Invite sent again', description: `${invite.email} has a fresh link, good for 7 days.`, duration: 6000 })
   }
 
   async function revoke(invite: Invite) {
@@ -189,7 +185,7 @@ export default function TeamScreen() {
     setBusy(undefined)
     setInvites((list) => list.filter((item) => item.id !== invite.id))
     focus(pendingRef.current)
-    notify('info', 'Invite revoked', `The link in ${invite.email}’s inbox no longer works, and the seat is free again.`)
+    toast({ tone: 'info', title: 'Invite revoked', description: `The link in ${invite.email}’s inbox no longer works, and the seat is free again.`, duration: 6000 })
   }
 
   function openInvite() {
@@ -482,12 +478,6 @@ export default function TeamScreen() {
           description={`${blocked?.id === ME ? 'You’re' : `${blocked?.name} is`} the only owner, so ${blocked?.id === ME ? 'you' : 'they'} can’t leave or take another role yet. Make someone else an owner first, with the Role menu in their row.`}
           dismissLabel="Got it"
         />
-
-        {notice && (
-          <Toast key={notice.id} tone={notice.tone} title={notice.title} duration={6000} onDismiss={() => setNotice(undefined)}>
-            {notice.text}
-          </Toast>
-        )}
       </div>
     </LucideProvider>
   )

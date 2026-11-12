@@ -2,7 +2,7 @@
 // Account settings: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/settings/page.tsx. Vite: save as src/Settings.tsx and render it inside your DiyaProvider.
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { Avatar, Button, Card, Choice, CodeBlock, Combobox, Dialog, FileUpload, Form, Inline, List, Select, SideNavigation, Stack, Switch, Tag, TextInput, Toast, type AlertTone } from '@idyeah/diya'
+import { Avatar, Button, Card, Choice, CodeBlock, Combobox, Dialog, FileUpload, Form, Inline, List, Select, SideNavigation, Stack, Switch, Tag, TextInput, toast } from '@idyeah/diya'
 import { Bell, Camera, Check, CreditCard, Laptop, LucideProvider, Monitor, Palette, Shield, Smartphone, Tablet, UserRound, Users } from 'lucide-react'
 
 // Your product, the person signed in, and what the demo account shows.
@@ -80,9 +80,6 @@ async function api(route: Route, body: Record<string, unknown> = {}) {
   return true
 }
 
-type Notice = { tone: AlertTone; title: string; text: string }
-type Notify = (notice: Notice) => void
-
 const emailProblem = (email: string) =>
   !email.trim() ? 'Enter your email address.' : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? undefined : 'Enter an email address like name@example.com.'
 const timeIn = (zone: string, now: Date) => new Intl.DateTimeFormat('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit' }).format(now)
@@ -92,11 +89,9 @@ export default function SettingsScreen() {
   const [section, setSection] = useState<Section>('profile')
   // The last day to bring a deleted account back, 30 days after it's deleted.
   const [deleted, setDeleted] = useState<string>()
-  const [notice, setNotice] = useState<Notice & { id: number }>()
   const titleRef = useRef<HTMLHeadingElement>(null)
   const shown = useRef<string>(section)
   const current = SECTIONS.find((item) => item.value === section) ?? SECTIONS[0]
-  const notify: Notify = (next) => setNotice({ ...next, id: Date.now() })
 
   useEffect(() => {
     // Opens the section the address names, such as /settings#security.
@@ -117,8 +112,8 @@ export default function SettingsScreen() {
   }
 
   const panes: Record<Section, ReactNode> = {
-    profile: <Profile notify={notify} onDeleted={() => setDeleted(longDate(new Date(Date.now() + 30 * 86_400_000)))} />,
-    security: <Security notify={notify} />,
+    profile: <Profile onDeleted={() => setDeleted(longDate(new Date(Date.now() + 30 * 86_400_000)))} />,
+    security: <Security />,
     notifications: <Notifications />,
     appearance: <Appearance />,
   }
@@ -173,18 +168,12 @@ export default function SettingsScreen() {
             {workspace('settings-nav settings-more')}
           </div>
         </main>
-
-        {notice && (
-          <Toast key={notice.id} tone={notice.tone} title={notice.title} duration={6000} onDismiss={() => setNotice(undefined)}>
-            {notice.text}
-          </Toast>
-        )}
       </div>
     </LucideProvider>
   )
 }
 
-function Profile({ notify, onDeleted }: { notify: Notify; onDeleted: () => void }) {
+function Profile({ onDeleted }: { onDeleted: () => void }) {
   const [saved, setSaved] = useState(ME)
   const [draft, setDraft] = useState(ME)
   const [errors, setErrors] = useState<{ name?: string; email?: string; zone?: string }>({})
@@ -213,10 +202,12 @@ function Profile({ notify, onDeleted }: { notify: Notify; onDeleted: () => void 
       return focus(emailField.current)
     }
     setSaved(draft)
-    notify({
+    toast({
+      id: 'settings-profile-saved',
       tone: 'success',
       title: 'Profile saved',
-      text: draft.email === saved.email ? 'Your teammates see the changes right away.' : `Check ${draft.email} for a link to confirm your new email.`,
+      description: draft.email === saved.email ? 'Your teammates see the changes right away.' : `Check ${draft.email} for a link to confirm your new email.`,
+      duration: 6000,
     })
   }
 
@@ -302,7 +293,7 @@ function DeleteAccount({ email, onDeleted }: { email: string; onDeleted: () => v
   )
 }
 
-function Security({ notify }: { notify: Notify }) {
+function Security() {
   const [changed, setChanged] = useState(PASSWORD_CHANGED)
   const [twoStep, setTwoStep] = useState(false)
   const [asking, setAsking] = useState<'on' | 'off'>()
@@ -322,7 +313,7 @@ function Security({ notify }: { notify: Notify }) {
     setSessions(sessions.filter((session) => !ids.includes(session.id)))
     focus(list.current)
     const one = sessions.find((session) => session.id === ids[0])
-    notify({ tone: 'success', title: ids.length > 1 ? 'Signed out everywhere else' : `Signed out of ${one?.device}`, text: 'Anyone using it will need your password to get back in.' })
+    toast({ tone: 'success', title: ids.length > 1 ? 'Signed out everywhere else' : `Signed out of ${one?.device}`, description: 'Anyone using it will need your password to get back in.', duration: 6000 })
   }
 
   async function turnOn() {
@@ -334,7 +325,7 @@ function Security({ notify }: { notify: Notify }) {
       return false
     }
     setTwoStep(true)
-    notify({ tone: 'success', title: 'Two-step sign-in is on', text: 'Next time you sign in on a new device, keep your authenticator app handy.' })
+    toast({ id: 'settings-two-step', tone: 'success', title: 'Two-step sign-in is on', description: 'Next time you sign in on a new device, keep your authenticator app handy.', duration: 6000 })
   }
 
   return (
@@ -344,7 +335,7 @@ function Security({ notify }: { notify: Notify }) {
         description={`Last changed ${changed}.`}
         footer={<PasswordDialog onChanged={() => {
           setChanged('today')
-          notify({ tone: 'success', title: 'Password changed', text: 'Use your new password the next time you sign in.' })
+          toast({ tone: 'success', title: 'Password changed', description: 'Use your new password the next time you sign in.', duration: 6000 })
         }} />}
       />
 
@@ -386,7 +377,7 @@ function Security({ notify }: { notify: Notify }) {
         onConfirm={async () => {
           await api('/me/two-step', { off: true })
           setTwoStep(false)
-          notify({ tone: 'info', title: 'Two-step sign-in is off', text: 'You can turn it back on here anytime.' })
+          toast({ id: 'settings-two-step', tone: 'info', title: 'Two-step sign-in is off', description: 'You can turn it back on here anytime.', duration: 6000 })
         }}
       />
 

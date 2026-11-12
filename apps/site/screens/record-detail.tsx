@@ -3,7 +3,7 @@
 // Next.js: save as app/customers/[id]/page.tsx. Vite: save as src/RecordDetail.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
-  Avatar, Breadcrumbs, Button, Card, ContentState, Dialog, List, Menu, Metric, Progress, Select, Table, Tabs, Tag, TextArea, TextLink, Toast,
+  Avatar, Breadcrumbs, Button, Card, ContentState, Dialog, List, Menu, Metric, Progress, Select, Table, Tabs, Tag, TextArea, TextLink, toast,
   type ListItem, type Tone,
 } from '@idyeah/diya'
 import { ChevronLeft, CircleCheck, Copy, CreditCard, Download, Ellipsis, Headset, LucideProvider, Mail, Pencil, Receipt, Trash, UserPlus, UserRound } from 'lucide-react'
@@ -78,7 +78,6 @@ export default function RecordDetailScreen() {
   const [loaded, setLoaded] = useState<Tab[]>(['overview'])
   const [deleting, setDeleting] = useState(false)
   const [deleted, setDeleted] = useState(false)
-  const [notice, setNotice] = useState<{ id: number; title: string; text: string; tone?: 'info' }>()
   const headingRef = useRef<HTMLDivElement>(null)
   const [moved, moveFocus] = useState(0)
   const c = CUSTOMER
@@ -106,21 +105,19 @@ export default function RecordDetailScreen() {
   async function remove() {
     await api({ route: `/customers/${c.id}`, method: 'DELETE' })
     setDeleted(true)
-    setNotice(undefined)
     moveFocus(Date.now())
   }
 
   function undo() {
     setDeleted(false)
-    setNotice({ id: Date.now(), title: `${c.name} is back`, text: 'Notes, activity and all.' })
+    toast({ tone: 'success', title: `${c.name} is back`, description: 'Notes, activity and all.', duration: 6000 })
     moveFocus(Date.now())
   }
 
-  const notify = (title: string, text: string, tone?: 'info') => setNotice({ id: Date.now(), title, text, tone })
   const copyId = () =>
     (navigator.clipboard ? navigator.clipboard.writeText(c.ref) : Promise.reject(new Error('No clipboard'))).then(
-      () => notify('Customer ID copied', c.ref),
-      () => notify('Here’s the customer ID', `Your browser blocked copying, so here it is: ${c.ref}`, 'info'),
+      () => toast({ id: 'record-detail-copy', tone: 'success', title: 'Customer ID copied', description: c.ref, duration: 6000 }),
+      () => toast({ id: 'record-detail-copy', title: 'Here’s the customer ID', description: `Your browser blocked copying, so here it is: ${c.ref}`, duration: 6000 }),
     )
   const ready = loaded.includes(tab)
 
@@ -158,7 +155,7 @@ export default function RecordDetailScreen() {
                   <Menu label={`More actions for ${c.name}`} trigger={<Button variant="outline" iconOnly aria-label={`More actions for ${c.name}`}><Ellipsis /></Button>} items={[
                     { id: 'copy', label: 'Copy customer ID', icon: <Copy />, onSelect: copyId },
                     { id: 'billing', label: 'Open in billing system', icon: <CreditCard />, href: `/billing/customers/${c.ref}` },
-                    { id: 'export', label: 'Export history', icon: <Download />, onSelect: () => notify('Export on its way', `We’ll email ${c.id}-history.csv to you in a minute.`) },
+                    { id: 'export', label: 'Export history', icon: <Download />, onSelect: () => toast({ tone: 'success', title: 'Export on its way', description: `We’ll email ${c.id}-history.csv to you in a minute.`, duration: 6000 }) },
                     { id: 'delete', label: 'Delete customer', icon: <Trash />, destructive: true, separatorBefore: true, onSelect: () => setDeleting(true) },
                   ]} />
                 </div>
@@ -169,8 +166,8 @@ export default function RecordDetailScreen() {
                   { value: 'overview', label: 'Overview', content: tab === 'overview' && <Overview onAll={() => setTab('activity')} /> },
                   { value: 'activity', label: 'Activity', content: tab === 'activity' && (ready ? <Activity /> : <Loading title="Activity" label="Loading activity" />) },
                   { value: 'invoices', label: 'Invoices', badge: { variant: 'count', count: 1, label: 'unpaid invoice' },
-                    content: tab === 'invoices' && <Invoices loading={!ready} onRemind={(id) => notify('Reminder sent', `${first(c.contact.name)} will get a nudge about ${id} within the hour.`)} /> },
-                  { value: 'notes', label: 'Notes', content: tab === 'notes' && (ready ? <Notes onSaved={() => notify('Notes saved', 'Everyone on the account can see them now.')} /> : <Loading title="Account notes" label="Loading notes" />) },
+                    content: tab === 'invoices' && <Invoices loading={!ready} onRemind={(id) => toast({ tone: 'success', title: 'Reminder sent', description: `${first(c.contact.name)} will get a nudge about ${id} within the hour.`, duration: 6000 })} /> },
+                  { value: 'notes', label: 'Notes', content: tab === 'notes' && (ready ? <Notes onSaved={() => toast({ tone: 'success', title: 'Notes saved', description: 'Everyone on the account can see them now.', duration: 6000 })} /> : <Loading title="Account notes" label="Loading notes" />) },
                 ]} />
 
                 <aside className="record-detail-side" aria-label="About this customer">
@@ -205,12 +202,6 @@ export default function RecordDetailScreen() {
         <Dialog open={deleting} onOpenChange={setDeleting} title={`Delete ${c.name}?`} size="small"
           description="Its notes, activity and usage history leave Tideline for good. The subscription and invoices stay in your billing system."
           confirmLabel="Delete customer" confirmVariant="destructive" onConfirm={remove} />
-
-        {notice && (
-          <Toast key={notice.id} tone={notice.tone ?? 'success'} title={notice.title} onDismiss={() => setNotice(undefined)} duration={6000}>
-            {notice.text}
-          </Toast>
-        )}
       </div>
     </LucideProvider>
   )

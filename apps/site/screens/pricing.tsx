@@ -3,7 +3,7 @@
 // Next.js: save as app/pricing/page.tsx. Vite: save as src/Pricing.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import {
-  Accordion, Button, Card, Dialog, Metric, Select, SiteHeader, Slider, Table, Tabs, TextArea, TextInput, TextLink, Toast, type TableColumn,
+  Accordion, Button, Card, Dialog, Metric, Select, SiteHeader, Slider, Table, Tabs, TextArea, TextInput, TextLink, toast, type TableColumn,
 } from '@idyeah/diya'
 import { ArrowRight, Check, LucideProvider, Minus } from 'lucide-react'
 
@@ -282,7 +282,6 @@ function Included({ value }: { value: Cell }) {
 function SalesDialog({ open, onOpenChange, onSent }: { open: boolean; onOpenChange: (open: boolean) => void; onSent: (email: string) => void }) {
   const [form, setForm] = useState<Sales>({ name: '', email: '', size: '', message: '' })
   const [errors, setErrors] = useState<Partial<Record<keyof Sales, string>>>({})
-  const [toast, setToast] = useState<string>()
   const fields = useRef<Partial<Record<keyof Sales, HTMLInputElement | HTMLSelectElement | null>>>({})
   const focus = useFocusAfterRender()
   const set = (key: keyof Sales) => (value: string) => {
@@ -304,29 +303,26 @@ function SalesDialog({ open, onOpenChange, onSent }: { open: boolean; onOpenChan
     }
     if (!(await api('/sales', form))) throw new Error('That didn’t send. Your message is still here, so try again in a moment.')
     onSent(form.email.trim())
-    setToast(`Thanks, ${form.name.trim().split(' ')[0]}. We’ll be in touch soon.`)
+    toast({ tone: 'success', title: 'Message sent', description: `Thanks, ${form.name.trim().split(' ')[0]}. We’ll be in touch soon.` })
     setForm({ name: '', email: '', size: '', message: '' })
   }
 
   return (
-    <>
-      <Dialog
-        open={open}
-        onOpenChange={onOpenChange}
-        title="Talk to sales"
-        description={`Tell us a little about your team. Someone who knows ${PRODUCT} well will write within one business day.`}
-        confirmLabel="Send"
-        onConfirm={send}
-      >
-        <div className="pricing-dialog-fields">
-          <TextInput ref={(node) => { fields.current.name = node }} label="Name" autoComplete="name" value={form.name} error={errors.name} onValueChange={set('name')} />
-          <TextInput ref={(node) => { fields.current.email = node }} label="Work email" type="email" autoComplete="email" value={form.email} error={errors.email} onValueChange={set('email')} />
-          <Select ref={(node) => { fields.current.size = node }} label="Company size" placeholder="Choose one" options={SIZES} value={form.size} error={errors.size} onValueChange={set('size')} />
-          <TextArea label="What are you looking for? (optional)" rows={3} value={form.message} onValueChange={set('message')} />
-        </div>
-      </Dialog>
-      {toast && <Toast tone="success" onDismiss={() => setToast(undefined)}>{toast}</Toast>}
-    </>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Talk to sales"
+      description={`Tell us a little about your team. Someone who knows ${PRODUCT} well will write within one business day.`}
+      confirmLabel="Send"
+      onConfirm={send}
+    >
+      <div className="pricing-dialog-fields">
+        <TextInput ref={(node) => { fields.current.name = node }} label="Name" autoComplete="name" value={form.name} error={errors.name} onValueChange={set('name')} />
+        <TextInput ref={(node) => { fields.current.email = node }} label="Work email" type="email" autoComplete="email" value={form.email} error={errors.email} onValueChange={set('email')} />
+        <Select ref={(node) => { fields.current.size = node }} label="Company size" placeholder="Choose one" options={SIZES} value={form.size} error={errors.size} onValueChange={set('size')} />
+        <TextArea label="What are you looking for? (optional)" rows={3} value={form.message} onValueChange={set('message')} />
+      </div>
+    </Dialog>
   )
 }
 

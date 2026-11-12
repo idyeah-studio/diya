@@ -85,6 +85,14 @@ The approved reference is the Sign in screen, `sign-in.tsx`. Match its craft.
 - **Appearance and width.** It looks right in Light, Dark and on Glass, where the
   preview paints a photo backdrop. It works from 320px to 1920px wide with no
   horizontal page scroll.
+- **Feedback.** Show feedback with `toast()`; never keep toast state.
+  - Call it in the handler that did the work, never in an effect: in
+    development, StrictMode runs effects twice, and the toast would show twice.
+  - An Undo is the toast's `action`.
+  - Give a toast an `id` when a later one replaces it, such as "Saving…" then
+    "Saved", or the same action done again. Start the id with the screen id
+    (`profile-saved`), so two screens on one site never share one.
+  - A toast raised inside a Dialog or Drawer shows inside it. Nothing to set up.
 - **States are reachable by interacting**, not by preview-only switches.
   - Every action that would call a server is a clearly marked stub
     (`// Replace with your API call`). It waits a moment and can fail in a
@@ -107,6 +115,7 @@ The approved reference is the Sign in screen, `sign-in.tsx`. Match its craft.
   - the import allowlist and the single default export;
   - no `DiyaProvider`, and the `LucideProvider` is there;
   - no `title=`;
+  - no `<Toast>` and no toast state, and no `toast()` inside an effect;
   - no `font-size` under 13px in the css;
   - class-name prefixes.
 - `tests/screens-compile.test.ts` compiles each file on its own with strict

@@ -3,7 +3,7 @@
 // Next.js: save as app/dashboard/page.tsx. Vite: save as src/Dashboard.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState } from 'react'
 import {
-  Avatar, Button, Card, ContentState, Drawer, Menu, Metric, Select, SideNavigation, Table, Tag, TextLink, Toast, Tooltip,
+  Avatar, Button, Card, ContentState, Drawer, Menu, Metric, Select, SideNavigation, Table, Tag, TextLink, toast, Tooltip,
   type MetricChange, type SideNavigationGroup, type TableColumn, type Tone,
 } from '@idyeah/diya'
 import { DataViz } from '@idyeah/diya/charts'
@@ -132,7 +132,6 @@ function summarize(range: Range): Summary {
 }
 
 type Load<T> = { status: 'loading' } | { status: 'error' } | { status: 'ready'; data: T }
-type Notice = { id: number; title: string; text: string }
 
 export default function DashboardScreen() {
   const [workspace, setWorkspace] = useState(WORKSPACES[0].id)
@@ -144,7 +143,6 @@ export default function DashboardScreen() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [peek, setPeek] = useState<Customer>()
   const [busy, setBusy] = useState<'export' | 'connect'>()
-  const [notice, setNotice] = useState<Notice>()
   const [counts, setCounts] = useState<{ failed?: number; atRisk?: number }>({})
   const titleRef = useRef<HTMLHeadingElement>(null)
   const [titleFocus, focusTitle] = useState(0)
@@ -188,7 +186,7 @@ export default function DashboardScreen() {
     setBusy('export')
     const file = await exportCsv(workspace, rangeLabel)
     setBusy(undefined)
-    setNotice({ id: Date.now(), title: 'Export on its way', text: `We’ll email ${file} to ${USER.email} in a minute or two.` })
+    toast({ id: 'dashboard-export', tone: 'success', title: 'Export on its way', description: `We’ll email ${file} to ${USER.email} in a minute or two.`, duration: 6000 })
   }
 
   async function connect() {
@@ -196,7 +194,7 @@ export default function DashboardScreen() {
     await connectBilling(workspace)
     setBusy(undefined)
     setConnected([...connected, workspace])
-    setNotice({ id: Date.now(), title: 'Billing connected', text: 'Your history is in. Every chart below is now real.' })
+    toast({ tone: 'success', title: 'Billing connected', description: 'Your history is in. Every chart below is now real.', duration: 6000 })
     focusTitle(Date.now())
   }
 
@@ -379,12 +377,6 @@ export default function DashboardScreen() {
             </div>
           )}
         </Drawer>
-
-        {notice && (
-          <Toast key={notice.id} tone="success" title={notice.title} onDismiss={() => setNotice(undefined)} duration={6000}>
-            {notice.text}
-          </Toast>
-        )}
       </div>
     </LucideProvider>
   )

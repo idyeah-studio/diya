@@ -2,7 +2,7 @@
 // Book a time: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/book/page.tsx. Vite: save as src/Booking.tsx and render it inside your DiyaProvider.
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode, type Ref } from 'react'
-import { Alert, Avatar, Button, Calendar, Choice, ContentState, Dialog, Select, Tag, TextArea, TextInput, Toast, useDiyaAppearance } from '@idyeah/diya'
+import { Alert, Avatar, Button, Calendar, Choice, ContentState, Dialog, Select, Tag, TextArea, TextInput, toast, useDiyaAppearance } from '@idyeah/diya'
 import { ArrowLeft, CalendarDays, CalendarPlus, CalendarX2, CircleCheck, Clock, Globe, LucideProvider, Phone, Video } from 'lucide-react'
 
 // Who people book, and when they're free. Hours and busy times are in the
@@ -137,7 +137,6 @@ export default function BookingScreen() {
   const [details, setDetails] = useState(EMPTY)
   const [booking, setBooking] = useState<Booking>()
   const [moving, setMoving] = useState(false)
-  const [notice, setNotice] = useState<{ id: number; text: string }>()
   const titleRef = useRef<HTMLHeadingElement>(null)
   const shown = useRef(step)
   const today = useToday()
@@ -186,7 +185,7 @@ export default function BookingScreen() {
     link.download = MEETING.file
     link.click()
     setTimeout(() => URL.revokeObjectURL(link.href), 1000)
-    setNotice({ id: Date.now(), text: `Open ${MEETING.file} from your downloads to add the call to your calendar.` })
+    toast({ id: 'book-download', tone: 'success', title: 'Downloaded', description: `Open ${MEETING.file} from your downloads to add the call to your calendar.`, duration: 6000 })
   }
 
   const done = step === 'booked' || step === 'canceled'
@@ -259,9 +258,6 @@ export default function BookingScreen() {
                 onBooked={(guests) => booked({ ...details, guests, guest: '', start: slot, length: Number(length), where, zone, moved: moving })} />
             )}
           </div>
-        )}
-        {notice && (
-          <Toast key={notice.id} tone="success" title="Downloaded" onDismiss={() => setNotice(undefined)} duration={6000}>{notice.text}</Toast>
         )}
       </main>
     </LucideProvider>

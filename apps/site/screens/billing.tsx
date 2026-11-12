@@ -2,7 +2,7 @@
 // Billing & plan: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/settings/billing/page.tsx. Vite: save as src/Billing.tsx and render it inside your DiyaProvider.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Alert, Button, Card, Choice, Dialog, Menu, Metric, Progress, SideNavigation, Stack, Table, Tag, TextInput, Toast, type AlertTone } from '@idyeah/diya'
+import { Alert, Button, Card, Choice, Dialog, Menu, Metric, Progress, SideNavigation, Stack, Table, Tag, TextInput, toast } from '@idyeah/diya'
 import { Bell, CreditCard, Download, LucideProvider, Menu as MenuIcon, Palette, Shield, UserRound, Users } from 'lucide-react'
 
 // Your product, the workspace, and what the demo account shows. The plan renews
@@ -120,7 +120,6 @@ function download(invoice: Invoice) {
   URL.revokeObjectURL(link.href)
 }
 
-type Notice = { tone: AlertTone; title: string; text: string; id: number }
 type CardForm = { name: string; number: string; expires: string; code: string }
 const EMPTY_CARD: CardForm = { name: '', number: '', expires: '', code: '' }
 
@@ -146,7 +145,6 @@ export default function BillingScreen() {
   const failedAlert = useRef<HTMLDivElement>(null)
   // Where focus goes once the dialog has closed and handed focus back.
   const [focusNext, setFocusNext] = useState<'failed' | 'plan'>()
-  const [notice, setNotice] = useState<Notice>()
   useEffect(() => {
     if (!focusNext || dialog) return
     const target = (focusNext === 'failed' ? failedAlert : planButton).current
@@ -156,7 +154,6 @@ export default function BillingScreen() {
   }, [focusNext, dialog])
   const current = PLANS[plan]
   const picked = PLANS[choice]
-  const notify = (tone: AlertTone, title: string, text: string) => setNotice({ tone, title, text, id: Date.now() })
   const close = (open: boolean) => !open && setDialog(undefined)
   const upgradeLabel = (name: string) => `${name} upgrade, ${short(dates.today)} to ${short(dates.end)}`
   const prorated = (difference: number) => Math.round(((difference * SEATS * DAYS_LEFT) / PERIOD_DAYS) * 100) / 100
@@ -194,7 +191,7 @@ export default function BillingScreen() {
     }
     settle(choice, charge, invoice)
     setFocusNext('plan')
-    notify('success', `You’re on ${picked.name}`, charge > 0 ? `We charged ${money(charge)} to ${card.brand} ending ${card.last4} for the rest of this period.` : `Your new price starts today. We’ll credit what’s left of ${current.name} to your next invoice.`)
+    toast({ tone: 'success', title: `You’re on ${picked.name}`, description: charge > 0 ? `We charged ${money(charge)} to ${card.brand} ending ${card.last4} for the rest of this period.` : `Your new price starts today. We’ll credit what’s left of ${current.name} to your next invoice.`, duration: 7000 })
   }
 
   async function saveCard() {
@@ -217,16 +214,17 @@ export default function BillingScreen() {
     if (failed && (await api('/subscription', { plan: failed.plan, charge: failed.amount, cardExpired: false }))) {
       settle(failed.plan, failed.amount, failed.invoice)
       setFocusNext('plan')
-      return notify('success', 'Card updated, and the payment went through', `You’re on ${PLANS[failed.plan].name}. We charged ${money(failed.amount)} to ${next.brand} ending ${next.last4}.`)
+      toast({ tone: 'success', title: 'Card updated, and the payment went through', description: `You’re on ${PLANS[failed.plan].name}. We charged ${money(failed.amount)} to ${next.brand} ending ${next.last4}.`, duration: 7000 })
+      return
     }
-    notify('success', 'Card updated', `We’ll charge ${next.brand} ending ${next.last4} on ${RENEWS}.`)
+    toast({ tone: 'success', title: 'Card updated', description: `We’ll charge ${next.brand} ending ${next.last4} on ${RENEWS}.`, duration: 7000 })
   }
 
   async function cancel() {
     await api('/subscription/cancel', { reason })
     setCanceled(true)
     setFocusNext('plan')
-    notify('info', 'Your plan is canceled', `${current.name} stays on until ${RENEWS}. Change your mind before then and nothing changes.`)
+    toast({ tone: 'info', title: 'Your plan is canceled', description: `${current.name} stays on until ${RENEWS}. Change your mind before then and nothing changes.`, duration: 7000 })
   }
 
   async function resume() {
@@ -234,7 +232,7 @@ export default function BillingScreen() {
     await api('/subscription/resume')
     setResuming(false)
     setCanceled(false)
-    notify('success', 'Your plan is back on', `It renews on ${RENEWS}, like nothing happened.`)
+    toast({ tone: 'success', title: 'Your plan is back on', description: `It renews on ${RENEWS}, like nothing happened.`, duration: 7000 })
   }
 
   const bind = (key: keyof CardForm) => ({
@@ -459,12 +457,6 @@ export default function BillingScreen() {
             </div>
           </Stack>
         </Dialog>
-
-        {notice && (
-          <Toast key={notice.id} tone={notice.tone} title={notice.title} duration={7000} onDismiss={() => setNotice(undefined)}>
-            {notice.text}
-          </Toast>
-        )}
       </div>
     </LucideProvider>
   )
