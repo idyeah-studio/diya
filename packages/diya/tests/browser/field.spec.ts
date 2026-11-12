@@ -102,3 +102,21 @@ test.describe('a hosted field fills its frame (G1)', () => {
     })
   }
 })
+
+// G2 (FE-08): a framed native select keeps a menu indicator, and a framed textarea shows its lines.
+test('a framed select shows an indicator; a framed textarea shows 3 lines (G2)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=providers&theme=light')
+  const select = await page.locator('#framed-select').evaluate((node) => {
+    const frame = node.parentElement!
+    const after = getComputedStyle(frame, '::after')
+    const native = getComputedStyle(node).appearance !== 'none'
+    return { native, chevron: after.content !== 'none' && after.content !== 'normal' && parseFloat(after.width) >= 12 && after.maskImage.includes('svg') }
+  })
+  expect(select.native || select.chevron).toBe(true)
+  const notes = await page.locator('#framed-notes').evaluate((node) => {
+    const area = node as HTMLTextAreaElement
+    return { clipped: area.scrollHeight - area.clientHeight, lines: Math.round(area.clientHeight / parseFloat(getComputedStyle(area).lineHeight)) }
+  })
+  expect(notes.clipped).toBeLessThanOrEqual(1)
+  expect(notes.lines).toBeGreaterThanOrEqual(3)
+})

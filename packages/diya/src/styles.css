@@ -1221,6 +1221,29 @@
   color: var(--diya-color-muted);
   opacity: 1;
 }
+/* A framed native select keeps a menu indicator: Select's chevron, drawn by the frame (G2). A
+   framed textarea grows the frame to its lines instead of clipping them to one. */
+.diya-root .diya-field-frame:has(> select)::after {
+  content: '';
+  flex: none;
+  width: 14px;
+  height: 14px;
+  background-color: var(--diya-color-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
+  pointer-events: none;
+}
+.diya-root .diya-field-frame:has(> textarea) {
+  height: auto;
+  padding-block: 12px;
+  align-items: stretch;
+}
+.diya-root .diya-field-frame > textarea {
+  height: auto;
+  min-height: calc(1.6em * 3);
+  line-height: 1.6;
+  resize: vertical;
+}
 /* Whatever a provider hands over fills the frame (G1): Stripe's mount div, which holds an iframe
    sized width: 1px !important; min-width: 100% !important, or a bare iframe. */
 .diya-root .diya-field-frame > :not(input, select, textarea) {
