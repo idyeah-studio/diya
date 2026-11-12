@@ -53,8 +53,9 @@ beforeAll(() => {
 afterAll(() => rmSync(work, { recursive: true, force: true }))
 
 const entryFiles = { '.': 'dist/index.js', './charts': 'dist/data-viz/index.js' }
+// A component is named in PascalCase, as build-api.mjs reads it: toast() (1.2) is a function, not one.
 const isComponent = (value: unknown, name = '') =>
-  !/^use[A-Z]/.test(name) && (typeof value === 'function' || (typeof value === 'object' && value !== null && '$$typeof' in value))
+  /^[A-Z]/.test(name) && (typeof value === 'function' || (typeof value === 'object' && value !== null && '$$typeof' in value))
 const allProps = (name: string) => {
   const component = api.components[name]
   return Object.assign({}, component.props, ...(component.modes ?? []).map(mode => mode.props)) as Record<string, Prop>

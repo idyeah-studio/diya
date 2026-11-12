@@ -107,8 +107,8 @@ export function motionTiming(node: HTMLElement, time: string, curve: string) {
  * the Web Animations API (jsdom, happy-dom) or in a hidden tab. `frames` gets the copy's computed
  * style, for the motion distances, and the node's opacity at that moment.
  */
-export function playOnCopy(node: HTMLElement | null | undefined, parent: Element | null | undefined, time: string, frames: (style: CSSStyleDeclaration, opacity: string) => Keyframe[]) {
-  if (!node || !parent || typeof node.animate !== 'function' || node.ownerDocument.hidden) return
+export function playOnCopy(node: HTMLElement | null | undefined, parent: Element | null | undefined, time: string, frames: (style: CSSStyleDeclaration, opacity: string) => Keyframe[], { zIndex = 1200, onDone }: { zIndex?: number; onDone?: () => void } = {}) {
+  if (!node || !parent || typeof node.animate !== 'function' || node.ownerDocument.hidden) return false
   const view = node.ownerDocument.defaultView
   if (!view) return
   const box = node.getBoundingClientRect()
@@ -121,16 +121,18 @@ export function playOnCopy(node: HTMLElement | null | undefined, parent: Element
   copy.inert = true
   Object.assign(copy.style, {
     position: 'fixed', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`,
-    right: 'auto', bottom: 'auto', margin: '0', zIndex: '1200', pointerEvents: 'none', transition: 'none',
+    right: 'auto', bottom: 'auto', margin: '0', zIndex: String(zIndex), pointerEvents: 'none', transition: 'none',
   })
   parent.append(copy)
   const { duration, easing, style } = motionTiming(copy, time, 'exit')
   if (!duration || !style) {
     copy.remove()
-    return
+    return false
   }
   const animation = copy.animate(frames(style, opacity), { duration, easing, fill: 'forwards' })
-  const cap = setTimeout(() => copy.remove(), EXIT_CAP_MS)
-  const done = () => { clearTimeout(cap); copy.remove() }
+  let ended = false
+  const done = () => { if (ended) return; ended = true; clearTimeout(cap); copy.remove(); onDone?.() }
+  const cap = setTimeout(done, EXIT_CAP_MS)
   animation.finished.then(done, done)
+  return true
 }

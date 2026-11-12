@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react'
+import { createContext, forwardRef, useContext, type HTMLAttributes, type ReactNode } from 'react'
 import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import type { Tone } from '../badge/Badge.js'
@@ -28,17 +28,25 @@ export type AlertProps = Omit<HTMLAttributes<HTMLDivElement>, 'title' | 'childre
   /** Announces immediately as `role="alert"`, interrupting a screen reader; otherwise it is a polite status. Use for errors that need action. */
   urgent?: boolean
 }
+/**
+ * Internal: an Alert inside DIYA's toast stack. The stack announces each toast once from its own
+ * live region, so the Alert's copy has no role (otherwise it would be read twice), and its close
+ * button is named for the toast.
+ */
+export const AlertInStackContext = createContext<{ announce: boolean; dismissLabel?: string }>({ announce: true })
+
 /** An inline message that reports a status, with an optional action and close button. */
 export const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert({ layout = 'card', tone = 'info', title, children, action, onDismiss, urgent = false, className, ...props }, ref) {
   const t = useDiyaMessages('alert', alertMessages)
+  const stack = useContext(AlertInStackContext)
   return <div {...props} ref={ref} className={cx('diya-alert', className)} data-tone={tone} data-layout={layout}>
     <svg className="diya-alert-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {tone === 'warning' ? <><path d="m12 3 10 18H2Z" /><path d="M12 9v5m0 3v.1" /></> : <><circle cx="12" cy="12" r="9" />{tone === 'success' ? <path d="m8 12 3 3 5-6" /> : tone === 'error' ? <path d="m9 9 6 6m0-6-6 6" /> : <path d="M12 11v6m0-10v.1" />}</>}
     </svg>
     <div className="diya-alert-copy">
-      <div role={urgent ? 'alert' : 'status'} aria-atomic="true"><span className="diya-alert-sr">{t[tone]}: </span>{title && <p className="diya-alert-title">{title}</p>}<div className="diya-alert-description">{children}</div></div>
+      <div role={stack.announce ? (urgent ? 'alert' : 'status') : undefined} aria-atomic={stack.announce ? 'true' : undefined}><span className="diya-alert-sr">{t[tone]}: </span>{title && <p className="diya-alert-title">{title}</p>}<div className="diya-alert-description">{children}</div></div>
       {action && <button type="button" className="diya-alert-action" onClick={action.onClick}>{action.label}</button>}
     </div>
-    {onDismiss && <button type="button" className="diya-alert-dismiss" aria-label={t.dismiss} onClick={onDismiss}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button>}
+    {onDismiss && <button type="button" className="diya-alert-dismiss" aria-label={stack.dismissLabel ?? t.dismiss} onClick={onDismiss}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button>}
   </div>
 })

@@ -1714,6 +1714,20 @@
 .diya-root .diya-toast-region { position: fixed; z-index: 1200; bottom: 28px; right: 28px; width: min(420px, calc(100vw - 40px)); }
 .diya-root .diya-toast-region .diya-alert { box-shadow: var(--diya-shadow-raised); }
 @media (max-width: 600px) { .diya-root .diya-toast-region { bottom: 20px; right: 20px; } }
+/* The toast stack (1.2): one region per app in today's spot, newest nearest the corner, 12px
+   apart. It's a manual popover, so while it holds toasts it's in the top layer: placed against
+   the viewport and painted above an open Dialog or Drawer, whose DOM child it is. The reset takes
+   back the popover's UA look, including its CanvasText color. The host around it takes no box. */
+.diya-root .diya-toast-host { display: contents; }
+.diya-root .diya-toast-stack[popover] { inset: auto 28px 28px auto; margin: 0; padding: 0; border: 0; background: transparent; overflow: visible; color: inherit; width: min(420px, calc(100vw - 40px)); height: auto; }
+@media (max-width: 600px) { .diya-root .diya-toast-stack[popover] { inset: auto 20px 20px auto; } }
+.diya-root .diya-toast-list { display: flex; flex-direction: column; gap: 12px; }
+.diya-root .diya-toast { position: relative; z-index: 1; }
+/* Arriving, a toast sits under the older ones, so they slide off it. */
+.diya-root .diya-toast[data-entering] { z-index: 0; }
+/* A toast() with a title and no description: no empty line under the title. */
+.diya-root .diya-toast .diya-alert-description:empty { display: none; }
+.diya-root .diya-toast .diya-alert-title:has(+ .diya-alert-description:empty) { margin-bottom: 0; }
 
 
 /* slider/Slider.css: portable component rules. */
@@ -3368,6 +3382,26 @@
     opacity: 0;
     translate: 0 var(--diya-internal-motion-distance-edge);
   }
+}
+/* In the stack (1.2), each toast enters on its own and the stack itself holds still; others
+   shift to make room through the Web Animations API (ToastStack), additively, on move. Moving
+   the stack into or out of a modal replays nothing. */
+.diya-root .diya-toast-stack {
+  transition-property: none;
+}
+.diya-root .diya-toast {
+  transition-property: opacity, translate;
+  transition-duration: var(--diya-internal-duration-slow);
+  transition-timing-function: var(--diya-ease-enter);
+}
+@starting-style {
+  .diya-root .diya-toast {
+    opacity: 0;
+    translate: 0 var(--diya-internal-motion-distance-edge);
+  }
+}
+.diya-root .diya-toast-stack[data-still] .diya-toast {
+  transition-property: none;
 }
 
 /* Dialog fades and settles from 0.98; Drawer slides in from its edge, or fades in place when

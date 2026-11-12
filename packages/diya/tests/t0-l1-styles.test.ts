@@ -307,7 +307,7 @@ describe('enter styles', () => {
 
   it('starts only popups, Toast, an opening Dialog or Drawer and the phone menu', () => {
     expect(startingRules.length).toBeGreaterThan(0)
-    const allowed = /^\.diya-root(\[data-glass='true'\])? (\.diya-floating|\.diya-toast-region|\.diya-dialog\[open\]|\.diya-drawer-modal\[open\]|:is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop|\.diya-site-mobile-nav:not\(\[hidden\]\))$/
+    const allowed = /^\.diya-root(\[data-glass='true'\])? (\.diya-floating|\.diya-toast-region|\.diya-toast|\.diya-dialog\[open\]|\.diya-drawer-modal\[open\]|:is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop|\.diya-site-mobile-nav:not\(\[hidden\]\))$/
     expect(startingRules.filter((selector) => !allowed.test(selector))).toEqual([])
   })
 

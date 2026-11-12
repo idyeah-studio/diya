@@ -28,7 +28,11 @@ function walk(field: (typeof fieldCases)[number]) {
       act(() => { fireEvent.click(opener) })
       act(() => { fireEvent.keyDown(opener, { key: 'ArrowDown' }) })
     }
-    out[step.name] = view.container.innerHTML
+    // 1.2's toast host (its always-present live regions and the stack) is the provider's, made in
+    // the browser only (api.md 5); the fields' own markup is what's frozen.
+    const copy = view.container.cloneNode(true) as HTMLElement
+    copy.querySelectorAll('.diya-toast-host').forEach((host) => host.remove())
+    out[step.name] = copy.innerHTML
   }
   view.unmount()
   return out

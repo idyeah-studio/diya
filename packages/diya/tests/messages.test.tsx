@@ -63,4 +63,16 @@ describe('DiyaProvider messages', () => {
     view.rerender(<DiyaProvider locale="en-GB"><DatePicker label="Due date" value="2026-10-14" onValueChange={() => {}} /></DiyaProvider>)
     expect(screen.getByRole('button', { name: /Due date/ }).textContent).toContain('14 Oct 2026')
   })
+
+  it('toast.label default changed; overrides still win', async () => {
+    const { toast } = await import('../dist/index.js')
+    expect(defaultMessages.toast.label).toBe('Notifications (F8)')
+    expect(defaultMessages.toast.dismiss('Draft saved')).toBe('Dismiss: Draft saved')
+    expect(defaultMessages.toast.actionHint('Undo')).toBe('Press F8 to reach Undo.')
+    render(<DiyaProvider messages={{ toast: { label: 'Mitteilungen (F8)', dismiss: (title) => `Schließen: ${title}` } }}><p>App</p></DiyaProvider>)
+    toast({ title: 'Entwurf gespeichert' })
+    expect(await screen.findByRole('region', { name: 'Mitteilungen (F8)' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Schließen: Entwurf gespeichert' })).toBeTruthy()
+    toast.dismiss()
+  })
 })

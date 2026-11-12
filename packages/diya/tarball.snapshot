@@ -179,8 +179,14 @@ dist/text-input/native-field.d.ts
 dist/text-input/native-field.js
 dist/toast/Toast.d.ts
 dist/toast/Toast.js
+dist/toast/ToastStack.d.ts
+dist/toast/ToastStack.js
+dist/toast/host.d.ts
+dist/toast/host.js
 dist/toast/messages.d.ts
 dist/toast/messages.js
+dist/toast/queue.d.ts
+dist/toast/queue.js
 dist/tooltip/Tooltip.d.ts
 dist/tooltip/Tooltip.js
 dist/workflow/ContentState.d.ts
