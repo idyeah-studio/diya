@@ -15,7 +15,7 @@ import { motionTiming, playOnCopy } from '../internal/presence.js'
 import { createAnnouncer, createToastHost, lowerToastHost, raiseToastHost, type ToastHost } from './host.js'
 import { elapsed, live as playing, moved, offsetY, overlaps, remaining as timeLeft, RIDE_ANIMATION, SHIFT_ANIMATION, showingCopies, type Shift, type Span } from './motion.js'
 import { toastMessages } from './messages.js'
-import { EMPTY_TOASTS, leaveToast, registerHost, removeToast, setToastCopies, setToastFocus, setToastSlotElement, setToastsPaused, settleToasts, subscribeToasts, toastSnapshot, unregisterHost, type ToastEntry, type ToastSlot } from './queue.js'
+import { EMPTY_TOASTS, leaveToast, providerAbove, registerHost, removeToast, setToastCopies, setToastFocus, setToastSlotElement, setToastsPaused, settleToasts, subscribeToasts, toastSnapshot, unregisterHost, type ToastEntry, type ToastSlot } from './queue.js'
 
 const LIMIT = 3
 const PHONE_LIMIT = 2
@@ -104,10 +104,11 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
 
   // The host: made in the browser only, so the server markup is unchanged.
   useClientLayoutEffect(() => {
-    // Outermost on the page, not only in this copy's React tree: a provider from another copy of
-    // the package (or another React root) inside a DIYA provider makes no stack, so the page
-    // keeps one, in its outermost provider (R8).
-    if (!portal || !outermost || portal.parentElement?.parentElement?.closest('.diya-root')) return
+    // Outermost on the page for this React, not only in this copy's React tree: a provider from
+    // another copy of the package (or another root) inside a provider of the same React makes no
+    // stack, so the page keeps one, in its outermost provider (R8). Another React's provider
+    // above doesn't count: an app on another React keeps its own stack (S5).
+    if (!portal || !outermost || !portal.parentElement || providerAbove(portal.parentElement)) return
     const made = createToastHost(portal.ownerDocument)
     portal.append(made.root)
     // Out of the top layer once the last exit has played and nothing shows.

@@ -73,6 +73,8 @@ type Store = {
   order: number
   dropping: boolean
   slotCount: number
+  /** The provider elements on this React, so a provider can tell whether one of its own React's is above it (S5). */
+  roots: WeakSet<Element>
 }
 
 // One store per React on the page, on globalThis under a versioned key: two copies of the
@@ -90,8 +92,9 @@ type Store = {
 // - ONE STORE PER REACT (S3). Under the key is a WeakMap from a React's createElement to that
 //   React's store. Entries hold that React's elements (a toast()'s description) and only that
 //   React can render them, so two Reacts on one page (micro-frontends mid-upgrade, React 18
-//   beside 19) get two stores and two stacks: 1.1's two corners in a rare setup, never one
-//   app's toast crashing the other app's tree.
+//   beside 19) get two stores and two stacks. Both stacks use the same corner, so their toasts
+//   overlap there, as nested providers' did in 1.1: a rare setup, and never one app's toast
+//   crashing the other app's tree. This isn't promised in the public docs.
 // - Within @1, only add fields, and only as optional. Read every field with a default (store()
 //   fills them), since an older copy may have made the store without it.
 // - Never change what an existing field means: `entries` (ToastEntry, and its `status`),
@@ -100,8 +103,11 @@ type Store = {
 //   the leaving <Toast>'s slot key, a fallback element and whether a close button was used),
 //   `listeners` and `snapshot`; `version` counts changes (it is not the package's version);
 //   `count`, `order` and `slotCount` only go up.
-// - Only a provider with no DIYA provider (.diya-root) above it in the DOM registers in `hosts`
-//   (R8). Every copy applies that rule, or two copies would disagree about who hosts.
+// - Only a provider with no provider of the same React above it in the DOM registers in `hosts`
+//   (R8, S5). Each provider adds its own element to `roots` while it's mounted; a provider
+//   counts the .diya-root elements above it that are in `roots`, so another React's app
+//   mounted inside this one's provider still hosts its own toasts. Every copy applies that
+//   rule, or two copies would disagree about who hosts.
 // - A newer copy may add behavior through optional fields (ToastSlot's `motion` and `leaving`
 //   are two); an older copy's stack ignores them, so that behavior is missing there, never
 //   broken.
@@ -109,7 +115,9 @@ type Store = {
 const KEY = Symbol.for('@idyeah/diya/toast@1')
 function store(): Store {
   const host = globalThis as unknown as Record<symbol, WeakMap<object, Partial<Store>> | undefined>
-  const stores = (host[KEY] ??= new WeakMap())
+  // A development tab hot-reloaded from a build before S3 may hold a plain object here.
+  if (!(host[KEY] instanceof WeakMap)) host[KEY] = new WeakMap()
+  const stores = host[KEY]
   // This copy's React, by its createElement: each React instance has its own.
   let state = stores.get(createElement)
   if (!state) stores.set(createElement, (state = {}))
@@ -128,6 +136,7 @@ function store(): Store {
   state.order ??= 0
   state.dropping ??= false
   state.slotCount ??= 0
+  state.roots ??= new WeakSet()
   return state as Store
 }
 
@@ -231,6 +240,16 @@ export function unregisterHost(host: object) {
     now.entries = []
     changed(now)
   })
+}
+
+/** A provider is mounted (or gone): its element marks "a provider of this React" for the ones inside it (S5). */
+export function addProviderRoot(element: Element) { store().roots.add(element) }
+export function removeProviderRoot(element: Element) { store().roots.delete(element) }
+/** Whether a provider of this React sits above `element` in the DOM. Another React's providers, and the stack's stand-in roots, don't count. */
+export function providerAbove(element: Element) {
+  const { roots } = store()
+  for (let above = element.parentElement?.closest('.diya-root'); above; above = above.parentElement?.closest('.diya-root')) if (roots.has(above)) return true
+  return false
 }
 
 /** The next place in arrival order, shared by toast() toasts and <Toast>s. */

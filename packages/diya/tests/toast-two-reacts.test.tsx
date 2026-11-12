@@ -5,7 +5,7 @@
 import { cpSync, mkdirSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { act } from '@testing-library/react'
 import { createElement as h18, version as v18 } from 'react'
 import { createRoot as root18 } from 'react-dom/client'
@@ -68,5 +68,39 @@ describe('two Reacts on one page (S3)', () => {
     await act(async () => { appB.unmount(); appA.unmount() })
     a.remove()
     b.remove()
+  })
+})
+
+// Round 4: an app on another React mounted inside this app's provider (a micro-frontend in the
+// shell's layout) is outermost for its own React, so its toasts show in its own stack (S5; the
+// design system's island probe, DS-R4-01).
+describe('an app on another React inside this app\'s provider (S5)', () => {
+  it("shows its <Toast> and toast() in its own stack, and the shell's stack stays its own", async () => {
+    const warnings = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const shell = document.createElement('div')
+    document.body.append(shell)
+    const appA = root18(shell)
+    await act(async () => { appA.render(h18(A.DiyaProvider, { theme: 'light' }, h18('p', null, 'shell'), h18('div', { id: 'mfe' }))) })
+    const island = shell.querySelector('#mfe')!
+    const appB = root19(island)
+    await act(async () => {
+      appB.render(R19.createElement(C.DiyaProvider, { theme: 'dark' },
+        R19.createElement('p', null, 'island'),
+        R19.createElement(C.Toast, { title: 'Island saved', duration: 0, onDismiss: () => {} })))
+    })
+    await wait(50)
+    await act(async () => { C.toast({ title: 'Island uploaded', description: R19.createElement('span', null, 'From the island.'), duration: 0 }) })
+    await act(async () => { A.toast({ title: 'Shell saved', duration: 0 }) })
+    await wait(80)
+    const titlesIn = (element: Element) => [...element.querySelectorAll('.diya-toast-list .diya-alert-title')].map((node) => node.textContent)
+    expect(titlesIn(island)).toEqual(['Island saved', 'Island uploaded'])
+    expect(island.textContent).toContain('From the island.')
+    // The shell's own stack is the one outside the island.
+    const shellLists = [...shell.querySelectorAll('.diya-toast-list')].filter((list) => !island.contains(list))
+    expect(shellLists.flatMap((list) => titlesIn(list))).toEqual(['Shell saved'])
+    expect(warnings.mock.calls.filter((call) => /no DiyaProvider/.test(String(call[0])))).toEqual([])
+    warnings.mockRestore()
+    await act(async () => { appB.unmount(); appA.unmount() })
+    shell.remove()
   })
 })

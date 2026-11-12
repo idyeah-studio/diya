@@ -8,7 +8,7 @@ import { useClientLayoutEffect } from './internal/layout-effect.js'
 import { composeRefs } from './internal/slot.js'
 import { motionTokens } from './toast/host.js'
 import { ToastStack } from './toast/ToastStack.js'
-import type { ToastLook } from './toast/queue.js'
+import { addProviderRoot, removeProviderRoot, type ToastLook } from './toast/queue.js'
 
 /** DIYA Sans ships with the stylesheet; a metric-matched Arial covers the moment before it loads. */
 export const DEFAULT_FONT_FAMILY = '"DIYA Sans", "DIYA Sans Fallback", Arial, sans-serif'
@@ -126,6 +126,16 @@ export const DiyaProvider = forwardRef<HTMLDivElement, DiyaProviderProps>(functi
   const [owner] = useState(() => ({}))
   const self = useRef<HTMLDivElement | null>(null)
   const setRoot = useMemo(() => composeRefs<HTMLDivElement>(self, ref), [ref])
+  // This provider marks its element for its React's toast stack, so a provider of the same React
+  // inside it makes no stack of its own, while another React's app inside it still does (S5).
+  // Every provider in a commit has marked its element before any stack checks: a stack makes its
+  // host only once its portal (set from a ref, so a commit later) exists.
+  useClientLayoutEffect(() => {
+    const element = self.current
+    if (!element) return
+    addProviderRoot(element)
+    return () => removeProviderRoot(element)
+  }, [])
   // How this provider moves, as resolved here (its motion setting, its duration scale and any set
   // above it), for its <Toast>s, which animate in the page's one stack (R2).
   const [motionOf] = useState(() => () => motionTokens(self.current))
