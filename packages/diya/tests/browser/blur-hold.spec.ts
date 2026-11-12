@@ -68,3 +68,32 @@ test.describe('touch', () => {
     })
   }
 })
+
+// G4 (FE-03): a press whose release the page never sees doesn't hold later errors. Keyboard
+// blurs show at once (frontend.md step 5).
+test.describe('a press the page never sees end (G4)', () => {
+  const keyboardBlurShows = async (page: import('@playwright/test').Page) => {
+    await page.locator('#cvc-ti').focus()
+    await page.locator('#cvc-ti').fill('1')
+    await page.keyboard.press('Tab')
+    await expect(page.locator('#pay-ti .diya-text-field-description')).toBeVisible({ timeout: 500 })
+    await expect(page.locator('#cvc-ti')).toHaveAttribute('aria-invalid', 'true')
+  }
+  test('a press released inside a cross-origin iframe', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=field&theme=light')
+    await page.frameLocator('iframe[title="Card number input"]').locator('#card').waitFor()
+    const frame = (await page.locator('iframe[title="Card number input"]').boundingBox())!
+    // Pressed on the page, released inside the hosted field: the page sees no pointerup.
+    await page.mouse.move(frame.x + 10, frame.y - 30)
+    await page.mouse.down()
+    await page.mouse.move(frame.x + 40, frame.y + frame.height / 2, { steps: 5 })
+    await page.mouse.up()
+    await keyboardBlurShows(page)
+  })
+
+  test('a secondary-button press with no release (a context menu)', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=field&theme=light')
+    await page.evaluate(() => document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 2, isPrimary: true, pointerType: 'mouse' })))
+    await keyboardBlurShows(page)
+  })
+})

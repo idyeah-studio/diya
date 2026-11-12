@@ -30,8 +30,12 @@ export function watchPointer(document: Document) {
     }
     const down = (event: PointerEvent) => {
       if (wait) release()
+      // Only a primary press can click: a second finger, or a right button (whose release a
+      // context menu swallows), never holds an error (G4).
+      // (A synthetic event with no pointerType, as a test sends, counts as the primary one.)
+      if (event.button > 0 || (event.isPrimary === false && !!event.pointerType)) return
       created.pressed = event.target as Element | null
-      touch = event.pointerType !== 'mouse'
+      touch = !!event.pointerType && event.pointerType !== 'mouse'
     }
     const up = (event: PointerEvent) => {
       if (!created.pressed) return
@@ -40,16 +44,33 @@ export function watchPointer(document: Document) {
       else release()
     }
     const click = () => { if (wait) release() }
+    // A press whose release the page never sees (let go inside a cross-origin iframe, or eaten
+    // by a context menu or a native popup) ends at the next sign the press is over: a key, the
+    // pointer moving with no button down, the window losing focus, a drag or a context menu.
+    // Without this, every later error, a keyboard blur's included, waited for the next click (G4).
+    const over = () => { if (created.pressed) release() }
+    const moved = (event: PointerEvent) => { if (created.pressed && !wait && event.buttons === 0) release() }
+    const view = document.defaultView
     document.addEventListener('pointerdown', down, true)
     document.addEventListener('pointerup', up, true)
     document.addEventListener('pointercancel', up, true)
     document.addEventListener('click', click, true)
+    document.addEventListener('keydown', over, true)
+    document.addEventListener('pointermove', moved, true)
+    document.addEventListener('dragstart', over, true)
+    document.addEventListener('contextmenu', over, true)
+    view?.addEventListener('blur', over)
     created.stop = () => {
       if (wait) clearTimeout(wait)
       document.removeEventListener('pointerdown', down, true)
       document.removeEventListener('pointerup', up, true)
       document.removeEventListener('pointercancel', up, true)
       document.removeEventListener('click', click, true)
+      document.removeEventListener('keydown', over, true)
+      document.removeEventListener('pointermove', moved, true)
+      document.removeEventListener('dragstart', over, true)
+      document.removeEventListener('contextmenu', over, true)
+      view?.removeEventListener('blur', over)
     }
     watches.set(document, created)
     watch = created
