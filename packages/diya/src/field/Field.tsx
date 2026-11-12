@@ -2,6 +2,7 @@
 import { cloneElement, forwardRef, isValidElement, useEffect, useId, useMemo, useRef, useState, type HTMLAttributes, type ReactElement, type ReactNode } from 'react'
 import { cx } from '../internal/cx.js'
 import { DIYA_FIELD, renderDescription, useErrorAnnouncement, useShownError } from '../internal/field-parts.js'
+import { watchFocus } from '../internal/frame-focus.js'
 import { composeRefs, onlyChild } from '../internal/slot.js'
 import { warnOnce } from '../internal/warn.js'
 
@@ -36,7 +37,7 @@ export type FieldProps = Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'id'>
   disabled?: boolean
   /** With `framed`, the frame's height and text size; defaults to 'medium'. */
   size?: 'small' | 'medium' | 'large'
-  /** Draws DIYA's field box (fill, edge, corner, height and focus ring) around a control that has none, such as a payment provider's card iframe or a native time input. Defaults to false. */
+  /** Draws DIYA's field box (fill, edge, corner, height and focus ring) around a control that has none, such as a payment provider's card iframe or a native time input. A label click focuses the iframe; if your provider needs its own `focus()` to reach its input (Stripe, Braintree), call it from the label: `onClick={(event) => { if ((event.target as Element).closest('label')) card.focus() }}`. Defaults to false. */
   framed?: boolean
   /** The control's id; defaults to the child's own `id`, then a generated one. */
   id?: string
@@ -73,8 +74,8 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field({ lab
   }
 
   // Focus in the field, as a signal the frame can show and an unreachable control can announce
-  // on: focusin and focusout, and, for an iframe, the page's window losing focus to it (focus
-  // that moves into a frame never reaches the page's focus events).
+  // on: focusin and focusout, and, for a control in an iframe, the shared focus watcher (focus
+  // that moves into a frame barely reaches the page's focus events).
   const [focused, setFocusedState] = useState(false)
   const [arrived, setArrived] = useState(0)
   const isFocused = useRef(false)
@@ -88,29 +89,16 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field({ lab
   useEffect(() => {
     const node = wrapper.current
     if (!node) return
-    const document = node.ownerDocument
-    const view = document.defaultView
+    // A control in an iframe: the shared focus watcher tells this field whether focus is in it,
+    // including between two hosted frames and out to blank page (G5).
+    if (hasFrame) return watchFocus(node.ownerDocument, (active) => setFocused(!!active && node.contains(active)))
     const enter = () => setFocused(true)
     const leave = (event: FocusEvent) => { if (!node.contains(event.relatedTarget as Node | null)) setFocused(false) }
     node.addEventListener('focusin', enter)
     node.addEventListener('focusout', leave)
-    let frame = 0
-    const blurred = () => {
-      frame = view?.requestAnimationFrame(() => { const active = document.activeElement; if (active?.tagName === 'IFRAME' && node.contains(active)) enter() }) ?? 0
-    }
-    const elsewhere = (event: FocusEvent) => { if (!node.contains(event.target as Node)) setFocused(false) }
-    if (hasFrame) {
-      view?.addEventListener('blur', blurred)
-      document.addEventListener('focusin', elsewhere)
-    }
     return () => {
       node.removeEventListener('focusin', enter)
       node.removeEventListener('focusout', leave)
-      if (hasFrame) {
-        view?.removeEventListener('blur', blurred)
-        document.removeEventListener('focusin', elsewhere)
-        if (frame) view?.cancelAnimationFrame(frame)
-      }
     }
   }, [hasFrame, reachable])
   useErrorAnnouncement(label, shown, wrapper, reachable ? 0 : arrived)

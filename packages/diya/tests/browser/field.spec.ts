@@ -120,3 +120,38 @@ test('a framed select shows an indicator; a framed textarea shows 3 lines (G2)',
   expect(notes.clipped).toBeLessThanOrEqual(1)
   expect(notes.lines).toBeGreaterThanOrEqual(3)
 })
+
+// G5 (UX-S56-03, FE-05, VIS-S56-01): the frame's ring follows focus into, between and out of
+// hosted iframes, in all three engines; the field focus arrives in says its error.
+test.describe('the ring follows focus across hosted iframes (G5)', () => {
+  const frameOf = (page: Page, title: string) => page.locator('.diya-field-frame').filter({ has: page.locator(`iframe[title="${title}"]`) })
+  const ready = async (page: Page) => {
+    for (const title of ['Split number', 'Split expiry']) await page.frameLocator(`iframe[title="${title}"]`).locator('#card').waitFor()
+  }
+  test('moves from one split field to the next', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=providers&theme=light')
+    await ready(page)
+    await page.frameLocator('iframe[title="Split number"]').locator('#card').click()
+    await expect(frameOf(page, 'Split number')).toHaveAttribute('data-focused', '')
+    await page.frameLocator('iframe[title="Split expiry"]').locator('#card').click()
+    await expect(frameOf(page, 'Split expiry')).toHaveAttribute('data-focused', '')
+    await expect(frameOf(page, 'Split number')).not.toHaveAttribute('data-focused', '')
+  })
+
+  test('clears when you click blank page', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=providers&theme=light')
+    await ready(page)
+    await page.frameLocator('iframe[title="Split number"]').locator('#card').click()
+    await expect(frameOf(page, 'Split number')).toHaveAttribute('data-focused', '')
+    await page.locator('#blank').click()
+    await expect(frameOf(page, 'Split number')).not.toHaveAttribute('data-focused', '')
+  })
+
+  test("the split field focus arrives in says its error", async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=providers&theme=light&error=1')
+    await ready(page)
+    await page.frameLocator('iframe[title="Split number"]').locator('#card').click()
+    await page.frameLocator('iframe[title="Split expiry"]').locator('#card').click()
+    await expect(page.locator('.diya-toast-host > [aria-live=polite]')).toHaveText('Expiry: Enter the expiry date.')
+  })
+})

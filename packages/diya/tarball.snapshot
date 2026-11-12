@@ -94,6 +94,8 @@ dist/internal/cx.d.ts
 dist/internal/cx.js
 dist/internal/field-parts.d.ts
 dist/internal/field-parts.js
+dist/internal/frame-focus.d.ts
+dist/internal/frame-focus.js
 dist/internal/layout-effect.d.ts
 dist/internal/layout-effect.js
 dist/internal/link.d.ts
