@@ -70,6 +70,7 @@ type Store = {
   count: number
   order: number
   dropping: boolean
+  slotCount: number
 }
 
 // One store per page, on globalThis under a versioned key: two copies of the package in one page
@@ -78,7 +79,7 @@ type Store = {
 const KEY = Symbol.for('@idyeah/diya/toast@1')
 function store(): Store {
   const host = globalThis as unknown as Record<symbol, Store | undefined>
-  return (host[KEY] ??= { entries: [], hosts: [], slots: [], elements: new Map(), paused: false, copies: null, focus: null, version: 0, listeners: new Set(), snapshot: { entries: [], hosts: [], slots: [], version: 0 }, count: 0, order: 0, dropping: false })
+  return (host[KEY] ??= { entries: [], hosts: [], slots: [], elements: new Map(), paused: false, copies: null, focus: null, version: 0, listeners: new Set(), snapshot: { entries: [], hosts: [], slots: [], version: 0 }, count: 0, order: 0, dropping: false, slotCount: 0 })
 }
 
 function changed(state: Store) {
@@ -190,8 +191,8 @@ export function nextToastOrder() {
 
 // --- <Toast> slots: every provider's <Toast>s share the page's one stack ------------------
 
-let slotCount = 0
-export const nextToastSlotKey = () => `diya-slot-${++slotCount}`
+/** A key for a new <Toast>'s place, from the page's store, so two copies of the package never hand out the same one (R8). On the server it's never used. */
+export const nextToastSlotKey = () => (onServer() ? `diya-slot-server-${++serverCount}` : `diya-slot-${++store().slotCount}`)
 export function addToastSlot(slot: ToastSlot) {
   const state = store()
   state.slots = [...state.slots.filter((item) => item.key !== slot.key), slot]

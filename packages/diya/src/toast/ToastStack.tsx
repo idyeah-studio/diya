@@ -104,7 +104,10 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
 
   // The host: made in the browser only, so the server markup is unchanged.
   useClientLayoutEffect(() => {
-    if (!portal || !outermost) return
+    // Outermost on the page, not only in this copy's React tree: a provider from another copy of
+    // the package (or another React root) inside a DIYA provider makes no stack, so the page
+    // keeps one, in its outermost provider (R8).
+    if (!portal || !outermost || portal.parentElement?.parentElement?.closest('.diya-root')) return
     const made = createToastHost(portal.ownerDocument)
     portal.append(made.root)
     // Out of the top layer once the last exit has played and nothing shows.
