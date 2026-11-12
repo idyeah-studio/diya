@@ -98,7 +98,8 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   const outside = useRef<HTMLElement | null>(null)
   // The element in the stack that focus last went to.
   const focused = useRef<Element | null>(null)
-  // Where focus was when it came into the stack from outside: where × sends it back (G8).
+  // Where focus was when it came into the stack from outside, for this visit only: where × sends
+  // it back (G8). Forgotten when focus leaves the stack or the stack empties (H2).
   const cameFrom = useRef<HTMLElement | null>(null)
   const nativeModal = useRef<HTMLDialogElement | null>(null)
   // Each toast's shifts, so one still waiting to start can fold into the next (R3).
@@ -603,13 +604,17 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     const leave = (event: MouseEvent) => { if (!node.contains(event.relatedTarget as Node | null)) setPointer(false) }
     const focusIn = (event: globalThis.FocusEvent) => {
       focused.current = event.target as Element
+      // Coming in from outside (or from <body>, which leaves nothing to go back to), this visit's
+      // entry point replaces any earlier one (H2).
       const from = event.relatedTarget as HTMLElement | null
-      if (from && !node.contains(from)) cameFrom.current = from
+      if (!from || !node.contains(from)) cameFrom.current = from
       setFocusInside(true)
     }
     const focusOut = (event: globalThis.FocusEvent) => {
       if (node.contains(event.relatedTarget as Node)) return
       setFocusInside(false)
+      // The visit is over: where it came in from is forgotten with it (H2).
+      cameFrom.current = null
       // Focus left the stack: any F8 walk is over.
       walking.current = false
       origin.current = null

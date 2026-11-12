@@ -89,3 +89,42 @@ test.describe('× on a toast raised by another button, while typing in a field (
     })
   }
 })
+
+// H2 (FE G-02, UX-G-01; a regression from G8): where focus came into the stack from belongs to
+// that visit only. Once focus has left the stack, × and Undo send it to the last place you were.
+test.describe('an earlier visit to the stack is forgotten (H2)', () => {
+  test('an earlier F8 visit, then a field, typing, then ×', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.locator('#post-toast').click()
+    const name = page.getByRole('textbox', { name: 'Project name' })
+    await name.focus()
+    await page.keyboard.press('F8')
+    await expect(page.getByRole('button', { name: 'Dismiss: Comment saved' })).toBeFocused()
+    await page.locator('#extra').click()
+    await page.keyboard.type('B')
+    await page.locator('#probe-blank').click()
+    await page.getByRole('button', { name: 'Dismiss: Comment saved' }).click()
+    await page.keyboard.type('!')
+    await expect(page.locator('#extra')).toHaveValue('B!')
+    await expect(name).toHaveValue('Atlas')
+  })
+
+  test('Tab into the stack and out, then a field, typing, then Undo', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.evaluate(() => { (window as any).comps.add({ title: 'Comment posted', action: { label: 'Undo', onClick() {} } }) })
+    const tab = testInfo.project.name.startsWith('webkit') ? 'Alt+Tab' : 'Tab'
+    await page.locator('#open-dialog').focus()
+    await page.keyboard.press(tab)
+    await expect(page.getByRole('button', { name: 'Undo' })).toBeFocused()
+    await page.keyboard.press(`Shift+${tab}`)
+    await expect(page.locator('#open-dialog')).toBeFocused()
+    const name = page.getByRole('textbox', { name: 'Project name' })
+    await name.click()
+    await page.keyboard.press('End')
+    await page.keyboard.type(' Labs')
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await page.keyboard.type('!')
+    await expect(name).toHaveValue('Atlas Labs!')
+  })
+})
+

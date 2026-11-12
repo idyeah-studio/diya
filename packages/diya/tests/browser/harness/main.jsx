@@ -300,6 +300,8 @@ function ProbeCase() {
   return (
     <div style={{ padding: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'start' }}>
       {query.get('bg') === '1' && <div aria-hidden="true" style={{ position: 'fixed', right: 0, bottom: 0, width: 520, height: 560, background: 'repeating-linear-gradient(135deg, #e4572e 0 24px, #29335c 24px 48px, #f3a712 48px 72px)', zIndex: 0 }} />}
+      <p id="probe-blank" style={{ margin: 0 }}>Blank page</p>
+      <input id="extra" aria-label="Extra" />
       <Button id="post-comment" onClick={() => window.comps.add({ title: 'Comment posted' })}>Post comment</Button>
       <Button id="post-toast" onClick={() => diya.toast({ title: 'Comment saved', duration: 0 })}>Save comment</Button>
       <TextInput label="Project name" defaultValue="Atlas" />
