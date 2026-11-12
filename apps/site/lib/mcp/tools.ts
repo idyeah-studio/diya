@@ -26,12 +26,12 @@ const SYNONYMS: Record<string, string[]> = {
   dropdown: ['select', 'menu'], picker: ['select', 'combobox', 'date-picker'], autocomplete: ['combobox'], typeahead: ['combobox'],
   multiselect: ['combobox'], pick: ['select', 'combobox', 'choice'], choose: ['select', 'combobox', 'choice'], option: ['select', 'choice'],
   country: ['combobox'], timezone: ['combobox'], currency: ['select'],
-  input: ['text-input'], field: ['text-input'], textfield: ['text-input'], email: ['text-input'], password: ['text-input'],
+  input: ['text-input'], field: ['field', 'text-input'], formfield: ['field'], wrapper: ['field'], iframe: ['field'], hosted: ['field'], payment: ['field'], stripe: ['field'], textfield: ['text-input'], email: ['text-input'], password: ['text-input'],
   textarea: ['text-area'], multiline: ['text-area'], calendar: ['calendar', 'date-picker'], date: ['date-picker'], daterange: ['date-picker'],
   day: ['calendar', 'date-picker'], booking: ['calendar'], appointment: ['calendar'], availability: ['calendar'], agenda: ['calendar'], schedule: ['calendar'],
   range: ['slider', 'date-picker'], sidebar: ['side-navigation'], nav: ['side-navigation', 'site-header'],
   navigation: ['side-navigation', 'site-header'], navbar: ['site-header'], topbar: ['site-header'], header: ['site-header', 'page-header'],
-  title: ['page-header'], snackbar: ['toast'], notification: ['toast', 'alert'], banner: ['alert'], callout: ['alert'],
+  title: ['page-header'], snackbar: ['toast'], notify: ['toast'], notification: ['toast', 'alert'], banner: ['alert'], callout: ['alert'],
   warning: ['alert'], chart: ['data-viz'], graph: ['data-viz'], plot: ['data-viz'], kpi: ['metric'], stat: ['metric'],
   stats: ['metric'], grid: ['table'], datagrid: ['table'], rows: ['table'], empty: ['content-state'], zero: ['content-state'],
   nothing: ['content-state'], loading: ['content-state', 'progress'], stepper: ['wizard'], steps: ['wizard'], onboarding: ['wizard'],
@@ -110,7 +110,7 @@ export function searchComponents({ query, limit = 5 }: { query: string; limit?: 
   if (top.length) {
     top.forEach(({ entry }, index) => {
       const use = entry.catalog?.guidance.use ?? entry.component?.description ?? ''
-      out.push(`${index + 1}. ${entry.title} · \`import { ${entry.exportName} } from '${entry.importFrom}'\`${entry.kind === 'pattern' ? ' · pattern' : ''}`)
+      out.push(`${index + 1}. ${entry.title} · \`import { ${entry.exportName} } from '${entry.importFrom}'\`${entry.kind === 'pattern' || entry.kind === 'utility' ? ` · ${entry.kind}` : ''}`)
       out.push(`   ${use}`)
       if (entry.catalog?.guidance.instead) out.push(`   Not quite? ${entry.catalog.guidance.instead}`)
     })
@@ -176,7 +176,21 @@ const EXTRA_EXAMPLES: Record<string, string> = {
   Inline:
     '```tsx\n<Inline gap={2} justify="end">\n  <Button variant="outline">Cancel</Button>\n  <Button>Save</Button>\n</Inline>\n```\nCenters its children and wraps them onto the next line when the row runs out of room.',
   DiyaProvider: 'get_setup has the app root; get_theme has brandColor, glass, fonts and motion.',
-  Toast: 'Render it where the message belongs; it floats above the page and dismisses itself.',
+  Toast: [
+    'Call `toast()` from the code that did the work: no state, and it works from any client code.',
+    '```tsx',
+    `import { toast } from '${API.package}'`,
+    '',
+    "toast({ tone: 'success', title: 'Draft saved', description: 'Everyone on the project can see it.' })",
+    '```',
+    'An Undo is its `action`. Calling again with the same `id` updates that toast in place, such as "Saving…" then "Saved". Use `<Toast>` only for a toast whose life is tied to a component\'s state: render it while the state holds and unmount it in `onDismiss`.',
+    ...(API.types.ToastOptions ? ['```ts', `type ToastOptions = ${API.types.ToastOptions}`, '```'] : []),
+  ].join('\n'),
+}
+
+/** A line under the description, for exports most code reaches another way. */
+const LEADS: Record<string, string> = {
+  Toast: 'Most toasts need no component: call `toast({ title, description, tone })` from the handler (Example, below). The props are for `<Toast>`.',
 }
 
 export const COMPONENT_SECTIONS = ['props', 'accessibility', 'example', 'tokens', 'messages'] as const
@@ -199,6 +213,7 @@ export function getComponent({ name, include }: { name: string; include?: Compon
     `# ${entry.title} (\`${entry.exportName}\`) · ${entry.kind} · ${item.stability} since ${item.since}`,
     `\`import { ${entry.exportName} } from '${entry.importFrom}'\`${needs.length ? ` · ${needs.join(' · ')}` : ''}`,
     component?.description ?? '',
+    ...(LEADS[entry.exportName] ? [LEADS[entry.exportName]] : []),
   ]
   if (item.stability !== 'stable') out.push('Experimental: its API may change in a minor release.')
   if (entry.variants.length) out.push(`Also exported: ${entry.variants.map((variant) => `\`${variant}\``).join(', ')}.`)
@@ -238,7 +253,7 @@ export function getComponent({ name, include }: { name: string; include?: Compon
     if (catalog) out.push('', `## Complete file (\`${catalog.fileName}\`)`, '```tsx', catalog.file.trimEnd(), '```')
     else if (EXTRA_EXAMPLES[entry.exportName]) out.push('', '## Example', EXTRA_EXAMPLES[entry.exportName])
   }
-  out.push('', `Catalog: ${catalog?.url ?? `${SITE}/explore`}`)
+  out.push('', entry.kind === 'utility' ? 'A utility: not counted among the components, and no catalog page.' : `Catalog: ${catalog?.url ?? `${SITE}/explore`}`)
   return out.filter((line, index, all) => !(line === '' && all[index - 1] === '')).join('\n')
 }
 

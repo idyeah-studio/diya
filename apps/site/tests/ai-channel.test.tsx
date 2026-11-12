@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DiyaProvider } from '@idyeah/diya'
-import { itemBrief, llmsFull, llmsIndex, screenLines } from '../components/reference/ai-docs'
+import { itemBrief, llmsFull, llmsIndex, RULES, screenLines, utilityItems } from '../components/reference/ai-docs'
 import { screens, type ScreenStatus } from '../components/screens/screens-data'
 import { API, EXPORT_NAMES, itemReference, itemUrl, kebab } from '../components/reference/api'
 import { guidance } from '../components/reference/guidance'
@@ -156,5 +156,37 @@ describe('Reference panel', () => {
   it('renders nothing off an item page', () => {
     const { container } = render(<ReferencePanel path="/explore?area=pro" />)
     expect(container.innerHTML).toBe('')
+  })
+})
+
+describe('the AI channel in 1.2', () => {
+  it('teaches toast(), Field and the portal container in the rules', () => {
+    expect(RULES).toContain("- Show a toast with `toast({ title, description, tone })` from any client code; don't keep toast state yourself. Use `<Toast>` only when a toast's life is tied to a component's state.")
+    expect(RULES).toContain("- DIYA's fields take `label`, `helperText` and `error` themselves; wrap only other controls in `Field` (`framed` for a hosted iframe).")
+    expect(RULES).toContain('- A popup from another library inside Dialog or Drawer: pass `useDiyaPortalContainer()` as its portal container.')
+    for (const text of [llmsIndex(), llmsFull(), itemBrief('alert')]) expect(text).toContain('Show a toast with `toast({ title, description, tone })`')
+    expect(llmsIndex()).toContain('- [Field](https://diya13.ai/explore?area=components&component=field): `Field`.')
+  })
+
+  it('lists utilities on their own, never among the components, with no catalog page', () => {
+    const items = API.items as Record<string, unknown>
+    const components = API.components as Record<string, unknown>
+    expect(utilityItems()).toEqual([])
+    expect(llmsIndex()).not.toContain('## Utilities')
+    items['sample-utility'] = { kind: 'utility', title: 'Sample Utility', stability: 'stable', since: '1.2.0', exports: [{ entry: '.', name: 'SampleUtility' }] }
+    components.SampleUtility = { description: 'Words only a screen reader hears.', entry: '.', props: { children: { type: 'ReactNode', description: 'The words.', required: true } } }
+    try {
+      const index = llmsIndex()
+      const utilities = index.slice(index.indexOf('## Utilities'))
+      expect(utilities).toMatch(/^## Utilities\n\nHelpers, not components: they aren't counted among the components and have no catalog page\.\n\n- `SampleUtility` from `@idyeah\/diya`: Words only a screen reader hears\.\n/)
+      expect(index.slice(index.indexOf('## Components'), index.indexOf('## Utilities'))).not.toContain('SampleUtility')
+      const full = llmsFull()
+      expect(full).toContain('## Utilities\n\n### Sample Utility (`SampleUtility`)\n\nWords only a screen reader hears. Import from `@idyeah/diya`. A utility: not counted among the components, and no catalog page.')
+      expect(full).toContain('| `children` (required) | `ReactNode` |')
+      expect(full.slice(full.indexOf('## Other exports'))).not.toContain('SampleUtility')
+    } finally {
+      delete items['sample-utility']
+      delete components.SampleUtility
+    }
   })
 })

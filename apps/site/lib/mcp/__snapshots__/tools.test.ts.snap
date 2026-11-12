@@ -139,6 +139,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 ## Rules
 - Every component renders inside \`DiyaProvider\`; popups, tooltips and toasts need it. Its \`theme\` defaults to \`"system"\` (follows the OS light or dark setting, in CSS, with no flash); pass \`"light"\` or \`"dark"\` to fix it. It paints its own background and text color; \`surface={false}\` leaves that to your page.
 - Fields work controlled (\`value\` with \`onValueChange\`; Switch: \`checked\` with \`onCheckedChange\`) or uncontrolled (\`defaultValue\`; Switch: \`defaultChecked\`). Native \`name\`, \`onChange\` and \`onBlur\` reach the native control, so react-hook-form \`register()\` works on TextInput, TextArea, Select, Switch, Choice and Slider without a Controller. Labels are required, even when hidden with \`hideLabel\`.
+- DIYA's fields take \`label\`, \`helperText\` and \`error\` themselves; wrap only other controls in \`Field\` (\`framed\` for a hosted iframe).
+- Show a toast with \`toast({ title, description, tone })\` from any client code; don't keep toast state yourself. Use \`<Toast>\` only when a toast's life is tied to a component's state.
 - Lay screens out with \`Stack\` (vertical) and \`Inline\` (horizontal, wrapping): \`gap\` takes a spacing step (1–8) or any CSS length, plus \`align\`, \`justify\`, \`wrap\` and \`as\`.
 - One brand color, set once: \`<DiyaProvider brandColor="#1F4E7A">\`, or \`{ light, dark }\`. Components take no color props (chart series aside); \`tone\` picks a status.
 - Every component takes \`className\`, \`style\` and its root element's attributes. Theme with public \`--diya-*\` tokens on \`.diya-root\`, never by overriding internal classes. DIYA's CSS sits in \`@layer diya\`, so your CSS and Tailwind utilities win.
@@ -146,6 +148,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 - DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.
 - Charts import from \`@idyeah/diya/charts\` and need \`echarts@6\` installed.
 - Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
+- A popup from another library inside Dialog or Drawer: pass \`useDiyaPortalContainer()\` as its portal container.
 - DIYA animates popups, dialogs, toggles and selection, and follows the device's Reduce Motion setting. \`motion="reduced"\` (fades only) or \`"off"\` on DiyaProvider changes it for everything inside; nested providers inherit it. Tune the speed with \`--diya-duration-scale\`. In browser tests, render with \`motion="off"\`.
 
 These notes describe 1.1.1. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
@@ -180,6 +183,8 @@ createRoot(document.getElementById('root')!).render(
 ## Rules
 - Every component renders inside \`DiyaProvider\`; popups, tooltips and toasts need it. Its \`theme\` defaults to \`"system"\` (follows the OS light or dark setting, in CSS, with no flash); pass \`"light"\` or \`"dark"\` to fix it. It paints its own background and text color; \`surface={false}\` leaves that to your page.
 - Fields work controlled (\`value\` with \`onValueChange\`; Switch: \`checked\` with \`onCheckedChange\`) or uncontrolled (\`defaultValue\`; Switch: \`defaultChecked\`). Native \`name\`, \`onChange\` and \`onBlur\` reach the native control, so react-hook-form \`register()\` works on TextInput, TextArea, Select, Switch, Choice and Slider without a Controller. Labels are required, even when hidden with \`hideLabel\`.
+- DIYA's fields take \`label\`, \`helperText\` and \`error\` themselves; wrap only other controls in \`Field\` (\`framed\` for a hosted iframe).
+- Show a toast with \`toast({ title, description, tone })\` from any client code; don't keep toast state yourself. Use \`<Toast>\` only when a toast's life is tied to a component's state.
 - Lay screens out with \`Stack\` (vertical) and \`Inline\` (horizontal, wrapping): \`gap\` takes a spacing step (1–8) or any CSS length, plus \`align\`, \`justify\`, \`wrap\` and \`as\`.
 - One brand color, set once: \`<DiyaProvider brandColor="#1F4E7A">\`, or \`{ light, dark }\`. Components take no color props (chart series aside); \`tone\` picks a status.
 - Every component takes \`className\`, \`style\` and its root element's attributes. Theme with public \`--diya-*\` tokens on \`.diya-root\`, never by overriding internal classes. DIYA's CSS sits in \`@layer diya\`, so your CSS and Tailwind utilities win.
@@ -187,6 +192,7 @@ createRoot(document.getElementById('root')!).render(
 - DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.
 - Charts import from \`@idyeah/diya/charts\` and need \`echarts@6\` installed.
 - Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
+- A popup from another library inside Dialog or Drawer: pass \`useDiyaPortalContainer()\` as its portal container.
 - DIYA animates popups, dialogs, toggles and selection, and follows the device's Reduce Motion setting. \`motion="reduced"\` (fades only) or \`"off"\` on DiyaProvider changes it for everything inside; nested providers inherit it. Tune the speed with \`--diya-duration-scale\`. In browser tests, render with \`motion="off"\`.
 
 These notes describe 1.1.1. If \`npm ls @idyeah/diya\` shows an older version, upgrade first; get_component says when each item arrived."
@@ -281,10 +287,10 @@ exports[`what an agent reads, word for word > search: toggle 1`] = `
    For one line of free text: a name, an email, a URL.
    Not quite? Several lines? Text Area. A fixed set of answers? Select or Choice.
 3. Alert · \`import { Alert } from '@idyeah/diya'\`
-   For a message about the page or a task: saved, needs attention, failed. Toast is the same message, floated and temporary.
+   For a message about the page or a task: saved, needs attention, failed. For the same message floated and temporary, call toast({ title, description, tone }) from the code that did the work.
    Not quite? Something that needs a decision before going on? Dialog.
 4. Toast · \`import { Toast } from '@idyeah/diya'\`
-   A temporary Alert floated above the page that dismisses itself after a while; the host unmounts the toast in \`onDismiss\`. \`className\`, \`style\` and the ref reach the Alert.
+   A temporary Alert floated above the page that dismisses itself after a while; the host unmounts the toast in \`onDismiss\`. It joins the page's one stack, with any toast() toasts, in its own provider's look. \`className\`, \`style\` and the ref reach the Alert.
 
 Next: get_component with a name, for its props and a complete file."
 `;
