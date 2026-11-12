@@ -1221,6 +1221,12 @@
   color: var(--diya-color-muted);
   opacity: 1;
 }
+/* Whatever a provider hands over fills the frame (G1): Stripe's mount div, which holds an iframe
+   sized width: 1px !important; min-width: 100% !important, or a bare iframe. */
+.diya-root .diya-field-frame > :not(input, select, textarea) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .diya-root .diya-field-frame iframe {
   color-scheme: light;
   display: block;

@@ -347,7 +347,44 @@ function FieldCase() {
   )
 }
 
-const cases = { field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+// Real hosted-field patterns inside Field framed (the front-end review, steps 5–6): Stripe's
+// mount div holding an iframe with !important inline sizing, a bare iframe, split card fields
+// (number, expiry), a native select and a textarea; plus a Dialog that mounts on its opener's
+// click, with no other overlay on the page.
+function ProvidersCase() {
+  const [later, setLater] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const stripe = useRef(null)
+  const cross = (name) => `${location.protocol}//127.0.0.1:${location.port}/card.html?${name}`
+  useEffect(() => {
+    // As Stripe Elements mounts: a private div, then an iframe with !important inline sizing.
+    const holder = document.createElement('div')
+    holder.className = '__PrivateStripeElement'
+    holder.setAttribute('style', 'margin: 0px !important; padding: 0px !important; border: none !important; display: block !important; background: transparent !important; position: relative !important; opacity: 1 !important;')
+    const frame = document.createElement('iframe')
+    frame.title = 'Stripe-like card'
+    frame.src = cross('stripe')
+    frame.setAttribute('style', 'border: none !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; user-select: none !important; height: 19.2px;')
+    holder.append(frame)
+    stripe.current.append(holder)
+    return () => holder.remove()
+  }, [])
+  return (
+    <div style={{ display: 'grid', gap: 24, padding: 24, width: 360 }}>
+      <Button id="later-open" onClick={() => { setMounted(true); setLater(true) }}>Open later</Button>
+      {mounted && <Dialog title="Later" open={later} onOpenChange={setLater}><p>Body</p></Dialog>}
+      <diya.Field label="Card (mount div)" framed><div id="stripe-mount" ref={stripe} /></diya.Field>
+      <diya.Field label="Card (bare iframe)" framed><iframe title="Bare card" src={cross('bare')} /></diya.Field>
+      <diya.Field label="Card number" framed><iframe title="Split number" src={cross('a')} /></diya.Field>
+      <diya.Field label="Expiry" framed error={query.get('error') ? 'Enter the expiry date.' : undefined}><iframe title="Split expiry" src={cross('b')} /></diya.Field>
+      <diya.Field label="Region" framed><select id="framed-select"><option>North</option><option>South</option></select></diya.Field>
+      <diya.Field label="Notes" framed><textarea id="framed-notes" defaultValue={'one\ntwo\nthree'} /></diya.Field>
+      <p id="blank" style={{ padding: 24 }}>Blank page</p>
+    </div>
+  )
+}
+
+const cases = { providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; }'

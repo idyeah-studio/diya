@@ -80,3 +80,25 @@ test('320px: no sideways scroll', async ({ page }, testInfo) => {
   await openCase(page, testInfo, 'case=field&theme=light&narrow=1')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
 })
+
+// G1 (FE-01): a hosted field fills the frame, whatever the provider puts in it. Stripe's mount div
+// holds an iframe sized `width: 1px !important; min-width: 100% !important`; others hand over a
+// bare iframe; split fields put one in each Field.
+test.describe('a hosted field fills its frame (G1)', () => {
+  const inner = (page: Page, selector: string) => page.evaluate((selector) => {
+    const node = document.querySelector(selector)!
+    const frame = node.closest('.diya-field-frame')!
+    const style = getComputedStyle(frame)
+    const content = frame.getBoundingClientRect().width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth)
+    return { content: Math.round(content), width: Math.round(node.getBoundingClientRect().width) }
+  }, selector)
+  for (const [name, selector] of [['a mount div (Stripe)', '#stripe-mount'], ["the mount div's iframe (Stripe)", 'iframe[title="Stripe-like card"]'], ['a bare iframe', 'iframe[title="Bare card"]'], ['split fields: the number', 'iframe[title="Split number"]'], ['split fields: the expiry', 'iframe[title="Split expiry"]'], ['a mount div with a plain iframe (the field case)', '.mount']] as const) {
+    test(name, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, `case=${selector === '.mount' ? 'field' : 'providers'}&theme=light`)
+      await page.locator(selector).waitFor({ state: 'attached' })
+      const { content, width } = await inner(page, selector)
+      expect(content).toBeGreaterThan(200)
+      expect(Math.abs(width - content)).toBeLessThanOrEqual(1)
+    })
+  }
+})
