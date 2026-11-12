@@ -7,6 +7,7 @@ import { cx } from '../internal/cx.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { pushModal, removeModal } from '../internal/modal-stack.js'
 import { inertWhileExiting } from '../internal/presence.js'
+import { opener, watchPresses } from '../internal/opener.js'
 import { watchForStrayPopups } from '../internal/stray-popups.js'
 import { composeRefs } from '../internal/slot.js'
 import { drawerMessages } from './drawer-messages.js'
@@ -52,11 +53,14 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
     if (returnFocus.current?.isConnected) returnFocus.current.focus()
     returnFocus.current = null
   }
+  // Remember presses, so a drawer opened by a click in Safari can give focus back to its opener.
+  useEffect(() => { if (dialog.current) watchPresses(dialog.current.ownerDocument) }, [])
   useEffect(() => {
     const node = dialog.current
     if (!node) return
     if (open && !node.open) {
-      returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      // The opener, even when a click in Safari left focus on <body> (F2).
+      returnFocus.current = opener(document)
       node.inert = false
       // Safari applies inert through style: read layout so it's lifted before showModal()
       // picks what to focus, or a drawer reopened mid-exit opens with focus on <body>.

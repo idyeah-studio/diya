@@ -506,7 +506,10 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     const document = host?.root.ownerDocument
     const slots = reachable()
     const slot = slots.find((item) => item.dataset.key === id)
-    if (!document || !slot?.contains(document.activeElement)) return
+    if (!document || !slot) return
+    // A click on × in Safari leaves focus on <body>: back by the chain, where the person was (UX-R3-01).
+    if (document.activeElement === document.body || !document.activeElement) { returnFocus(id, fallback); return }
+    if (!slot.contains(document.activeElement)) return
     const index = slots.indexOf(slot)
     const neighbor = slots[index - 1] ?? slots[index + 1]
     if (neighbor) controls(neighbor)[0].focus()

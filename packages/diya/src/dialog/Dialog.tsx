@@ -6,6 +6,7 @@ import { cx } from '../internal/cx.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { pushModal, removeModal } from '../internal/modal-stack.js'
 import { inertWhileExiting } from '../internal/presence.js'
+import { opener, watchPresses } from '../internal/opener.js'
 import { watchForStrayPopups } from '../internal/stray-popups.js'
 import { composeRefs, renderSlot } from '../internal/slot.js'
 import { dialogMessages } from './messages.js'
@@ -116,6 +117,8 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
     },
     []
   )
+  // Remember presses, so a dialog opened by a click in Safari can give focus back to its opener.
+  useEffect(() => { if (dialog.current) watchPresses(dialog.current.ownerDocument) }, [])
   // A layout cleanup runs before React removes the dialog's node, so whatever follows the modal
   // stack (the toast stack) leaves it while it's still in the page.
   useClientLayoutEffect(() => {
@@ -126,8 +129,8 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
     const node = dialog.current
     if (!node) return
     if (open && !node.open) {
-      previousFocus.current =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null
+      // The opener, even when a click in Safari left focus on <body> (F2).
+      previousFocus.current = opener(document)
       setError('')
       node.inert = false
       // Safari applies inert through style: read layout so it's lifted before showModal()

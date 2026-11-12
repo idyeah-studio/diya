@@ -92,6 +92,8 @@ dist/internal/link.d.ts
 dist/internal/link.js
 dist/internal/modal-stack.d.ts
 dist/internal/modal-stack.js
+dist/internal/opener.d.ts
+dist/internal/opener.js
 dist/internal/presence.d.ts
 dist/internal/presence.js
 dist/internal/slot.d.ts

@@ -63,7 +63,10 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
   // Focus follows the stack's chain, as for toast() (T12): Escape goes back to where F8 was
   // pressed, a close button to the toast beside it; where the toast was raised is a fallback.
   function dismiss(adjacent = false) {
-    if (slotRef.current?.contains(document.activeElement)) returnToastFocus(key, returnFocus.current, adjacent)
+    // Focus on <body> too: a click on × in Safari doesn't focus it, and focus would stay lost
+    // (UX-R3-01). The chain then returns it where the person was, as Undo does.
+    const active = document.activeElement
+    if (slotRef.current?.contains(active) || !active || active === document.body) returnToastFocus(key, returnFocus.current, adjacent)
     settle()
   }
   const dismissRef = useRef(dismiss)
