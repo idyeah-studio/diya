@@ -143,3 +143,52 @@ test('× on a <Toast> in a Dialog while typing in the Dialog keeps your typing (
   await page.keyboard.type('!')
   await expect(task).toHaveValue('Write the brief v2!')
 })
+
+// UX-H-01 (UX's exact repros): in Safari a press on × or Undo never moves focus into the stack, so
+// where focus was is read at the press; and focus never returns to something that isn't a
+// control (a <dialog>, a container). Chromium and Firefox already passed.
+test.describe('× or Undo while typing, on a toast raised from a button or inside a Dialog (UX-H-01)', () => {
+  const typeThenClose = async (page: Page, field: import('@playwright/test').Locator, typed: string, control: string) => {
+    await field.click()
+    await page.keyboard.press('End')
+    await page.keyboard.type(typed)
+    await page.getByRole('button', { name: control, exact: true }).click()
+    await page.keyboard.type('!')
+  }
+  test('page: Enter on a button raises it; type in a field; ×', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.locator('#post-undo').focus()
+    await page.keyboard.press('Enter')
+    const name = page.getByRole('textbox', { name: 'Project name' })
+    await typeThenClose(page, name, ' Labs', 'Dismiss: Comment hidden')
+    await expect(name).toHaveValue('Atlas Labs!')
+  })
+
+  test('page: Enter on a button raises it; type in a field; Undo', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.locator('#post-undo').focus()
+    await page.keyboard.press('Enter')
+    const name = page.getByRole('textbox', { name: 'Project name' })
+    await typeThenClose(page, name, ' Labs', 'Undo')
+    await expect(name).toHaveValue('Atlas Labs!')
+  })
+
+  test('Dialog: a click on Save raises it; type in the Dialog’s field; ×', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.locator('#open-dialog').click()
+    await page.locator('#dialog-save').click()
+    const task = page.getByRole('textbox', { name: 'Task name' })
+    await typeThenClose(page, task, ' v2', 'Dismiss: Brief saved')
+    await expect(task).toHaveValue('Write the brief v2!')
+  })
+
+  test('Dialog: Enter on Save raises it; type in the Dialog’s field; ×', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=light')
+    await page.locator('#open-dialog').click()
+    await page.locator('#dialog-save').focus()
+    await page.keyboard.press('Enter')
+    const task = page.getByRole('textbox', { name: 'Task name' })
+    await typeThenClose(page, task, ' v2', 'Dismiss: Brief saved')
+    await expect(task).toHaveValue('Write the brief v2!')
+  })
+})

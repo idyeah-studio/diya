@@ -501,8 +501,11 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     // A <Toast>'s own place (where it was raised, as in 1.1.1) comes before the last place
     // focused outside the stack, which a click in Safari can leave on a Dialog itself (R5).
     // Where focus came into the stack from comes before a <Toast>'s raise point: a click on ×
-    // while typing goes back to the field, not the button that raised the toast (G8).
-    for (const candidate of [origin.current, cameFrom.current, fallback, outside.current]) {
+    // while typing goes back to the field, not the button that raised the toast (G8). Past where
+    // F8 was pressed, focus only ever returns to a control: never to a <dialog> or another
+    // container recorded as the raise point (UX-H-01).
+    for (const [index, candidate] of [origin.current, cameFrom.current, fallback, outside.current].entries()) {
+      if (index > 0 && !isControl(candidate)) continue
       if (takesFocus(candidate)) { origin.current = null; return }
     }
     const nextToast = Array.from(document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')).find((slot) => slot.dataset.key !== leaving)?.querySelector<HTMLElement>(focusable)
@@ -612,6 +615,12 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
       if (!from || !node.contains(from)) cameFrom.current = from
       setFocusInside(true)
     }
+    // In Safari a press on × or Undo never moves focus into the stack: where focus was is read at
+    // the press instead (UX-H-01). Chromium and Firefox record it on focusin too.
+    const press = () => {
+      const active = node.ownerDocument.activeElement
+      if (active && !node.contains(active) && isControl(active)) cameFrom.current = active as HTMLElement
+    }
     const focusOut = (event: globalThis.FocusEvent) => {
       if (node.contains(event.relatedTarget as Node)) return
       setFocusInside(false)
@@ -625,12 +634,14 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     node.addEventListener('mouseover', enter)
     node.addEventListener('mouseout', leave)
     node.addEventListener('focusin', focusIn)
+    node.addEventListener('pointerdown', press, true)
     node.addEventListener('focusout', focusOut)
     node.addEventListener('keydown', keydown)
     return () => {
       node.removeEventListener('mouseover', enter)
       node.removeEventListener('mouseout', leave)
       node.removeEventListener('focusin', focusIn)
+      node.removeEventListener('pointerdown', press, true)
       node.removeEventListener('focusout', focusOut)
       node.removeEventListener('keydown', keydown)
     }
