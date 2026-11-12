@@ -265,15 +265,21 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
         continue
       }
       let dy = before - bottom
-      const kept: Shift[] = []
-      for (const shift of moving.current.get(slot) ?? []) {
-        if (!playing(shift.animation)) continue
-        if (elapsed(shift.animation) < shift.until) {
+      const shifts = (moving.current.get(slot) ?? []).filter((shift) => playing(shift.animation))
+      if (dy && shifts.length) {
+        // Its place moved again while it's still sliding, or waiting to: every shift under way
+        // folds into this one, which starts from where the toast is now. It turns from there,
+        // never going on the old way first, and never one way and then back (R3, S2).
+        for (const shift of shifts) {
+          dy += shift.dy * (1 - (Number(shift.animation.effect?.getComputedTiming().progress) || 0))
           shift.animation.cancel()
-          dy += shift.dy
-        } else kept.push(shift)
+        }
+        moving.current.set(slot, [])
+        if (Math.abs(dy) >= 0.5) movers.push({ slot, dy, span: span(slot), now: 0 })
+        continue
       }
-      moving.current.set(slot, kept)
+      moving.current.set(slot, shifts)
+      const kept = shifts
       const now = animate ? offsetY(slot) : 0
       if (dy) movers.push({ slot, dy, span: span(slot), now })
       else if (now) obstacles.push({ span: moved(span(slot), now), clear: Math.max(0, ...kept.map((shift) => timeLeft(shift.animation))) })

@@ -709,3 +709,43 @@ test.describe('a <Toast> closed in the same tick as a toast() (S1)', () => {
     })
   }
 })
+
+// Round 3. A second change while a toast is already sliding: the toast turns from where it is,
+// and never keeps going the old way first (MOT-R3-02; S2). Each spec checks the frames from the
+// second change on.
+test.describe('a second change while a toast is sliding (S2)', () => {
+  for (const gap of [130, 200]) {
+    test(`a toast leaves, then a toast() ${gap}ms later: the older toast turns from where it is`, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, 'case=probe&theme=dark&glass=1&bg=1')
+      // Desktop: one leaves from the middle; phone: the newest leaves.
+      const titles = isPhone(testInfo) ? ['Draft saved', 'Link copied'] : ['Draft saved', 'Link copied', 'Export started']
+      for (const title of titles) {
+        await page.evaluate((title) => (window as any).diya.toast({ id: title, title, description: 'One line under it.', duration: 0 }), title)
+        await settle(page)
+      }
+      const track = await frames(page, `window.diya.toast.dismiss('Link copied'); setTimeout(() => window.diya.toast({ title: 'Invoice sent', duration: 0 }), ${gap})`, gap + 650)
+      oneWay(track.filter((frame) => frame.t >= gap + 20), 'Draft saved')
+      seeThrough(track, 'Invoice sent')
+    })
+  }
+
+  test('Undo whose handler raises "Emails restored" 150ms later: the older toast turns from where it is', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=probe&theme=dark&glass=1&bg=1')
+    await page.evaluate(() => {
+      const { toast } = (window as any).diya
+      toast({ title: 'Draft saved', duration: 0 })
+      toast({ title: '3 emails archived', description: 'From Inbox.', action: { label: 'Undo', onClick: () => setTimeout(() => toast({ title: 'Emails restored', duration: 0 }), 150) } })
+    })
+    await settle(page)
+    const box = (await page.getByRole('button', { name: 'Undo' }).boundingBox())!
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 3 })
+    await startFrames(page, 850)
+    await page.mouse.down()
+    await page.mouse.up()
+    const track = await endFrames(page)
+    // From the click, the restore arrives about 150ms later.
+    const clicked = track.find((frame) => !frame.live.some((box) => box.title === '3 emails archived'))?.t ?? 0
+    oneWay(track.filter((frame) => frame.t >= clicked + 170), 'Draft saved')
+    seeThrough(track, 'Emails restored')
+  })
+})
