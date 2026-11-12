@@ -76,7 +76,7 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field({ lab
     if (name) warnOnce(`DIYA: Field is wrapping a ${name}, which has its own label. Pass label, helperText and error to ${name} and remove the Field, or screen readers will hear two labels.`)
     if (kind === 'none') warnOnce('DIYA: Field needs one control element, or a function that renders it.')
     const own = element?.props.id
-    if (id && own && own !== id) warnOnce(`DIYA: Field's id "${id}" and its child's id "${String(own)}" differ; the child's is used.`)
+    if (id && own && own !== id) warnOnce(`DIYA: Field's id "${id}" and its child's id "${String(own)}" differ; the child's is used. Remove one, or make them match.`)
   }
 
   // Focus in the field, as a signal the frame can show and an unreachable control can announce

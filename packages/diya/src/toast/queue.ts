@@ -114,8 +114,8 @@ type Store = {
 //   rule, or two copies would disagree about who hosts.
 // - A newer copy may add behavior through optional fields (ToastSlot's `motion` and `leaving`
 //   are two, and the store's `say` and `unsay`, read by internal/announce.ts for a field's
-//   error announcement); an older copy's stack
-//   ignores them, so that behavior is missing there, never broken.
+//   error announcement); an older copy's stack ignores them, so that behavior is missing there,
+//   never broken.
 // Sharing across copies is best effort, and isn't promised in the public docs.
 const KEY = Symbol.for('@idyeah/diya/toast@1')
 function store(): Store {
