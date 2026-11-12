@@ -5,6 +5,7 @@ import { LinkComponentContext, type DiyaLinkComponent } from './internal/link.js
 import { cx } from './internal/cx.js'
 import { resolveBrand, type DiyaBrandTokens } from './internal/brand.js'
 import { useClientLayoutEffect } from './internal/layout-effect.js'
+import { watchPresses } from './internal/opener.js'
 import { composeRefs } from './internal/slot.js'
 import { motionTokens } from './toast/host.js'
 import { ToastStack } from './toast/ToastStack.js'
@@ -134,6 +135,9 @@ export const DiyaProvider = forwardRef<HTMLDivElement, DiyaProviderProps>(functi
     const element = self.current
     if (!element) return
     addProviderRoot(element)
+    // Remember presses from the start, so a Dialog or Drawer mounted by its opener's own click
+    // can give focus back to that opener in Safari, whose clicks don't focus buttons (G7).
+    watchPresses(element.ownerDocument)
     return () => removeProviderRoot(element)
   }, [])
   // How this provider moves, as resolved here (its motion setting, its duration scale and any set

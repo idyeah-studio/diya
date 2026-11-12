@@ -60,3 +60,14 @@ test.describe("a toast's close button clicked while typing elsewhere returns foc
     await expect.poll(() => focused(page)).toBe('input:Atlas')
   })
 })
+
+// G7 (FE-04): a Dialog mounted by its opener's own click, with no other overlay on the page,
+// returns focus there the first time (the press is remembered from the provider's mount on).
+test('a Dialog mounted by its opener’s click, with no other overlay on the page, returns focus there (G7)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=providers&theme=light')
+  await page.locator('#later-open').click()
+  await expect(page.locator('dialog[open]')).toHaveCount(1)
+  await page.keyboard.press('Escape')
+  await expect(page.locator('dialog[open]')).toHaveCount(0)
+  await expect.poll(() => focused(page)).toBe('Open later')
+})
