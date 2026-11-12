@@ -481,7 +481,7 @@ export const items = {
     state: [],
     tokens: ['--diya-text-caption', '--diya-radius-surface', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-surface',
       '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-shadow-raised',
-      '--diya-text-body', '--diya-text-title', '--diya-color-heading'],
+      '--diya-text-body', '--diya-text-title', '--diya-color-heading', '--diya-height-control-small'],
     messages: null,
   },
   table: {

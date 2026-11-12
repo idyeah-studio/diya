@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client'
 import '@idyeah/diya/styles.css'
 import * as diya from '@idyeah/diya'
 import {
-  Accordion, Button, Card, Combobox, DatePicker, Dialog, DiyaProvider, Drawer, Menu, PageHeader, Popover, Progress, Select, Switch, Tabs,
+  Accordion, Button, Card, Combobox, Pagination, DatePicker, Dialog, DiyaProvider, Drawer, Menu, PageHeader, Popover, Progress, Select, Switch, Tabs,
   TextArea, TextInput, Toast, Tooltip,
 } from '@idyeah/diya'
 
@@ -187,7 +187,7 @@ function TokensBody() {
   return (
     <div style={{ display: 'grid', gap: 16, padding: 24, maxWidth: 520 }}>
       <PageHeader title="Workspace settings" />
-      <Card title="Billing">Card body</Card>
+      <Card title="Billing" actions={<Button data-k="card-action" iconOnly size="small" aria-label="More">⋯</Button>}>Card body</Card>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <Button data-k="button-small" size="small">Small</Button>
         <Button data-k="button-medium">Medium</Button>
@@ -203,6 +203,7 @@ function TokensBody() {
       <Tabs label="Sections" items={[{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Beta' }]} value={tab} onValueChange={setTab} />
       <Menu label="Actions" open={menu} onOpenChange={setMenu} items={[{ id: 'r', label: 'Rename', onSelect: () => {} }]} />
       <Dialog title="Edit project" trigger={<Button>Open dialog</Button>}><p>Body</p></Dialog>
+      <div data-k="pagination"><Pagination page={2} total={60} pageSize={10} onPageChange={() => {}} /></div>
     </div>
   )
 }

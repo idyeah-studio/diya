@@ -73,6 +73,15 @@ test.describe('theming tokens', () => {
     expect(got.text).toMatchObject({ 'background-color': 'rgb(255, 255, 255)', 'border-top-color': 'rgb(125, 140, 142)', height: '44px' })
     expect(got['text-invalid']).not.toEqual({ 'border-top-color': 'rgb(125, 140, 142)' })
     expect(got.tab).toMatchObject({ 'min-height': '44px' })
+    // Card's corner action and Pagination's page buttons follow the small height too (DS-03).
+    const sizes = await page.evaluate(() => ({
+      card: (({ width, height }) => `${width}x${height}`)(document.querySelector('[data-k=card-action]')!.getBoundingClientRect()),
+      pages: [...document.querySelectorAll<HTMLElement>('[data-k=pagination] nav .diya-button')].map((button) => `${Math.round(button.getBoundingClientRect().width)}x${Math.round(button.getBoundingClientRect().height)}`),
+    }))
+    expect(sizes.card).toBe('36x36')
+    expect(sizes.pages.length).toBeGreaterThan(2)
+    for (const page of sizes.pages) expect(Number(page.split('x')[0]), page).toBeGreaterThanOrEqual(36)
+    for (const page of sizes.pages) expect(page.split('x')[1], page).toBe('36')
     expect(got['focus-button']).toMatchObject({ 'outline-color': 'rgb(15, 107, 112)' })
     expect(got['focus-field']).toMatchObject({ 'outline-color': 'rgb(15, 107, 112)' })
     expect(got['page-title']).toEqual({ color: 'rgb(11, 74, 78)' })

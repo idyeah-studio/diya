@@ -1603,7 +1603,7 @@
 .diya-root .diya-text-link:hover { text-decoration-thickness: 2px; }
 .diya-root .diya-pagination { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 20px 24px; width: 100%; color: var(--diya-color-text); container: diya-pagination / inline-size; }
 .diya-root .diya-pagination nav { display: flex; align-items: center; justify-content:center; flex-wrap:wrap; gap:8px 4px; min-width:0; max-width:100%; }
-.diya-root .diya-pagination nav .diya-button[aria-label] { min-width: 32px; padding: 0 8px; }
+.diya-root .diya-pagination nav .diya-button[aria-label] { min-width: var(--diya-height-control-small, 32px); padding: 0 8px; }
 .diya-root .diya-pagination-count,
 .diya-root  .diya-pagination-size { margin: 0; font-size: var(--diya-text-caption); color: var(--diya-color-muted); }
 .diya-root .diya-pagination-size { display: flex; align-items: center; gap: 8px; }
@@ -1613,7 +1613,7 @@
 .diya-root .diya-pagination-chevron { display: none; }
 @container diya-pagination (max-width: 400px) {
   .diya-root .diya-pagination nav { flex-wrap: nowrap; gap: 4px; }
-  .diya-root .diya-pagination nav > .diya-button:not([aria-label]) { width: 32px; min-width: 32px; padding: 0; }
+  .diya-root .diya-pagination nav > .diya-button:not([aria-label]) { width: var(--diya-height-control-small, 32px); min-width: var(--diya-height-control-small, 32px); padding: 0; }
   .diya-root .diya-pagination-chevron { display: block; }
   .diya-root .diya-pagination-step { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
@@ -1802,7 +1802,7 @@
 .diya-root .diya-card-header p:not(:where([class*='diya-'], .diya-card-header [class*='diya-'] *)) { color:var(--diya-color-muted); font-size:var(--diya-text-body); line-height:1.6; margin:10px 0 0; }
 .diya-root .diya-card-tag { margin-bottom:16px; }
 .diya-root .diya-card-menu { flex-shrink:0; }
-.diya-root .diya-card-menu .diya-button { width:32px; height:32px; min-height:32px; padding:6px; }
+.diya-root .diya-card-menu .diya-button { width:var(--diya-height-control-small, 32px); height:var(--diya-height-control-small, 32px); min-height:var(--diya-height-control-small, 32px); padding:6px; }
 .diya-root .diya-card-content { margin-top:24px; }
 /* A List inside a Card or Drawer lines up with its title, edge to edge, and shares
    its material instead of laying a second pane of Glass on it. Rows that are buttons

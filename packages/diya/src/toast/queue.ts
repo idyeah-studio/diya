@@ -132,7 +132,9 @@ function dismiss(id?: string) {
   changed(state)
 }
 
+/** Shows a toast in the app's one stack and returns its id. Call it from client code, such as event handlers, effects and data code. On the server it does nothing. */
 export const toast: {
+  /** Shows a toast in the app's one stack and returns its id. Call it from client code, such as event handlers, effects and data code. On the server it does nothing. */
   (options: ToastOptions): string
   /** Closes the toast with this id, or every toast, shown and waiting, when called without one. */
   dismiss(id?: string): void

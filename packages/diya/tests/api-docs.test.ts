@@ -19,3 +19,13 @@ describe('api.json documents every public prop', () => {
     expect(missing).toEqual([])
   })
 })
+
+// DS-02: an editor hovering toast( shows what it does, on the call itself and on the export.
+it('toast() carries its doc comment in the shipped types', async () => {
+  const { readFileSync } = await import('node:fs')
+  const { resolve } = await import('node:path')
+  const types = readFileSync(resolve(process.cwd(), 'dist/toast/queue.d.ts'), 'utf8')
+  const sentence = "Shows a toast in the app's one stack and returns its id. Call it from client code, such as event handlers, effects and data code. On the server it does nothing."
+  expect(types.split(sentence)).toHaveLength(3)
+  expect(types).toMatch(/On the server it does nothing\. \*\/\n\s*\(options: ToastOptions\): string;/)
+})
