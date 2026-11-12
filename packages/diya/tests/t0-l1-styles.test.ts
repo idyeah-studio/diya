@@ -283,6 +283,23 @@ describe('Drawer while it leaves', () => {
   })
 })
 
+describe('an open Dialog or Drawer', () => {
+  it('rests with no transform, so fixed popups inside place against the page', () => {
+    // 1.1.0 left `translate: 0 0` and `scale: 1` on the open panel. Any value but none makes it
+    // the containing block for position: fixed, so a Menu, Popover or Tooltip in a Drawer opened
+    // off screen and couldn't be clicked.
+    const open = bare.match(/\.diya-root :is\(\.diya-dialog, \.diya-drawer-modal\)\[open\] \{([^}]*)\}/)
+    expect(open).not.toBeNull()
+    expect(open![1]).toMatch(/scale: none;/)
+    expect(open![1]).toMatch(/translate: none;/)
+    const outsideStart = bare.replace(/@starting-style\s*\{[\s\S]*?\}\s*\}/g, '')
+    for (const [, selector, body] of outsideStart.matchAll(/([^{}]*\.diya-(?:dialog|drawer-modal)[^{}]*\[open\][^{}]*)\{([^}]*)\}/g)) {
+      if (selector.includes('::backdrop')) continue
+      expect(body, selector.trim()).not.toMatch(/(?:^|;)\s*(?:transform|scale|translate|rotate|perspective|filter|contain|will-change)\s*:\s*(?!none\b)\S/)
+    }
+  })
+})
+
 describe('enter styles', () => {
   // @starting-style also fires for elements in the first HTML and whenever hidden content is
   // shown again, so it's only for what mounts or opens on demand.
