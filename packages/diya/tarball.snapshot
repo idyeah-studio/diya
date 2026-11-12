@@ -185,6 +185,8 @@ dist/toast/host.d.ts
 dist/toast/host.js
 dist/toast/messages.d.ts
 dist/toast/messages.js
+dist/toast/motion.d.ts
+dist/toast/motion.js
 dist/toast/queue.d.ts
 dist/toast/queue.js
 dist/tooltip/Tooltip.d.ts
