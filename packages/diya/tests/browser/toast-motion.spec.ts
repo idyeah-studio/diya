@@ -228,3 +228,49 @@ test.describe("a <Toast> in an app's own showModal() dialog", () => {
     })
   }
 })
+
+test.describe('nothing see-through passes over something visible', () => {
+  const check = (track: Awaited<ReturnType<typeof frames>>, arriving?: string) => {
+    for (const frame of track) {
+      for (const copy of frame.copies.filter((item) => item.opacity > 0.05)) {
+        for (const toast of frame.live) expect(overlap(toast, copy), `${toast.title} over the copy of ${copy.title} at ${Math.round(frame.t)}ms`).toBe(0)
+      }
+      if (!arriving) continue
+      const enter = frame.live.find((item) => item.title === arriving)
+      if (!enter || enter.opacity <= 0.02) continue
+      for (const toast of frame.live.filter((item) => item !== enter)) expect(overlap(toast, enter), `${arriving} under ${toast.title} at ${Math.round(frame.t)}ms`).toBe(0)
+    }
+  }
+  for (const theme of ['light', 'dark']) {
+    test(`arrival, leaving from the middle and a full stack plus one, in Glass ${theme}`, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, `case=probe&theme=${theme}&glass=1&bg=1`)
+      const add = (title: string, description?: string) => page.evaluate(([title, description]) => (window as any).diya.toast({ id: title, title, description, duration: 0 }), [title, description])
+      await add('Draft saved')
+      await settle(page)
+      // Arrival into a stack that shows a toast.
+      check(await frames(page, "window.diya.toast({ id: 'Export started', title: 'Export started', description: 'We\\'ll email you when it\\'s ready.', duration: 0 })", 450), 'Export started')
+      await settle(page)
+      if (!isPhone(testInfo)) {
+        await add('Link copied')
+        await settle(page)
+        // Leaving from the middle.
+        check(await frames(page, "window.diya.toast.dismiss('Export started')", 450))
+        await settle(page)
+        await add('Invite sent')
+        await settle(page)
+      }
+      // A full stack plus one: the oldest leaves to make room while the newcomer arrives.
+      check(await frames(page, "window.diya.toast({ id: 'Synced', title: 'Synced', duration: 0 })", 500), 'Synced')
+    })
+  }
+})
+
+test('a same-id update that grows: the updated toast gets no shift of its own', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=probe&theme=light')
+  await page.evaluate(() => (window as any).diya.toast({ id: 'upload', title: 'Uploading', duration: 0 }))
+  await settle(page)
+  await page.evaluate(() => (window as any).diya.toast({ title: 'Link copied', duration: 0 }))
+  await settle(page)
+  const track = await frames(page, "window.diya.toast({ id: 'upload', title: 'Uploaded', description: 'All 12 files are in Billing, ready to share.', duration: 0 })", 300)
+  expect(track.every((frame) => (frame.live.find((item) => item.title === 'Uploaded')?.waapi ?? 0) === 0)).toBe(true)
+})

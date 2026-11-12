@@ -1726,8 +1726,6 @@
 /* A <Toast> portals into its slot's scope; from another provider the scope carries that
    provider's look (it's a .diya-root) and takes no box of its own. */
 .diya-root .diya-toast-scope { display: contents; }
-/* Arriving, a toast sits under the older ones, so they slide off it. */
-.diya-root .diya-toast[data-entering] { z-index: 0; }
 /* A toast() with a title and no description: no empty line under the title. */
 .diya-root .diya-toast .diya-alert-description:empty { display: none; }
 .diya-root .diya-toast .diya-alert-title:has(+ .diya-alert-description:empty) { margin-bottom: 0; }
