@@ -39,7 +39,7 @@ export type FieldProps = Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'id'>
   size?: 'small' | 'medium' | 'large'
   /** Draws DIYA's field box (fill, edge, corner, height and focus ring) around a control that has none, such as a payment provider's card iframe or a native time input. A label click focuses the iframe; if your provider needs its own `focus()` to reach its input (Stripe, Braintree), call it from the label: `onClick={(event) => { if ((event.target as Element).closest('label')) card.focus() }}`. Defaults to false. */
   framed?: boolean
-  /** The control's id; defaults to the child's own `id`, then a generated one. */
+  /** The control's id, for a function child or a child without its own `id`; a child's own `id` wins. Defaults to a generated one. */
   id?: string
   /** One control element, which gets the ids and states merged in; or a function that receives them, for a control that takes them somewhere else. */
   children: ReactElement | ((control: FieldControlProps) => ReactNode)
@@ -75,6 +75,8 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field({ lab
     const name = element && (element.type as unknown as Record<symbol, string> | undefined)?.[DIYA_FIELD]
     if (name) warnOnce(`DIYA: Field is wrapping a ${name}, which has its own label. Pass label, helperText and error to ${name} and remove the Field, or screen readers will hear two labels.`)
     if (kind === 'none') warnOnce('DIYA: Field needs one control element, or a function that renders it.')
+    const own = element?.props.id
+    if (id && own && own !== id) warnOnce(`DIYA: Field's id "${id}" and its child's id "${String(own)}" differ; the child's is used.`)
   }
 
   // Focus in the field, as a signal the frame can show and an unreachable control can announce

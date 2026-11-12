@@ -146,3 +146,20 @@ describe('Field with a pending Server Component child (G6)', () => {
     expect(errors.filter((message) => /try\/catch/.test(message))).toEqual([])
   })
 })
+
+// G11 (DS-S56-02): a child's own id wins over Field's, as the doc now says, and Field warns when
+// the two differ.
+describe("Field's id beside the child's (G11)", () => {
+  it('warns when both are set and differ, and uses the child’s', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    inProvider(<Field label="Expiry" id="from-field"><input id="from-child" /></Field>)
+    expect(screen.getByLabelText('Expiry').id).toBe('from-child')
+    expect(warn.mock.calls.map(([message]) => String(message))).toContain('DIYA: Field\'s id "from-field" and its child\'s id "from-child" differ; the child\'s is used.')
+  })
+
+  it('says nothing when only one is set, or both match', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    inProvider(<><Field label="A" id="a"><input /></Field><Field label="B"><input id="b" /></Field><Field label="C" id="c"><input id="c" /></Field></>)
+    expect(warn.mock.calls.filter(([message]) => /and its child's id/.test(String(message)))).toEqual([])
+  })
+})
