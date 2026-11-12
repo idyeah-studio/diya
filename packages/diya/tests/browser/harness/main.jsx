@@ -6,8 +6,8 @@ import { createRoot } from 'react-dom/client'
 import '@idyeah/diya/styles.css'
 import * as diya from '@idyeah/diya'
 import {
-  Accordion, Button, Combobox, DatePicker, Dialog, DiyaProvider, Drawer, Menu, Popover, Progress, Select, Switch, Tabs,
-  TextInput, Toast, Tooltip,
+  Accordion, Button, Card, Combobox, DatePicker, Dialog, DiyaProvider, Drawer, Menu, PageHeader, Popover, Progress, Select, Switch, Tabs,
+  TextArea, TextInput, Toast, Tooltip,
 } from '@idyeah/diya'
 
 const query = new URLSearchParams(location.search)
@@ -171,14 +171,63 @@ function ToastHost() {
   )
 }
 
-const cases = { buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost }
+
+// The theming tokens' targets: each control the nine tokens reach, open where it opens.
+// brand=1 adds a brand file; outer=1 sets the tokens on an outer provider's style around a
+// nested Dark provider.
+const BRAND_FILE = `.diya-root { --diya-height-control-small: 36px; --diya-height-control-medium: 44px; --diya-height-control-large: 52px; }
+@media (forced-colors: none) {
+  .diya-root[data-theme='light'] { --diya-color-heading: #0b4a4e; --diya-color-focus: #0f6b70; --diya-color-field: #ffffff; --diya-color-field-line: #7d8c8e; }
+  .diya-root[data-theme='dark'] { --diya-color-heading: #9fe3dc; --diya-color-focus: #4cc4bb; --diya-color-field: #18181b; --diya-color-field-line: #6b7a7c; }
+}`
+function TokensBody() {
+  const [tab, setTab] = useState('a')
+  const [menu, setMenu] = useState(false)
+  return (
+    <div style={{ display: 'grid', gap: 16, padding: 24, maxWidth: 520 }}>
+      <PageHeader title="Workspace settings" />
+      <Card title="Billing">Card body</Card>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <Button data-k="button-small" size="small">Small</Button>
+        <Button data-k="button-medium">Medium</Button>
+        <Button data-k="button-large" size="large">Large</Button>
+        <Button data-k="button-icon" iconOnly aria-label="More">⋯</Button>
+      </div>
+      <TextInput data-k="text" label="Name" defaultValue="Ada" />
+      <TextInput data-k="text-invalid" label="Email" defaultValue="ada@" error="Enter a full email address." />
+      <TextArea label="Notes" defaultValue="Draft" />
+      <Select label="Team" options={[{ value: 'a', label: 'Alpha' }]} defaultValue="a" />
+      <Combobox label="Owner" options={[{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }]} defaultValue="" />
+      <DatePicker label="Due" value="2026-11-12" onValueChange={() => {}} />
+      <Tabs label="Sections" items={[{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Beta' }]} value={tab} onValueChange={setTab} />
+      <Menu label="Actions" open={menu} onOpenChange={setMenu} items={[{ id: 'r', label: 'Rename', onSelect: () => {} }]} />
+      <Dialog title="Edit project" trigger={<Button>Open dialog</Button>}><p>Body</p></Dialog>
+    </div>
+  )
+}
+function Tokens() {
+  if (query.get('brand') === '1') {
+    const sheet = document.createElement('style')
+    sheet.textContent = BRAND_FILE
+    document.head.append(sheet)
+  }
+  if (query.get('outer') !== '1') return <TokensBody />
+  return (
+    <DiyaProvider theme="light" style={{ '--diya-height-control-medium': '60px', '--diya-color-field': 'rgb(255, 0, 0)', '--diya-color-focus': 'rgb(255, 0, 0)', '--diya-radius-popup': '2px' }}>
+      <div id="outer-probe"><Button data-k="outer-button">Outer</Button></div>
+      <DiyaProvider theme="dark"><div id="nested"><TokensBody /></div></DiyaProvider>
+    </DiyaProvider>
+  )
+}
+
+const cases = { buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; }'
 document.head.append(style)
 document.documentElement.dataset.react = version
 createRoot(document.getElementById('root')).render(
-  which === 'theme'
+  which === 'theme' || (which === 'tokens' && query.get('outer') === '1')
     ? <Case />
     : <DiyaProvider theme={theme} glass={glass} motion={motion} style={scale === null ? undefined : { '--diya-duration-scale': scale }}><Case /></DiyaProvider>,
 )
