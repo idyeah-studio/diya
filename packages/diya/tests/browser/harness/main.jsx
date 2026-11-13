@@ -438,10 +438,66 @@ function CheckboxCase() {
   )
 }
 
-const cases = { checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+// Spinner (1.2): one mounted on demand (for the 400ms beat), one beside text at each size's
+// type (14, 15, 17 and 20px, with a zero-size marker on the baseline), a labeled one, one with
+// its words, and a main-thread block on demand.
+function SpinnerCase() {
+  const [shown, setShown] = useState(false)
+  // Blocks the main thread for ms, with a flag that is red for the whole block (painted first).
+  window.__block = (ms) => {
+    const flag = document.getElementById('sp-flag')
+    flag.style.background = 'rgb(255, 0, 0)'
+    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => {
+      const start = performance.now()
+      while (performance.now() - start < ms);
+      flag.style.background = 'rgb(0, 0, 0)'
+    }, 20)))
+  }
+  return (
+    <div style={{ display: 'grid', gap: 24, padding: 24, width: 600 }}>
+      <button id="sp-mount" onClick={() => { note('mount', performance.now()); setShown((value) => !value) }}>Toggle</button>
+      <p style={{ margin: 0, minHeight: 24 }}>{shown && <diya.Spinner id="sp-new" label="Loading older invoices" />}</p>
+      {[[14, 'small'], [15, 'small'], [17, 'medium'], [20, 'large']].map(([px, size]) => (
+        <p key={px} data-px={px} style={{ fontSize: px, margin: 0 }}>Hamburg <diya.Spinner size={size} /><span className="sp-base" style={{ display: 'inline-block', width: 0, height: 0 }} /></p>
+      ))}
+      <p style={{ margin: 0 }}><diya.Spinner id="sp-labeled" label="Loading messages" /></p>
+      <p style={{ margin: 0 }}><diya.Spinner id="sp-words" size="small" label="Loading older invoices" showLabel /></p>
+      <p style={{ margin: 0, display: 'flex', gap: 24, alignItems: 'center' }}><span id="sp-flag" style={{ width: 24, height: 24, background: 'rgb(0, 0, 0)' }} /><diya.Spinner id="sp-block" size="large" /></p>
+    </div>
+  )
+}
+
+// Button loading (1.2): every size and variant with a neighbor, icon-only, a link, asChild, a
+// Button whose own class sets its padding, and a Dialog whose long confirm wraps. dir=rtl flips it.
+function LoadingCase() {
+  const [busy, setBusy] = useState(query.get('busy') === '1')
+  window.__setBusy = (value) => { note('busy', performance.now()); flushSync(() => setBusy(value)) }
+  const icon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+  return (
+    <div dir={query.get('dir') || 'ltr'} style={{ display: 'grid', gap: 16, padding: 24 }}>
+      {['small', 'medium', 'large'].flatMap((size) => ['solid', 'outline', 'quiet'].map((variant) => (
+        <div key={`${size}-${variant}`} style={{ display: 'flex', gap: 8 }}>
+          <Button id={`bl-${size}-${variant}`} size={size} variant={variant} loading={busy}>Save changes</Button>
+          <Button id={`bl-${size}-${variant}-next`} size={size} variant="outline">Cancel</Button>
+        </div>
+      )))}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Button id="bl-icon" iconOnly aria-label="Add" loading={busy}>{icon}</Button>
+        <Button id="bl-link" href="#saved" loading={busy}>Open report</Button>
+        <Button id="bl-child" asChild loading={busy}><a href="#child">Child link</a></Button>
+        <Button id="bl-pad" className="app-pad" loading={busy}>Save</Button>
+        <Button id="bl-pad-wide" className="app-pad-wide" loading={busy}>Save</Button>
+      </div>
+      <Dialog title="Delete the archive?" confirmLabel="Delete every archived conversation" confirmVariant="destructive" onConfirm={() => new Promise(() => {})}
+        trigger={<Button id="bl-dialog-open" variant="outline">Delete archive</Button>}>Archived conversations go for good.</Dialog>
+    </div>
+  )
+}
+
+const cases = { spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
-style.textContent = '.classbg { background: rgb(220 38 38); color: white; }'
+style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; }'
 document.head.append(style)
 document.documentElement.dataset.react = version
 const app = which === 'theme' || (which === 'tokens' && query.get('outer') === '1')

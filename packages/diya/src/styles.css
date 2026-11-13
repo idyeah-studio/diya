@@ -314,10 +314,35 @@
   pointer-events: auto;
 }
 
-.diya-root .diya-button-progress {
-  position: static;
-  font-size: var(--diya-text-caption);
-  line-height: 1;
+/* Loading shows a small Spinner, and the width never changes. Each size names its padding and
+   the room the spinner needs (its size plus the 8px gap, halved). On the Spinner's 400ms beat the
+   start padding grows by the room and the end padding shrinks by it, so the label slides over
+   while the box stays put. The spinner sits in the flow with margins that add up to nothing, so
+   it always ends 8px before the label, even when your own padding wins. */
+.diya-root .diya-button {
+  --diya-internal-button-pad: 20px;
+  --diya-internal-button-room: 12px;
+  --diya-internal-beat: 400ms;
+}
+.diya-root .diya-button[data-size='small'] {
+  --diya-internal-button-pad: 16px;
+}
+.diya-root .diya-button[data-size='large'] {
+  --diya-internal-button-pad: 24px;
+  --diya-internal-button-room: 14px;
+}
+.diya-root .diya-button[aria-busy='true']:not([data-icon-only='true']) {
+  padding-inline: calc(var(--diya-internal-button-pad) + var(--diya-internal-button-room)) calc(var(--diya-internal-button-pad) - var(--diya-internal-button-room));
+}
+.diya-root .diya-button > .diya-spinner {
+  margin-inline-start: calc(-2 * var(--diya-internal-button-room));
+}
+/* Icon-only: the spinner takes the icon's place on the beat, in the same square. The icon stays
+   until then, so the button is never blank. */
+.diya-root .diya-button[data-icon-only='true'] > .diya-spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
 }
 
 .diya-root .diya-button svg {
@@ -1343,14 +1368,19 @@
 .diya-root .diya-text-field input:disabled {
   cursor: not-allowed;
 }
-.diya-root .diya-sr-only {
+/* Visually hidden: read, not seen. The same declarations as VisuallyHidden's inline style. */
+.diya-root .diya-sr-only,
+.diya-root .diya-table .diya-sr-only,
+.diya-root .diya-chat-sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
   padding: 0;
+  margin: -1px;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+  border: 0;
 }
 @media (forced-colors: active) {
   .diya-root .diya-text-field-control {
@@ -1926,6 +1956,45 @@
 }
 @media (forced-colors: active) { .diya-root .diya-progress-track { outline: 1px solid CanvasText; } .diya-root .diya-progress-track > span { background: Highlight; } .diya-root .diya-progress-fill-circle { stroke: Highlight; } }
 
+/* Spinner: a ring in the text color, drawn at its exact size (16, 20 or 24px), centered on the
+   cap height of the text beside it (DIYA Sans caps are 0.729em). It waits 400ms, then fades in
+   over medium on enter, as a delayed Tooltip arrives, so a quick load shows nothing. The wait
+   isn't motion: a literal 400ms (the beat), never scaled or gated. The fade is gated (instant
+   under off). */
+.diya-root .diya-spinner {
+  --diya-internal-spinner: 20px;
+  --diya-internal-beat: 400ms;
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--diya-internal-spinner);
+  height: var(--diya-internal-spinner);
+  vertical-align: calc(0.365em - var(--diya-internal-spinner) / 2);
+  animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both;
+}
+.diya-root .diya-spinner[data-size='small'] { --diya-internal-spinner: 16px; }
+.diya-root .diya-spinner[data-size='large'] { --diya-internal-spinner: 24px; }
+@keyframes diya-spinner-arrive { from { opacity: 0; } }
+/* One turn a second with transform, not the rotate property: Chromium runs rotate on an <svg> on
+   the main thread, so it froze whenever the page was busy, which is when spinners show. A status
+   loop, like Progress's: a literal 1s, never scaled, and it keeps turning with motion off. */
+.diya-root .diya-spinner svg { display: block; overflow: visible; animation: diya-spinner-turn 1s linear infinite; }
+@keyframes diya-spinner-turn { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.diya-root .diya-spinner-track { stroke-opacity: 0.16; }
+/* With showLabel, the words sit 8px after the ring and arrive with it. */
+.diya-root .diya-spinner[data-show-label='true'] { display: inline; width: auto; height: auto; vertical-align: baseline; }
+.diya-root .diya-spinner[data-show-label='true'] svg { display: inline-block; vertical-align: calc(0.365em - var(--diya-internal-spinner) / 2); margin-inline-end: 8px; }
+/* Under Reduce Motion, and with motion="reduced", the turn stops and the ring closes and breathes
+   with Progress's keyframe, on the <svg> (WebKit froze a breathe on the inner circle while busy).
+   Unscoped from data-motion in the media query, as Progress's rule is. */
+.diya-root[data-motion='reduced'] .diya-spinner svg { animation: diya-progress-breathe 2s ease-in-out infinite alternate; }
+.diya-root[data-motion='reduced'] .diya-spinner-arc { stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .diya-root .diya-spinner svg { animation: diya-progress-breathe 2s ease-in-out infinite alternate; }
+  .diya-root .diya-spinner-arc { stroke-dashoffset: 0; }
+}
+/* A Button's spinner keeps the button's own forced color. */
+@media (forced-colors: active) { .diya-root .diya-spinner svg { stroke: CanvasText; } .diya-root .diya-button > .diya-spinner svg { stroke: currentColor; } }
+
 
 /* card/Card.css: portable component rules. */
 .diya-root .diya-card { width:100%; border:1px solid var(--diya-color-line); border-radius:var(--diya-radius-surface); background:var(--diya-color-surface); color:var(--diya-color-text);  overflow:hidden; }
@@ -2013,7 +2082,6 @@
 .diya-root .diya-table .diya-pagination { margin-top:20px; }
 .diya-root .diya-table-bulk { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 16px; margin-bottom:8px; border:1px solid var(--diya-color-line); border-radius:calc(12px * var(--diya-corner-scale, 1)); background:var(--diya-color-selected); }
 .diya-root .diya-table-bulk > span { margin-right:auto; }
-.diya-root .diya-table .diya-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
 .diya-root .diya-table-empty { padding:40px 16px; text-align:center; }
 .diya-root .diya-table-empty p { color:var(--diya-color-muted); margin:8px 0 20px; }
 .diya-root .diya-table-project { display:block; font-weight:500; white-space:nowrap; }
@@ -2244,7 +2312,7 @@
 /* application-patterns/ApplicationPatterns.css: portable component rules. */
 .diya-root .diya-app-pattern-surface{background:var(--diya-color-raised,var(--diya-color-surface));color:var(--diya-color-text);border:1px solid var(--diya-color-line);border-radius:var(--diya-radius-surface);overflow:hidden}
 .diya-root .diya-chat{width:100%;max-width:620px;display:flex;flex-direction:column}
-.diya-root .diya-chat-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
 .diya-root .diya-chat[data-presentation='floating']{max-width:380px;margin-left:auto;box-shadow:0 calc(12px * var(--diya-elevation, 1)) calc(32px * var(--diya-elevation, 1)) #0002}
 .diya-root .diya-chat[data-presentation='full-page']{max-width:none;height:100%;min-height:0}
 .diya-root .diya-chat-header{flex:none;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--diya-color-line)}
@@ -3668,6 +3736,39 @@
   transition-property: background-color;
   transition-duration: var(--diya-internal-duration-fast);
   transition-timing-function: var(--diya-ease-move);
+}
+/* Loading: the 0.8 dim eases at once, as the answer to the press. On the 400ms beat the label
+   slides over by the room (fast, on move; it steps when nothing travels), and slides back at once
+   when loading ends. Start and end padding move the same amount the other way, so the width is
+   the same on every frame. ([data-variant] outranks the shared list above; every Button has it.) */
+.diya-root .diya-button[data-variant] {
+  transition-property: background-color, border-color, color, box-shadow, scale, opacity, padding-inline-start, padding-inline-end;
+  transition-duration: var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast),
+    calc(var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel)), calc(var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel));
+}
+.diya-root .diya-button[data-variant][aria-busy='true'] {
+  transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, var(--diya-internal-beat), var(--diya-internal-beat);
+}
+/* The spinner's margins move with the padding, the other way, so it holds still while the label
+   slides; it fades in once the label is halfway across, so the two never overlap. */
+.diya-root .diya-button > .diya-spinner {
+  animation:
+    diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) calc(var(--diya-internal-beat) + var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel) / 2) both,
+    diya-button-make-room calc(var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel)) var(--diya-ease-move) var(--diya-internal-beat) both;
+}
+@keyframes diya-button-make-room {
+  from {
+    margin-inline-start: calc(-1 * var(--diya-internal-button-room));
+    margin-inline-end: calc(-1 * var(--diya-internal-button-room));
+  }
+}
+/* Icon-only, nothing moves: the icon gives way on the beat and the spinner fades in there. */
+.diya-root .diya-button[data-icon-only='true'] > .diya-spinner {
+  animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both;
+}
+/* The icon goes on the beat: the arrive fade played backwards, in no time. */
+.diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > :not(.diya-spinner) {
+  animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) reverse both;
 }
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active,
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active::after {

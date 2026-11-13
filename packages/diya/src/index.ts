@@ -37,6 +37,8 @@ export { Alert, type AlertProps, type AlertTone } from './alert/Alert.js'
 export { Toast, type ToastProps } from './toast/Toast.js'
 export { toast, type ToastOptions } from './toast/queue.js'
 export { Progress, type ProgressProps } from './progress/Progress.js'
+export { Spinner, type SpinnerProps } from './spinner/Spinner.js'
+export { VisuallyHidden, type VisuallyHiddenProps } from './visually-hidden/VisuallyHidden.js'
 export { Tooltip, type TooltipProps } from './tooltip/Tooltip.js'
 export { Popover, type PopoverProps } from './popover/Popover.js'
 export {

@@ -86,5 +86,12 @@ it('provider server markup matches 1.1.1', async () => {
   const html = Object.fromEntries(Object.entries(cases).map(([name, element]) => [name, renderToString(element)]))
   const writeTo = process.env.DIYA_WRITE_FIXTURES
   if (writeTo) writeFileSync(resolve(writeTo, `${version}-provider.json`), `${JSON.stringify(html, null, 2)}\n`)
-  else expect(html).toEqual(JSON.parse(readFileSync(resolve(process.cwd(), 'tests/fixtures/provider-ssr-1.1.1.json'), 'utf8'))[version])
+  else {
+    // The one markup change 1.2 makes here, named by the build plan (frontend.md step 8, E3): a loading
+    // Button shows the small spinner ring where 1.1.1 had "···". Everything else must equal 1.1.1.
+    const ring = '<span class="diya-spinner" data-size="small" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false"><circle class="diya-spinner-track" cx="8" cy="8" r="7.125"></circle><circle class="diya-spinner-arc" cx="8" cy="8" r="7.125" pathLength="100" stroke-dasharray="100" stroke-dashoffset="72" stroke-linecap="round" transform="rotate(-90 8 8)"></circle></svg></span>'
+    const changed1_2 = (markup: string) => markup.split(ring).join('<span class="diya-button-progress" aria-hidden="true">···</span>')
+    expect(Object.fromEntries(Object.entries(html).map(([name, markup]) => [name, changed1_2(markup)])))
+      .toEqual(JSON.parse(readFileSync(resolve(process.cwd(), 'tests/fixtures/provider-ssr-1.1.1.json'), 'utf8'))[version])
+  }
 })

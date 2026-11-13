@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
-import { Accordion, Alert, Button, Dialog, DiyaProvider, Drawer, List, Table, type TableColumn, type TableProps } from '../dist/index.js'
+import { Accordion, Alert, Button, Dialog, DiyaProvider, Drawer, Form, List, Table, TextInput, Wizard, type TableColumn, type TableProps } from '../dist/index.js'
 
 type Project = { id: string; name: string; status: string }
 const projects: Project[] = [
@@ -157,6 +157,38 @@ const members: Member[] = Array.from({ length: 12 }, (_, index) => ({
 }))
 const memberColumns: TableColumn<Member>[] = [{ key: 'name', label: 'Name', render: (row) => row.name }]
 const bodyRows = () => within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row').slice(1)
+
+// 1.2 (E3): the patterns get Button's spinner through Button, with no change of their own.
+describe('Busy patterns', () => {
+  it('Dialog confirm, Form submit and Wizard next show the spinner and can\'t submit twice', async () => {
+    const user = userEvent.setup()
+    let finish!: () => void
+    const confirm = vi.fn(() => new Promise<void>((done) => { finish = done }))
+    const submit = vi.fn()
+    const step = vi.fn()
+    const steps = [{ id: 'a', label: 'Details', content: 'One' }, { id: 'b', label: 'Review', content: 'Two' }]
+    render(<DiyaProvider>
+      <Dialog trigger={<Button>Delete chat</Button>} title="Delete this chat?" confirmLabel="Delete" onConfirm={confirm}>Gone for good.</Dialog>
+      <Form title="Project" loading onSubmit={submit}><TextInput label="Name" value="Atlas" onValueChange={() => {}} /></Form>
+      <Wizard steps={steps} activeStep={0} onStepChange={step} onComplete={() => {}} loading />
+    </DiyaProvider>)
+    await user.click(screen.getByRole('button', { name: 'Delete chat' }))
+    const del = screen.getByRole('button', { name: 'Delete' })
+    await user.click(del)
+    const busy = [del, screen.getByRole('button', { name: /Submit/ }), screen.getByRole('button', { name: /Continue/ })]
+    for (const button of busy) {
+      expect(button.querySelector(':scope > .diya-spinner[aria-hidden="true"] svg'), button.textContent!).not.toBeNull()
+      expect(button.getAttribute('aria-busy')).toBe('true')
+      await user.click(button)
+      button.focus()
+      await user.keyboard('{Enter}')
+    }
+    expect(confirm).toHaveBeenCalledOnce()
+    expect(submit).not.toHaveBeenCalled()
+    expect(step).not.toHaveBeenCalled()
+    await act(async () => finish())
+  })
+})
 
 describe('Table defaults', () => {
   it('shows ten rows a page with no checkboxes, search, filters or row menu unless asked', () => {

@@ -41,6 +41,18 @@ describe('client boundary', () => {
     for (const file of messages) expect(hasDirective(file.text), file.name).toBe(false)
   })
 
+  it('VisuallyHidden has no directive and works in a Server Component', async () => {
+    const file = files.find(item => item.name === 'visually-hidden/VisuallyHidden.js')
+    expect(file).toBeDefined()
+    expect(hasDirective(file!.text)).toBe(false)
+    // As a Server Component renders it: no provider, straight to HTML.
+    const { createElement } = await import('react')
+    const { renderToString } = await import('react-dom/server')
+    const { VisuallyHidden } = await import(/* @vite-ignore */ join(dist, 'visually-hidden/VisuallyHidden.js'))
+    expect(renderToString(createElement('h2', null, createElement(VisuallyHidden, null, 'Filters'))))
+      .toBe('<h2><span style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0">Filters</span></h2>')
+  })
+
   it('exports defaultMessages from the root as a plain object', async () => {
     const core = await import(/* @vite-ignore */ join(dist, 'index.js'))
     expect(Object.getPrototypeOf(core.defaultMessages)).toBe(Object.prototype)

@@ -20,7 +20,8 @@ describe('Button loading', () => {
     expect(button.disabled).toBe(false)
     expect(button.getAttribute('aria-disabled')).toBe('true')
     expect(button.getAttribute('aria-busy')).toBe('true')
-    expect(button.querySelector('.diya-button-progress')).not.toBeNull()
+    // 1.2 (E3): the spinner replaces 1.1's "···".
+    expect(button.querySelector('.diya-spinner[aria-hidden="true"] svg')).not.toBeNull()
     view.rerender(<DiyaProvider><Button disabled>Send</Button></DiyaProvider>)
     expect(button.disabled).toBe(true)
     expect(button.hasAttribute('aria-disabled')).toBe(false)
@@ -110,5 +111,80 @@ describe('Patterns that use Button loading still block a second submit', () => {
     await user.keyboard('{Enter}')
     expect(confirm).toHaveBeenCalledOnce()
     await act(async () => work.resolve())
+  })
+})
+
+// 1.2 (E3, B2): the spinner replaces "···" on every path; the rest of loading is unchanged.
+describe('Button loading shows a spinner', () => {
+  const spinnerOf = (node: Element) => node.querySelector(':scope > .diya-spinner')
+
+  it('renders an aria-hidden spinner, not "···": small in small and medium Buttons, medium in large ones', () => {
+    render(<DiyaProvider>
+      <Button size="small" loading>Small</Button><Button loading>Medium</Button><Button size="large" loading>Large</Button>
+    </DiyaProvider>)
+    const sizes = ['Small', 'Medium', 'Large'].map((name) => {
+      const button = screen.getByRole('button', { name })
+      expect(button.textContent).toBe(name)
+      expect(button.textContent).not.toContain('···')
+      const spinner = spinnerOf(button)!
+      expect(spinner.getAttribute('aria-hidden')).toBe('true')
+      expect(spinner.hasAttribute('role')).toBe(false)
+      return [spinner.getAttribute('data-size'), spinner.querySelector('svg')!.getAttribute('width')]
+    })
+    expect(sizes).toEqual([['small', '16'], ['small', '16'], ['medium', '20']])
+    // The label is the Button's whole accessible name: nothing from the spinner.
+    expect(screen.getByRole('button', { name: 'Medium' })).toBeTruthy()
+  })
+
+  it('aria-busy and aria-disabled unchanged, and no spinner when not loading', () => {
+    const view = render(<DiyaProvider><Button>Send</Button></DiyaProvider>)
+    const button = screen.getByRole('button', { name: 'Send' })
+    expect(spinnerOf(button)).toBeNull()
+    view.rerender(<DiyaProvider><Button loading>Send</Button></DiyaProvider>)
+    expect([button.getAttribute('aria-busy'), button.getAttribute('aria-disabled'), (button as HTMLButtonElement).disabled]).toEqual(['true', 'true', false])
+    view.rerender(<DiyaProvider><Button>Send</Button></DiyaProvider>)
+    expect(spinnerOf(button)).toBeNull()
+    expect(button.hasAttribute('aria-busy')).toBe(false)
+  })
+
+  it('Enter and Space do nothing while loading', async () => {
+    const user = userEvent.setup()
+    const click = vi.fn()
+    render(<DiyaProvider><Button loading onClick={click}>Send</Button></DiyaProvider>)
+    screen.getByRole('button', { name: 'Send' }).focus()
+    await user.keyboard('{Enter}')
+    await user.keyboard(' ')
+    expect(click).not.toHaveBeenCalled()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Send' }))
+  })
+
+  it('asChild and href paths too', async () => {
+    const user = userEvent.setup()
+    const click = vi.fn()
+    render(<DiyaProvider>
+      <Button href="/report" loading onClick={click}>Open report</Button>
+      <Button asChild loading><a href="/child" onClick={click}>Child link</a></Button>
+    </DiyaProvider>)
+    for (const name of ['Open report', 'Child link']) {
+      const link = screen.getByRole('link', { name })
+      expect(spinnerOf(link)!.getAttribute('aria-hidden')).toBe('true')
+      expect(link.getAttribute('aria-busy')).toBe('true')
+      expect(link.getAttribute('aria-disabled')).toBe('true')
+      expect(link.textContent).toBe(name)
+      await user.click(link)
+    }
+    expect(click).not.toHaveBeenCalled()
+  })
+
+  it('iconOnly keeps its icon until the beat: the icon stays mounted beside the spinner', () => {
+    const icon = <svg data-icon="plus" aria-hidden="true" />
+    const view = render(<DiyaProvider><Button iconOnly aria-label="Add">{icon}</Button></DiyaProvider>)
+    const button = screen.getByRole('button', { name: 'Add' })
+    const before = button.querySelector('[data-icon="plus"]')
+    view.rerender(<DiyaProvider><Button iconOnly aria-label="Add" loading>{icon}</Button></DiyaProvider>)
+    // The same icon node (not remounted), with the spinner first; CSS swaps them on the beat.
+    expect(button.querySelector('[data-icon="plus"]')).toBe(before)
+    expect(button.firstElementChild!.classList.contains('diya-spinner')).toBe(true)
+    expect(button.getAttribute('aria-busy')).toBe('true')
   })
 })

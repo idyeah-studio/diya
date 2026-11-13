@@ -2,6 +2,7 @@
 import { cloneElement, forwardRef, isValidElement, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from '../internal/cx.js'
 import { useDiyaLinkComponent } from '../internal/link.js'
+import { renderSpinnerRing } from '../spinner/Spinner.js'
 import { onlyChild, renderSlot } from '../internal/slot.js'
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -13,7 +14,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   shape?: 'pill' | 'rounded'
   /** Square button for a single icon child; give it an `aria-label`, since the icon is its only content. */
   iconOnly?: boolean
-  /** Shows a working indicator and sets `aria-busy`; the label stays unless `iconOnly`. The button stays focusable, so focus isn't lost while it works, but it is inert: `aria-disabled="true"`, and clicks, Enter and Space do nothing, so it can't submit twice. */
+  /** Shows a small spinner and sets `aria-busy`; the label stays unless `iconOnly`. The button stays focusable, so focus isn't lost while it works, but it is inert: `aria-disabled="true"`, and clicks, Enter and Space do nothing, so it can't submit twice. */
   loading?: boolean
   /** Renders a link to this URL that looks like a Button, through the provider's `linkComponent` (a plain anchor by default). */
   href?: string
@@ -54,9 +55,11 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     onPointerDownCapture: (event: PointerEvent<HTMLElement>) => { pressFloor(event); props.onPointerDownCapture?.(event as never) },
     onKeyDownCapture: (event: KeyboardEvent<HTMLElement>) => { pressFloor(event); props.onKeyDownCapture?.(event as never) },
   }
+  // The spinner waits for the 400ms beat like every Spinner, while the label makes room for it
+  // (styles.css). An icon-only Button keeps its icon until the beat, so it's never blank.
   const content = (inner: ReactNode) => <>
-    {loading && <span className="diya-button-progress" aria-hidden="true">···</span>}
-    {!(iconOnly && loading) && inner}
+    {loading && <span className="diya-spinner" data-size={size === 'large' ? 'medium' : 'small'} aria-hidden="true">{renderSpinnerRing(size === 'large' ? 'medium' : 'small')}</span>}
+    {inner}
   </>
   if (asChild) {
     const child = onlyChild(children)
