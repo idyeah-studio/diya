@@ -137,7 +137,7 @@ function SignInStep({ email, setEmail, go, titleRef, onEmailed }: StepProps & { 
         <TextInput ref={passwordField} label="Password" type="password" autoComplete="current-password" value={password} error={errors.password}
           onValueChange={(value) => { setPassword(value); setErrors({ ...errors, password: undefined }) }} />
         <Inline justify="between" gap={3}>
-          <Checkbox label="Keep me signed in" checked={keep} onCheckedChange={setKeep} />
+          <Checkbox className="sign-in-keep" label="Keep me signed in" checked={keep} onCheckedChange={setKeep} />
           <LinkButton onClick={() => go('forgot')}>Forgot password?</LinkButton>
         </Inline>
       </Stack>
@@ -458,6 +458,7 @@ const css = `
 .sign-in-hint { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: var(--diya-leading-body); text-wrap: pretty; }
 .sign-in-strong { color: var(--diya-color-text); font-weight: 600; overflow-wrap: anywhere; }
 .sign-in-wide { width: 100%; }
+.sign-in-keep { padding-block: 9px; }
 .sign-in-logo { width: 20px; height: 20px; flex-shrink: 0; margin-inline-end: 2px; }
 .sign-in-github { fill: currentColor; fill: light-dark(#000, #fff); }
 .sign-in-google-sweep {
