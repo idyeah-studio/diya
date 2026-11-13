@@ -308,38 +308,26 @@
   pointer-events: none;
 }
 
-/* Loading: focusable and inert. The button takes its own clicks (and drops them), with the disabled cursor. */
+/* Loading looks busy, not disabled (F13): full color and the progress cursor. It stays focusable
+   and inert: the button takes its own clicks, and drops them. */
 .diya-root .diya-button[aria-busy='true'] {
-  opacity: 0.8;
+  opacity: 1;
+  cursor: progress;
   pointer-events: auto;
 }
 
-/* Loading shows a small Spinner, and the width never changes. Each size names its padding and
-   the room the spinner needs (its size plus the 8px gap, halved). On the Spinner's 400ms beat the
-   start padding grows by the room and the end padding shrinks by it, so the label slides over
-   while the box stays put. The spinner sits in the flow with margins that add up to nothing, so
-   it always ends 8px before the label, even when your own padding wins. */
+/* Loading's spinner (F12): on the Spinner's 400ms beat it takes the place of the first thing in
+   the button, centered on it: the leading icon, or else the label, which keeps its box. Nothing
+   moves and the width holds, at any padding, and the spinner never leaves the button. */
 .diya-root .diya-button {
-  --diya-internal-button-pad: 20px;
-  --diya-internal-button-room: 12px;
   --diya-internal-beat: 400ms;
 }
-.diya-root .diya-button[data-size='small'] {
-  --diya-internal-button-pad: 16px;
+.diya-root .diya-button-lead {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
 }
-.diya-root .diya-button[data-size='large'] {
-  --diya-internal-button-pad: 24px;
-  --diya-internal-button-room: 14px;
-}
-.diya-root .diya-button[aria-busy='true']:not([data-icon-only='true']) {
-  padding-inline: calc(var(--diya-internal-button-pad) + var(--diya-internal-button-room)) calc(var(--diya-internal-button-pad) - var(--diya-internal-button-room));
-}
-.diya-root .diya-button > .diya-spinner {
-  margin-inline-start: calc(-2 * var(--diya-internal-button-room));
-}
-/* Icon-only: the spinner takes the icon's place on the beat, in the same square. The icon stays
-   until then, so the button is never blank. */
-.diya-root .diya-button[data-icon-only='true'] > .diya-spinner {
+.diya-root :is(.diya-button, .diya-button-lead) > .diya-spinner {
   position: absolute;
   inset: 0;
   margin: auto;
@@ -1033,6 +1021,12 @@
     opacity: 1;
     color: GrayText;
     border-color: GrayText;
+  }
+
+  /* Busy, not disabled (F13). */
+  .diya-root .diya-button[aria-busy='true']:not(:disabled) {
+    color: ButtonText;
+    border-color: ButtonText;
   }
 
   .diya-root .diya-tab[aria-selected='true'] {
@@ -1993,7 +1987,7 @@
 .diya-root .diya-spinner-track { stroke-opacity: 0.16; }
 /* Beside words, a quarter em of air on each side (about 8px with the word space, as with
    showLabel). Not in a Button, which places its own. */
-.diya-root .diya-spinner:not([data-show-label], .diya-button > *) { margin-inline: 0.25em; }
+.diya-root .diya-spinner:not([data-show-label], .diya-button > *, .diya-button-lead > *) { margin-inline: 0.25em; }
 /* With showLabel, the words sit 8px after the ring and arrive with it. */
 .diya-root .diya-spinner[data-show-label='true'] { display: inline; width: auto; height: auto; vertical-align: baseline; }
 .diya-root .diya-spinner[data-show-label='true'] svg { display: inline-block; vertical-align: calc(0.365em - var(--diya-internal-spinner) / 2); margin-inline-end: 8px; }
@@ -3757,38 +3751,34 @@
   transition-duration: var(--diya-internal-duration-fast);
   transition-timing-function: var(--diya-ease-move);
 }
-/* Loading: the 0.8 dim eases at once, as the answer to the press. On the 400ms beat the label
-   slides over by the room (fast, on move; it steps when nothing travels), and slides back at once
-   when loading ends. Start and end padding move the same amount the other way, so the width is
-   the same on every frame. ([data-variant] outranks the shared list above; every Button has it.) */
-.diya-root .diya-button[data-variant] {
-  transition-property: background-color, border-color, color, box-shadow, scale, opacity, padding-inline-start, padding-inline-end;
-  transition-duration: var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast),
-    calc(var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel)), calc(var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel));
+/* Loading (F12): the swap is instant on the beat, under every setting: the label (or the icon) goes
+   and the spinner is there in the same frame, with no crossfade. When loading ends the spinner goes
+   at once and they fade back over fast, on the enter curve. */
+.diya-root :is(.diya-button, .diya-button-lead) > .diya-spinner {
+  animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both;
 }
-.diya-root .diya-button[data-variant][aria-busy='true'] {
-  transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, var(--diya-internal-beat), var(--diya-internal-beat);
+.diya-root :is(.diya-button-label, .diya-button-lead > :not(.diya-spinner), .diya-button[data-icon-only='true'] > :not(.diya-spinner)) {
+  transition-property: opacity;
+  transition-duration: var(--diya-internal-duration-fast);
+  transition-timing-function: var(--diya-ease-enter);
 }
-/* The spinner's margins move with the padding, the other way, so it holds still while the label
-   slides; it fades in once the label is halfway across, so the two never overlap. */
-.diya-root .diya-button > .diya-spinner {
-  animation:
-    diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) calc(var(--diya-internal-beat) + var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel) / 2) both,
-    diya-button-make-room calc(var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel)) var(--diya-ease-move) var(--diya-internal-beat) both;
+.diya-root .diya-button[aria-busy='true'] > .diya-button-label,
+.diya-root .diya-button[aria-busy='true'] > .diya-button-lead > :not(.diya-spinner),
+.diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > :not(.diya-spinner) {
+  opacity: 0;
+  transition-duration: 0s;
+  transition-delay: var(--diya-internal-beat);
 }
-@keyframes diya-button-make-room {
-  from {
-    margin-inline-start: calc(-1 * var(--diya-internal-button-room));
-    margin-inline-end: calc(-1 * var(--diya-internal-button-room));
+/* The label's wrapper (and a leading icon's) first appears as loading starts: shown until the beat. */
+@starting-style {
+  .diya-root .diya-button[aria-busy='true'] > .diya-button-label {
+    opacity: 1;
   }
 }
-/* Icon-only, nothing moves: the icon gives way on the beat and the spinner fades in there. */
-.diya-root .diya-button[data-icon-only='true'] > .diya-spinner {
-  animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both;
-}
-/* The icon goes on the beat: the arrive fade played backwards, in no time. */
-.diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > :not(.diya-spinner) {
-  animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) reverse both;
+@starting-style {
+  .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > :not(.diya-spinner) {
+    opacity: 1;
+  }
 }
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active,
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active::after {

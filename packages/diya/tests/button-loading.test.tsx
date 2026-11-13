@@ -188,3 +188,28 @@ describe('Button loading shows a spinner', () => {
     expect(button.getAttribute('aria-busy')).toBe('true')
   })
 })
+
+// F12: on the beat the spinner takes the place of the leading icon, or else of the label. The label
+// (or icon) gets a wrapper when loading first starts and keeps it, so it can fade back.
+describe('Button loading takes the place of the label or the leading icon (F12)', () => {
+  it('wraps the label while loading, and keeps the wrapper after', () => {
+    const view = render(<DiyaProvider><Button>Save</Button></DiyaProvider>)
+    const button = screen.getByRole('button', { name: 'Save' })
+    expect(button.innerHTML).toBe('Save')
+    view.rerender(<DiyaProvider><Button loading>Save</Button></DiyaProvider>)
+    expect([...button.children].map((node) => node.className)).toEqual(['diya-spinner', 'diya-button-label'])
+    expect(button.querySelector('.diya-button-label')!.textContent).toBe('Save')
+    view.rerender(<DiyaProvider><Button>Save</Button></DiyaProvider>)
+    expect([...button.children].map((node) => node.className)).toEqual(['diya-button-label'])
+    expect(screen.getByRole('button', { name: 'Save' })).toBe(button)
+  })
+
+  it('with a leading icon, the spinner joins the icon and the label stays as it is', () => {
+    render(<DiyaProvider><Button loading><svg data-icon="plus" aria-hidden="true" />Add member</Button></DiyaProvider>)
+    const button = screen.getByRole('button', { name: 'Add member' })
+    const lead = button.querySelector(':scope > .diya-button-lead')!
+    expect([...lead.children].map((node) => node.getAttribute('data-icon') ?? node.className)).toEqual(['plus', 'diya-spinner'])
+    expect(button.querySelector('.diya-button-label')).toBeNull()
+    expect(button.lastChild!.textContent).toBe('Add member')
+  })
+})

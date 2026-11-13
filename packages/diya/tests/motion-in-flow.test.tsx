@@ -40,8 +40,9 @@ describe('Button press and hover', () => {
     expect(css).not.toMatch(/filter:\s*brightness/)
     // Every rule that sets a Button's transition list includes scale, so whichever wins the
     // cascade, the release eases (a shared list without it once snapped the release back).
+    // F12: only the Button itself, not its loading label or icon (diya-button-label, -lead).
     const lists = [...css.matchAll(/([^{}]*\.diya-button[^{}]*)\{([^{}]*transition-property:[^;]*;)/g)]
-      .filter(([, selector]) => !selector.includes('::after'))
+      .filter(([, selector]) => !selector.includes('::after') && /\.diya-button(?![\w-])/.test(selector.replace(/\.diya-button(?:-label|-lead)\b|\.diya-button\[data-icon-only='true'\] > :not\(\.diya-spinner\)/g, '')))
       .map(([, selector, body]) => ({ selector: selector.trim(), list: /transition-property:([^;]*);/.exec(body)![1] }))
     expect(lists.length).toBeGreaterThan(0)
     for (const { selector, list } of lists) expect(list, selector).toContain('scale')
@@ -199,8 +200,9 @@ describe('Progress and loading rows', () => {
     expect(css).toMatch(/\.diya-table-skeleton \{\s*animation: diya-skeleton-pulse 1\.4s ease-in-out infinite;/)
     expect(css).toMatch(/@keyframes diya-skeleton-pulse \{ 50% \{ opacity: 0\.55; \} \}/)
     // 1.2 step 8 (E2, E3, motion.md §1–2): Spinner's arrive and turn, and Button's room for its spinner.
+    // F12 drops Button's slide, and its diya-button-make-room keyframe with it.
     expect(css.match(/@keyframes [\w-]+/g)).toEqual(['@keyframes diya-progress-travel', '@keyframes diya-progress-spin', '@keyframes diya-progress-breathe',
-      '@keyframes diya-spinner-arrive', '@keyframes diya-spinner-turn', '@keyframes diya-button-make-room', '@keyframes diya-skeleton-pulse'])
+      '@keyframes diya-spinner-arrive', '@keyframes diya-spinner-turn', '@keyframes diya-skeleton-pulse'])
     // A fade: nothing in the Reduce Motion or motion settings stops it.
     expect(css).not.toMatch(/diya-table-skeleton[^{]*\{[^}]*animation:\s*none/)
   })

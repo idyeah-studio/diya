@@ -491,6 +491,12 @@ function LoadingCase() {
         <Button id="bl-pad" className="app-pad" loading={busy}>Save</Button>
         <Button id="bl-pad-wide" className="app-pad-wide" loading={busy}>Save</Button>
       </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {[10, 12, 16].map((px) => <Button key={px} id={`bl-pad-${px}`} className={`app-pad-${px}`} loading={busy}>Pay $42</Button>)}
+        <Button id="bl-lead" loading={busy}>{icon}Add member</Button>
+        <Button id="bl-lead-pad" className="app-pad-12" size="small" loading={busy}>{icon}Add</Button>
+        <Button id="bl-short" size="small" loading={busy}>OK</Button>
+      </div>
       <Dialog title="Delete the archive?" confirmLabel="Delete every archived conversation" confirmVariant="destructive" onConfirm={() => new Promise(() => {})}
         trigger={<Button id="bl-dialog-open" variant="outline">Delete archive</Button>}>Archived conversations go for good.</Dialog>
     </div>
@@ -568,7 +574,7 @@ function RhfCase() {
 const cases = { rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
-style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; }'
+style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; }'
 document.head.append(style)
 document.documentElement.dataset.react = version
 const app = which === 'theme' || (which === 'tokens' && query.get('outer') === '1')

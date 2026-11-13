@@ -1,142 +1,200 @@
-// Button loading (1.2, motion.md §2) in a real browser: the width never changes, the label slides
-// over on the 400ms beat and the spinner fades in 8px before it, a quick load shows only the dim,
-// an app's own padding, icon-only, and a Dialog footer on a phone.
+// Button loading (1.2, F12 and F13) in a real browser. On the Spinner's 400ms beat the spinner
+// takes the place of the first thing in the button, in one frame: the leading icon (the label
+// stays), or else the label, which keeps its box. Nothing moves, the width holds, the spinner stays
+// inside the button at any padding, and when loading ends the label (or icon) fades back. A loading
+// Button looks busy, not disabled. (F12 replaces step 8's slide, whose tests these replace.)
 import { expect, test, type Page } from '@playwright/test'
 import { openCase } from './helpers'
 
-type Frame = { t: number; boxes: { id: string; width: number; x: number; next: number | null; label: number | null; labelEnd: number | null; spinner: number | null; spinnerEnd: number | null; spinnerOpacity: number | null; opacity: number; icon: number | null }[] }
+type Box = { left: number; right: number; top: number; bottom: number }
+type Row = {
+  id: string; button: Box; next: number | null
+  label: Box | null; labelOpacity: number | null
+  icon: Box | null; iconOpacity: number | null
+  spinner: Box | null; spinnerOpacity: number | null
+  opacity: number; cursor: string; color: string
+}
+type Frame = { t: number; rows: Row[] }
 
 const grid = ['small', 'medium', 'large'].flatMap((size) => ['solid', 'outline', 'quiet'].map((variant) => `bl-${size}-${variant}`))
+const padded = ['bl-pad-10', 'bl-pad-12', 'bl-pad', 'bl-pad-16', 'bl-pad-wide']
 
-/** Turns loading on (or off) and measures every listed Button on every frame for `ms`. */
-function frames(page: Page, ids: string[], ms: number, { busy = true, endAfter }: { busy?: boolean; endAfter?: number } = {}) {
-  return page.evaluate(({ ids, ms, busy, endAfter }) => new Promise<Frame[]>((done) => {
+/** Turns loading on (or ends it after `endAfter` ms) and measures the listed Buttons on every frame for `ms`. */
+function frames(page: Page, ids: string[], ms: number, { endAfter, busy = true }: { endAfter?: number; busy?: boolean } = {}) {
+  return page.evaluate(({ ids, ms, endAfter, busy }) => new Promise<Frame[]>((done) => {
+    const box = (node: Element | Range | null | undefined) => {
+      if (!node) return null
+      const r = node.getBoundingClientRect()
+      return { left: r.left, right: r.right, top: r.top, bottom: r.bottom }
+    }
     const measure = (t: number): Frame => ({
       t,
-      boxes: ids.map((id) => {
+      rows: ids.map((id) => {
         const button = document.getElementById(id)!
-        const box = button.getBoundingClientRect()
-        const next = document.getElementById(`${id}-next`)
+        const wrapper = button.querySelector<HTMLElement>(':scope > .diya-button-label')
         const text = [...button.childNodes].find((node) => node.nodeType === Node.TEXT_NODE)
-        const range = document.createRange()
-        if (text) range.selectNodeContents(text)
-        const label = text ? range.getBoundingClientRect() : null
-        const spinner = button.querySelector<HTMLElement>(':scope > .diya-spinner')
-        const ring = spinner?.getBoundingClientRect()
-        const icon = button.querySelector<SVGElement>(':scope > svg')
+        const range = text ? document.createRange() : null
+        if (range && text) range.selectNodeContents(text)
+        const icon = button.querySelector<SVGElement>(':scope > svg, :scope > .diya-button-lead > svg')
+        const spinner = button.querySelector<HTMLElement>('.diya-spinner')
+        const style = getComputedStyle(button)
         return {
-          id, width: box.width, x: box.x, next: next ? next.getBoundingClientRect().x : null,
-          label: label ? label.left : null, labelEnd: label ? label.right : null,
-          spinner: ring ? ring.left : null, spinnerEnd: ring ? ring.right : null,
-          spinnerOpacity: spinner ? Number(getComputedStyle(spinner).opacity) : null,
-          opacity: Number(getComputedStyle(button).opacity),
-          icon: icon ? Number(getComputedStyle(icon).opacity) : null,
+          id, button: box(button)!, next: document.getElementById(`${id}-next`)?.getBoundingClientRect().left ?? null,
+          label: box(wrapper ?? range), labelOpacity: wrapper ? Number(getComputedStyle(wrapper).opacity) : text ? 1 : null,
+          icon: box(icon), iconOpacity: icon ? Number(getComputedStyle(icon).opacity) : null,
+          spinner: box(spinner), spinnerOpacity: spinner ? Number(getComputedStyle(spinner).opacity) : null,
+          opacity: Number(style.opacity), cursor: style.cursor, color: style.color,
         }
       }),
     })
-    const out = [measure(-1)]
     const setBusy = (window as unknown as { __setBusy(value: boolean): void }).__setBusy
+    const out = [measure(-1)]
     setBusy(busy)
     const start = performance.now()
     if (endAfter !== undefined) setTimeout(() => setBusy(false), endAfter)
+    out.push(measure(0))
     const tick = () => {
       const t = performance.now() - start
       out.push(measure(t))
       if (t < ms) requestAnimationFrame(tick)
       else done(out)
     }
-    out.push(measure(0))
     requestAnimationFrame(tick)
-  }), { ids, ms, busy, endAfter })
+  }), { ids, ms, endAfter, busy })
 }
-const of = (list: Frame[], id: string) => list.map(({ t, boxes }) => ({ t, ...boxes.find((box) => box.id === id)! }))
+const of = (list: Frame[], id: string) => list.map(({ t, rows }) => ({ t, ...rows.find((row) => row.id === id)! }))
+const center = (b: Box) => [(b.left + b.right) / 2, (b.top + b.bottom) / 2]
+const spread = (values: number[]) => Math.max(...values) - Math.min(...values)
 
 for (const dir of ['ltr', 'rtl'] as const) {
-  test(`width changes by 0px on every frame for 700ms; the neighbor moves 0px (${dir})`, async ({ page }, testInfo) => {
+  test(`width and neighbor hold, and nothing moves, on every frame for 700ms (${dir})`, async ({ page }, testInfo) => {
     await openCase(page, testInfo, `case=loading&theme=light&dir=${dir}`)
-    const list = await frames(page, grid, 700)
+    const ids = [...grid, ...padded, 'bl-lead', 'bl-lead-pad', 'bl-short', 'bl-icon']
+    const list = await frames(page, ids, 700)
     expect(list.length).toBeGreaterThan(5)
-    // 0px to the engine's layout unit: Chromium sometimes rounds the two paddings apart by 1/64px
-    // mid-slide, which no screen shows.
-    const spread = (values: number[]) => Math.max(...values) - Math.min(...values)
-    for (const id of grid) {
+    for (const id of ids) {
       const rows = of(list, id)
-      expect(spread(rows.map((row) => row.width)), `${id} widths ${[...new Set(rows.map((row) => row.width))]}`).toBeLessThanOrEqual(1 / 64)
-      expect(spread(rows.map((row) => row.next!)), `${id} neighbor ${[...new Set(rows.map((row) => row.next))]}`).toBeLessThanOrEqual(1 / 64)
-    }
-  })
-
-  test(`label shifts 12/12/14px after 400ms; spinner-to-label gap 8px; the spinner holds still (${dir})`, async ({ page }, testInfo) => {
-    await openCase(page, testInfo, `case=loading&theme=light&dir=${dir}`)
-    const list = await frames(page, grid, 750)
-    const sign = dir === 'ltr' ? 1 : -1
-    for (const id of grid) {
-      const rows = of(list, id)
-      const [rest, end] = [rows[0], rows.at(-1)!]
-      const room = id.includes('large') ? 14 : 12
-      expect(end.label! - rest.label!, `${id} label shift`).toBeCloseTo(sign * room, 1)
-      // Nothing moves before the beat.
-      for (const row of rows.filter(({ t }) => t < 380)) expect(row.label, `${id} at ${row.t.toFixed(0)}ms`).toBeCloseTo(rest.label!, 2)
-      const gap = dir === 'ltr' ? end.label! - end.spinnerEnd! : end.spinner! - end.labelEnd!
-      expect(gap, `${id} gap`).toBeCloseTo(8, 1)
-      // Seen only where it ends up, and it fades in once the label is halfway across, so the two
-      // never overlap.
-      const seen = rows.filter((row) => (row.spinnerOpacity ?? 0) > 0.01)
-      expect(seen.length, id).toBeGreaterThan(0)
-      for (const row of seen) {
-        expect(row.spinner, `${id} spinner at ${row.t.toFixed(0)}ms`).toBeCloseTo(end.spinner!, 1)
-        expect(dir === 'ltr' ? row.label! - row.spinnerEnd! : row.spinner! - row.labelEnd!, `${id} clear at ${row.t.toFixed(0)}ms`).toBeGreaterThan(0)
+      expect(spread(rows.map((row) => row.button.right - row.button.left)), `${id} width`).toBe(0)
+      expect(spread(rows.map((row) => row.button.left)), `${id} place`).toBe(0)
+      if (rows[0].next !== null) expect(spread(rows.map((row) => row.next!)), `${id} neighbor`).toBe(0)
+      // The label and the icon keep their boxes; the spinner, once there, doesn't move either.
+      for (const part of ['label', 'icon'] as const) {
+        const boxes = rows.map((row) => row[part]).filter(Boolean) as Box[]
+        if (boxes.length) expect(spread(boxes.map((b) => b.left)), `${id} ${part}`).toBeLessThanOrEqual(0.01)
       }
-      expect(end.spinnerOpacity).toBe(1)
-      expect(end.opacity).toBeCloseTo(0.8, 5)
+      const spinners = rows.map((row) => row.spinner).filter(Boolean) as Box[]
+      expect(spread(spinners.map((b) => b.left)), `${id} spinner`).toBe(0)
     }
   })
 }
 
-test('a load under 400ms shows only the dim', async ({ page }, testInfo) => {
+test('on the beat the label goes and a centered spinner is there in the same frame; before it, nothing changes', async ({ page }, testInfo) => {
   await openCase(page, testInfo, 'case=loading&theme=light')
-  const ids = ['bl-medium-solid', 'bl-large-outline']
-  const list = await frames(page, ids, 600, { endAfter: 200 })
+  const ids = [...grid, 'bl-short', ...padded]
+  const list = await frames(page, ids, 700)
   for (const id of ids) {
-    const rows = of(list, id)
+    const rows = of(list, id).filter((row) => row.t >= 0)
+    for (const row of rows.filter(({ t }) => t < 380)) expect([row.labelOpacity, row.spinnerOpacity], `${id} at ${row.t.toFixed(0)}ms`).toEqual([1, 0])
+    // No crossfade: every frame shows exactly one of the two, fully.
+    for (const row of rows) expect([[1, 0], [0, 1]], `${id} at ${row.t.toFixed(0)}ms: ${row.labelOpacity}, ${row.spinnerOpacity}`).toContainEqual([row.labelOpacity, row.spinnerOpacity])
+    const end = rows.at(-1)!
+    expect([end.labelOpacity, end.spinnerOpacity]).toEqual([0, 1])
+    // Centered on the label's box (which is the button's middle), and inside the button.
+    const [lx, ly] = center(end.label!)
+    const [sx, sy] = center(end.spinner!)
+    expect(Math.abs(sx - lx), `${id} x`).toBeLessThanOrEqual(0.5)
+    expect(Math.abs(sy - ly), `${id} y`).toBeLessThanOrEqual(1)
+  }
+})
+
+test('at any padding the spinner stays inside the button: Tailwind px-3 and px-4, and 10 to 32px', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const list = await frames(page, [...padded, 'bl-lead-pad'], 600)
+  for (const id of [...padded, 'bl-lead-pad']) {
+    const end = of(list, id).at(-1)!
+    expect(end.spinnerOpacity, id).toBe(1)
+    expect(end.spinner!.left - end.button.left, `${id} start`).toBeGreaterThanOrEqual(8)
+    expect(end.button.right - end.spinner!.right, `${id} end`).toBeGreaterThanOrEqual(8)
+    expect(end.spinner!.top).toBeGreaterThanOrEqual(end.button.top)
+    expect(end.spinner!.bottom).toBeLessThanOrEqual(end.button.bottom)
+  }
+})
+
+test('with a leading icon, the spinner takes the icon\'s place and the label stays', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const list = await frames(page, ['bl-lead', 'bl-lead-pad'], 700)
+  for (const id of ['bl-lead', 'bl-lead-pad']) {
+    const rows = of(list, id).filter((row) => row.t >= 0)
     for (const row of rows) {
-      expect(row.label, `${id} at ${row.t.toFixed(0)}ms`).toBeCloseTo(rows[0].label!, 2)
-      expect(row.width).toBe(rows[0].width)
+      expect(row.labelOpacity, `${id} label at ${row.t.toFixed(0)}ms`).toBe(1)
+      expect([[1, 0], [0, 1]], `${id} at ${row.t.toFixed(0)}ms`).toContainEqual([row.iconOpacity, row.spinnerOpacity])
+    }
+    const end = rows.at(-1)!
+    expect([end.iconOpacity, end.spinnerOpacity]).toEqual([0, 1])
+    const [ix, iy] = center(end.icon!)
+    const [sx, sy] = center(end.spinner!)
+    expect(Math.abs(sx - ix), `${id} x`).toBeLessThanOrEqual(1)
+    expect(Math.abs(sy - iy), `${id} y`).toBeLessThanOrEqual(1)
+  }
+})
+
+test('icon-only swaps in one frame, never blank (S78-M1)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const rows = of(await frames(page, ['bl-icon'], 700), 'bl-icon').filter((row) => row.t >= 0)
+  for (const row of rows) expect([[1, 0], [0, 1]], `at ${row.t.toFixed(0)}ms`).toContainEqual([row.iconOpacity, row.spinnerOpacity])
+  const end = rows.at(-1)!
+  expect([end.iconOpacity, end.spinnerOpacity]).toEqual([0, 1])
+  const [bx, by] = center(end.button)
+  const [sx, sy] = center(end.spinner!)
+  expect(Math.abs(sx - bx)).toBeLessThanOrEqual(0.5)
+  expect(Math.abs(sy - by)).toBeLessThanOrEqual(0.5)
+})
+
+test('when loading ends the spinner goes at once and the label fades back; a load under 400ms changes nothing', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const ids = ['bl-medium-solid', 'bl-lead', 'bl-icon']
+  const long = await frames(page, ids, 1000, { endAfter: 600 })
+  for (const id of ids) {
+    const rows = of(long, id).filter((row) => row.t > 640)
+    for (const row of rows) expect(row.spinner, `${id} spinner at ${row.t.toFixed(0)}ms`).toBeNull()
+    const back = rows.map((row) => (id === 'bl-medium-solid' ? row.labelOpacity : row.iconOpacity)!)
+    // It fades: at least one frame part of the way, and fully back by the end.
+    expect(back.some((value) => value > 0 && value < 1), `${id}: ${back.map((v) => v.toFixed(2))}`).toBe(true)
+    expect(back.at(-1)).toBe(1)
+  }
+  await page.reload()
+  await page.waitForSelector('html[data-ready]')
+  const quick = await frames(page, ids, 700, { endAfter: 200 })
+  for (const id of ids) {
+    for (const row of of(quick, id)) {
+      expect(row.labelOpacity ?? 1, `${id} label at ${row.t.toFixed(0)}ms`).toBe(1)
+      expect(row.iconOpacity ?? 1, `${id} icon at ${row.t.toFixed(0)}ms`).toBe(1)
       if (row.spinnerOpacity !== null) expect(row.spinnerOpacity, `${id} spinner at ${row.t.toFixed(0)}ms`).toBe(0)
     }
-    // The dim answered the press, and lifted.
-    expect(Math.min(...rows.map((row) => row.opacity)), id).toBeLessThan(1)
-    expect(rows.at(-1)!.opacity).toBe(1)
-    expect(rows.at(-1)!.spinner).toBeNull()
   }
 })
 
-test('a Button with class-set padding: width constant, spinner clear of the label', async ({ page }, testInfo) => {
-  // .app-pad (14px) and .app-pad-wide (32px) are unlayered, so they beat DIYA's padding at rest
-  // and while busy. The width holds (to the engine's layout unit, 1/64px) and the spinner ends
-  // 8px before the label.
+test('a loading Button looks busy, not disabled: full color and the progress cursor (F13)', async ({ page }, testInfo) => {
   await openCase(page, testInfo, 'case=loading&theme=light')
-  const ids = ['bl-pad', 'bl-pad-wide']
-  const list = await frames(page, ids, 750)
+  const ids = [...grid, 'bl-link', 'bl-child']
+  const list = await frames(page, ids, 200)
   for (const id of ids) {
     const rows = of(list, id)
-    const widths = rows.map((row) => row.width)
-    expect(Math.max(...widths) - Math.min(...widths), `${id} widths ${[...new Set(widths)]}`).toBeLessThanOrEqual(1 / 32)
-    const end = rows.at(-1)!
-    expect(end.label! - end.spinnerEnd!, `${id} gap`).toBeCloseTo(8, 1)
-    for (const row of rows.filter((row) => (row.spinnerOpacity ?? 0) > 0.01)) expect(row.label! - row.spinnerEnd!, `${id} at ${row.t.toFixed(0)}ms`).toBeGreaterThan(0)
+    for (const row of rows) expect(row.opacity, `${id} at ${row.t.toFixed(0)}ms`).toBe(1)
+    expect(rows[0].cursor, id).toBe('pointer')
+    expect(rows.at(-1)!.cursor, id).toBe('progress')
+    expect(rows.at(-1)!.color, id).toBe(rows[0].color)
   }
-})
-
-test('icon-only keeps its icon until the beat, then the spinner takes its place', async ({ page }, testInfo) => {
-  await openCase(page, testInfo, 'case=loading&theme=light')
-  const rows = of(await frames(page, ['bl-icon'], 700), 'bl-icon')
-  for (const row of rows.filter(({ t }) => t < 380)) expect(row.icon, `icon at ${row.t.toFixed(0)}ms`).toBe(1)
-  const end = rows.at(-1)!
-  expect([end.icon, end.spinnerOpacity]).toEqual([0, 1])
-  expect(new Set(rows.map((row) => row.width)).size).toBe(1)
-  // Centered in the same square.
-  expect(end.spinner! - end.x).toBeCloseTo((end.width - 16) / 2, 1)
+  // Still inert: a click does nothing, and focus stays. (Playwright waits for an aria-disabled
+  // element to be enabled, so the click is forced.)
+  const button = page.locator('#bl-medium-solid')
+  await button.focus()
+  await button.click({ force: true })
+  await button.press('Enter')
+  await button.press(' ')
+  await expect(button).toBeFocused()
+  await expect(button).toHaveAttribute('aria-busy', 'true')
+  await expect(button).toHaveAttribute('aria-disabled', 'true')
 })
 
 test('href and asChild Buttons show the spinner too', async ({ page }, testInfo) => {
@@ -146,6 +204,7 @@ test('href and asChild Buttons show the spinner too', async ({ page }, testInfo)
     await expect(link).toHaveAttribute('aria-busy', 'true')
     await expect(link.locator(':scope > .diya-spinner svg')).toHaveCount(1)
     await expect(link.locator(':scope > .diya-spinner')).toHaveCSS('opacity', '1')
+    await expect(link.locator(':scope > .diya-button-label')).toHaveCSS('opacity', '0')
   }
 })
 
@@ -157,9 +216,8 @@ test('Dialog footer at 320px: the label\'s line count is unchanged while loading
   await expect(confirm).toBeVisible()
   await page.waitForFunction(() => document.getAnimations().length === 0)
   const lines = () => confirm.evaluate((button) => {
-    const text = [...button.childNodes].find((node) => node.nodeType === Node.TEXT_NODE)!
     const range = document.createRange()
-    range.selectNodeContents(text)
+    range.selectNodeContents(button.querySelector('.diya-button-label') ?? button)
     return { lines: new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size, width: button.getBoundingClientRect().width, height: button.getBoundingClientRect().height }
   })
   const before = await lines()
@@ -168,4 +226,18 @@ test('Dialog footer at 320px: the label\'s line count is unchanged while loading
   await expect(confirm).toHaveAttribute('aria-busy', 'true')
   await page.waitForTimeout(700)
   expect(await lines()).toEqual(before)
+})
+
+// UX DOCS-01: the label hides with opacity, so it stays the accessible name. The docs promise
+// "accessible name unchanged": text, leading-icon and icon-only, before and after the beat.
+test('the accessible name is unchanged while loading: text, leading icon and icon-only', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const names = { 'bl-medium-solid': 'Save changes', 'bl-lead': 'Add member', 'bl-icon': 'Add', 'bl-pad-12': 'Pay $42' }
+  for (const [id, name] of Object.entries(names)) await expect(page.locator(`#${id}`)).toHaveAccessibleName(name)
+  await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+  await page.waitForTimeout(600)
+  for (const [id, name] of Object.entries(names)) {
+    await expect(page.locator(`#${id}`), id).toHaveAccessibleName(name)
+    await expect(page.locator(`#${id}`), id).toHaveAttribute('aria-busy', 'true')
+  }
 })

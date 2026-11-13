@@ -90,7 +90,9 @@ it('provider server markup matches 1.1.1', async () => {
     // The one markup change 1.2 makes here, named by the build plan (frontend.md step 8, E3): a loading
     // Button shows the small spinner ring where 1.1.1 had "···". Everything else must equal 1.1.1.
     const ring = '<span class="diya-spinner" data-size="small" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false"><circle class="diya-spinner-track" cx="8" cy="8" r="7.125"></circle><circle class="diya-spinner-arc" cx="8" cy="8" r="7.125" pathLength="100" stroke-dasharray="100" stroke-dashoffset="72" stroke-linecap="round" transform="rotate(-90 8 8)"></circle></svg></span>'
-    const changed1_2 = (markup: string) => markup.split(ring).join('<span class="diya-button-progress" aria-hidden="true">···</span>')
+    // F12: the label is wrapped while loading (it fades back when loading ends), so the wrapper maps
+    // back to the bare label too.
+    const changed1_2 = (markup: string) => markup.split(ring).join('<span class="diya-button-progress" aria-hidden="true">···</span>').replace(/<span class="diya-button-label">([^<]*)<\/span>/g, '$1')
     expect(Object.fromEntries(Object.entries(html).map(([name, markup]) => [name, changed1_2(markup)])))
       .toEqual(JSON.parse(readFileSync(resolve(process.cwd(), 'tests/fixtures/provider-ssr-1.1.1.json'), 'utf8'))[version])
   }

@@ -1,5 +1,5 @@
 'use client'
-import { cloneElement, forwardRef, isValidElement, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode, type Ref } from 'react'
+import { Children, cloneElement, forwardRef, isValidElement, useState, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from '../internal/cx.js'
 import { useDiyaLinkComponent } from '../internal/link.js'
 import { renderSpinnerRing } from '../spinner/Spinner.js'
@@ -14,7 +14,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   shape?: 'pill' | 'rounded'
   /** Square button for a single icon child; give it an `aria-label`, since the icon is its only content. */
   iconOnly?: boolean
-  /** Shows a small spinner and sets `aria-busy`; the label stays unless `iconOnly`. The button stays focusable, so focus isn't lost while it works, but it is inert: `aria-disabled="true"`, and clicks, Enter and Space do nothing, so it can't submit twice. */
+  /** Shows a small spinner and sets `aria-busy`: after 400ms it takes the place of the leading icon, or else of the label, which keeps its width. The button stays focusable, so focus isn't lost while it works, but it is inert: `aria-disabled="true"`, and clicks, Enter and Space do nothing, so it can't submit twice. */
   loading?: boolean
   /** Renders a link to this URL that looks like a Button, through the provider's `linkComponent` (a plain anchor by default). */
   href?: string
@@ -55,12 +55,20 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     onPointerDownCapture: (event: PointerEvent<HTMLElement>) => { pressFloor(event); props.onPointerDownCapture?.(event as never) },
     onKeyDownCapture: (event: KeyboardEvent<HTMLElement>) => { pressFloor(event); props.onKeyDownCapture?.(event as never) },
   }
-  // The spinner waits for the 400ms beat like every Spinner, while the label makes room for it
-  // (styles.css). An icon-only Button keeps its icon until the beat, so it's never blank.
-  const content = (inner: ReactNode) => <>
-    {loading && <span className="diya-spinner" data-size={size === 'large' ? 'medium' : 'small'} aria-hidden="true">{renderSpinnerRing(size === 'large' ? 'medium' : 'small')}</span>}
-    {inner}
-  </>
+  // Loading (F12): on the Spinner's 400ms beat the spinner takes the place of the first thing in
+  // the button, in one frame: a leading icon (the label stays), or else the label, which keeps its
+  // box so nothing moves. When loading ends the spinner goes and they fade back. Once a Button has
+  // been loading, its label (or leading icon) keeps a wrapper, so it has something to fade.
+  const [wrapped, setWrapped] = useState(loading)
+  if (loading && !wrapped) setWrapped(true)
+  const spinner = loading && <span className="diya-spinner" data-size={size === 'large' ? 'medium' : 'small'} aria-hidden="true">{renderSpinnerRing(size === 'large' ? 'medium' : 'small')}</span>
+  const content = (inner: ReactNode) => {
+    if (iconOnly) return <>{spinner}{inner}</>
+    if (!wrapped) return inner
+    const parts = Children.toArray(inner)
+    if (parts.length > 1 && isValidElement(parts[0])) return <><span className="diya-button-lead">{parts[0]}{spinner}</span>{parts.slice(1)}</>
+    return <>{spinner}<span className="diya-button-label">{inner}</span></>
+  }
   if (asChild) {
     const child = onlyChild(children)
     if (!isValidElement(child)) return null

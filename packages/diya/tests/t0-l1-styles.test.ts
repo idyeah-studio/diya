@@ -307,7 +307,8 @@ describe('enter styles', () => {
 
   it('starts only popups, Toast, an opening Dialog or Drawer and the phone menu', () => {
     expect(startingRules.length).toBeGreaterThan(0)
-    const allowed = /^\.diya-root(\[data-glass='true'\])? (\.diya-floating|\.diya-toast-region|\.diya-toast|\.diya-dialog\[open\]|\.diya-drawer-modal\[open\]|:is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop|\.diya-site-mobile-nav:not\(\[hidden\]\))$/
+    // F12 adds a loading Button's label or leading icon, wrapped as loading starts: shown until the beat.
+    const allowed = /^\.diya-root(\[data-glass='true'\])? (\.diya-floating|\.diya-toast-region|\.diya-toast|\.diya-dialog\[open\]|\.diya-drawer-modal\[open\]|:is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop|\.diya-site-mobile-nav:not\(\[hidden\]\)|\.diya-button\[aria-busy='true'\] > \.diya-button-label|\.diya-button\[aria-busy='true'\] > \.diya-button-lead > :not\(\.diya-spinner\))$/
     expect(startingRules.filter((selector) => !allowed.test(selector))).toEqual([])
   })
 
@@ -462,7 +463,8 @@ describe('Spinner (1.2)', () => {
   })
 
   it('beside words, a quarter em of air on each side; not with showLabel, not in a Button (K4)', () => {
-    expect(bare).toMatch(/\.diya-root \.diya-spinner:not\(\[data-show-label\], \.diya-button > \*\) \{ margin-inline: 0\.25em; \}/)
+    // F12 puts a leading icon's spinner in .diya-button-lead, so that's excluded too.
+    expect(bare).toMatch(/\.diya-root \.diya-spinner:not\(\[data-show-label\], \.diya-button > \*, \.diya-button-lead > \*\) \{ margin-inline: 0\.25em; \}/)
   })
 
   it('waits the literal 400ms beat, never scaled, and fades in over the gated medium', () => {
@@ -488,5 +490,23 @@ describe('step 9 refinements (1.2)', () => {
     const progress = distRules.filter(rule => rule.selector.includes('.diya-table-progress progress') && rule.body.includes('border-radius'))
     expect(progress.map(rule => rule.selector)).toEqual(['.diya-root .diya-table-progress progress', '.diya-root .diya-table-progress progress::-webkit-progress-bar', '.diya-root .diya-table-progress progress::-webkit-progress-value', '.diya-root .diya-table-progress progress::-moz-progress-bar'])
     for (const rule of progress) expect(rule.body, rule.selector).toContain('border-radius:calc(10px * var(--diya-corner-scale, 1))')
+  })
+})
+
+describe('Button loading (F12, F13)', () => {
+  it('looks busy, not disabled: full color and the progress cursor', () => {
+    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\] \{\s*opacity: 1;\s*cursor: progress;\s*pointer-events: auto;\s*\}/)
+  })
+
+  it('moves nothing: no padding or margin is animated or transitioned for loading', () => {
+    expect(bare).not.toMatch(/diya-button-make-room|--diya-internal-button-(pad|room)/)
+    for (const [, selector, body] of bare.matchAll(/([^{}]*diya-button[^{}]*)\{([^{}]*)\}/g)) {
+      for (const [, name, value] of body.matchAll(/(transition-property|animation)\s*:\s*([^;]+)/g)) expect(`${selector.trim()} ${name}: ${value}`).not.toMatch(/padding|margin/)
+    }
+  })
+
+  it('swaps in one frame on the beat and fades the label or icon back over fast', () => {
+    expect(bare).toMatch(/\.diya-root :is\(\.diya-button, \.diya-button-lead\) > \.diya-spinner \{\s*animation: diya-spinner-arrive 0s linear var\(--diya-internal-beat\) both;\s*\}/)
+    expect(bare).toMatch(/\{\s*opacity: 0;\s*transition-duration: 0s;\s*transition-delay: var\(--diya-internal-beat\);\s*\}/)
   })
 })
