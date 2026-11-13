@@ -26,7 +26,7 @@ const SYNONYMS: Record<string, string[]> = {
   dropdown: ['select', 'menu'], picker: ['select', 'combobox', 'date-picker'], autocomplete: ['combobox'], typeahead: ['combobox'],
   multiselect: ['combobox'], pick: ['select', 'combobox', 'choice'], choose: ['select', 'combobox', 'choice'], option: ['select', 'choice'],
   country: ['combobox'], timezone: ['combobox'], currency: ['select'],
-  input: ['text-input'], field: ['field', 'text-input'], formfield: ['field'], wrapper: ['field'], iframe: ['field'], hosted: ['field'], payment: ['field'], stripe: ['field'], textfield: ['text-input'], email: ['text-input'], password: ['text-input'],
+  input: ['text-input'], field: ['field'], formfield: ['field'], wrapper: ['field'], iframe: ['field'], hosted: ['field'], payment: ['field'], stripe: ['field'], textfield: ['text-input'], email: ['text-input'], password: ['text-input'],
   textarea: ['text-area'], multiline: ['text-area'], calendar: ['calendar', 'date-picker'], date: ['date-picker'], daterange: ['date-picker'],
   day: ['calendar', 'date-picker'], booking: ['calendar'], appointment: ['calendar'], availability: ['calendar'], agenda: ['calendar'], schedule: ['calendar'],
   range: ['slider', 'date-picker'], sidebar: ['side-navigation'], nav: ['side-navigation', 'site-header'],
@@ -51,14 +51,17 @@ const SYNONYMS: Record<string, string[]> = {
 }
 
 /**
- * Everyday words that mean one of DIYA's own controls, even where an export has
- * the word as its name: "a field" is a Text Input, and Field is for controls DIYA
- * doesn't make (QA-SITE-02). A query that also says what makes it someone else's
- * control (a hosted iframe, a payment provider's card) still finds Field first.
+ * "Field" is an everyday word for DIYA's own fields, and Field is for controls DIYA
+ * doesn't make (QA-SITE-02, DS-SITE-04). So in a query, "field" counts toward
+ * Field only when the query also names a hosted or third-party control; it nudges
+ * DIYA's own fields instead, so "date field" finds Date Picker and "dropdown field"
+ * Select; and Text Input leads only when every other word is a generic one
+ * ("field", "text field", "email field").
  */
-const EVERYDAY: Record<string, { id: string; unless: string[] }> = {
-  field: { id: 'text-input', unless: ['iframe', 'hosted', 'payment', 'stripe', 'card', 'wrapper', 'wrap', 'own', 'custom', 'third', 'thirdparty', 'native', 'time', 'color', 'framed'] },
-}
+const FIELD_WORDS = new Set(['field', 'fields'])
+const SOMEONE_ELSES = ['iframe', 'hosted', 'payment', 'stripe', 'card', 'wrapper', 'wrap', 'own', 'custom', 'third', 'thirdparty', 'native', 'time', 'color', 'framed']
+const OWN_FIELDS = ['text-input', 'text-area', 'select', 'combobox', 'date-picker', 'search', 'choice', 'switch', 'slider']
+const GENERIC_FIELD = new Set(['text', 'email', 'password', 'form', 'input', 'name', 'phone', 'number', 'url'])
 
 /** Things people ask for that DIYA doesn't have, with the honest answer. */
 const GAPS: Record<string, string> = {
@@ -85,18 +88,23 @@ const startsWord = (text: string, term: string) => new RegExp(`\\b${term}`).test
 function rank(query: string): { terms: string[]; results: Ranked[] } {
   const wanted = terms(query)
   const phrase = norm(query)
-  const everyday = wanted
-    .map((term) => EVERYDAY[term] ?? EVERYDAY[term.replace(/s$/, '')])
-    .filter((rule) => rule && !rule.unless.some((word) => wanted.includes(word)))
-    .map((rule) => rule!.id)
+  const fieldWord = wanted.some((term) => FIELD_WORDS.has(term))
+  const hosted = wanted.some((term) => SOMEONE_ELSES.includes(term))
+  const textInputFirst = fieldWord && !hosted && wanted.every((term) => FIELD_WORDS.has(term) || GENERIC_FIELD.has(term))
   const scored = mcpEntries().map((entry) => {
     const use = (entry.catalog?.guidance.use ?? '').toLowerCase()
     const instead = (entry.catalog?.guidance.instead ?? '').toLowerCase()
     const description = (entry.component?.description ?? '').toLowerCase()
     const props = Object.keys(entry.component?.props ?? {}).map(norm)
     const titleWords = entry.title.toLowerCase().split(/\s+/)
-    let score = [entry.exportName, entry.title, entry.id].some((key) => norm(key) === phrase) ? 20 : 0
+    // Field's own name doesn't win on the everyday word.
+    const ownFieldWord = entry.id === 'field' && fieldWord && !hosted
+    let score = !ownFieldWord && [entry.exportName, entry.title, entry.id].some((key) => norm(key) === phrase) ? 20 : 0
     for (const term of wanted) {
+      if (FIELD_WORDS.has(term)) {
+        if (ownFieldWord) continue
+        if (!hosted && OWN_FIELDS.includes(entry.id)) score += 3
+      }
       if (norm(entry.exportName) === term || norm(entry.title) === term) score += 12
       else if (titleWords.includes(term)) score += 6
       const synonyms = SYNONYMS[term]
@@ -106,7 +114,7 @@ function rank(query: string): { terms: string[]; results: Ranked[] } {
       if (startsWord(description, term)) score += 1
       if (props.includes(term)) score += 1
     }
-    if (everyday.includes(entry.id)) score += 40
+    if (textInputFirst && entry.id === 'text-input') score += 40
     return { entry, score }
   })
   const sorted = scored.filter((s) => s.score >= 2).sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title))

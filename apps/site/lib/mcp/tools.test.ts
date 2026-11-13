@@ -185,13 +185,36 @@ describe('toast(), Field and utilities', () => {
     expect(text).toContain('<input')
   })
 
-  // QA-SITE-02: "a field" is DIYA's own Text Input; Field is for controls DIYA doesn't make.
-  it('keeps Text Input first for "field" and "text field", with Field after it', () => {
-    for (const query of ['field', 'text field', 'email field', 'fields']) {
-      const lines = searchComponents({ query }).text.split('\n').filter((line) => /^\d+\. /.test(line))
-      expect(lines[0], query).toContain("import { TextInput } from '@idyeah/diya'")
-      if (query !== 'email field') expect(lines.some((line) => line.includes("import { Field } from")), query).toBe(true)
-    }
+  // QA-SITE-02 and DS-SITE-04: "field" alone or with a generic word is DIYA's Text Input; with another
+  // control's name it finds that control; Field leads only when the query names someone else's control.
+  it.each([
+    ['field', 'TextInput'],
+    ['fields', 'TextInput'],
+    ['text field', 'TextInput'],
+    ['email field', 'TextInput'],
+    ['password field', 'TextInput'],
+    ['form field', 'TextInput'],
+    ['date field', 'DatePicker'],
+    ['select field', 'Select'],
+    ['dropdown field', 'Select'],
+    ['search field', 'Search'],
+    ['multiline field', 'TextArea'],
+    ['checkbox field', 'Choice'],
+    ['file field', 'FileUpload'],
+    ['combobox field', 'Combobox'],
+    ['card', 'Card'],
+    ['card field', 'Field'],
+    ['time field', 'Field'],
+    ['stripe', 'Field'],
+    ['hosted iframe', 'Field'],
+  ])('search "%s" leads with %s', (query, first) => {
+    const lines = searchComponents({ query }).text.split('\n').filter((line) => /^\d+\. /.test(line))
+    expect(lines[0], query).toContain(`import { ${first} } from '@idyeah/diya'`)
+  })
+
+  it('never lets Field win on the everyday word "field" alone', () => {
+    for (const query of ['field', 'text field', 'date field', 'select field'])
+      expect(searchComponents({ query }).text, query).not.toContain("import { Field } from")
     expect(getComponent({ name: 'field', include: ['props'] })).toMatch(/^# Field \(`Field`\)/)
   })
 
