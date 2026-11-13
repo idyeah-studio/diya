@@ -3,6 +3,8 @@
  * as the reader's own (VIS-SITE-02), not DIYA's field box. The preview and
  * Get code use this one stylesheet, so the code gives what the preview shows,
  * including the rule that turns the edge red from the aria-invalid Field sets.
+ * The ring is on :focus, not :focus-visible: WebKit never matches :focus-visible
+ * on a time input (VIS-SITE2-02), and a field shows its ring on any focus anyway.
  */
 export const OWN_INPUT_CLASS = 'time-input'
 
@@ -17,7 +19,7 @@ export const OWN_INPUT_CSS = `
   color: inherit;
   font: inherit;
 }
-.time-input:focus-visible {
+.time-input:focus {
   outline: 2px solid var(--diya-color-focus, var(--diya-color-text));
   outline-offset: 3px;
 }

@@ -132,6 +132,9 @@ describe('the Field page with Framed off (VIS-SITE-02)', () => {
     const css = preview.querySelector('style')!.textContent!
     expect(css).toContain(".time-input[aria-invalid='true'] {\n  border-color: var(--diya-color-error);\n}")
     expect(css).toContain('border-radius: 999px;')
+    // VIS-SITE2-02: WebKit never matches :focus-visible on a time input, so the ring is on :focus.
+    expect(css).toContain('.time-input:focus {\n  outline: 2px solid var(--diya-color-focus, var(--diya-color-text));')
+    expect(css).not.toContain(':focus-visible')
     const { code } = snippetFor('field', page.read())
     expect(code).toContain('const css = `' + css + '`')
     expect(code).toContain('<style>{css}</style>')
