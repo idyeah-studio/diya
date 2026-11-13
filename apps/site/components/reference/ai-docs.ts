@@ -30,9 +30,11 @@ import { DiyaProvider } from '${API.package}'
 
 /** The rules every DIYA screen follows, as a Markdown list. Also served by the MCP server. */
 export const RULES = `- Every component renders inside \`DiyaProvider\`; popups, tooltips and toasts need it. Its \`theme\` defaults to \`"system"\` (follows the OS light or dark setting, in CSS, with no flash); pass \`"light"\` or \`"dark"\` to fix it. It paints its own background and text color; \`surface={false}\` leaves that to your page.
-- Fields work controlled (\`value\` with \`onValueChange\`; Switch: \`checked\` with \`onCheckedChange\`) or uncontrolled (\`defaultValue\`; Switch: \`defaultChecked\`). Native \`name\`, \`onChange\` and \`onBlur\` reach the native control, so react-hook-form \`register()\` works on TextInput, TextArea, Select, Switch, Choice and Slider without a Controller. Labels are required, even when hidden with \`hideLabel\`.
+- Fields work controlled (\`value\` with \`onValueChange\`; Switch and Checkbox: \`checked\` with \`onCheckedChange\`) or uncontrolled (\`defaultValue\`; Switch and Checkbox: \`defaultChecked\`). Native \`name\`, \`onChange\` and \`onBlur\` reach the native control, so react-hook-form \`register()\` works on TextInput, TextArea, Select, Switch, Checkbox, Choice and Slider without a Controller. Labels are required, even when hidden with \`hideLabel\`.
+- Switch acts now. Checkbox is a yes or no you send with a form. Choice picks from a list.
 - DIYA's fields take \`label\`, \`helperText\` and \`error\` themselves; wrap only other controls in \`Field\` (\`framed\` for a hosted iframe).
 - Show a toast with \`toast({ title, description, tone })\` from any client code; don't keep toast state yourself. Use \`<Toast>\` only when a toast's life is tied to a component's state.
+- Busy: Button \`loading\`, then Progress, then Spinner; never your own Spinner inside a Button.
 - Lay screens out with \`Stack\` (vertical) and \`Inline\` (horizontal, wrapping): \`gap\` takes a spacing step (1–8) or any CSS length, plus \`align\`, \`justify\`, \`wrap\` and \`as\`.
 - One brand color, set once: \`<DiyaProvider brandColor="#1F4E7A">\`, or \`{ light, dark }\`. Components take no color props (chart series aside); \`tone\` picks a status.
 - Every component takes \`className\`, \`style\` and its root element's attributes. Theme with public \`--diya-*\` tokens on \`.diya-root\`, never by overriding internal classes. DIYA's CSS sits in \`@layer diya\`, so your CSS and Tailwind utilities win.

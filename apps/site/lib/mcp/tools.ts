@@ -21,7 +21,7 @@ const STOP = new Set(
 
 /** Words people say for things DIYA calls something else. Values are api.json ids. */
 const SYNONYMS: Record<string, string[]> = {
-  toggle: ['switch'], onoff: ['switch'], checkbox: ['choice'], checkboxes: ['choice'], radio: ['choice'], radios: ['choice'],
+  toggle: ['switch'], onoff: ['switch'], checkbox: ['checkbox'], tick: ['checkbox'], agree: ['checkbox'], consent: ['checkbox'], checkboxes: ['choice'], radio: ['choice'], radios: ['choice'],
   modal: ['dialog'], confirm: ['dialog'], popup: ['dialog', 'popover'], sheet: ['drawer'], panel: ['drawer'], sidepanel: ['drawer'],
   dropdown: ['select', 'menu'], picker: ['select', 'combobox', 'date-picker'], autocomplete: ['combobox'], typeahead: ['combobox'],
   multiselect: ['combobox'], pick: ['select', 'combobox', 'choice'], choose: ['select', 'combobox', 'choice'], option: ['select', 'choice'],
@@ -34,9 +34,9 @@ const SYNONYMS: Record<string, string[]> = {
   title: ['page-header'], snackbar: ['toast'], notify: ['toast'], notification: ['toast', 'alert'], banner: ['alert'], callout: ['alert'],
   warning: ['alert'], chart: ['data-viz'], graph: ['data-viz'], plot: ['data-viz'], kpi: ['metric'], stat: ['metric'],
   stats: ['metric'], grid: ['table'], datagrid: ['table'], rows: ['table'], empty: ['content-state'], zero: ['content-state'],
-  nothing: ['content-state'], loading: ['content-state', 'progress'], stepper: ['wizard'], steps: ['wizard'], onboarding: ['wizard'],
+  nothing: ['content-state'], loading: ['content-state', 'progress', 'spinner'], busy: ['spinner'], stepper: ['wizard'], steps: ['wizard'], onboarding: ['wizard'],
   upload: ['file-upload'], dropzone: ['file-upload'], attach: ['file-upload'], chat: ['chatbot'], assistant: ['chatbot'],
-  spinner: ['progress'], loader: ['progress'], chip: ['tag'], label: ['badge', 'tag'], count: ['badge'], collapse: ['accordion'],
+  spinner: ['spinner'], loader: ['spinner', 'progress'], chip: ['tag'], label: ['badge', 'tag'], count: ['badge'], collapse: ['accordion'],
   disclosure: ['accordion'], faq: ['accordion'], hint: ['tooltip'], help: ['tooltip', 'popover'], link: ['text-link'],
   anchor: ['text-link'], crumbs: ['breadcrumbs'], pager: ['pagination'], filter: ['search'], layout: ['stack', 'inline'],
   column: ['stack'], row: ['inline'], flex: ['stack', 'inline'], gap: ['stack', 'inline'], spacing: ['stack', 'inline'],
@@ -60,7 +60,7 @@ const SYNONYMS: Record<string, string[]> = {
  */
 const FIELD_WORDS = new Set(['field', 'fields'])
 const SOMEONE_ELSES = ['iframe', 'hosted', 'payment', 'stripe', 'card', 'wrapper', 'wrap', 'own', 'custom', 'third', 'thirdparty', 'native', 'time', 'color', 'framed']
-const OWN_FIELDS = ['text-input', 'text-area', 'select', 'combobox', 'date-picker', 'search', 'choice', 'switch', 'slider']
+const OWN_FIELDS = ['text-input', 'text-area', 'select', 'combobox', 'date-picker', 'search', 'choice', 'checkbox', 'switch', 'slider']
 const GENERIC_FIELD = new Set(['text', 'email', 'password', 'form', 'input', 'name', 'phone', 'number', 'url'])
 
 /** Things people ask for that DIYA doesn't have, with the honest answer. */

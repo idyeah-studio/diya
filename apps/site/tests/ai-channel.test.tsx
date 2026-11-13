@@ -214,3 +214,16 @@ describe('Reference panel guidance', () => {
     expect(css).toMatch(/\.item-reference-guide code \{[^}]*white-space: nowrap;/)
   })
 })
+
+// Steps 7–8 in the AI channel: Checkbox and Spinner's rules lines, pages and the register() list.
+describe('the AI channel after steps 7–8', () => {
+  it('teaches Switch, Checkbox and Choice apart, and the busy ladder, everywhere the rules go', () => {
+    expect(RULES).toContain('- Switch acts now. Checkbox is a yes or no you send with a form. Choice picks from a list.')
+    expect(RULES).toContain('- Busy: Button `loading`, then Progress, then Spinner; never your own Spinner inside a Button.')
+    expect(RULES).toContain('`register()` works on TextInput, TextArea, Select, Switch, Checkbox, Choice and Slider')
+    const index = llmsIndex()
+    expect(index).toContain('- [Checkbox](https://diya13.ai/explore?area=components&component=checkbox): `Checkbox`.')
+    expect(index).toContain('- [Spinner](https://diya13.ai/explore?area=components&component=spinner): `Spinner`.')
+    expect(index.slice(index.indexOf('## Utilities'))).toContain('`VisuallyHidden`')
+  })
+})
