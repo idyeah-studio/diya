@@ -85,6 +85,8 @@ export function contrastPairs(appearance: Appearance, item?: CustomizeItem): Con
       check('Text in fields', text, field, 4.5, own.field ? token('field') : color('text'), color('text'))
       check('Field edges on the field', composite(t.fieldLine, field), field, 3, own.fieldLine ? token('fieldLine') : token('field'), token('field'))
       check('Field edges on the background', composite(t.fieldLine, background), background, 3, own.fieldLine ? token('fieldLine') : color('text'), color('background'))
+      /* Over Glass Light's backdrop an edge that passes on white can fall under 3:1, so in Light a picked edge needs 3.8:1 on white. */
+      if (theme === 'light' && own.fieldLine) check('Field edges on white, so they hold over Glass', composite(t.fieldLine, '#FFFFFF'), '#FFFFFF', 3.8, token('fieldLine'))
       /* Under Glass Light the field is see-through, so the edge must also hold 3:1 on the field as it renders there. */
       if (theme === 'light' && appearance.translucent) {
         const glassField = composite(withAlpha(t.field, GLASS_FIELD_STRENGTH), GLASS_LIGHT_PAGE)

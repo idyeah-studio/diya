@@ -125,7 +125,7 @@ describe('Customize: Fields', () => {
     await user.clear(edge)
     await user.type(edge, '#E2E5E5')
     const labels = contrastIssues(effectiveAppearance(getSnapshot().brand)).map((issue) => issue.label)
-    expect(labels).toEqual(['Field edges on the field', 'Field edges on the background'])
+    expect(labels).toEqual(['Field edges on the field', 'Field edges on the background', 'Field edges on white, so they hold over Glass'])
     const issues = within(panel).getByRole('heading', { name: /color pairs? (is|are) hard to read/ }).closest('section')!
     await user.click(within(issues).getByRole('button', { name: 'Adjust Field edge (Light)' }))
     await waitFor(() => expect(document.activeElement).toBe(within(panel).getByRole('textbox', { name: 'Field edge' })))
@@ -163,7 +163,8 @@ describe('Customize: a picked field edge under Glass Light', () => {
     const issue = glassEdge(brand)!
     expect(issue).toMatchObject({ theme: 'light', minimum: 3, path: 'tokens.light.fieldLine', background: '#EDEEED' })
     expect(issue.ratio).toBeLessThan(3)
-    expect(contrastIssues(effectiveAppearance(brand)).map((i) => i.label)).toEqual(['Field edges on the Glass field'])
+    // 3.45:1 on white fails the 3.8:1 pair too.
+    expect(contrastIssues(effectiveAppearance(brand)).map((i) => i.label)).toEqual(['Field edges on white, so they hold over Glass', 'Field edges on the Glass field'])
     const fix = contrastFix(brand, issue)!
     expect(fix.path).toBe('tokens.light.fieldLine')
     expect(fix.ratio).toBeGreaterThanOrEqual(3)
@@ -175,5 +176,31 @@ describe('Customize: a picked field edge under Glass Light', () => {
     expect(glassEdge({ translucent: true, 'tokens.dark.fieldLine': '#8A8A8A' })).toBeUndefined()
     // The README's sample: 3.30:1 on the Glass field.
     expect(contrastIssues(effectiveAppearance({ translucent: true, 'tokens.light.fieldLine': '#768587' }))).toEqual([])
+  })
+})
+
+// VIS-04, as the README and api.json now say it: in Light a picked edge needs 3.8:1 against white,
+// so it still holds 3:1 over Glass, whether or not this theme turns Glass on.
+describe('Customize: a picked field edge in Light, against white', () => {
+  const onWhite = (brand: Record<string, string | boolean>) =>
+    contrastIssues(effectiveAppearance(brand)).find((issue) => issue.label === 'Field edges on white, so they hold over Glass')
+
+  it('checks 3.8:1 on white, and offers a fix that reaches it', () => {
+    // Brackwater's first edge: 3.49:1 on white, so it passes the 3:1 pairs but not this one.
+    const brand = { 'tokens.light.fieldLine': '#7D8C8E' }
+    const issue = onWhite(brand)!
+    expect(issue).toMatchObject({ theme: 'light', minimum: 3.8, path: 'tokens.light.fieldLine', background: '#FFFFFF' })
+    expect(contrastIssues(effectiveAppearance(brand)).map((i) => i.label)).toEqual(['Field edges on white, so they hold over Glass'])
+    const fix = contrastFix(brand, issue)!
+    expect(fix).toMatchObject({ path: 'tokens.light.fieldLine' })
+    expect(fix.ratio).toBeGreaterThanOrEqual(3.8)
+    expect(onWhite({ 'tokens.light.fieldLine': fix.value })).toBeUndefined()
+  })
+
+  it('passes the README sample, leaves Dark alone, and never flags DIYA’s own edge', () => {
+    expect(onWhite({ 'tokens.light.fieldLine': '#768587' })).toBeUndefined()
+    expect(onWhite({ 'tokens.dark.fieldLine': '#7D8C8E' })).toBeUndefined()
+    // A picked fill alone keeps DIYA's edge, which isn't the person's pick.
+    expect(onWhite({ 'tokens.light.field': '#F4F6F6' })).toBeUndefined()
   })
 })

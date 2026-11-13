@@ -199,7 +199,7 @@ describe('Get theme, the 1.2 theming tokens', () => {
     // White is what Light fields are filled with anyway, so it's left out of the file.
     'tokens.light.field': '#FFFFFF',
     'tokens.dark.field': '#18181B',
-    'tokens.light.fieldLine': '#7D8C8E',
+    'tokens.light.fieldLine': '#768587',
     'tokens.dark.fieldLine': '#6B7A7C',
     'tokens.heightSmall': 36,
     'tokens.heightMedium': 44,
@@ -217,7 +217,7 @@ describe('Get theme, the 1.2 theming tokens', () => {
     expect(file).toContain(
       '.diya-root {\n  --diya-height-control-small: 36px;\n  --diya-height-control-medium: 44px;\n  --diya-height-control-large: 52px;\n  --diya-radius-popup: 10px;\n  --diya-radius-modal: 14px;\n}'
     )
-    const light = '--diya-color-focus: #0F6B70;\n    --diya-color-heading: #0B4A4E;\n    --diya-color-field-line: #7D8C8E;\n  }'
+    const light = '--diya-color-focus: #0F6B70;\n    --diya-color-heading: #0B4A4E;\n    --diya-color-field-line: #768587;\n  }'
     const dark = '--diya-color-focus: #4CC4BB;\n    --diya-color-heading: #9FE3DC;\n    --diya-color-field: #18181B;\n    --diya-color-field-line: #6B7A7C;\n  }'
     expect(file).toContain(`  .diya-root[data-theme='light'] {\n    ${light}`)
     expect(file).toContain(`  .diya-root[data-theme='dark'] {\n    ${dark}`)
