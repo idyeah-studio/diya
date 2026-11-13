@@ -129,3 +129,21 @@ test('a mixed box the app leaves mixed shows its check after a click; the next r
   await expect(page.locator('#cb-sent')).toHaveText('1')
   await expect.poll(state).toEqual({ checked: false, indeterminate: true, mark: '8pxx2px' })
 })
+
+// K7 (QA-S78-01): with react-hook-form's register(), a checked Checkbox is true, as a native
+// checkbox and a Switch are; one given a value sends that value. Unchecked, false.
+test('react-hook-form register(): a checked Checkbox submits true, like a native checkbox and Switch', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=rhf&theme=light')
+  await page.getByRole('button', { name: 'Send' }).click()
+  await expect(page.locator('#rhf-sent')).toHaveText(JSON.stringify({ native: false, sw: false, cb: false, news: false }))
+  for (const name of ['Native', 'Switch', 'Checkbox', 'News']) await page.getByRole(name === 'Switch' ? 'switch' : 'checkbox', { name }).check()
+  await page.getByRole('button', { name: 'Send' }).click()
+  await expect(page.locator('#rhf-sent')).toHaveText(JSON.stringify({ native: true, sw: true, cb: true, news: 'yes' }))
+})
+
+// K7: with no value attribute, a plain form post still sends the browser's own "on".
+test('a checked Checkbox with a name and no value posts "on"', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=checkbox&theme=light')
+  await page.locator('#cb-terms').check()
+  expect(await page.locator('#cb-form').evaluate((form) => new FormData(form as HTMLFormElement).getAll('terms'))).toEqual(['on'])
+})

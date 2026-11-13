@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, version } from 'react'
 import { createPortal, flushSync } from 'react-dom'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
+import { useForm } from 'react-hook-form'
 import '@idyeah/diya/styles.css'
 import * as diya from '@idyeah/diya'
 import {
@@ -547,7 +548,24 @@ function MarksCase() {
   )
 }
 
-const cases = { marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+// react-hook-form's register() on a native checkbox, a Switch and a Checkbox (K7): the submitted
+// values are written out as JSON.
+function RhfCase() {
+  const { register, handleSubmit } = useForm({ defaultValues: { native: false, sw: false, cb: false, news: false } })
+  const [sent, setSent] = useState('')
+  return (
+    <form onSubmit={handleSubmit((values) => setSent(JSON.stringify(values)))} style={{ display: 'grid', gap: 16, padding: 24, width: 360 }}>
+      <label><input type="checkbox" {...register('native')} /> Native</label>
+      <Switch label="Switch" {...register('sw')} />
+      <diya.Checkbox label="Checkbox" {...register('cb')} />
+      <diya.Checkbox label="News" value="yes" {...register('news')} />
+      <Button type="submit">Send</Button>
+      <output id="rhf-sent">{sent}</output>
+    </form>
+  )
+}
+
+const cases = { rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; }'

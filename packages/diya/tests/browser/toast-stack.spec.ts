@@ -106,19 +106,27 @@ for (const theme of ['light', 'glass-dark'] as const) {
       if (!phone) await page.getByRole('button', { name: 'Export' }).click()
       await expect.poll(() => titles(page)).toEqual(phone ? ['Draft saved', 'Link copied'] : ['Draft saved', 'Link copied', 'Export started'])
       await page.waitForTimeout(400)
-      const track = await page.evaluate(() => new Promise<{ tops: number[]; copyUnder: boolean[]; frames: number[] }>((done) => {
+      // Under load the frame clock can run slower than the slide, so two samples can straddle most
+      // of it (K9, QA-S78-03: 5 in 60 under 10 burners, 11 in 60 at round H). The slide itself
+      // is read from its animation, and steps are judged only between frames under 50ms apart.
+      type Shift = { from: string; to: string; duration: number; composite: string }
+      const track = await page.evaluate(() => new Promise<{ samples: { t: number; top: number }[]; copyUnder: boolean[]; shifts: Shift[] }>((done) => {
         const first = document.querySelector<HTMLElement>('.diya-toast-list > .diya-toast')!
         const middle = document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')[1]
-        const tops: number[] = []
+        const samples: { t: number; top: number }[] = []
         const copyUnder: boolean[] = []
-        const frames: number[] = []
+        let shifts: Shift[] = []
         const start = performance.now()
-        let last = start
         middle.querySelector<HTMLButtonElement>('.diya-alert-dismiss')!.click()
         const tick = (now: number) => {
-          frames.push(now - last)
-          last = now
-          tops.push(first.getBoundingClientRect().top)
+          samples.push({ t: now - start, top: first.getBoundingClientRect().top })
+          if (!shifts.length) {
+            shifts = first.getAnimations().map((animation) => {
+              const effect = animation.effect as KeyframeEffect
+              const keyframes = effect.getKeyframes()
+              return { from: String(keyframes[0]?.transform), to: String(keyframes.at(-1)?.transform), duration: Number(effect.getTiming().duration), composite: effect.composite }
+            }).filter((shift) => shift.composite === 'add' && shift.from.startsWith('translateY'))
+          }
           const copy = document.querySelector<HTMLElement>('.diya-toast-copies > *')
           if (copy && !copyUnder.length) {
             // The paint order, tested directly: lay the copy over a live toast and make it
@@ -139,15 +147,22 @@ for (const theme of ['light', 'glass-dark'] as const) {
             copy.inert = true
           }
           if (now - start < 450) requestAnimationFrame(tick)
-          else done({ tops, copyUnder, frames: frames.slice(1) })
+          else done({ samples, copyUnder, shifts })
         }
         requestAnimationFrame(tick)
       }))
-      const steps = track.tops.slice(1).map((top, index) => Math.abs(top - track.tops[index]))
-      const moved = Math.abs(track.tops.at(-1)! - track.tops[0])
-      // It moves by a whole toast plus 12px, in steps, not in one jump.
+      const moved = Math.abs(track.samples.at(-1)!.top - track.samples[0].top)
+      // It moves by a whole toast plus 12px...
       expect(moved).toBeGreaterThan(60)
-      expect(Math.max(...steps)).toBeLessThan(moved * 0.6)
+      // ...by sliding: one additive shift from that distance to its place, over the slow time.
+      expect(track.shifts).toHaveLength(1)
+      expect(track.shifts[0].to).toBe('none')
+      expect(Math.abs(parseFloat(track.shifts[0].from.replace('translateY(', '')))).toBeCloseTo(moved, 0)
+      expect(track.shifts[0].duration).toBe(240)
+      // And on screen, in steps, not in one jump, wherever the frames came close enough to see it.
+      const close = track.samples.slice(1).map((sample, index) => ({ gap: sample.t - track.samples[index].t, step: Math.abs(sample.top - track.samples[index].top) })).filter(({ gap }) => gap < 50)
+      expect(close.length).toBeGreaterThan(0)
+      for (const { gap, step } of close) expect(step, `a ${gap.toFixed(0)}ms frame moved ${step.toFixed(1)}px of ${moved.toFixed(1)}`).toBeLessThan(moved * 0.6)
       expect(track.copyUnder).toEqual([true])
     })
 

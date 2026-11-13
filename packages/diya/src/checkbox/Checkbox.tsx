@@ -15,7 +15,7 @@ export type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' |
   onCheckedChange?: (checked: boolean) => void
   /** Shows a dash for "some chosen" and is announced as mixed; `checked` is set aside while it's on, so a click reports true. Use it for a box that chooses all of a list of your own. Defaults to false. */
   indeterminate?: boolean
-  /** The value sent with the form under `name` while the box is checked; defaults to "on", like a native checkbox. */
+  /** The value sent with the form under `name` while the box is checked; "on" when left out, as for a native checkbox. Left out, react-hook-form's `register()` reads the field as `true` or `false`. */
   value?: string
   /** Visible statement beside the box, in the reader's voice ("I agree to the Terms"); also its accessible name. It can hold inline TextLinks, which open without toggling the box. Hide it with hideLabel. */
   label: ReactNode
@@ -31,7 +31,7 @@ export type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' |
   size?: 'small' | 'medium' | 'large'
 }
 /** A lone yes-or-no box sent with a form, such as agreeing to terms, with a label and optional helper text or error. */
-export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox({ checked, defaultChecked, onCheckedChange, onChange, indeterminate = false, value = 'on', label, helperText, error, hideLabel = false, disabled = false, size = 'medium', id, className, style, 'aria-describedby': describedBy, ...props }, ref) {
+export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox({ checked, defaultChecked, onCheckedChange, onChange, indeterminate = false, value, label, helperText, error, hideLabel = false, disabled = false, size = 'medium', id, className, style, 'aria-describedby': describedBy, ...props }, ref) {
   const { id: inputId, descriptionId } = useFieldIds(id, 'description')
   const wrapper = useRef<HTMLDivElement | null>(null)
   const input = useRef<HTMLInputElement | null>(null)
@@ -51,9 +51,11 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     node.indeterminate = indeterminate
     if (indeterminate) node.checked = false
   })
+  // No value key at all when none is given: React 18 writes value="" for a present but undefined
+  // one, which a form then posts as "" (K7).
   const state = checked !== undefined ? { checked: indeterminate ? false : checked } : { defaultChecked: indeterminate ? false : defaultChecked }
   return <div ref={wrapper} className={cx('diya-checkbox-field', className)} style={style} data-size={size} data-disabled={disabled || undefined} data-invalid={!!shown || undefined}>
-    <input {...props} ref={setInput} id={inputId} type="checkbox" className="diya-checkbox" value={value} {...state}
+    <input {...props} ref={setInput} id={inputId} type="checkbox" className="diya-checkbox" {...(value === undefined ? undefined : { value })} {...state}
       data-indeterminate={indeterminate ? 'true' : undefined}
       aria-describedby={[describedBy, description ? descriptionId : undefined].filter(Boolean).join(' ') || undefined}
       aria-invalid={shown ? true : props['aria-invalid']} disabled={disabled}

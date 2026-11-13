@@ -44,6 +44,15 @@ describe('Checkbox', () => {
     expect([...new FormData(form).entries()]).toEqual([['terms', 'on'], ['news', 'yes']])
   })
 
+  // K7 (QA-S78-01): no value attribute unless one is given, so react-hook-form reads a checked box
+  // as true, as for a native checkbox and Switch (with value="on" it read "on"). A plain form post
+  // still sends "on", the browser's own default (above).
+  it('renders no value attribute unless given one', () => {
+    render(<><Checkbox label="Terms" /><Checkbox label="News" value="yes" /></>)
+    expect(screen.getByRole('checkbox', { name: 'Terms' }).hasAttribute('value')).toBe(false)
+    expect(screen.getByRole('checkbox', { name: 'News' }).getAttribute('value')).toBe('yes')
+  })
+
   it.runIf(react18)('register() works without a Controller', async () => {
     const user = userEvent.setup()
     const saved = vi.fn()

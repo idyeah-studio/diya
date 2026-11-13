@@ -1,18 +1,64 @@
 // Spinner (1.2) in a real browser: the 400ms beat and its fade, the turn surviving a busy main
 // thread (MOT-1.2-01/02), and the ring centered on the cap height of the text beside it.
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { expect, test, type Page } from '@playwright/test'
+import { homedir, platform, tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
+import { expect, test, type Browser, type Page } from '@playwright/test'
 import { isPhone, isReact18, openCase } from './helpers'
 
-// Playwright's own ffmpeg (installed with its browsers) and PNG reader decode the recorded video:
-// screenshots wait for the main thread, so only a recording sees a page that is busy.
-const fromPlaywright = createRequire(createRequire(realpathSync(createRequire(import.meta.url).resolve('@playwright/test'))).resolve('playwright'))
-const ffmpeg = () => (fromPlaywright('playwright-core/lib/server/registry/index') as { registry: { findExecutable(name: string): { executablePathOrDie(language: string): string } } }).registry.findExecutable('ffmpeg').executablePathOrDie('javascript')
-const { PNG } = fromPlaywright('playwright-core/lib/utilsBundle') as { PNG: { sync: { read(buffer: Buffer): { data: Buffer } } } }
+// Screenshots wait for the main thread, so only a recording sees a page that is busy. The ffmpeg
+// that Playwright installs with its browsers (it makes the recordings) cuts it into PNG frames,
+// found where `playwright install` puts it; the browser itself reads the PNGs. No Playwright
+// internals (K8).
+function ffmpeg() {
+  const env = process.env.PLAYWRIGHT_BROWSERS_PATH
+  const cache = env === '0'
+    ? join(dirname(createRequire(createRequire(realpathSync(createRequire(import.meta.url).resolve('@playwright/test'))).resolve('playwright')).resolve('playwright-core/package.json')), '.local-browsers')
+    : env || (platform() === 'darwin' ? join(homedir(), 'Library', 'Caches', 'ms-playwright') : platform() === 'win32' ? join(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), 'ms-playwright') : join(homedir(), '.cache', 'ms-playwright'))
+  const folders = existsSync(cache) ? readdirSync(cache).filter((name) => /^ffmpeg-\d+$/.test(name)).sort((a, b) => Number(b.slice(7)) - Number(a.slice(7))) : []
+  for (const folder of folders) {
+    const binary = readdirSync(join(cache, folder)).find((name) => /^ffmpeg-(mac|linux|win64\.exe)/.test(name))
+    if (binary) return join(cache, folder, binary)
+  }
+  throw new Error(`No ffmpeg under ${cache}: run "pnpm exec playwright install ffmpeg" (Playwright records video with it).`)
+}
+
+/** Per frame of the recording: the flag's mean red and green, and how much the ring changed since the frame before (mean channel difference). */
+async function readFrames(browser: Browser, flags: string[], rings: string[]) {
+  const page = await browser.newPage()
+  try {
+    return await page.evaluate(async ([flags, rings]) => {
+      const pixels = async (base64: string) => {
+        const image = new Image()
+        image.src = `data:image/png;base64,${base64}`
+        await image.decode()
+        const canvas = new OffscreenCanvas(image.width, image.height)
+        const context = canvas.getContext('2d')!
+        context.drawImage(image, 0, 0)
+        return context.getImageData(0, 0, image.width, image.height).data
+      }
+      const flag = await Promise.all(flags.map(async (frame) => {
+        const data = await pixels(frame)
+        let r = 0, g = 0
+        for (let i = 0; i < data.length; i += 4) { r += data[i]; g += data[i + 1] }
+        return [r / (data.length / 4), g / (data.length / 4)]
+      }))
+      const ring = await Promise.all(rings.map(pixels))
+      const change = ring.map((data, index) => {
+        if (!index) return 0
+        const before = ring[index - 1]
+        let difference = 0
+        for (let i = 0; i < data.length; i += 4) difference += Math.abs(data[i] - before[i]) + Math.abs(data[i + 1] - before[i + 1]) + Math.abs(data[i + 2] - before[i + 2])
+        return difference / (data.length / 4)
+      })
+      return { flag, change }
+    }, [flags, rings] as const)
+  } finally {
+    await page.close()
+  }
+}
 
 /** Samples #sp-new's opacity and words on every frame for `ms` after the Toggle click mounts it. */
 function sampleMount(page: Page, ms: number) {
@@ -76,23 +122,16 @@ for (const motion of ['system', 'reduced'] as const) {
         const out = join(dir, name)
         mkdirSync(out)
         execFileSync(ffmpeg(), ['-loglevel', 'error', '-i', file, '-vsync', 'passthrough', '-vf', `crop=${crop[2]}:${crop[3]}:${crop[0]}:${crop[1]}`, join(out, '%05d.png')])
-        return readdirSync(out).sort().map((frame) => PNG.sync.read(readFileSync(join(out, frame))).data)
+        return readdirSync(out).sort().map((frame) => readFileSync(join(out, frame)).toString('base64'))
       }
+      const read = await readFrames(browser, frames([flag[0] + 6, flag[1] + 6, 12, 12], 'flag'), frames(ring, 'ring'))
       // The flag is red for the whole block.
-      const red = frames([flag[0] + 6, flag[1] + 6, 12, 12], 'flag').map((data, index) => {
-        let r = 0, g = 0
-        for (let i = 0; i < data.length; i += 4) { r += data[i]; g += data[i + 1] }
-        return r / (data.length / 4) > 150 && g / (data.length / 4) < 100 ? index : -1
-      }).filter((index) => index >= 0)
-      const rings = frames(ring, 'ring')
+      const red = read.flag.map(([r, g], index) => (r > 150 && g < 100 ? index : -1)).filter((index) => index >= 0)
       expect(red.length, 'frames while blocked').toBeGreaterThan(30)
       let changed = 0, total = 0
       for (let index = red[0] + 2; index <= red.at(-1)! - 1; index++) {
-        const [a, b] = [rings[index - 1], rings[index]]
-        let difference = 0
-        for (let i = 0; i < a.length; i += 4) difference += Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2])
         total++
-        if (difference / (a.length / 4) > 1) changed++
+        if (read.change[index] > 1) changed++
       }
       // A turn changes every frame; a breathe slows at its ends, so most frames.
       expect(changed / total, `${changed}/${total} frames changed while blocked`).toBeGreaterThan(motion === 'system' ? 0.9 : 0.6)
