@@ -30,6 +30,14 @@ export const variants: Record<ItemId, { playground: Playground; options?: Record
     { playground: { Type: 'Multiple', Size: 'Large', Options: ['Label', 'Descriptions', 'Select all', 'Helper text'], State: 'Error' } },
     { playground: { Options: ['Descriptions', 'Helper text'], State: 'Disabled' } },
   ],
+  checkbox: [
+    { playground: { Size: 'Large', Options: ['Label', 'Mixed'], State: 'Error' } },
+    { playground: { Size: 'Small', Options: ['Helper text'], State: 'Disabled' } },
+  ],
+  spinner: [
+    { playground: { Size: 'Large', Options: ['Show label'] } },
+    { playground: { Size: 'Small', Options: [] } },
+  ],
   switch: [
     { playground: { Size: 'Small', Color: 'Brand', 'Brand color': '#ff5500', Options: ['Helper text'], State: 'Error' } },
     { playground: { Options: [], State: 'Disabled' } },

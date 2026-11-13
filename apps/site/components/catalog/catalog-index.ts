@@ -11,6 +11,7 @@ export const componentGroups = [
     { id: 'calendar', title: 'Calendar', keywords: 'date day month booking schedule agenda availability range' },
     { id: 'combobox', title: 'Combobox', keywords: 'search select multiple multiselect autocomplete typeahead tags' },
     { id: 'choice', title: 'Choice', keywords: 'radio checkbox single multiple' },
+    { id: 'checkbox', title: 'Checkbox', keywords: 'check box tick agree terms consent boolean yes no mixed indeterminate' },
     { id: 'switch', title: 'Switch', keywords: 'toggle boolean on off' },
     { id: 'slider', title: 'Slider', keywords: 'range value volume' },
     { id: 'search', title: 'Search', keywords: 'find filter query' },
@@ -37,6 +38,7 @@ export const componentGroups = [
     { id: 'badge', title: 'Badge', keywords: 'indicator count status dot' },
     { id: 'alert', title: 'Alert', keywords: 'toast notification message status banner snackbar error warning success' },
     { id: 'progress', title: 'Progress', keywords: 'loading spinner percentage circular linear' },
+    { id: 'spinner', title: 'Spinner', keywords: 'loading busy loader waiting ring activity indicator' },
   ] },
   { title: 'Overlays', items: [
     { id: 'tooltip', title: 'Tooltip', keywords: 'hint help hover' },

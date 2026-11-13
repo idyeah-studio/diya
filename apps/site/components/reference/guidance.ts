@@ -45,12 +45,17 @@ export const guidance: Record<ItemId, Guidance> = {
   },
   choice: {
     use: 'For two to six options that should all be visible: radios for one, checkboxes for several.',
-    instead: 'An on/off setting that applies at once? Switch.',
+    instead: 'An on/off setting that applies at once? Switch. A lone yes or no sent with a form? Checkbox.',
     access: 'Native radios and checkboxes in a fieldset whose legend is the label, so the group is announced with each option.',
+  },
+  checkbox: {
+    use: 'For a lone yes or no sent with a form: agreeing to terms, keeping someone signed in. Switch acts now. Checkbox is a yes or no you send with a form. Choice picks from a list.',
+    instead: 'A setting that takes effect the moment it flips? Switch. Several options under one question? Choice.',
+    access: 'A native checkbox, so Space toggles it. The label names it, helper text and errors are linked to it, and an error sets aria-invalid. The mixed state is announced as mixed.',
   },
   switch: {
     use: 'For a setting that takes effect the moment it flips, like notifications.',
-    instead: 'Part of a form that is saved with a button? A checkbox (Choice with multiple) reads more honestly.',
+    instead: 'Part of a form that’s saved with a button? Checkbox.',
     access: 'role="switch" with its state announced as on or off. Space toggles it.',
   },
   slider: {
@@ -144,8 +149,13 @@ export const guidance: Record<ItemId, Guidance> = {
   },
   progress: {
     use: 'For how far along a task is, or that something is still working.',
-    instead: 'A measured value, not a task? Metric.',
+    instead: 'A measured value, not a task? Metric. One busy part of a page with no measure? Spinner.',
     access: 'A native progressbar with a label and value. An indeterminate one says it is busy without a number.',
+  },
+  spinner: {
+    use: 'For one busy part of a page when nothing better fits. It waits 400ms before showing, so a quick load shows nothing.',
+    instead: 'A button that’s working? Button `loading`. Progress you can measure? Progress.',
+    access: 'Says its `label` politely once, when it appears; the ring itself is hidden from screen readers. Leave the label out only when words beside it, or `aria-busy` on the region, already say what’s loading. Under Reduce Motion it breathes instead of turning.',
   },
   tooltip: {
     use: 'For a short, optional hint about a control, like what an icon button does.',

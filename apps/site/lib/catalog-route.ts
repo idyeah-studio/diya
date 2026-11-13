@@ -12,6 +12,7 @@ export const componentIds = [
   'calendar',
   'combobox',
   'choice',
+  'checkbox',
   'switch',
   'slider',
   'search',
@@ -32,6 +33,7 @@ export const componentIds = [
   'badge',
   'alert',
   'progress',
+  'spinner',
   'tooltip',
   'popover',
 ] as const

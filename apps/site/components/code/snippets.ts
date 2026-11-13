@@ -280,10 +280,10 @@ function walk(value: unknown, found: Found, key?: string): void {
 }
 
 const MAIN_EXPORTS = new Set([
-  'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Calendar', 'Card', 'Chatbot', 'Choice',
+  'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Calendar', 'Card', 'Chatbot', 'Checkbox', 'Choice',
   'CodeBlock', 'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'Field', 'FileUpload', 'Form', 'Inline', 'List', 'Menu',
   'Metric', 'PageHeader', 'Pagination', 'Popover', 'Progress', 'Prose', 'Rating', 'Search', 'Select',
-  'SideNavigation', 'SiteHeader', 'Slider', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput',
+  'SideNavigation', 'SiteHeader', 'Slider', 'Spinner', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput',
   'TextLink', 'Toast', 'Tooltip', 'Wizard',
 ])
 const CHART_EXPORTS = new Set(['Chart', 'DataViz'])
@@ -291,11 +291,11 @@ const CHART_EXPORTS = new Set(['Chart', 'DataViz'])
 /** Catalog component ids and the export each one documents. */
 const COMPONENT_NAMES: Partial<Record<ItemId, string>> = {
   button: 'Button', 'text-input': 'TextInput', 'text-area': 'TextArea', select: 'Select',
-  'date-picker': 'DatePicker', calendar: 'Calendar', combobox: 'Combobox', choice: 'Choice', switch: 'Switch', slider: 'Slider',
+  'date-picker': 'DatePicker', calendar: 'Calendar', combobox: 'Combobox', choice: 'Choice', checkbox: 'Checkbox', switch: 'Switch', slider: 'Slider',
   search: 'Search', field: 'Field', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
   menu: 'Menu', tag: 'Tag', metric: 'Metric', rating: 'Rating', avatar: 'Avatar', list: 'List',
   accordion: 'Accordion', prose: 'Prose', 'code-block': 'CodeBlock',
-  badge: 'Badge', alert: 'Alert', progress: 'Progress', tooltip: 'Tooltip', popover: 'Popover',
+  badge: 'Badge', alert: 'Alert', progress: 'Progress', spinner: 'Spinner', tooltip: 'Tooltip', popover: 'Popover',
 }
 
 /**
@@ -863,6 +863,37 @@ function switchSnippet(p: Playground): Snippet {
       helperText: on(p, 'Options', 'Helper text', false) && 'Keep up with important updates.',
       error: state === 'Error' && 'Notifications could not be updated. Try again.',
       disabled: state === 'Disabled',
+    }),
+  })
+}
+
+function checkbox(p: Playground): Snippet {
+  const state = one(p, 'State', 'Default')
+  /* Mixed is for a box that chooses all of a list, so the example becomes one. */
+  const mixed = on(p, 'Options', 'Mixed', false)
+  return build('checkbox', {
+    jsx: h('Checkbox', {
+      label: mixed ? 'Select all 4 files' : 'I agree to the Terms of Service',
+      hideLabel: !on(p, 'Options', 'Label', true),
+      checked: v(mixed ? 'allSelected' : 'agreed', 'boolean'),
+      onCheckedChange: v(mixed ? 'setAllSelected' : 'setAgreed', '(checked: boolean) => void'),
+      indeterminate: mixed,
+      size: sized(sizeOf(p)),
+      helperText:
+        on(p, 'Options', 'Helper text', true) &&
+        (state === 'Disabled' ? 'Already agreed when your team signed up.' : mixed ? '2 of 4 chosen.' : 'You can read them any time from your account.'),
+      error: state === 'Error' && (mixed ? 'Choose at least one file to share.' : 'Agree to the terms to create your account.'),
+      disabled: state === 'Disabled',
+    }),
+  })
+}
+
+function spinner(p: Playground): Snippet {
+  return build('spinner', {
+    jsx: h('Spinner', {
+      label: 'Loading invoices',
+      size: sized(sizeOf(p)),
+      showLabel: on(p, 'Options', 'Show label', false),
     }),
   })
 }
@@ -2120,6 +2151,7 @@ const SNIPPETS: Record<ItemId, (p: Playground, o: Options) => Snippet> = {
   calendar,
   combobox,
   choice,
+  checkbox,
   switch: switchSnippet,
   slider,
   search,
@@ -2140,6 +2172,7 @@ const SNIPPETS: Record<ItemId, (p: Playground, o: Options) => Snippet> = {
   badge,
   alert,
   progress,
+  spinner,
   tooltip,
   popover,
   'page-header': pageHeader,
