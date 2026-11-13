@@ -14,8 +14,11 @@ const SIZES = ['Small', 'Medium', 'Large'] as const
 
 /**
  * A lone yes or no sent with a form. Mixed is for a box that chooses all of a
- * list, so with Mixed on the example becomes one ("Select all 4 files").
+ * list, so with Mixed on the example becomes one ("Select all 4 files"): it
+ * starts with 2 of 4 chosen, and clicking it chooses all, then none, as a real
+ * select-all does (UX-SITE3-01).
  */
+const FILES = 4
 export function CheckboxLibrary() {
   const [size, setSize] = useState<(typeof SIZES)[number]>('Medium')
   const [state, setState] = useState('Default')
@@ -23,7 +26,11 @@ export function CheckboxLibrary() {
   const [helper, setHelper] = useState(true)
   const [mixed, setMixed] = useState(false)
   const [checked, setChecked] = useState(false)
-  const help = state === 'Disabled' ? 'Already agreed when your team signed up.' : mixed ? '2 of 4 chosen.' : 'You can read them any time from your account.'
+  const [chosen, setChosen] = useState(2)
+  const help =
+    mixed
+      ? state === 'Disabled' ? 'Sharing is off for this folder.' : `${chosen} of ${FILES} chosen.`
+      : state === 'Disabled' ? 'Already agreed when your team signed up.' : 'You can read them any time from your account.'
   return (
     <main id="content" className="gallery-study component-library button-library text-input-library" data-area="components">
       <div className="gallery-study-backdrop" aria-hidden="true" />
@@ -41,7 +48,14 @@ export function CheckboxLibrary() {
               items={[
                 { label: 'Label', checked: label, onChange: setLabel },
                 { label: 'Helper text', checked: helper, onChange: setHelper },
-                { label: 'Mixed', checked: mixed, onChange: setMixed },
+                {
+                  label: 'Mixed',
+                  checked: mixed,
+                  onChange: (on) => {
+                    setMixed(on)
+                    setChosen(2)
+                  },
+                },
               ]}
             />
             <PreviewSetting label="State" options={['Default', 'Error', 'Disabled']} value={state} onChange={setState} />
@@ -51,12 +65,9 @@ export function CheckboxLibrary() {
               <Checkbox
                 label={mixed ? 'Select all 4 files' : 'I agree to the Terms of Service'}
                 hideLabel={!label}
-                checked={checked}
-                onCheckedChange={(next) => {
-                  setChecked(next)
-                  setMixed(false)
-                }}
-                indeterminate={mixed}
+                checked={mixed ? chosen === FILES : checked}
+                onCheckedChange={(next) => (mixed ? setChosen(next ? FILES : 0) : setChecked(next))}
+                indeterminate={mixed && chosen > 0 && chosen < FILES}
                 size={size === 'Small' ? 'small' : size === 'Large' ? 'large' : 'medium'}
                 helperText={helper ? help : undefined}
                 error={state === 'Error' ? (mixed ? 'Choose at least one file to share.' : 'Agree to the terms to create your account.') : undefined}

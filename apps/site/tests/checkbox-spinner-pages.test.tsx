@@ -75,15 +75,34 @@ describe('the Checkbox page', () => {
     expect(snippetFor('checkbox', page.read()).code).toContain('helperText="Already agreed when your team signed up."')
   })
 
-  it('Mixed becomes a select-all box, announced as mixed', async () => {
+  // UX-SITE3-01: the select-all stays a select-all when clicked: mixed, then all, then none, then all.
+  it('Mixed becomes a select-all box that chooses all, then none, and Get code gives that pattern', async () => {
     const user = userEvent.setup()
     const page = renderPage(<CheckboxLibrary />)
-    await user.click(screen.getByRole('checkbox', { name: 'Mixed' }))
-    const box = within(screen.getByRole('region', { name: 'Checkbox preview' })).getByRole('checkbox', { name: 'Select all 4 files' }) as HTMLInputElement
-    expect(box.indeterminate).toBe(true)
-    const { code } = snippetFor('checkbox', page.read())
-    expect(code).toContain('label="Select all 4 files"')
-    expect(code).toContain('indeterminate')
+    const mixed = screen.getByRole('checkbox', { name: 'Mixed' }) as HTMLInputElement
+    await user.click(mixed)
+    const preview = screen.getByRole('region', { name: 'Checkbox preview' })
+    const box = () => within(preview).getByRole('checkbox', { name: 'Select all 4 files' }) as HTMLInputElement
+    expect([box().indeterminate, box().checked, description(box())]).toEqual([true, false, '2 of 4 chosen.'])
+    await user.click(box())
+    expect([box().indeterminate, box().checked, description(box())]).toEqual([false, true, '4 of 4 chosen.'])
+    await user.click(box())
+    expect([box().indeterminate, box().checked, description(box())]).toEqual([false, false, '0 of 4 chosen.'])
+    await user.click(box())
+    expect(box().checked).toBe(true)
+    expect(mixed.checked).toBe(true)
+    const { code, file } = snippetFor('checkbox', page.read())
+    expect(code).toBe(`import { Checkbox } from '@idyeah/diya'
+
+<Checkbox
+  label="Select all 4 files"
+  checked={chosen.length === files.length}
+  indeterminate={chosen.length > 0 && chosen.length < files.length}
+  onCheckedChange={(checked) => setChosen(checked ? files : [])}
+  helperText={\`\${chosen.length} of \${files.length} chosen.\`}
+/>`)
+    expect(file).toContain("const files = ['Brief.pdf', 'Budget.xlsx', 'Logo.svg', 'Plan.docx']")
+    expect(file).toContain("const [chosen, setChosen] = useState<string[]>(['Brief.pdf', 'Budget.xlsx'])")
   })
 })
 

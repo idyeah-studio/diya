@@ -869,21 +869,41 @@ function switchSnippet(p: Playground): Snippet {
 
 function checkbox(p: Playground): Snippet {
   const state = one(p, 'State', 'Default')
-  /* Mixed is for a box that chooses all of a list, so the example becomes one. */
-  const mixed = on(p, 'Options', 'Mixed', false)
+  const helper = on(p, 'Options', 'Helper text', true)
+  const shared = {
+    hideLabel: !on(p, 'Options', 'Label', true),
+    size: sized(sizeOf(p)),
+    disabled: state === 'Disabled',
+  }
+  /* Mixed is for a box that chooses all of a list, so the example becomes a select-all. */
+  if (on(p, 'Options', 'Mixed', false)) {
+    const files = v('files', 'string[]', "['Brief.pdf', 'Budget.xlsx', 'Logo.svg', 'Plan.docx']")
+    const chosen = v('chosen', 'string[]', "['Brief.pdf', 'Budget.xlsx']")
+    const setChosen = v('setChosen', '(chosen: string[]) => void')
+    return build('checkbox', {
+      jsx: h('Checkbox', {
+        label: 'Select all 4 files',
+        hideLabel: shared.hideLabel,
+        checked: raw('chosen.length === files.length', chosen, files),
+        indeterminate: raw('chosen.length > 0 && chosen.length < files.length', chosen, files),
+        onCheckedChange: fn('checked', raw('setChosen(checked ? files : [])', setChosen, files)),
+        size: shared.size,
+        helperText: helper && (state === 'Disabled' ? 'Sharing is off for this folder.' : raw('`${chosen.length} of ${files.length} chosen.`', chosen, files)),
+        error: state === 'Error' && 'Choose at least one file to share.',
+        disabled: shared.disabled,
+      }),
+    })
+  }
   return build('checkbox', {
     jsx: h('Checkbox', {
-      label: mixed ? 'Select all 4 files' : 'I agree to the Terms of Service',
-      hideLabel: !on(p, 'Options', 'Label', true),
-      checked: v(mixed ? 'allSelected' : 'agreed', 'boolean'),
-      onCheckedChange: v(mixed ? 'setAllSelected' : 'setAgreed', '(checked: boolean) => void'),
-      indeterminate: mixed,
-      size: sized(sizeOf(p)),
-      helperText:
-        on(p, 'Options', 'Helper text', true) &&
-        (state === 'Disabled' ? 'Already agreed when your team signed up.' : mixed ? '2 of 4 chosen.' : 'You can read them any time from your account.'),
-      error: state === 'Error' && (mixed ? 'Choose at least one file to share.' : 'Agree to the terms to create your account.'),
-      disabled: state === 'Disabled',
+      label: 'I agree to the Terms of Service',
+      hideLabel: shared.hideLabel,
+      checked: v('agreed', 'boolean'),
+      onCheckedChange: v('setAgreed', '(checked: boolean) => void'),
+      size: shared.size,
+      helperText: helper && (state === 'Disabled' ? 'Already agreed when your team signed up.' : 'You can read them any time from your account.'),
+      error: state === 'Error' && 'Agree to the terms to create your account.',
+      disabled: shared.disabled,
     }),
   })
 }
