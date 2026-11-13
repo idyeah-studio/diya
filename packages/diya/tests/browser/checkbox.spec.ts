@@ -75,3 +75,37 @@ test('an axe check', async ({ page }, testInfo) => {
   })
   expect(violations).toEqual([])
 })
+
+// Step 9's refinements, made in Choice and Checkbox together: the small box centers on its 20px
+// line, and the large box draws a 5x10 tick and a 10x2 bar. Medium doesn't change.
+test('the small box centers on its line; the large mark is a 5x10 tick and a 10x2 bar', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=marks&theme=light')
+  await page.waitForFunction(() => document.getAnimations().length === 0)
+  const measure = () => page.evaluate(() => {
+    const center = (node: Element) => { const box = node.getBoundingClientRect(); return box.top + box.height / 2 }
+    const mark = (node: Element) => { const before = getComputedStyle(node, '::before'); return `${before.width}x${before.height}` }
+    const row = (size: string) => document.querySelector(`[data-size-row="${size}"]`)!
+    const choiceBox = (size: string, label: string) => [...row(size).querySelectorAll('.diya-choice-option')].find((option) => option.textContent === label)!.querySelector('input')!
+    const offsets = ['small', 'medium', 'large'].flatMap((size) => [
+      [choiceBox(size, 'Alpha'), choiceBox(size, 'Alpha').closest('label')!.querySelector('.diya-choice-label')!],
+      [document.getElementById(`cb-${size}`)!, document.getElementById(`cb-${size}`)!.closest('.diya-checkbox-field')!.querySelector('.diya-checkbox-label')!],
+    ].map(([box, label]) => {
+      const line = parseFloat(getComputedStyle(label).lineHeight)
+      return `${size} ${Math.round((center(box) - (label.getBoundingClientRect().top + line / 2)) * 100) / 100}`
+    }))
+    return {
+      offsets,
+      ticks: ['small', 'large'].flatMap((size) => [mark(choiceBox(size, 'Alpha')), mark(document.getElementById(`cb-${size}`)!)]),
+      bars: ['small', 'large'].flatMap((size) => [mark(row(size).querySelector('input[aria-label="Select all"]')!), mark(document.getElementById(`cb-${size}-mixed`)!)]),
+      medium: [mark(choiceBox('medium', 'Alpha')), mark(document.getElementById('cb-medium')!), mark(row('medium').querySelector('input[aria-label="Select all"]')!), mark(document.getElementById('cb-medium-mixed')!)],
+    }
+  })
+  const found = await measure()
+  // Every box's center on its first line's center.
+  // Small was 1px high; medium is 1.1.1's (its box is 18px on a 20px line, 1px down, centered);
+  // large sits 1px down, as before.
+  expect(found.offsets).toEqual(['small 0', 'small 0', 'medium 0', 'medium 0', 'large 0', 'large 0'])
+  expect(found.ticks).toEqual(['4pxx8px', '4pxx8px', '5pxx10px', '5pxx10px'])
+  expect(found.bars).toEqual(['8pxx2px', '8pxx2px', '10pxx2px', '10pxx2px'])
+  expect(found.medium).toEqual(['4pxx8px', '4pxx8px', '8pxx2px', '8pxx2px'])
+})

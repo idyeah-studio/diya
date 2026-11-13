@@ -423,9 +423,21 @@ describe('theming tokens (1.2)', () => {
     for (const rule of solid) expect(rule.index).toBeGreaterThan(mix[0].index)
   })
 
-  it('the Drawer doesn\'t read --diya-radius-modal yet', () => {
-    for (const rule of distRules.filter(rule => rule.selector.includes('diya-drawer-modal'))) expect(rule.body, rule.selector).not.toContain('--diya-radius-modal')
-    expect(distRules.find(rule => rule.selector === '.diya-root .diya-dialog' && rule.body.includes('border-radius'))!.body).toContain('border-radius: var(--diya-radius-modal, calc(22px * var(--diya-corner-scale, 1)))')
+  // Step 9 replaces step 1's guard ("the Drawer doesn't read --diya-radius-modal yet"), as the
+  // build plan names: the Drawer's open edge is the modal corner now.
+  it('Dialog and Drawer read --diya-radius-modal', () => {
+    const modal = 'var(--diya-radius-modal, calc(22px * var(--diya-corner-scale, 1)))'
+    const radius = (selector: string) => distRules.find(rule => rule.selector === selector && rule.at.every(at => at.startsWith('@layer')) && rule.body.includes('border-radius'))!.body.match(/border-radius:\s*([^;]+)/)![1].trim()
+    expect(radius('.diya-root .diya-dialog')).toBe(modal)
+    expect(radius('.diya-root .diya-drawer-modal')).toBe(`${modal} 0 0 ${modal}`)
+    expect(radius(".diya-root .diya-drawer-modal[data-side='left']")).toBe(`0 ${modal} ${modal} 0`)
+    // No other Drawer rule rounds it, outside the phone rule below.
+    for (const rule of distRules.filter(rule => rule.selector.includes('diya-drawer-modal') && /border-radius/.test(rule.body) && rule.at.every(at => at.startsWith('@layer')))) expect(rule.body, rule.selector).toContain('--diya-radius-modal')
+  })
+
+  it('the Drawer is square at max-width 440px', () => {
+    const phone = distRules.filter(rule => rule.at.some(at => at.includes('(max-width: 440px)')) && rule.selector.includes('diya-drawer-modal'))
+    expect(phone.map(rule => [rule.selector.replace(/\s+/g, ' '), rule.body.trim()])).toEqual([[".diya-root .diya-drawer-modal, .diya-root .diya-drawer-modal[data-side='left']", 'border-radius: 0;']])
   })
 })
 
@@ -452,5 +464,24 @@ describe('Spinner (1.2)', () => {
   it('waits the literal 400ms beat, never scaled, and fades in over the gated medium', () => {
     expect(bare).toMatch(/\.diya-root \.diya-spinner \{[^}]*--diya-internal-beat: 400ms;[^}]*animation: diya-spinner-arrive var\(--diya-internal-duration-medium\) var\(--diya-ease-enter\) var\(--diya-internal-beat\) both;/)
     expect(keyframes('diya-spinner-arrive')).toBe('@keyframes diya-spinner-arrive { from { opacity: 0; } }')
+  })
+})
+
+describe('step 9 refinements (1.2)', () => {
+  const body = (selector: string) => distRules.find(rule => rule.selector === selector && rule.at.every(at => at.startsWith('@layer')))?.body.trim()
+  it('the small Choice and Checkbox box sits 2px down, on its line\'s center', () => {
+    expect(body(".diya-root :is(.diya-choice[data-size='small'] .diya-choice-option input, .diya-checkbox-field[data-size='small'] .diya-checkbox)")).toBe('margin-top: 2px;')
+  })
+
+  it('the large Choice and Checkbox box draws a 5x10 tick and a 10x2 bar; small and medium marks don\'t change', () => {
+    expect(body(".diya-root :is(.diya-choice[data-size='large'] .diya-choice-option input[type='checkbox'], .diya-checkbox-field[data-size='large'] .diya-checkbox)::before")).toBe('width: 5px; height: 10px;')
+    expect(body(".diya-root :is(.diya-choice[data-size='large'] input[type='checkbox'], .diya-checkbox-field[data-size='large'] .diya-checkbox):is(:indeterminate, [data-indeterminate='true'])::before")).toBe('width: 10px; height: 2px;')
+    expect(body(".diya-root :is(.diya-choice-option input[type='checkbox'], .diya-checkbox):checked::before")).toMatch(/width: 4px;\s*height: 8px;/)
+  })
+
+  it('Table progress rounds with the corner scale', () => {
+    const progress = distRules.filter(rule => rule.selector.includes('.diya-table-progress progress') && rule.body.includes('border-radius'))
+    expect(progress.map(rule => rule.selector)).toEqual(['.diya-root .diya-table-progress progress', '.diya-root .diya-table-progress progress::-webkit-progress-bar', '.diya-root .diya-table-progress progress::-webkit-progress-value', '.diya-root .diya-table-progress progress::-moz-progress-bar'])
+    for (const rule of progress) expect(rule.body, rule.selector).toContain('border-radius:calc(10px * var(--diya-corner-scale, 1))')
   })
 })

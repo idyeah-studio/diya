@@ -671,7 +671,9 @@ export const items = {
     state: [{ value: 'open', onChange: 'onOpenChange' }],
     tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-scrim', '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-shadow-raised', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
       // Button's loading spinner (1.2).
-      '--diya-duration-medium'],
+      '--diya-duration-medium',
+      // Its open edge is the modal corner (1.2).
+      '--diya-radius-modal'],
     messages: 'drawer',
   },
   'content-state': {

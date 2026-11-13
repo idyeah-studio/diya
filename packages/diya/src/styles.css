@@ -1582,6 +1582,11 @@
 .diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true']) { background: var(--diya-color-accent); border-color: var(--diya-color-accent); }
 .diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true'])::before { content: ''; width: 8px; height: 2px; border: 0; transform: none; background: var(--diya-color-accent-text); }
 @media (forced-colors: active) { .diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true'])::before { display: none; } }
+/* The small box centers on its 20px line (2px down, not 1), and the large box draws a 5x10 tick
+   and a 10x2 bar, so its mark fills it as the smaller marks fill theirs. Choice and Checkbox alike. */
+.diya-root :is(.diya-choice[data-size='small'] .diya-choice-option input, .diya-checkbox-field[data-size='small'] .diya-checkbox) { margin-top: 2px; }
+.diya-root :is(.diya-choice[data-size='large'] .diya-choice-option input[type='checkbox'], .diya-checkbox-field[data-size='large'] .diya-checkbox)::before { width: 5px; height: 10px; }
+.diya-root :is(.diya-choice[data-size='large'] input[type='checkbox'], .diya-checkbox-field[data-size='large'] .diya-checkbox):is(:indeterminate, [data-indeterminate='true'])::before { width: 10px; height: 2px; }
 
 /* Checkbox (1.2): a lone box, Choice's box value for value (the shared selectors above), 12px
    from a label in the reader's voice; help and error under the label, 4px below. */
@@ -2146,10 +2151,10 @@
 .diya-root .diya-table .diya-metric[data-size='small'] .diya-metric-number { font-size:var(--diya-text-body); letter-spacing:0; }
 .diya-root .diya-table .diya-metric-comparison { font-size:var(--diya-text-caption); }
 .diya-root .diya-table-progress { font-size:var(--diya-text-caption); font-variant-numeric:tabular-nums; }
-.diya-root .diya-table-progress progress { appearance:none; border:0; border-radius:10px; overflow:hidden; background:var(--diya-color-selected); }
-.diya-root .diya-table-progress progress::-webkit-progress-bar { background:var(--diya-color-selected); border-radius:10px; }
-.diya-root .diya-table-progress progress::-webkit-progress-value { background:var(--diya-color-text); border-radius:10px; }
-.diya-root .diya-table-progress progress::-moz-progress-bar { background:var(--diya-color-text); border-radius:10px; }
+.diya-root .diya-table-progress progress { appearance:none; border:0; border-radius:calc(10px * var(--diya-corner-scale, 1)); overflow:hidden; background:var(--diya-color-selected); }
+.diya-root .diya-table-progress progress::-webkit-progress-bar { background:var(--diya-color-selected); border-radius:calc(10px * var(--diya-corner-scale, 1)); }
+.diya-root .diya-table-progress progress::-webkit-progress-value { background:var(--diya-color-text); border-radius:calc(10px * var(--diya-corner-scale, 1)); }
+.diya-root .diya-table-progress progress::-moz-progress-bar { background:var(--diya-color-text); border-radius:calc(10px * var(--diya-corner-scale, 1)); }
 .diya-root .diya-table-empty { min-height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .diya-root .diya-table-empty strong { font-size:var(--diya-text-large); font-weight:500; }
 .diya-root .diya-table-empty p { font-size:var(--diya-text-body); max-width:300px; line-height:1.6; }
@@ -2283,7 +2288,13 @@
 .diya-root .diya-project-form { max-width:520px; margin:auto; padding:24px; display:grid; gap:24px; }.diya-root .diya-project-form > footer { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:12px; padding-top:8px; }
 .diya-root .diya-workflow-eyebrow { font-size:var(--diya-text-caption); letter-spacing:0; color:var(--diya-color-muted); display:block; margin-bottom:16px; }
 .diya-root .diya-drawer-modal>header { display:flex; gap:16px; align-items:flex-start; padding:24px; border-bottom:1px solid var(--diya-color-line); }.diya-root .diya-drawer-body { padding:24px; }.diya-root .diya-drawer-body h4:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { font-size:var(--diya-text-title); margin:0; }.diya-root .diya-drawer-body dl:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { margin:24px 0 0; }.diya-root .diya-drawer-body dl div:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid var(--diya-color-line); font-size:var(--diya-text-body); }.diya-root .diya-drawer-body dt:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { color:var(--diya-color-muted); }.diya-root .diya-drawer-body dd:not(:where([class*='diya-'], .diya-drawer-body [class*='diya-'] *)) { margin:0; }.diya-root .diya-drawer-modal > footer { display:flex; justify-content:flex-end; gap:12px; padding:20px 24px; border-top:1px solid var(--diya-color-line); }
-.diya-root .diya-drawer-modal { position:fixed; inset:0 0 0 auto; width:min(440px,100vw); height:100dvh; max-height:100dvh; max-width:100vw; padding:0; margin:0; border-radius:calc(16px * var(--diya-corner-scale, 1)) 0 0 calc(16px * var(--diya-corner-scale, 1)); overflow:hidden; box-shadow:var(--diya-shadow-raised); }.diya-root .diya-drawer-modal[data-side='left'] { inset:0 auto 0 0; border-radius:0 calc(16px * var(--diya-corner-scale, 1)) calc(16px * var(--diya-corner-scale, 1)) 0; }.diya-root .diya-drawer-modal::backdrop { background:var(--diya-color-scrim, #0008); }.diya-root .diya-drawer-modal>header>div { flex:1; min-width:0; overflow-wrap:anywhere; }.diya-root .diya-drawer-modal>header>.diya-button { flex-shrink:0; }.diya-root .diya-drawer-modal { flex-direction:column; }.diya-root .diya-drawer-modal[open] { display:flex; }.diya-root .diya-drawer-modal > footer { margin-top:auto; flex-wrap:wrap; }
+.diya-root .diya-drawer-modal { position:fixed; inset:0 0 0 auto; width:min(440px,100vw); height:100dvh; max-height:100dvh; max-width:100vw; padding:0; margin:0; border-radius:var(--diya-radius-modal, calc(22px * var(--diya-corner-scale, 1))) 0 0 var(--diya-radius-modal, calc(22px * var(--diya-corner-scale, 1))); overflow:hidden; box-shadow:var(--diya-shadow-raised); }.diya-root .diya-drawer-modal[data-side='left'] { inset:0 auto 0 0; border-radius:0 var(--diya-radius-modal, calc(22px * var(--diya-corner-scale, 1))) var(--diya-radius-modal, calc(22px * var(--diya-corner-scale, 1))) 0; }.diya-root .diya-drawer-modal::backdrop { background:var(--diya-color-scrim, #0008); }.diya-root .diya-drawer-modal>header>div { flex:1; min-width:0; overflow-wrap:anywhere; }.diya-root .diya-drawer-modal>header>.diya-button { flex-shrink:0; }.diya-root .diya-drawer-modal { flex-direction:column; }.diya-root .diya-drawer-modal[open] { display:flex; }.diya-root .diya-drawer-modal > footer { margin-top:auto; flex-wrap:wrap; }
+/* The Drawer's open edge is the modal corner, Dialog's. At 440px and below it fills the screen,
+   with no open edge to round: square, so no scrim shows in wedges at the screen's edge. */
+@media (max-width: 440px) {
+  .diya-root .diya-drawer-modal,
+  .diya-root .diya-drawer-modal[data-side='left'] { border-radius: 0; }
+}
 .diya-root .diya-content-state { max-width:600px; margin:auto; padding:44px 32px; text-align:center; }.diya-root .diya-content-state p { max-width:360px; margin:10px auto 24px; }
 .diya-root .diya-workflow-surface :is(.diya-content-state-title, .diya-wizard-title) { margin:0; font-size:var(--diya-text-title); font-weight:600; letter-spacing:-.015em; line-height:var(--diya-leading-tight); }
 @media(max-width:700px) {.diya-root .diya-project-form { padding:20px; } }

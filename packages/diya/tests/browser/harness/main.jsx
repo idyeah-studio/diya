@@ -515,7 +515,37 @@ function HeightsCase() {
   )
 }
 
-const cases = { heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+// Drawer corners (1.2 step 9): a Drawer open on the side given (side=left|right) at the corner
+// scale given (cs=0.5, 1 or 1.5).
+function DrawerCase() {
+  const [open, setOpen] = useState(true)
+  const side = query.get('side') || 'right'
+  return (
+    <div style={{ padding: 24, '--diya-corner-scale': query.get('cs') || undefined }}>
+      <Button onClick={() => setOpen(true)}>Open drawer</Button>
+      <Drawer open={open} onOpenChange={setOpen} side={side} title="Filters" style={{ '--diya-corner-scale': query.get('cs') || undefined }}><p>Drawer body</p></Drawer>
+    </div>
+  )
+}
+
+// Choice and Checkbox at every size (1.2 step 9): checked boxes, a mixed Checkbox and a mixed
+// Select all in each size's row.
+function MarksCase() {
+  const options = [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }]
+  return (
+    <div style={{ display: 'grid', gap: 24, padding: 24, width: 420 }}>
+      {['small', 'medium', 'large'].map((size) => (
+        <div key={size} data-size-row={size} style={{ display: 'grid', gap: 12 }}>
+          <diya.Choice label={`Choice ${size}`} size={size} multiple selectAll options={options} defaultValue={['a']} />
+          <diya.Checkbox id={`cb-${size}`} size={size} label={`Checkbox ${size}`} defaultChecked />
+          <diya.Checkbox id={`cb-${size}-mixed`} size={size} label={`Mixed ${size}`} indeterminate />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const cases = { marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; }'
