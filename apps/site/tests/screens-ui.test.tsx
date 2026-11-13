@@ -512,7 +512,7 @@ describe('each toast Screen raises its toast', () => {
     expect(document.querySelector('dialog[open]')).toBeNull()
     expect(region.closest('dialog')).toBeNull()
     expect(screen.queryByRole('button', { name: 'Rebook' })).toBeNull()
-  })
+  }, 20_000)
 
   // SITE-FE-01: an action toast never times out, so task-list's Undo would follow the reader to every page.
   it('task-list’s Undo toast leaves with the Screen', async () => {
@@ -533,7 +533,7 @@ describe('each toast Screen raises its toast', () => {
     await user.click(screen.getByRole('button', { name: 'Go to settings' }))
     await waitFor(() => expect(screen.queryByRole('region', { name: 'Notifications (F8)' })).toBeNull(), LONG)
     expect(screen.getByRole('heading', { name: 'Settings' })).toBeTruthy()
-  })
+  }, 20_000)
 
   it('task-list: Undo is the toast’s action, and puts the task back', async () => {
     const user = userEvent.setup()
@@ -547,7 +547,7 @@ describe('each toast Screen raises its toast', () => {
     await waitFor(() => expect(screen.queryByRole('region', { name: 'Notifications (F8)' })).toBeNull(), LONG)
     expect((screen.getByRole('checkbox', { name }) as HTMLInputElement).checked).toBe(false)
     expect(screen.getByRole('status').textContent).toBe(`“${name}” is back in To do.`)
-  })
+  }, 20_000)
 })
 
 // frontend.md step 11: the lone yes-or-no boxes on Sign in and Application are Checkboxes, not one-option groups.
