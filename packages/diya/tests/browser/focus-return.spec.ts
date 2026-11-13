@@ -192,3 +192,27 @@ test.describe('× or Undo while typing, on a toast raised from a button or insid
     await expect(task).toHaveValue('Write the brief v2!')
   })
 })
+
+// UX-78-01 (K3): UX-H-01's guard skipped anything that wasn't a control, so a heading that held
+// focus (tabindex="-1", where focus goes when a view changes) was passed over: after × focus went
+// to the raise point, or in Safari to <body>. Round H (H3) kept it there. Only <body> and a modal's
+// own element are skipped now.
+test('focus on the page heading, then × on a <Toast> raised from a button: focus stays on the heading', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=probe&theme=light')
+  await page.locator('#post-undo').click()
+  await page.locator('#page-title').focus()
+  await page.getByRole('button', { name: 'Dismiss: Comment hidden', exact: true }).click()
+  await expect.poll(() => focused(page)).toBe('Comments')
+  await expect(page.getByRole('button', { name: 'Dismiss: Comment hidden', exact: true })).toHaveCount(0)
+})
+
+// UX-78 note 1 (K3): in a Dialog in Safari, a click on a button focuses the dialog, so the toast's
+// raise point was the dialog and Undo landed on its first control ("Close dialog"). The control
+// the press landed on stands in now, in every engine.
+test('a click on Archive in a Dialog raises a <Toast>; a click on its Undo returns focus to Archive', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=probe&theme=light')
+  await page.locator('#open-dialog').click()
+  await page.locator('#dialog-archive').click()
+  await page.getByRole('button', { name: 'Undo archive', exact: true }).click()
+  await expect.poll(() => focused(page)).toBe('Archive brief')
+})

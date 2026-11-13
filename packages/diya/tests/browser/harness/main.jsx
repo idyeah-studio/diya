@@ -302,6 +302,7 @@ function ProbeCase() {
     <div style={{ padding: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'start' }}>
       {query.get('bg') === '1' && <div aria-hidden="true" style={{ position: 'fixed', right: 0, bottom: 0, width: 520, height: 560, background: 'repeating-linear-gradient(135deg, #e4572e 0 24px, #29335c 24px 48px, #f3a712 48px 72px)', zIndex: 0 }} />}
       <p id="probe-blank" style={{ margin: 0 }}>Blank page</p>
+      <h2 id="page-title" tabIndex={-1} style={{ margin: 0, fontSize: 15 }}>Comments</h2>
       <input id="extra" aria-label="Extra" />
       <Button id="post-undo" onClick={() => window.comps.add({ title: 'Comment hidden', action: { label: 'Undo', onClick: () => note('undo-comment') } })}>Hide comment</Button>
       <Button id="post-comment" onClick={() => window.comps.add({ title: 'Comment posted' })}>Post comment</Button>
@@ -312,6 +313,7 @@ function ProbeCase() {
         <TextInput label="Task name" defaultValue="Write the brief" />
         <Button onClick={() => diya.toast({ title: 'Saved in the dialog', duration: 0 })}>Toast inside</Button>
         <Button id="dialog-save" onClick={() => window.comps.add({ title: 'Brief saved' })}>Save brief</Button>
+        <Button id="dialog-archive" onClick={() => window.comps.add({ title: 'Brief archived', action: { label: 'Undo archive', onClick: () => note('undo-archive') } })}>Archive brief</Button>
       </Dialog>
       <dialog ref={native} id="native" style={{ padding: 24 }}>
         <TextInput id="coupon" label="Coupon code" error={couponError} onBlur={(event) => setCouponError(event.target.value.length < 6 ? 'Enter all 6 characters of the code.' : undefined)} />

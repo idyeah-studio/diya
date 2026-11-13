@@ -11,7 +11,7 @@ import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { subscribeModals, topModal } from '../internal/modal-stack.js'
-import { isControl } from '../internal/opener.js'
+import { isControl, isPlace } from '../internal/opener.js'
 import { motionTiming, playOnCopy } from '../internal/presence.js'
 import { createAnnouncer, createToastHost, lowerToastHost, raiseToastHost, type ToastHost } from './host.js'
 import { elapsed, live as playing, moved, offsetY, overlaps, remaining as timeLeft, RIDE_ANIMATION, SHIFT_ANIMATION, showingCopies, type Shift, type Span } from './motion.js'
@@ -502,10 +502,11 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     // focused outside the stack, which a click in Safari can leave on a Dialog itself (R5).
     // Where focus came into the stack from comes before a <Toast>'s raise point: a click on ×
     // while typing goes back to the field, not the button that raised the toast (G8). Past where
-    // F8 was pressed, focus only ever returns to a control: never to a <dialog> or another
-    // container recorded as the raise point (UX-H-01).
+    // F8 was pressed, focus never returns to <body> or a modal's own element, which a click in
+    // Safari focuses instead of the control (UX-H-01); a heading that held focus is kept
+    // (UX-78-01).
     for (const [index, candidate] of [origin.current, cameFrom.current, fallback, outside.current].entries()) {
-      if (index > 0 && !isControl(candidate)) continue
+      if (index > 0 && !isPlace(candidate)) continue
       if (takesFocus(candidate)) { origin.current = null; return }
     }
     const nextToast = Array.from(document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')).find((slot) => slot.dataset.key !== leaving)?.querySelector<HTMLElement>(focusable)
@@ -619,7 +620,7 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     // the press instead (UX-H-01). Chromium and Firefox record it on focusin too.
     const press = () => {
       const active = node.ownerDocument.activeElement
-      if (active && !node.contains(active) && isControl(active)) cameFrom.current = active as HTMLElement
+      if (active && !node.contains(active) && isPlace(active)) cameFrom.current = active as HTMLElement
     }
     const focusOut = (event: globalThis.FocusEvent) => {
       if (node.contains(event.relatedTarget as Node)) return

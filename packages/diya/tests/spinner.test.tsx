@@ -62,17 +62,20 @@ describe('Spinner', () => {
     expect(screen.getByRole('status').textContent).toBe('Loading')
   })
 
-  it('showLabel: visible words aria-hidden, announced once', () => {
+  // K1 (DS-S78-01): one copy of the words, so getByText finds one element. Before, the visible
+  // words were in the page from mount (aria-hidden) and a hidden copy joined them at the beat.
+  it('showLabel: one copy of the words, shown and heard, put in on the beat', () => {
     const { container } = render(<DiyaProvider><Spinner label="Loading older invoices" showLabel /></DiyaProvider>)
     const status = screen.getByRole('status')
-    const shown = container.querySelector('.diya-spinner-words')!
-    expect(shown.textContent).toBe('Loading older invoices')
-    expect(shown.getAttribute('aria-hidden')).toBe('true')
     expect(root(container).getAttribute('data-show-label')).toBe('true')
+    expect(screen.queryAllByText('Loading older invoices')).toHaveLength(0)
+    expect(status.textContent).toBe('')
     act(() => { vi.advanceTimersByTime(400) })
-    // The words a screen reader gets: once, from the hidden copy.
-    const heard = [...status.childNodes].filter((node) => !(node instanceof Element && (node.getAttribute('aria-hidden') === 'true'))).map((node) => node.textContent).join('')
-    expect(heard).toBe('Loading older invoices')
+    const words = screen.getByText('Loading older invoices')
+    expect(words.classList.contains('diya-spinner-words')).toBe(true)
+    expect(words.hasAttribute('aria-hidden')).toBe(false)
+    expect(words.hasAttribute('style')).toBe(false)
+    expect(status.textContent).toBe('Loading older invoices')
   })
 
   it('showLabel without a label warns, and shows no words', () => {

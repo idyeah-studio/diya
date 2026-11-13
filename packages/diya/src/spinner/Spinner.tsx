@@ -9,7 +9,7 @@ export type SpinnerProps = Omit<HTMLAttributes<HTMLSpanElement>, 'children' | 'r
   size?: 'small' | 'medium' | 'large'
   /** What's loading, such as "Loading older invoices"; said politely once, when the spinner appears. Leave it out only when words beside it, or `aria-busy` on the region, already say so. */
   label?: string
-  /** Shows `label` beside the ring, at the same moment; defaults to false. */
+  /** Shows `label` beside the ring, at the same moment (the one copy screen readers hear); defaults to false. */
   showLabel?: boolean
 }
 
@@ -47,10 +47,10 @@ export const Spinner = forwardRef<HTMLSpanElement, SpinnerProps>(function Spinne
   }, [named])
   if (process.env.NODE_ENV !== 'production' && showLabel && !named) warnOnce('DIYA: Spinner has showLabel but no label, so there are no words to show. Add a label.')
   const words = showLabel && named
+  // One copy of the words, put in on the beat: shown beside the ring with showLabel, else hidden.
   return <span {...props} ref={ref} className={cx('diya-spinner', className)} data-size={size} data-show-label={words || undefined}
     role={named ? 'status' : undefined} aria-hidden={named ? props['aria-hidden'] : true}>
     {renderSpinnerRing(size)}
-    {words && <span className="diya-spinner-words" aria-hidden="true">{label}</span>}
-    {named && said && <span style={visuallyHiddenStyle}>{label}</span>}
+    {named && said && (words ? <span className="diya-spinner-words">{label}</span> : <span style={visuallyHiddenStyle}>{label}</span>)}
   </span>
 })

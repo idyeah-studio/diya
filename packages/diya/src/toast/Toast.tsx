@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { Alert, AlertInStackContext, type AlertProps } from '../alert/Alert.js'
 import { ToastScopeContext, useDiyaMessages } from '../DiyaProvider.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
-import { isControl } from '../internal/opener.js'
+import { currentPlace, isControl } from '../internal/opener.js'
 import { playOnCopy } from '../internal/presence.js'
 import { toastMessages } from './messages.js'
 import { addToastSlot, leaveToastSlot, nextToastOrder, nextToastSlotKey, removeToastSlot, returnToastFocus, subscribeToasts, toastCopies, toastSlotElement, toastsPaused, touchToasts, updateToastSlot } from './queue.js'
@@ -77,7 +77,9 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
   // provider's look.
   useClientLayoutEffect(() => {
     if (!scope) return
-    returnFocus.current = document.activeElement as HTMLElement
+    // Where it was raised: in Safari a click on a button inside a Dialog focuses the dialog, so
+    // the control pressed stands in (UX-78 note 1).
+    returnFocus.current = currentPlace(document)
     addToastSlot({ key, order: nextToastOrder(), hasAction: !!props.action, urgent: !!props.urgent, owner: scope.owner, look: scope.look, motion: scope.motion, dismiss: () => dismissRef.current() })
     return () => removeToastSlot(key)
   }, [!!scope, key])

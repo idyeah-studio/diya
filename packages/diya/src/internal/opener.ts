@@ -24,6 +24,23 @@ export function watchPresses(document: Document) {
   }, true)
 }
 
+/** Whether `element` is somewhere a person was: anything that held focus, a heading with
+ *  tabindex="-1" included (where focus goes when a view changes), but not <body> or a modal's own
+ *  element (a <dialog>, or a role="dialog" or aria-modal root), which a click in Safari focuses
+ *  instead of the control it pressed (H3, UX-78-01). */
+export function isPlace(element: Element | null | undefined) {
+  return !!element && element !== element.ownerDocument.body && !element.matches('dialog, [role="dialog"], [role="alertdialog"], [aria-modal="true"]')
+}
+
+/** Where a person is now: the focused element when it's a place, else (Safari focused <body> or
+ *  the modal instead) the control the last press landed on. */
+export function currentPlace(document: Document): HTMLElement | null {
+  const active = document.activeElement
+  if (active instanceof HTMLElement && isPlace(active)) return active
+  const target = pressed.get(document)?.target
+  return target?.isConnected ? target : null
+}
+
 /** The element to give focus back to: the focused one, or, with focus on <body>, the control the last press landed on. */
 export function opener(document: Document): HTMLElement | null {
   const active = document.activeElement

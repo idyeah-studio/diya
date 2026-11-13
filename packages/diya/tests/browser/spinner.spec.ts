@@ -116,3 +116,14 @@ test('centered on cap height within 0.5px at 14/15/17/20px text', async ({ page 
   expect(offsets.map(({ px }) => px)).toEqual(['14', '15', '17', '20'])
   for (const { px, off } of offsets) expect(Math.abs(off), `${px}px text: ${off.toFixed(2)}px off`).toBeLessThanOrEqual(0.5)
 })
+
+// K4 (VIS-S78-03): beside words, a quarter em of air on each side; none with showLabel (its words
+// sit 8px after the ring) and none in a Button.
+test('a quarter em of air beside words, none with showLabel or in a Button', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=spinner&theme=light')
+  const margins = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('p[data-px] .diya-spinner, #sp-words')].map((node) => {
+    const style = getComputedStyle(node)
+    return `${style.marginLeft} ${style.marginRight}`
+  }))
+  expect(margins).toEqual(['3.5px 3.5px', '3.75px 3.75px', '4.25px 4.25px', '5px 5px', '0px 0px'])
+})

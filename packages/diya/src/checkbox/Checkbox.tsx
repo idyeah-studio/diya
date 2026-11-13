@@ -42,13 +42,15 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
   const description = shown || helperText
   // Mixed: the property is what assistive tech reads ("mixed", "half checked"); the look keys off
   // data-indeterminate, which is in the server HTML, so nothing grows in at hydration (MOT-1.2-05).
-  // While mixed the box is unchecked, so the next click reports true.
+  // While mixed the box is unchecked, so the next click reports true. A click clears the
+  // property and checks the box, which then shows its check; on every render the prop is put back,
+  // so a box the app keeps mixed is mixed again (S78-02).
   useClientLayoutEffect(() => {
     const node = input.current
     if (!node) return
     node.indeterminate = indeterminate
     if (indeterminate) node.checked = false
-  }, [indeterminate])
+  })
   const state = checked !== undefined ? { checked: indeterminate ? false : checked } : { defaultChecked: indeterminate ? false : defaultChecked }
   return <div ref={wrapper} className={cx('diya-checkbox-field', className)} style={style} data-size={size} data-disabled={disabled || undefined} data-invalid={!!shown || undefined}>
     <input {...props} ref={setInput} id={inputId} type="checkbox" className="diya-checkbox" value={value} {...state}

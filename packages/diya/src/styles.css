@@ -1579,14 +1579,14 @@
 }
 /* Mixed: keyed off data-indeterminate too, which is in the server HTML, so the mark is already
    showing when hydration sets the property and nothing grows in on page load (MOT-1.2-05). */
-.diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true']) { background: var(--diya-color-accent); border-color: var(--diya-color-accent); }
-.diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true'])::before { content: ''; width: 8px; height: 2px; border: 0; transform: none; background: var(--diya-color-accent-text); }
-@media (forced-colors: active) { .diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true'])::before { display: none; } }
+.diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true']:not(:checked)) { background: var(--diya-color-accent); border-color: var(--diya-color-accent); }
+.diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true']:not(:checked))::before { content: ''; width: 8px; height: 2px; border: 0; transform: none; background: var(--diya-color-accent-text); }
+@media (forced-colors: active) { .diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true']:not(:checked))::before { display: none; } }
 /* The small box centers on its 20px line (2px down, not 1), and the large box draws a 5x10 tick
    and a 10x2 bar, so its mark fills it as the smaller marks fill theirs. Choice and Checkbox alike. */
 .diya-root :is(.diya-choice[data-size='small'] .diya-choice-option input, .diya-checkbox-field[data-size='small'] .diya-checkbox) { margin-top: 2px; }
 .diya-root :is(.diya-choice[data-size='large'] .diya-choice-option input[type='checkbox'], .diya-checkbox-field[data-size='large'] .diya-checkbox)::before { width: 5px; height: 10px; }
-.diya-root :is(.diya-choice[data-size='large'] input[type='checkbox'], .diya-checkbox-field[data-size='large'] .diya-checkbox):is(:indeterminate, [data-indeterminate='true'])::before { width: 10px; height: 2px; }
+.diya-root :is(.diya-choice[data-size='large'] input[type='checkbox'], .diya-checkbox-field[data-size='large'] .diya-checkbox):is(:indeterminate, [data-indeterminate='true']:not(:checked))::before { width: 10px; height: 2px; }
 
 /* Checkbox (1.2): a lone box, Choice's box value for value (the shared selectors above), 12px
    from a label in the reader's voice; help and error under the label, 4px below. */
@@ -1991,6 +1991,9 @@
 .diya-root .diya-spinner svg { display: block; overflow: visible; animation: diya-spinner-turn 1s linear infinite; }
 @keyframes diya-spinner-turn { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .diya-root .diya-spinner-track { stroke-opacity: 0.16; }
+/* Beside words, a quarter em of air on each side (about 8px with the word space, as with
+   showLabel). Not in a Button, which places its own. */
+.diya-root .diya-spinner:not([data-show-label], .diya-button > *) { margin-inline: 0.25em; }
 /* With showLabel, the words sit 8px after the ring and arrive with it. */
 .diya-root .diya-spinner[data-show-label='true'] { display: inline; width: auto; height: auto; vertical-align: baseline; }
 .diya-root .diya-spinner[data-show-label='true'] svg { display: inline-block; vertical-align: calc(0.365em - var(--diya-internal-spinner) / 2); margin-inline-end: 8px; }

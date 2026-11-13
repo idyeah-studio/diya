@@ -28,7 +28,8 @@ describe('VisuallyHidden', () => {
   it('warns on a button child', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     render(<VisuallyHidden>Skip <button type="button">here</button></VisuallyHidden>)
-    expect(warn).toHaveBeenCalledWith('DIYA: VisuallyHidden contains a focusable element, which keyboard users would land on without seeing it.')
+    // K5 (UX note): the warning says what to do instead.
+    expect(warn).toHaveBeenCalledWith('DIYA: VisuallyHidden contains a focusable element, which keyboard users would land on without seeing it. Move it outside, or name the control with aria-label.')
     warn.mockRestore()
   })
 

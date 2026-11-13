@@ -35,6 +35,6 @@ function focusable(children: ReactNode): boolean {
 
 /** Text that screen readers read and the screen doesn't show. To name a control with no text, use `aria-label` instead. Needs no provider; works in a Server Component. */
 export const VisuallyHidden = forwardRef<HTMLSpanElement, VisuallyHiddenProps>(function VisuallyHidden({ style, children, ...props }, ref) {
-  if (process.env.NODE_ENV !== 'production' && focusable(children)) warnOnce('DIYA: VisuallyHidden contains a focusable element, which keyboard users would land on without seeing it.')
+  if (process.env.NODE_ENV !== 'production' && focusable(children)) warnOnce('DIYA: VisuallyHidden contains a focusable element, which keyboard users would land on without seeing it. Move it outside, or name the control with aria-label.')
   return <span {...props} ref={ref} style={style ? { ...visuallyHiddenStyle, ...style } : visuallyHiddenStyle}>{children}</span>
 })

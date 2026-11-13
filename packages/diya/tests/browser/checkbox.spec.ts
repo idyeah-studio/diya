@@ -109,3 +109,23 @@ test('the small box centers on its line; the large mark is a 5x10 tick and a 10x
   expect(found.bars).toEqual(['8pxx2px', '8pxx2px', '10pxx2px', '10pxx2px'])
   expect(found.medium).toEqual(['4pxx8px', '4pxx8px', '8pxx2px', '8pxx2px'])
 })
+
+// K2 (FE S78-02): a mixed box that's clicked is checked, and shows its check, not the dash; the
+// next render puts the app's mixed state back (property and look together).
+test('a mixed box the app leaves mixed shows its check after a click; the next render makes it mixed again', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=checkbox&theme=light')
+  const box = page.locator('#cb-mixed')
+  const state = () => box.evaluate((node) => {
+    const input = node as HTMLInputElement
+    const mark = getComputedStyle(input, '::before')
+    return { checked: input.checked, indeterminate: input.indeterminate, mark: `${mark.width}x${mark.height}` }
+  })
+  await page.waitForFunction(() => document.getAnimations().length === 0)
+  expect(await state()).toEqual({ checked: false, indeterminate: true, mark: '8pxx2px' })
+  await box.click()
+  await expect.poll(state).toEqual({ checked: true, indeterminate: false, mark: '4pxx8px' })
+  // Any render (here, the form's submit count) puts the prop back.
+  await page.getByRole('button', { name: 'Create account' }).click()
+  await expect(page.locator('#cb-sent')).toHaveText('1')
+  await expect.poll(state).toEqual({ checked: false, indeterminate: true, mark: '8pxx2px' })
+})
