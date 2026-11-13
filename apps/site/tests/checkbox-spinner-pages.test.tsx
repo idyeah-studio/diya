@@ -130,8 +130,9 @@ describe('the Spinner page', () => {
     expect(snippetFor('spinner', page.read()).code).toBe(`import { Spinner } from '@idyeah/diya'
 
 <Spinner label="Loading invoices" />`)
-    // Start again shows the wait: the status words come only at the 400ms beat.
-    await user.click(screen.getByRole('button', { name: 'Start again' }))
+    // Start again shows the wait: the status words come only at the 400ms beat. Like every
+    // control in the bar, it sits under a label ("Demo").
+    await user.click(within(screen.getByRole('group', { name: 'Demo' })).getByRole('button', { name: 'Start again' }))
     expect(within(preview).queryByText('Loading invoices')).toBeNull()
     expect(await within(preview).findByText('Loading invoices', {}, { timeout: 2000 })).toBeTruthy()
     await user.click(screen.getByRole('radio', { name: 'Large' }))

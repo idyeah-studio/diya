@@ -33,9 +33,12 @@ export function SpinnerLibrary() {
           <div className="input-preview-controls">
             <PreviewSetting label="Size" options={[...SIZES]} value={size} onChange={(next) => setSize(next as (typeof SIZES)[number])} />
             <PreviewOptions className="input-options-group" items={[{ label: 'Show label', checked: showLabel, onChange: setShowLabel }]} />
-            <Button variant="quiet" size="small" className="spinner-library-again" onClick={() => setRun((count) => count + 1)}>
-              Start again
-            </Button>
+            <fieldset className="button-control-group">
+              <legend>Demo</legend>
+              <Button variant="quiet" size="small" className="spinner-library-again" onClick={() => setRun((count) => count + 1)}>
+                Start again
+              </Button>
+            </fieldset>
           </div>
           <CustomizationScope id="spinner">
             <section className="input-example" aria-label="Spinner preview">
