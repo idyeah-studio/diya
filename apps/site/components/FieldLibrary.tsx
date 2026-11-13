@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { AtomicSidebar } from './AtomicSidebar'
 import { PreviewOptions, PreviewSetting } from './PreviewControls'
 import { Field } from '@idyeah/diya'
+import { OWN_INPUT_CLASS, OWN_INPUT_CSS } from './code/field-example'
 import './GalleryStudy.css'
 import './ComponentLibrary.css'
 import './ButtonLibrary.css'
@@ -48,6 +49,7 @@ export function FieldLibrary() {
           </div>
           <CustomizationScope id="field">
             <section className="input-example" aria-label="Field preview">
+              {!framed && <style>{OWN_INPUT_CSS}</style>}
               <Field
                 label="Start time"
                 hideLabel={!label}
@@ -58,7 +60,7 @@ export function FieldLibrary() {
                 framed={framed}
                 size={size === 'Small' ? 'small' : size === 'Large' ? 'large' : 'medium'}
               >
-                <input type="time" value={value} onChange={(event) => setValue(event.target.value)} />
+                <input className={framed ? undefined : OWN_INPUT_CLASS} type="time" value={value} onChange={(event) => setValue(event.target.value)} />
               </Field>
             </section>
           </CustomizationScope>

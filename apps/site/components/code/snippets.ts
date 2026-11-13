@@ -3,6 +3,7 @@ import { acquisitionTotal, allocationData, channels, chartData } from '../catalo
 import type { Playground } from './playground'
 import { CONTENT_TEXT, ICON_PATHS, isIcon } from './stand-ins'
 import { FORMAT_FILE, FORMAT_SOURCE, INSTALL_COMMAND } from './content-examples'
+import { OWN_INPUT_CLASS, OWN_INPUT_CSS } from './field-example'
 
 export type Snippet = {
   /** Full step-3 code: import line(s), a blank line, then optional consts, then JSX. No DiyaProvider (that is step 2), no component function wrapper, no 'use client'. */
@@ -668,8 +669,8 @@ function field(p: Playground): Snippet {
   const state = one(p, 'State', 'Default')
   const framed = on(p, 'Options', 'Framed', true)
   const time = v('startTime', 'string', "'09:30'")
-  return build('field', {
-    jsx: h(
+  /* Unframed, the input is the reader's own: a style of its own, whose edge follows Field's aria-invalid. */
+  const control = h(
       'Field',
       {
         label: 'Start time',
@@ -683,11 +684,15 @@ function field(p: Playground): Snippet {
         size: framed && sized(sizeOf(p)),
       },
       h('input', {
+        className: !framed && OWN_INPUT_CLASS,
         type: 'time',
         value: time,
         onChange: fn('event', raw('setStartTime(event.target.value)', v('setStartTime', STRING_SETTER))),
       })
-    ),
+    )
+  return build('field', {
+    consts: framed ? [] : [{ name: 'css', value: raw(`\`${OWN_INPUT_CSS}\``) }],
+    jsx: framed ? control : (group(hi('style', {}, raw('css')), control) as El),
   })
 }
 

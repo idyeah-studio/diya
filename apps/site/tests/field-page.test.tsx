@@ -118,3 +118,27 @@ describe('the Field page’s Disabled state (UX-SITE-02)', () => {
     expect(code).toContain('disabled')
   })
 })
+
+describe('the Field page with Framed off (VIS-SITE-02)', () => {
+  it('styles the input as the reader’s own, edged in the error color from Field’s aria-invalid, in the preview and Get code', async () => {
+    const user = userEvent.setup()
+    const page = renderPage()
+    await user.click(screen.getByRole('checkbox', { name: 'Framed' }))
+    await user.click(screen.getByRole('radio', { name: 'Error' }))
+    const preview = screen.getByRole('region', { name: 'Field preview' })
+    const input = within(preview).getByLabelText('Start time') as HTMLInputElement
+    expect(input.className).toBe('time-input')
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    const css = preview.querySelector('style')!.textContent!
+    expect(css).toContain(".time-input[aria-invalid='true'] {\n  border-color: var(--diya-color-error);\n}")
+    expect(css).toContain('border-radius: 999px;')
+    const { code } = snippetFor('field', page.read())
+    expect(code).toContain('const css = `' + css + '`')
+    expect(code).toContain('<style>{css}</style>')
+    expect(code).toContain('className="time-input"')
+    // Framed, the frame is DIYA's and the input needs no style of its own.
+    await user.click(screen.getByRole('checkbox', { name: 'Framed' }))
+    expect(preview.querySelector('style')).toBeNull()
+    expect(snippetFor('field', page.read()).code).not.toMatch(/time-input|<style>/)
+  })
+})
