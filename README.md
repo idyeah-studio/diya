@@ -386,21 +386,26 @@ Checkbox, Choice and Slider with no `Controller`: values come back on submit,
 and an error moves focus to its field.
 
 ```tsx
-const { register, handleSubmit } = useForm<{ name: string; volume: number; alerts: boolean; terms: boolean }>()
+const { register, handleSubmit, formState: { errors } } = useForm<{ name: string; volume: number; alerts: boolean; terms: boolean }>()
 
 <form onSubmit={handleSubmit(save)}>
   <Stack gap={4}>
-    <TextInput label="Name" {...register('name', { required: 'Add a name' })} />
+    <TextInput label="Name" error={errors.name?.message} {...register('name', { required: 'Add a name' })} />
     <Slider label="Volume" {...register('volume', { valueAsNumber: true })} />
     <Switch label="Email alerts" {...register('alerts')} />
-    <Checkbox label="I agree to the terms" {...register('terms', { required: 'Agree to the terms to go on' })} />
+    <Checkbox
+      label="I agree to the terms"
+      error={errors.terms?.message}
+      {...register('terms', { required: 'Agree to the terms to continue.' })}
+    />
     <Button type="submit">Save</Button>
   </Stack>
 </form>
 ```
 
 Slider needs `valueAsNumber: true` to give you a number. Checkbox gives `true`
-or `false`; a plain form post sends `"on"` unless you pass a `value`. Combobox
+or `false`, or with a `value`, that value or `false`; a plain form post sends
+`"on"` unless you pass a `value`. Combobox
 and DatePicker need a `Controller`; in a plain form they post their value
 through `name`. Calendar takes no `name`, so it always goes through a
 `Controller`.
@@ -428,7 +433,7 @@ wired up for screen readers.
 ```tsx
 import { Field } from '@idyeah/diya'
 
-<Field label="Start time" helperText="Your local time" error={errors.start}>
+<Field label="Start time" helperText="Your local time" error={errors.start?.message}>
   <input type="time" {...register('start')} />
 </Field>
 ```
@@ -484,7 +489,8 @@ toast({ title: '3 emails archived', action: { label: 'Undo', onClick: restore } 
 - **Update it:** pass an `id`, and a later call with the same `id` updates
   that toast in place, such as "Saving…" then "Saved".
 - **Close it:** `toast.dismiss(id)` closes one toast; `toast.dismiss()`
-  closes them all.
+  closes every toast `toast()` showed. A `<Toast>` closes when you stop
+  rendering it.
 - **Urgent:** `urgent` makes a screen reader say it at once. Use it for errors
   that need action.
 
@@ -522,8 +528,9 @@ Ids that `toast()` makes look like `diya-toast-1`. Ids that start with
 `<Toast>` still works, for a toast whose life is tied to a component's
 state. It joins the same stack and keeps its own provider's look.
 
-**In tests,** close every toast between tests, and find a toast by its
-region or its text:
+**In tests,** close the toasts between tests, and find a toast by its region
+or its text. In Playwright, pass `{ exact: true }` to `getByText`, since a
+toast's words are also in a live region for a few seconds:
 
 ```tsx
 afterEach(() => toast.dismiss())
@@ -696,11 +703,12 @@ or `count()`, or render `motion="off"` in your test build. Playwright's
 </DiyaProvider>
 ```
 
-**Loading:** a Spinner, and a Button with `loading`, wait 400ms before they
-show, so a quick load shows nothing. The wait is the same at every
-`--diya-duration-scale`. In tests, use `findBy…` (or advance fake timers) to
-see a Spinner or hear its label. A loading Button shows a small spinner in
-its label's place and keeps its exact size; it looks busy, not disabled.
+**Loading:** a Spinner, and the spinner in a Button with `loading`, wait
+400ms before they show, so a quick load shows nothing. The wait is the same
+at every `--diya-duration-scale`. In tests, use `findBy…` (or advance fake
+timers) to see a Spinner or hear its label. A loading Button's cursor turns to
+`progress` at once; after 400ms a small spinner takes its label's place, and
+the button keeps its exact size. It looks busy, not disabled.
 
 **Rather keep 1.0 exactly?** Pin the 1.0 line:
 
@@ -767,7 +775,7 @@ provider starts from DIYA's defaults, so a value set on an outer provider's
 | Lines | `--diya-color-line` |
 | Brand | `--diya-color-accent` (fills), `--diya-color-accent-text` (text on the fill), `--diya-color-accent-soft` (a quiet tint) and `--diya-color-accent-ink` (brand-colored text on the page). `brandColor` sets all four; set them together if you override them. |
 | States | `--diya-color-hover`, `--diya-color-selected`, and `--diya-color-focus`: every focus ring. Defaults to the text color. It needs 3:1 against the surfaces; in Light, use at least 5.1:1 against white so it holds over Glass. |
-| Fields | `--diya-color-field` (the fill) and `--diya-color-field-line` (the edge) of every field: TextInput, TextArea, Select, Search, Combobox, Date Picker and `Field framed`. The edge needs 3:1 against the field. In Light, use at least 3.8:1 against white so it holds 3:1 over the Glass field. An invalid field keeps the error border. Under Glass, fields stay see-through at your color. |
+| Fields | `--diya-color-field` (the fill) and `--diya-color-field-line` (the edge) of every field: TextInput, TextArea, Select, Search, Combobox, Date Picker and `Field framed`. The edge needs 3:1 against the field fill and against the page behind it. In Light, use at least 3.8:1 against white so it still holds 3:1 over Glass. An invalid field keeps the error border. Under Glass, fields stay see-through at your color. |
 | Control height | `--diya-height-control-small`, `--diya-height-control-medium` and `--diya-height-control-large`: 32, 40 and 48px. These are the heights of Buttons (and icon-only squares), every field, Tabs and calendar days. Type sizes don't change. Combobox can't go below 26px (32px at large). |
 | Destructive actions | `--diya-color-destructive` |
 | Statuses | For each of `success`, `warning`, `error` and `info`: `--diya-color-{status}` for text and icons on a surface, `--diya-color-{status}-surface` behind them, and `--diya-color-{status}-fill` with `--diya-color-{status}-on-fill` for solid badges. `--diya-color-error` also colors error messages, the border of every invalid field and a falling Metric. |
@@ -855,6 +863,10 @@ major version:
 - message keys and their arguments;
 - `api.json` within `schemaVersion: 1`, where only additions are allowed;
 - peer dependency ranges.
+
+From 1.2, the toast keyboard contract (F8, the Tab order through the toasts,
+and Escape stopping at a toast) and how the stack reads each toast aloud are
+documented behavior, so they're covered too.
 
 Development warnings start with "DIYA:" and print only in development, never
 in production builds. A test setup that fails on `console.warn` may see one;

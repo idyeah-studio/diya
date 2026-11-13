@@ -51,7 +51,8 @@ and Checkbox use `onCheckedChange`). Leave `value` out and pass
 form reset puts it back. Native `name`, `onChange` and `onBlur` reach the
 control too, so react-hook-form's `register()` works on TextInput, TextArea,
 Select, Switch, Checkbox, Choice and Slider (Slider with
-`valueAsNumber: true`; Checkbox gives `true` or `false`). Combobox and
+`valueAsNumber: true`; Checkbox gives `true` or `false`, or with a `value`,
+that value or `false`). Combobox and
 DatePicker take `name` for plain forms and need a `Controller` with
 react-hook-form.
 
@@ -334,7 +335,7 @@ toast({ title: '3 emails archived', action: { label: 'Undo', onClick: restore } 
 ("Dismiss: Draft saved"). `duration` is in milliseconds (8000 by default;
 `0` keeps it until closed). A toast with an `action` never times out. A later
 call with the same `id` updates that toast in place. `toast.dismiss(id)`
-closes one, and `toast.dismiss()` closes them all. Pointing at or focusing any
+closes one, and `toast.dismiss()` closes every toast `toast()` showed. Pointing at or focusing any
 toast pauses them all.
 
 There's one stack per page, in the outermost provider's corner: at most 3
@@ -343,7 +344,8 @@ closes the focused one. Inside an open Dialog or Drawer, toasts show inside
 it. Avoid putting critical, time-sensitive instructions only in a toast.
 
 `<Toast>` is for a toast whose life is tied to a component's state. Render it
-while the state holds and pass `onDismiss`; `showClose={false}` hides the close
+while the state holds and pass `onDismiss`; it closes when you stop rendering
+it, and `toast.dismiss()` leaves it alone. `showClose={false}` hides the close
 button on a toast without an action. It joins the page's one stack and keeps
 its own provider's look.
 
@@ -430,7 +432,7 @@ not communicate status. Icon-only buttons need their own `aria-label`.
 | A popup from another library can't be clicked in a Dialog | Pass `useDiyaPortalContainer()` as the library's portal container. Inside a Dialog or Drawer it returns the modal. |
 | A toast shows in the wrong theme | Toasts show in the outermost provider, in its theme. A widget's own provider that mounts before your app's shows every toast; mount your app's provider first. |
 | `toast()` does nothing | No `DiyaProvider` is mounted yet (the toast waits for one), or it ran on the server. Call it in the client. |
-| A text query finds a toast or field error twice | A fresh toast or field error is also in a live region for a few seconds. Query inside the form or the stack with `within()`, or use exact text. |
+| A text query finds a toast or field error twice | A fresh toast or field error is also in a live region for a few seconds. Query inside the form or the stack with `within()`, or use exact text. In Playwright, pass `{ exact: true }` to `getByText`: a plain string matches substrings. |
 | An event handler errors in Next.js | Functions can't be passed from a Server Component. Move the component into a file that starts with `'use client'`. |
 | A menu or popover is still in the page right after closing | It's leaving, for about 110ms (a dialog or drawer, 160ms). Wait for it to go, use web-first assertions, or render tests with `motion="off"`. |
 | Screenshots catch a half-open popup | Render with `motion="off"`; the device's Reduce Motion setting still fades. |

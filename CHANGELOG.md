@@ -22,8 +22,9 @@ Not released yet. This entry describes what 1.2.0 will ship.
     room.
   - Call again with the same `id` to update a toast in place, such as
     "Saving…" then "Saved". It restarts its time.
-  - `toast.dismiss(id)` closes one toast. `toast.dismiss()` closes every toast,
-    shown and waiting.
+  - `toast.dismiss(id)` closes one toast. `toast.dismiss()` closes every
+    toast `toast()` showed, shown and waiting. A `<Toast>` closes when you
+    stop rendering it.
   - Ids that `toast()` makes look like `diya-toast-1`. Ids that start with
     `diya-` are DIYA's, so don't use that prefix for your own.
   - It shows in the first-mounted outermost `DiyaProvider`, in that provider's
@@ -125,6 +126,10 @@ Not released yet. This entry describes what 1.2.0 will ship.
 
 ### Changed
 
+Two entries change documented screen-reader and keyboard behavior, to fix a
+toast that was read twice and an Escape that closed the Dialog under a toast:
+"Screen readers" and "Escape on a focused toast" below.
+
 - **Toasts stack.** Several toasts no longer cover each other. Every
   provider's `<Toast>`s and every `toast()` share the one column, in the
   outermost provider's corner.
@@ -142,9 +147,12 @@ Not released yet. This entry describes what 1.2.0 will ship.
   the provider's class finds two elements.
 - **Screen readers.** Inside the stack, a `<Toast>`'s message no longer has
   `role="status"` or `role="alert"`. The stack reads each toast once, from
-  its own live region, tone first: "success: Draft saved." With an action, it
+  its own live region, tone first: "Success: Draft saved." With an action, it
   adds "Press F8 to reach Undo." `urgent` still interrupts.
   - Toasts raised together are read together, in the order they arrived.
+  - The stack's name and the words read for each toast come from the
+    outermost provider's `messages`. A nested provider's `messages` still
+    name its own toasts' close buttons.
 - **The toast region** is a `region` landmark named "Notifications (F8)"
   while it holds a toast. The `toast.label` default changed from
   "Notification" to "Notifications (F8)". If you translated it, translate the
@@ -154,12 +162,14 @@ Not released yet. This entry describes what 1.2.0 will ship.
 - **Pausing.** Pointing at or focusing any toast pauses every toast on the
   page. In 1.1 only that toast paused. A hidden tab still pauses them all.
 - **Escape on a focused toast closes only that toast.** It goes no further: a
-  Dialog or Drawer around it stays open.
+  Dialog or Drawer around it stays open, and it doesn't bubble up to your own
+  key handlers either, so an app-wide Escape handler doesn't receive it.
 - **Toasts inside modals.** While a Dialog or Drawer is open, the toasts show
   inside the topmost one, above the dim and clickable, and move back when it
   closes. The same goes for your own `<dialog>` opened with `showModal()`, if
   it holds focus when a toast arrives. Inside a modal, toasts take its theme.
-- **A toast arrives in about 350ms:** the others make room, then it arrives.
+- **When other toasts are showing, a new one arrives in about 350ms:** they
+  make room, then it arrives. A toast on its own arrives as before.
 - **Under Glass, the page behind a toast is now evenly frosted.** In 1.1.1,
   text behind it showed faintly through on a phone.
 - **DIYA's own fields announce an error that appears after you leave them.**
@@ -170,11 +180,11 @@ Not released yet. This entry describes what 1.2.0 will ship.
 - **An error that appears when you leave a field by pressing elsewhere shows
   once the press ends,** so the button you pressed doesn't move under the
   pointer or your finger.
-- **Button `loading` shows a small spinner instead of "···".** Pressing still
-  answers at once. After 400ms the spinner takes the label's place: the label
-  hides but keeps its width, so the button keeps its exact size and nothing
-  moves. With a leading icon, the spinner takes the icon's place and the label
-  stays. An icon-only button swaps its icon for the spinner. When loading
+- **Button `loading` shows a small spinner instead of "···".** The cursor
+  turns to `progress` at once. After 400ms the spinner takes the label's
+  place: the label hides but keeps its width, so the button keeps its exact
+  size and nothing moves. With an icon before the label, the spinner takes the
+  icon's place and the label stays. An icon-only button swaps its icon for the spinner. When loading
   ends, the label fades back.
   - A loading Button looks busy, not disabled: full color and a `progress`
     cursor. Clicks, Enter and Space still do nothing; `aria-busy` and
@@ -188,7 +198,7 @@ Not released yet. This entry describes what 1.2.0 will ship.
 - **The Drawer's open edge is rounded like Dialog:** 22px × the corner scale,
   where it was 16px. A Drawer that fills a phone screen (440px or narrower) is
   square, so no dim shows in wedges at the screen's edge.
-- **Choice and Checkbox boxes.** The small box sits 2px lower, so it centers on
+- **Choice and Checkbox boxes.** The small box sits 1px lower, so it centers on
   its line. The large box draws a 5×10 tick and a 10×2 bar, where they were
   4×8 and 8×2. Small and medium marks don't change.
 - **Table's progress bars scale their corners** with `--diya-corner-scale`
@@ -224,32 +234,41 @@ Not released yet. This entry describes what 1.2.0 will ship.
   longer finds it. Use
   `getByRole('region', { name: 'Notifications (F8)' })`, or find the toast
   by its text.
+- **The stack's name is now "Notifications (F8)".** A query for
+  "Notification" finds nothing. Use the new name, or a regular expression
+  such as `/Notifications/`.
 - **Close buttons:** a toast with a title is now "Dismiss: {title}". A
   `<Toast>` without a title is still "Dismiss alert".
 - **Clear toasts between tests:** `afterEach(() => toast.dismiss())`, next to
-  `motion="off"` in your test setup.
+  `motion="off"` in your test setup. It closes every toast `toast()` showed; a
+  `<Toast>` goes when its test unmounts it.
 - **A regular expression can find a fresh toast or field error twice.** A
   toast's words, and a field error that appears after you leave the field,
   are also read from a live region. They stay there for up to 5 seconds, or
   until the toast closes or the error clears. While they're there, a
   regular-expression text query (`getByText(/valid email/)`,
   `findByText(/changes are live/)`, Playwright's `getByText` with a pattern)
-  finds two matches. Exact-text queries are unaffected. Pick one:
+  finds two matches. Exact-text queries are unaffected: Testing Library's
+  `getByText('Enter a valid email')`, or Playwright's
+  `getByText('Enter a valid email', { exact: true })`. Playwright's `getByText`
+  with a plain string matches substrings, so it finds two as well. Pick one:
   - look inside the form or the stack:
     `within(form).getByText(/valid email/)`, or
     `within(screen.getByRole('region', { name: 'Notifications (F8)' })).getByText(/Draft/)`;
   - query the field by its description:
     `expect(screen.getByLabelText('Email')).toHaveAccessibleDescription(/valid email/)`;
-  - use exact text: `getByText('Enter a valid email')`.
-- **Live-region copies under fake timers:** the copy appears a frame after the
-  toast or error. Advance timers to let it go.
+  - use exact text: `getByText('Enter a valid email')`, or in Playwright
+    `getByText('Enter a valid email', { exact: true })`.
+- **Live-region copies under fake timers:** the copy appears one frame after
+  the toast or error and leaves after 5 seconds. Advance timers by a frame to
+  hear it, or past 5 seconds before a regular-expression query.
 - **An effect that calls `toast()` shows it twice** in development under
   StrictMode, since StrictMode runs effects twice. Pass an `id`, and the
   second call updates the first. Better still, call `toast()` from the
   handler that did the work.
 - **Pausing in tests:** `fireEvent.mouseEnter` and `mouseLeave`, and
-  `fireEvent.focus` and `blur`, on a toast pause and resume every toast, as in
-  1.1.
+  `fireEvent.focus` and `blur`, on a toast pause and resume it, as in 1.1.
+  They now hold every toast's timer, not only that toast's.
 - **Errors after a press:** an error that appears when you leave a field by
   clicking elsewhere shows once the press ends. With user-event, use
   `findBy…` after the click. Under fake timers, advance timers after it.
@@ -258,7 +277,8 @@ Not released yet. This entry describes what 1.2.0 will ship.
 - **Button `loading`:** the button's text no longer includes "···", and the
   spinner is `aria-hidden`. The accessible name is unchanged.
 - **Checkbox with react-hook-form:** `register('terms')` gives `true` or
-  `false`, as a native checkbox does.
+  `false`, as a native checkbox does. With a `value`, it gives that value, or
+  `false`.
 - **DOM snapshots of anything inside a provider change.** Every outermost
   `DiyaProvider` adds a toast host to its portal when it mounts: two empty
   live regions and a `popover` element. `.diya-toast-region` now wraps the
