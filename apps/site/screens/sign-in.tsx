@@ -2,7 +2,7 @@
 // Sign in: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/sign-in/page.tsx. Vite: save as src/SignIn.tsx and render it inside your DiyaProvider.
 import { useEffect, useId, useRef, useState, type ReactNode, type Ref } from 'react'
-import { Alert, Button, Choice, Form, Inline, Stack, TextInput, TextLink } from '@idyeah/diya'
+import { Alert, Button, Checkbox, Form, Inline, Stack, TextInput, TextLink } from '@idyeah/diya'
 import { ArrowLeft, ArrowRight, LucideProvider } from 'lucide-react'
 
 // Your product, and what the demo account shows.
@@ -67,7 +67,7 @@ export default function SignInScreen() {
 
 function SignInStep({ email, setEmail, go, titleRef, onEmailed }: StepProps & { onEmailed: (kind: Sent) => void }) {
   const [password, setPassword] = useState('')
-  const [keep, setKeep] = useState<string[]>([])
+  const [keep, setKeep] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
   const [failed, setFailed] = useState(false)
   const [busy, setBusy] = useState<'password' | 'link' | 'google' | 'github'>()
@@ -81,7 +81,7 @@ function SignInStep({ email, setEmail, go, titleRef, onEmailed }: StepProps & { 
     setFailed(false)
     if (found.email || found.password) return focus(found.email ? emailField.current : passwordField.current)
     setBusy('password')
-    const ok = await api('/session', { email, password, remember: keep.length > 0 })
+    const ok = await api('/session', { email, password, remember: keep })
     if (ok) return go('code')
     setBusy(undefined)
     setFailed(true)
@@ -137,7 +137,7 @@ function SignInStep({ email, setEmail, go, titleRef, onEmailed }: StepProps & { 
         <TextInput ref={passwordField} label="Password" type="password" autoComplete="current-password" value={password} error={errors.password}
           onValueChange={(value) => { setPassword(value); setErrors({ ...errors, password: undefined }) }} />
         <Inline justify="between" gap={3}>
-          <Choice multiple hideLabel label="Session" options={[{ value: 'keep', label: 'Keep me signed in' }]} value={keep} onValueChange={setKeep} />
+          <Checkbox label="Keep me signed in" checked={keep} onCheckedChange={setKeep} />
           <LinkButton onClick={() => go('forgot')}>Forgot password?</LinkButton>
         </Inline>
       </Stack>

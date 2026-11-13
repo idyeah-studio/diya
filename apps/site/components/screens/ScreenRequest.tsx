@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Button, Choice, DiyaProvider, FileUpload, TextArea, TextInput, TextLink, type FileRejection } from '@idyeah/diya'
+import { Button, Checkbox, DiyaProvider, FileUpload, TextArea, TextInput, TextLink, type FileRejection } from '@idyeah/diya'
 import { useAppearance } from '../../app/Appearance'
 import { IMAGE_ACCEPT, ORIGINAL_IMAGE_MAX_BYTES, TEXT_COUNTER_FROM, TEXT_MAX, TEXT_MIN } from '../../lib/screen-requests/config'
 import { cleanText, textLength } from '../../lib/screen-requests/text'
@@ -40,7 +40,6 @@ export const REQUEST_COPY = {
   emailHelp: 'So I can reply.',
   emailEmpty: 'Add your email so I can reply.',
   emailMalformed: 'That doesn’t look like an email yet. Check the @ and the part after it.',
-  notifyGroup: 'Updates',
   notify: 'Also tell me when it’s ready',
   privacy: 'I’ll use this only to reply about your request.',
   submit: 'Send request',
@@ -425,15 +424,7 @@ function RequestForm({ want, onClosed }: { want: string | null; onClosed: () => 
             }}
           />
 
-          <Choice
-            multiple
-            hideLabel
-            className="screens-request-notify"
-            label={COPY.notifyGroup}
-            options={[{ value: 'notify', label: COPY.notify }]}
-            value={notify ? ['notify'] : []}
-            onValueChange={(values) => setNotify(values.includes('notify'))}
-          />
+          <Checkbox className="screens-request-notify" label={COPY.notify} checked={notify} onCheckedChange={setNotify} />
 
           <div className="screens-request-honeypot" aria-hidden="true">
             <label>

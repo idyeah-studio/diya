@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useEffect, useState, type ComponentProps, type ComponentType, type ReactNode } from 'react'
 import { DiyaProvider, toast } from '@idyeah/diya'
@@ -547,5 +547,23 @@ describe('each toast Screen raises its toast', () => {
     await waitFor(() => expect(screen.queryByRole('region', { name: 'Notifications (F8)' })).toBeNull(), LONG)
     expect((screen.getByRole('checkbox', { name }) as HTMLInputElement).checked).toBe(false)
     expect(screen.getByRole('status').textContent).toBe(`“${name}” is back in To do.`)
+  })
+})
+
+// frontend.md step 11: the lone yes-or-no boxes on Sign in and Application are Checkboxes, not one-option groups.
+describe('lone yes-or-no boxes are Checkboxes', () => {
+  it.each([
+    ['sign-in', 'Keep me signed in'],
+    ['application', 'Keep my application on file for 12 months for other roles'],
+  ])('%s: "%s"', async (id, label) => {
+    const { default: Screen } = await import(`../screens/${id}.tsx`)
+    render(<DiyaProvider theme="light"><Screen /></DiyaProvider>)
+    await act(async () => {})
+    const box = screen.getByRole('checkbox', { name: label }) as HTMLInputElement
+    expect(box.className).toBe('diya-checkbox')
+    expect(box.closest('fieldset')).toBeNull()
+    expect(box.checked).toBe(false)
+    fireEvent.click(box)
+    expect(box.checked).toBe(true)
   })
 })

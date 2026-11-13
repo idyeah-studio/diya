@@ -2,7 +2,7 @@
 // Application form: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/apply/page.tsx. Vite: save as src/Application.tsx and render it inside your DiyaProvider.
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode, type Ref } from 'react'
-import { Alert, Button, Choice, Dialog, FileUpload, Select, TextArea, TextInput, TextLink } from '@idyeah/diya'
+import { Alert, Button, Checkbox, Choice, Dialog, FileUpload, Select, TextArea, TextInput, TextLink } from '@idyeah/diya'
 import { ArrowLeft, Check, CircleCheck, LucideProvider, Plus, X } from 'lucide-react'
 
 // The studio, the role, and where the draft is kept on this device.
@@ -30,7 +30,7 @@ async function sendApplication(application: Draft, resume: File | undefined) {
 type Position = { id: string; company: string; title: string; from: string; to: string }
 type Draft = {
   first: string; last: string; email: string; phone: string; city: string; positions: Position[]
-  portfolio: string; linkedin: string; other: string; heard: string; rating: string; essay: string; keep: string[]
+  portfolio: string; linkedin: string; other: string; heard: string; rating: string; essay: string; keep: boolean
 }
 type View = 'form' | 'review' | 'sent'
 type Section = 'about' | 'experience' | 'portfolio' | 'resume' | 'questions'
@@ -39,7 +39,7 @@ const position = (others: Position[] = []): Position => {
   const top = Math.max(0, ...others.map((p) => Number(p.id.slice(1)) || 0))
   return { id: `p${top + 1}`, company: '', title: '', from: '', to: 'now' }
 }
-const EMPTY: Draft = { first: '', last: '', email: '', phone: '', city: '', positions: [position()], portfolio: '', linkedin: '', other: '', heard: '', rating: '', essay: '', keep: [] }
+const EMPTY: Draft = { first: '', last: '', email: '', phone: '', city: '', positions: [position()], portfolio: '', linkedin: '', other: '', heard: '', rating: '', essay: '', keep: false }
 
 // The last 27 years, newest first, read from the reader's clock. The server can't know it, so it lists none until the page loads.
 const subscribeNever = () => () => {}
@@ -108,7 +108,7 @@ export default function ApplicationScreen() {
       const raw = window.localStorage.getItem(DRAFT_KEY)
       if (raw) {
         const stored = JSON.parse(raw) as { draft: Draft; at: string }
-        setDraft({ ...EMPTY, ...stored.draft })
+        setDraft({ ...EMPTY, ...stored.draft, keep: stored.draft.keep === true })
         setRestored(stored.at)
         setSaved(stored.at)
       }
@@ -307,8 +307,7 @@ export default function ApplicationScreen() {
                     options={RATING} value={draft.rating} error={errors.rating || undefined} onValueChange={(v) => set('rating', v)} />
                   <TextArea className="application-full" id="application-essay" label="Tell us about a design decision you’d defend, and one you’d take back." rows={7} maxLength={1500} showCount
                     helperText="A few paragraphs is plenty. No need to polish." value={draft.essay} error={errors.essay || undefined} onValueChange={(v) => set('essay', v)} />
-                  <Choice multiple label="Other roles (optional)" options={[{ value: 'keep', label: 'Keep my application on file for 12 months for other roles' }]}
-                    value={draft.keep} onValueChange={(v) => set('keep', v)} />
+                  <Checkbox label="Keep my application on file for 12 months for other roles" checked={draft.keep} onCheckedChange={(v) => set('keep', v)} />
                 </Part>
 
                 <div className="application-submit">
@@ -355,7 +354,7 @@ function Review({ titleRef, draft: d, resume, onEdit, onSent }: ReviewProps) {
     resume: [['File', resume ? `${resume.name}, ${Math.max(1, Math.round(resume.size / 1024))} KB` : '']],
     questions: [
       ['Heard from', optional(d.heard)], ['Presenting', RATING.find((r) => r.value === d.rating)?.label ?? ''],
-      ['Your answer', <span className="application-quote">{d.essay.trim()}</span>], ['Other roles', d.keep.length ? 'Keep on file for 12 months' : 'Just this role'],
+      ['Your answer', <span className="application-quote">{d.essay.trim()}</span>], ['Other roles', d.keep ? 'Keep on file for 12 months' : 'Just this role'],
     ],
   }
 
