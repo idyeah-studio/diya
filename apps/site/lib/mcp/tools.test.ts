@@ -212,8 +212,15 @@ describe('toast(), Field and utilities', () => {
     expect(lines[0], query).toContain(`import { ${first} } from '@idyeah/diya'`)
   })
 
+  // W13: Field's exact name still lists it, second, never first.
+  it.each(['field', 'fields', 'Field'])('search "%s" lists Text Input, then Field', (query) => {
+    const lines = searchComponents({ query }).text.split('\n').filter((line) => /^\d+\. /.test(line))
+    expect(lines[0]).toContain("import { TextInput } from '@idyeah/diya'")
+    expect(lines[1]).toContain("import { Field } from '@idyeah/diya'")
+  })
+
   it('never lets Field win on the everyday word "field" alone', () => {
-    for (const query of ['field', 'text field', 'date field', 'select field'])
+    for (const query of ['text field', 'date field', 'select field'])
       expect(searchComponents({ query }).text, query).not.toContain("import { Field } from")
     expect(getComponent({ name: 'field', include: ['props'] })).toMatch(/^# Field \(`Field`\)/)
   })

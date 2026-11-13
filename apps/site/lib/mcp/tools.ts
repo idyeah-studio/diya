@@ -120,7 +120,11 @@ function rank(query: string): { terms: string[]; results: Ranked[] } {
   const sorted = scored.filter((s) => s.score >= 2).sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title))
   // Keep the clear answers: anything under a third of the best match is noise.
   const best = sorted[0]?.score ?? 0
-  return { terms: wanted, results: sorted.filter((s) => s.score >= best / 3) }
+  const results = sorted.filter((s) => s.score >= best / 3)
+  // Searching Field's exact name lists it, second: "field" means Text Input first (DS-SITE-04, W13).
+  const field = scored.find((s) => s.entry.id === 'field')
+  if (field && FIELD_WORDS.has(phrase) && !results.includes(field) && results.length) results.splice(1, 0, { entry: field.entry, score: results[0].score })
+  return { terms: wanted, results }
 }
 
 /** search_components. `found` is false when nothing in DIYA fits, the signal /ask is for. */
