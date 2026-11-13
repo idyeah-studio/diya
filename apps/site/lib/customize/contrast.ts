@@ -1,6 +1,6 @@
 import { statusNames, themes, type Appearance, type AppearancePath, type Theme } from './appearance'
 import type { CustomizeItem } from './registry'
-import { composite, contrast } from './color'
+import { composite, contrast, withAlpha } from './color'
 import { neutralSet, statusSet, tokenColors } from './tokens'
 
 export type ContrastIssue = {
@@ -19,6 +19,13 @@ export type ContrastIssue = {
 }
 
 const round = (n: number) => Math.floor(n * 100) / 100
+/*
+ * The page behind a Glass Light field, as the visual designer measured it over
+ * DIYA's Glass backdrop (after Glass's blur and brightness). A field mixes its
+ * fill at 66% over it, so a white fill renders about #EDEEED.
+ */
+const GLASS_LIGHT_PAGE = '#CACDCA'
+const GLASS_FIELD_STRENGTH = 0.66
 const STATUS_LABEL = { success: 'Success', warning: 'Warning', error: 'Error', info: 'Info' } as const
 
 /**
@@ -78,6 +85,11 @@ export function contrastPairs(appearance: Appearance, item?: CustomizeItem): Con
       check('Text in fields', text, field, 4.5, own.field ? token('field') : color('text'), color('text'))
       check('Field edges on the field', composite(t.fieldLine, field), field, 3, own.fieldLine ? token('fieldLine') : token('field'), token('field'))
       check('Field edges on the background', composite(t.fieldLine, background), background, 3, own.fieldLine ? token('fieldLine') : color('text'), color('background'))
+      /* Under Glass Light the field is see-through, so the edge must also hold 3:1 on the field as it renders there. */
+      if (theme === 'light' && appearance.translucent) {
+        const glassField = composite(withAlpha(t.field, GLASS_FIELD_STRENGTH), GLASS_LIGHT_PAGE)
+        check('Field edges on the Glass field', composite(t.fieldLine, glassField), glassField, 3, own.fieldLine ? token('fieldLine') : token('field'), token('field'), 'translucent')
+      }
       if (own.field) {
         /* Placeholders and hints are the quieter text, and an invalid field keeps the error edge. */
         check('Quieter text in fields', n.muted, field, 4.5, color('text'), token('field'))

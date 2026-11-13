@@ -6,6 +6,7 @@ import { AppearanceProvider } from '../app/Appearance'
 import { CatalogProvider } from '../components/CatalogProvider'
 import { TextInputLibrary } from '../components/TextInputLibrary'
 import { contrastIssues } from '../lib/customize/contrast'
+import { contrastFix } from '../lib/customize/theme'
 import { effectiveAppearance } from '../lib/customize/appearance'
 import { getSnapshot, resetStoreForTests } from '../lib/customize/store'
 
@@ -147,5 +148,32 @@ describe('Customize: a picked field fill', () => {
     // A fill that keeps them all, and Auto, add nothing.
     expect(contrastIssues(effectiveAppearance({ 'tokens.light.field': '#F4F6F6' }))).toEqual([])
     expect(contrastIssues(effectiveAppearance({ 'tokens.light.fieldLine': '#5E7476' }))).toEqual([])
+  })
+})
+
+// Visual's DOC-03 ruling: under Glass Light the field renders its fill at 66% over the page behind
+// Glass (about #EDEEED for a white fill), so a picked edge also needs 3:1 there.
+describe('Customize: a picked field edge under Glass Light', () => {
+  const glassEdge = (brand: Record<string, string | boolean>) =>
+    contrastIssues(effectiveAppearance(brand)).find((issue) => issue.label === 'Field edges on the Glass field')
+
+  it('checks the edge against the Glass field as it renders, and offers a fix', () => {
+    // 3.45:1 on white, so it passes on the field and the page, but about 2.95:1 on the Glass field.
+    const brand = { translucent: true, 'tokens.light.fieldLine': '#8A8A8A' }
+    const issue = glassEdge(brand)!
+    expect(issue).toMatchObject({ theme: 'light', minimum: 3, path: 'tokens.light.fieldLine', background: '#EDEEED' })
+    expect(issue.ratio).toBeLessThan(3)
+    expect(contrastIssues(effectiveAppearance(brand)).map((i) => i.label)).toEqual(['Field edges on the Glass field'])
+    const fix = contrastFix(brand, issue)!
+    expect(fix.path).toBe('tokens.light.fieldLine')
+    expect(fix.ratio).toBeGreaterThanOrEqual(3)
+    expect(glassEdge({ ...brand, 'tokens.light.fieldLine': fix.value })).toBeUndefined()
+  })
+
+  it('leaves it out without Glass, in Dark, and for the sample edge', () => {
+    expect(glassEdge({ 'tokens.light.fieldLine': '#8A8A8A' })).toBeUndefined()
+    expect(glassEdge({ translucent: true, 'tokens.dark.fieldLine': '#8A8A8A' })).toBeUndefined()
+    // The README's sample: 3.30:1 on the Glass field.
+    expect(contrastIssues(effectiveAppearance({ translucent: true, 'tokens.light.fieldLine': '#768587' }))).toEqual([])
   })
 })
