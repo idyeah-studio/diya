@@ -571,7 +571,7 @@ describe('lone yes-or-no boxes are Checkboxes', () => {
 // VIS-SITE4-01: Sign in is the approved bar, so its "Keep me signed in" row keeps 1.1.1's 38px
 // (Choice's 9px above and below), set in the Screen's own styles; Checkbox itself is unchanged.
 it('Sign in’s "Keep me signed in" row keeps its 1.1.1 spacing', async () => {
-  const { default: SignIn } = await import('../screens/sign-in.tsx')
+  const { default: SignIn } = await import('../screens/sign-in')
   render(<DiyaProvider theme="light"><SignIn /></DiyaProvider>)
   await act(async () => {})
   const row = screen.getByRole('checkbox', { name: 'Keep me signed in' }).closest('.diya-checkbox-field')!
