@@ -50,6 +50,16 @@ const SYNONYMS: Record<string, string[]> = {
   clipboard: ['code-block'], monospace: ['code-block'],
 }
 
+/**
+ * Everyday words that mean one of DIYA's own controls, even where an export has
+ * the word as its name: "a field" is a Text Input, and Field is for controls DIYA
+ * doesn't make (QA-SITE-02). A query that also says what makes it someone else's
+ * control (a hosted iframe, a payment provider's card) still finds Field first.
+ */
+const EVERYDAY: Record<string, { id: string; unless: string[] }> = {
+  field: { id: 'text-input', unless: ['iframe', 'hosted', 'payment', 'stripe', 'card', 'wrapper', 'wrap', 'own', 'custom', 'third', 'thirdparty', 'native', 'time', 'color', 'framed'] },
+}
+
 /** Things people ask for that DIYA doesn't have, with the honest answer. */
 const GAPS: Record<string, string> = {
   icon: 'DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.',
@@ -75,6 +85,10 @@ const startsWord = (text: string, term: string) => new RegExp(`\\b${term}`).test
 function rank(query: string): { terms: string[]; results: Ranked[] } {
   const wanted = terms(query)
   const phrase = norm(query)
+  const everyday = wanted
+    .map((term) => EVERYDAY[term] ?? EVERYDAY[term.replace(/s$/, '')])
+    .filter((rule) => rule && !rule.unless.some((word) => wanted.includes(word)))
+    .map((rule) => rule!.id)
   const scored = mcpEntries().map((entry) => {
     const use = (entry.catalog?.guidance.use ?? '').toLowerCase()
     const instead = (entry.catalog?.guidance.instead ?? '').toLowerCase()
@@ -92,6 +106,7 @@ function rank(query: string): { terms: string[]; results: Ranked[] } {
       if (startsWord(description, term)) score += 1
       if (props.includes(term)) score += 1
     }
+    if (everyday.includes(entry.id)) score += 40
     return { entry, score }
   })
   const sorted = scored.filter((s) => s.score >= 2).sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title))

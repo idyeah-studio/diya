@@ -177,12 +177,22 @@ describe('toast(), Field and utilities', () => {
   })
 
   it('finds Field for a control DIYA doesn’t make, with its page, guidance and complete file', () => {
-    for (const query of ['field', 'label and error around a hosted iframe', 'stripe card field'])
+    for (const query of ['label and error around a hosted iframe', 'stripe card field', 'field around my own time input'])
       expect(searchComponents({ query }).text.split('\n').find((line) => line.startsWith('1. ')), query).toContain("import { Field } from '@idyeah/diya'")
     const text = getComponent({ name: 'Field' })
     expect(text).toContain('When: For a control DIYA doesn’t make')
     expect(text).toContain('Catalog: https://diya13.ai/explore?area=components&component=field')
     expect(text).toContain('<input')
+  })
+
+  // QA-SITE-02: "a field" is DIYA's own Text Input; Field is for controls DIYA doesn't make.
+  it('keeps Text Input first for "field" and "text field", with Field after it', () => {
+    for (const query of ['field', 'text field', 'email field', 'fields']) {
+      const lines = searchComponents({ query }).text.split('\n').filter((line) => /^\d+\. /.test(line))
+      expect(lines[0], query).toContain("import { TextInput } from '@idyeah/diya'")
+      if (query !== 'email field') expect(lines.some((line) => line.includes("import { Field } from")), query).toBe(true)
+    }
+    expect(getComponent({ name: 'field', include: ['props'] })).toMatch(/^# Field \(`Field`\)/)
   })
 
   it('marks a utility as one: no catalog page, never a component', () => {
