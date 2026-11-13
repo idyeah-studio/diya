@@ -494,8 +494,20 @@ function LoadingCase() {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {[10, 12, 16].map((px) => <Button key={px} id={`bl-pad-${px}`} className={`app-pad-${px}`} loading={busy}>Pay $42</Button>)}
         <Button id="bl-lead" loading={busy}>{icon}Add member</Button>
+        <Button id="bl-lead-large" size="large" loading={busy}>{icon}Add member</Button>
         <Button id="bl-lead-pad" className="app-pad-12" size="small" loading={busy}>{icon}Add</Button>
         <Button id="bl-short" size="small" loading={busy}>OK</Button>
+      </div>
+      {/* Labels of more than one part (L7), each beside a twin that has no loading prop. */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Button id="bl-multi" loading={busy}>Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
+        <Button id="bl-multi-next" variant="outline">Back</Button>
+        <Button id="bl-multi-plain">Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Button id="bl-kbd" variant="outline" loading={busy}>Search <kbd>⌘K</kbd></Button>
+        <Button id="bl-kbd-next" variant="outline">Cancel</Button>
+        <Button id="bl-kbd-plain" variant="outline">Search <kbd>⌘K</kbd></Button>
       </div>
       <Dialog title="Delete the archive?" confirmLabel="Delete every archived conversation" confirmVariant="destructive" onConfirm={() => new Promise(() => {})}
         trigger={<Button id="bl-dialog-open" variant="outline">Delete archive</Button>}>Archived conversations go for good.</Dialog>

@@ -296,11 +296,11 @@ describe('API map', () => {
     }
   })
 
-  // DOC-05: toast() is listed beside <Toast>. VIS-04 (DOC-03): the field edge's rule, the same in
-  // api.json and the README.
+  // DOC-05: toast() is listed beside <Toast>. VIS-04 (DOC-03, refined as L6): the field edge's rule,
+  // the same in api.json and the README.
   it('lists toast() on the toast item, and gives the field edge VIS-04\'s rule in api.json and the README', () => {
     expect(api.items.toast.exports.map(({ name }) => name)).toEqual(['Toast', 'toast'])
-    const rule = 'The edge needs 3:1 against the field fill and against the page behind it. In Light, use at least 3.8:1 against white so it still holds 3:1 over Glass.'
+    const rule = "The edge needs 3:1 against the field fill and against the page behind it. A color you set is used as is in every appearance, so in Light use at least 3.8:1 against white; it then still holds 3:1 over Glass. DIYA's default edge follows the muted text color, which Glass makes stronger, so it holds on its own."
     expect(api.tokens['--diya-color-field-line'].description).toBe(rule)
     expect(readFileSync(resolve(root, 'README.md'), 'utf8')).toContain(rule)
   })

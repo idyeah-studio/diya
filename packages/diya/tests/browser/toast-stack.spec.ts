@@ -190,9 +190,12 @@ for (const theme of ['light', 'glass-dark'] as const) {
 // slides). So the shift's own work is counted (no layout per frame: it's a transform), and its
 // frames are judged against the same page idle just before and after, which shows when the machine
 // itself is dropping frames.
-test('the shift holds every frame at 4x CPU (Chromium)', async ({ page }, testInfo) => {
+// L8 (motion round 2): in Light and in Glass Dark, whose backdrop blur is where paint-only jank
+// would show; style recalcs are recorded beside layouts.
+for (const [look, query] of [['light', 'theme=light'], ['glass-dark', 'theme=dark&glass=1']] as const) {
+test(`the shift holds every frame at 4x CPU (Chromium, ${look})`, async ({ page }, testInfo) => {
   test.skip(engine(testInfo) !== 'chromium' || isPhone(testInfo), 'CPU throttling is a Chromium tool')
-  await openCase(page, testInfo, 'case=stack&theme=dark&glass=1')
+  await openCase(page, testInfo, `case=stack&${query}`)
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('Performance.enable')
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 })
@@ -207,20 +210,22 @@ test('the shift holds every frame at 4x CPU (Chromium)', async ({ page }, testIn
     const tick = (now: number) => { out.push(now - last); last = now; if (now - start < ms) requestAnimationFrame(tick); else done(out.slice(1)) }
     requestAnimationFrame(tick)
   }), { ms, slide })
-  const layouts = async () => (await cdp.send('Performance.getMetrics')).metrics.find((metric) => metric.name === 'LayoutCount')!.value
+  const metric = async (name: string) => (await cdp.send('Performance.getMetrics')).metrics.find((entry) => entry.name === name)!.value
   const idleBefore = await watch(900)
-  const before = await layouts()
+  const [layoutsBefore, stylesBefore] = [await metric('LayoutCount'), await metric('RecalcStyleCount')]
   const frames = await watch(450, true)
-  const laidOut = (await layouts()) - before
+  const laidOut = (await metric('LayoutCount')) - layoutsBefore
+  const restyled = (await metric('RecalcStyleCount')) - stylesBefore
   const idleAfter = await watch(900)
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 })
   const long = (list: number[]) => list.filter((frame) => frame > (process.env.CI ? 50 : 20)).length
-  testInfo.annotations.push({ type: 'frames', description: `${frames.length} frames, longest ${Math.round(Math.max(...frames))}ms, over 20ms: ${long(frames)}; idle around it: ${long(idleBefore) + long(idleAfter)}; layouts: ${laidOut}` })
+  testInfo.annotations.push({ type: 'frames', description: `${frames.length} frames, longest ${Math.round(Math.max(...frames))}ms, over 20ms: ${long(frames)}; idle around it: ${long(idleBefore) + long(idleAfter)}; layouts: ${laidOut}; style recalcs: ${restyled}` })
   // The work: the toast leaves and the others' places are measured once; nothing lays out per frame.
   expect(laidOut).toBeLessThanOrEqual(3)
   // The frames: no more long ones than the same page shows idle, twice as long, on either side.
   expect(long(frames)).toBeLessThanOrEqual(long(idleBefore) + long(idleAfter) + (process.env.CI ? 2 : 0))
 })
+}
 
 test.describe('without the Popover API', () => {
   test('the stack keeps 1.1\'s fixed position and works inside a Dialog', async ({ page }, testInfo) => {

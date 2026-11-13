@@ -327,10 +327,25 @@
   display: inline-flex;
   flex-shrink: 0;
 }
-.diya-root :is(.diya-button, .diya-button-lead) > .diya-spinner {
+/* A label of more than one part ("Next" and an arrow, a kbd) keeps the Button's own gap, so the
+   wrapper never changes its width (L7). */
+.diya-root .diya-button-label {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+}
+.diya-root .diya-button > .diya-spinner {
   position: absolute;
   inset: 0;
   margin: auto;
+}
+/* Centered on the icon whatever their sizes: a large Button's 20px spinner over an 18px icon. */
+.diya-root .diya-button-lead > .diya-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  translate: -50% -50%;
 }
 
 .diya-root .diya-button svg {

@@ -69,7 +69,7 @@ const spread = (values: number[]) => Math.max(...values) - Math.min(...values)
 for (const dir of ['ltr', 'rtl'] as const) {
   test(`width and neighbor hold, and nothing moves, on every frame for 700ms (${dir})`, async ({ page }, testInfo) => {
     await openCase(page, testInfo, `case=loading&theme=light&dir=${dir}`)
-    const ids = [...grid, ...padded, 'bl-lead', 'bl-lead-pad', 'bl-short', 'bl-icon']
+    const ids = [...grid, ...padded, 'bl-lead', 'bl-lead-pad', 'bl-short', 'bl-icon', 'bl-multi', 'bl-kbd']
     const list = await frames(page, ids, 700)
     expect(list.length).toBeGreaterThan(5)
     for (const id of ids) {
@@ -267,4 +267,31 @@ test('no blank frame on a first load without @starting-style', async ({ page }, 
       expect(shown, `${id} at ${row.t.toFixed(0)}ms`).toBe(1)
     }
   }
+})
+
+// L7 (MOT-S78-R2-01): a label of more than one part ("Next" and an arrow, a kbd) keeps its width:
+// as wide as the same Button with no loading prop, before, during and after loading, and its
+// neighbor stays put.
+test('a label of more than one part keeps its width before, during and after loading', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const width = (id: string) => page.locator(`#${id}`).evaluate((node) => node.getBoundingClientRect().width)
+  // To a hundredth of a pixel: WebKit's rects differ in the fifth decimal through the nested flex box.
+  for (const id of ['bl-multi', 'bl-kbd']) expect(await width(id), id).toBeCloseTo(await width(`${id}-plain`), 2)
+  const list = await frames(page, ['bl-multi', 'bl-kbd'], 1000, { endAfter: 600 })
+  for (const id of ['bl-multi', 'bl-kbd']) {
+    const rows = of(list, id)
+    expect(spread(rows.map((row) => row.button.right - row.button.left)), `${id} width`).toBe(0)
+    expect(spread(rows.map((row) => row.next!)), `${id} neighbor`).toBe(0)
+    expect(rows[0].button.right - rows[0].button.left).toBeCloseTo(await width(`${id}-plain`), 2)
+  }
+})
+
+// Visual round 2: in a large Button the 20px spinner sits on the 18px leading icon's center.
+test('a large Button\'s spinner is centered on its leading icon', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const end = of(await frames(page, ['bl-lead-large'], 600), 'bl-lead-large').at(-1)!
+  const [ix, iy] = center(end.icon!)
+  const [sx, sy] = center(end.spinner!)
+  expect(Math.abs(sx - ix)).toBeLessThanOrEqual(0.25)
+  expect(Math.abs(sy - iy)).toBeLessThanOrEqual(0.25)
 })
