@@ -215,7 +215,10 @@ export default function AgendaScreen() {
 
         {open && (
           <BookingDrawer key={open.id} today={today} booking={open} bookings={bookings} onClose={() => setOpenId(undefined)}
-            onSaved={(change, title, text) => { update(open.id, change); toast({ tone: 'success', title, description: text, duration: 6000 }) }} />
+            onSaved={(change, title, text) => {
+              update(open.id, change); setOpenId(undefined)
+              toast({ tone: 'success', title, description: text, duration: 6000 })
+            }} />
         )}
         {adding && (
           <NewBooking today={today} day={day} bookings={bookings} onClose={() => setAdding(false)}

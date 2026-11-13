@@ -501,6 +501,19 @@ describe('each toast Screen raises its toast', () => {
     expect(within(screen.getByRole('region', { name: 'Notifications (F8)' })).getAllByText(title)).toHaveLength(1)
   }, 20_000)
 
+  // VIS-SITE-01: agenda's Drawer stays open after its actions in 1.1, and its toast covered Rebook.
+  it('agenda closes the booking Drawer before its toast, so the toast lands on the page', async () => {
+    const user = userEvent.setup()
+    const { raise, title } = RAISES.find((entry) => entry.id === 'agenda')!
+    render(<DiyaProvider theme="light"><AgendaScreen /></DiyaProvider>, { reactStrictMode: true })
+    await raise(user)
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' }, LONG)
+    await waitFor(() => expect(within(region).getAllByText(title)).toHaveLength(1), LONG)
+    expect(document.querySelector('dialog[open]')).toBeNull()
+    expect(region.closest('dialog')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Rebook' })).toBeNull()
+  })
+
   // SITE-FE-01: an action toast never times out, so task-list's Undo would follow the reader to every page.
   it('task-list’s Undo toast leaves with the Screen', async () => {
     const user = userEvent.setup()

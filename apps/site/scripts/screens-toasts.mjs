@@ -34,13 +34,13 @@ const REGION = { name: 'Notifications (F8)' }
 const ready = (page, name, scope = page) => scope.getByRole('button', { name, exact: typeof name === 'string' }).and(scope.locator(':not([disabled]):not([aria-disabled="true"]):not([aria-busy="true"])')).filter({ visible: true }).first()
 const modal = (page) => page.locator('dialog[open]').last()
 
-/** How to reach each screen's toast, and the title it shows. `modal`: it arrives while a Dialog or Drawer is open. */
+/** How to reach each screen's toast, and the title it shows. `modal`: it arrives while a Dialog or Drawer is open; `page`: its modal closes first. */
 export const FLOWS = {
   activity: { title: 'Audit log exported', run: async (page) => {
     await page.getByRole('tab', { name: 'Audit log' }).click()
     await ready(page, /Export CSV/).click()
   } },
-  agenda: { title: 'Booking canceled', modal: true, run: async (page) => {
+  agenda: { title: 'Booking canceled', page: true, run: async (page) => {
     await page.locator('.agenda-row[data-status="confirmed"]').first().click()
     await ready(page, 'Cancel booking', modal(page)).click()
     await ready(page, 'Cancel booking', modal(page)).click()
@@ -215,6 +215,7 @@ async function check(page, port, id, flow) {
   if (!arrival.onTop) problems.push('the toast isn’t on top at its point when it arrives')
   if (flow.modal && !arrival.modalOpen) problems.push('expected it to arrive while a modal is open')
   if (arrival.modalOpen && !arrival.insideModal) problems.push('arrived outside the open modal')
+  if (flow.page && arrival.modalOpen) problems.push('expected its modal to close first, so it lands on the page')
   if (arrival.stillInside === false) problems.push('left the modal while it was still open')
   // Settled: whatever modal there was has closed or stayed; the toast is still on top.
   await page.waitForTimeout(700)
