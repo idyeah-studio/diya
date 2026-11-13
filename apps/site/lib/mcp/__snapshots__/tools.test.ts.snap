@@ -287,7 +287,7 @@ exports[`what an agent reads, word for word > search: toggle 1`] = `
    For one line of free text: a name, an email, a URL.
    Not quite? Several lines? Text Area. A fixed set of answers? Select or Choice.
 3. Alert · \`import { Alert } from '@idyeah/diya'\`
-   For a message about the page or a task: saved, needs attention, failed. For the same message floated and temporary, call toast({ title, description, tone }) from the code that did the work.
+   For a message about the page or a task: saved, needs attention, failed. For the same message floated and temporary, call \`toast()\` from the code that did the work.
    Not quite? Something that needs a decision before going on? Dialog.
 4. Toast · \`import { Toast } from '@idyeah/diya'\`
    A temporary Alert floated above the page that dismisses itself after a while; the host unmounts the toast in \`onDismiss\`. It joins the page's one stack, with any toast() toasts, in its own provider's look. \`className\`, \`style\` and the ref reach the Alert.

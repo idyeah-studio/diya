@@ -138,7 +138,7 @@ export const guidance: Record<ItemId, Guidance> = {
     access: 'Every badge needs a label, which screen readers hear in place of the dot or number.',
   },
   alert: {
-    use: 'For a message about the page or a task: saved, needs attention, failed. For the same message floated and temporary, call toast({ title, description, tone }) from the code that did the work.',
+    use: 'For a message about the page or a task: saved, needs attention, failed. For the same message floated and temporary, call `toast()` from the code that did the work.',
     instead: 'Something that needs a decision before going on? Dialog.',
     access: 'An urgent alert is announced at once (role="alert"); others politely. The tone is said in words, not just shown in color.',
   },

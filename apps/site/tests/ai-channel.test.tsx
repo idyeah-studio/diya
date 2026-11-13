@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -188,5 +190,22 @@ describe('the AI channel in 1.2', () => {
       delete items['sample-utility']
       delete components.SampleUtility
     }
+  })
+})
+
+// VIS-SITE-03: Alert's guidance names `toast()` as code, so the call never breaks across lines.
+describe('Reference panel guidance', () => {
+  it('sets `toast()` in Alert’s guidance as code that doesn’t wrap', () => {
+    render(
+      <DiyaProvider>
+        <ReferencePanel path="/explore?area=components&component=alert" />
+      </DiyaProvider>
+    )
+    const when = within(screen.getByRole('region', { name: 'Using Alert' })).getByRole('heading', { name: 'When to use' }).parentElement!
+    expect(when.textContent).toContain('call toast() from the code that did the work.')
+    expect(when.textContent).not.toMatch(/toast\(\{|`/)
+    expect(within(when).getByText('toast()', { selector: 'code' })).toBeTruthy()
+    const css = readFileSync(join(process.cwd(), 'components/reference/reference.css'), 'utf8')
+    expect(css).toMatch(/\.item-reference-guide code \{[^}]*white-space: nowrap;/)
   })
 })
