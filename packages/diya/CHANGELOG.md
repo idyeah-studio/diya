@@ -184,8 +184,8 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   turns to `progress` at once. After 400ms the spinner takes the label's
   place: the label hides but keeps its width, so the button keeps its exact
   size and nothing moves. With an icon before the label, the spinner takes the
-  icon's place and the label stays. An icon-only button swaps its icon for the spinner. When loading
-  ends, the label fades back.
+  icon's place and the label stays. An icon-only button swaps its icon for
+  the spinner. When loading ends, the label, or the icon, fades back.
   - A loading Button looks busy, not disabled: full color and a `progress`
     cursor. Clicks, Enter and Space still do nothing; `aria-busy` and
     `aria-disabled` are unchanged.
@@ -193,8 +193,6 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
     too.
   - Under Reduce Motion the spinner breathes in place.
   - The button's text no longer includes "···".
-- **A Button's disabled dim eases in** over the fast duration, with none under
-  Reduce Motion or `motion="off"`.
 - **The Drawer's open edge is rounded like Dialog:** 22px × the corner scale,
   where it was 16px. A Drawer that fills a phone screen (440px or narrower) is
   square, so no dim shows in wedges at the screen's edge.
@@ -285,6 +283,11 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   whole stack, and each toast is a `.diya-toast` in it. Class names and DOM
   aren't covered by semver; a placement override on `.diya-toast-region`
   still applies.
+- **A Button that has been `loading` gains wrappers.** It wraps its label in
+  `span.diya-button-label`, and an icon before the label in
+  `span.diya-button-lead`, and keeps them after loading ends. A Button that
+  never loads renders as before. CSS that targets a Button's direct children
+  won't match inside the wrappers.
 - **Development warnings:** test setups that fail on `console.warn` may see
   DIYA's new "DIYA: …" warnings. Each says what to do instead.
 - **Translations typed as `DiyaMessages`** need the new keys
