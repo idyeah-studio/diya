@@ -171,7 +171,9 @@ describe('API map', () => {
     for (const [id, item] of Object.entries(api.items)) {
       for (const { name, entry } of item.exports) {
         owners.set(name, [...(owners.get(name) ?? []), id])
-        expect(api.components[name]?.entry, `${id}: ${name}`).toBe(entry)
+        // DOC-05: an item may also list a plain function that is its other way in (toast beside Toast).
+        if (/^[a-z]/.test(name)) expect(api.entries[entry].values, `${id}: ${name}`).toContain(name)
+        else expect(api.components[name]?.entry, `${id}: ${name}`).toBe(entry)
       }
     }
     for (const [entry, file] of Object.entries(entryFiles)) {
@@ -198,7 +200,8 @@ describe('API map', () => {
 
   it('names a ReactNode prop in every slot, and lists every ReactNode prop as a slot', () => {
     for (const [id, item] of Object.entries(api.items)) {
-      const [primary, ...variants] = item.exports.map(({ name }) => name)
+      // Components only: a function export (toast, DOC-05) has no props.
+      const [primary, ...variants] = item.exports.map(({ name }) => name).filter((name) => !/^[a-z]/.test(name))
       for (const [path, slot] of Object.entries(item.slots)) {
         const type = pathType(primary, path)
         expect(type, `${id}.slots.${path}`).toBeDefined()
@@ -291,6 +294,15 @@ describe('API map', () => {
       const reached = styleTokens(css, files, publicTokens, item.kind === 'provider')
       expect(reached.filter(name => !item.tokens.includes(name)), id).toEqual([])
     }
+  })
+
+  // DOC-05: toast() is listed beside <Toast>. VIS-04 (DOC-03): the field edge's rule, the same in
+  // api.json and the README.
+  it('lists toast() on the toast item, and gives the field edge VIS-04\'s rule in api.json and the README', () => {
+    expect(api.items.toast.exports.map(({ name }) => name)).toEqual(['Toast', 'toast'])
+    const rule = 'The edge needs 3:1 against the field fill and against the page behind it. In Light, use at least 3.8:1 against white so it still holds 3:1 over Glass.'
+    expect(api.tokens['--diya-color-field-line'].description).toBe(rule)
+    expect(readFileSync(resolve(root, 'README.md'), 'utf8')).toContain(rule)
   })
 
   it('reads token defaults from the stylesheet and the provider', () => {

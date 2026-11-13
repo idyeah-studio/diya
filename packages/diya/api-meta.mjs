@@ -414,7 +414,8 @@ export const items = {
   },
   toast: {
     kind: 'component', title: 'Toast', ...v1,
-    exports: ['Toast'],
+    // toast() is the same item's other way in (DOC-05, api.md §5).
+    exports: ['Toast', 'toast'],
     slots: {},
     children: { allowed: true, accepts: [], content: ['text'] },
     state: [],
@@ -729,7 +730,7 @@ const theming = {
     description: 'The fill of every field. Under Glass it is laid at the glass strength, so fields stay see-through.' },
   '--diya-color-field-line': { group: 'fields', kind: 'color', pairsWith: ['--diya-color-field', '--diya-color-surface'], ...v1_2,
     defaults: { light: 'color-mix(in srgb, var(--diya-color-muted) 70%, transparent)', dark: 'color-mix(in srgb, var(--diya-color-muted) 70%, transparent)' },
-    description: 'The edge of every field. Needs 3:1 against the field and the page. An invalid field always uses --diya-color-error.' },
+    description: 'The edge needs 3:1 against the field fill and against the page behind it. In Light, use at least 3.8:1 against white so it still holds 3:1 over Glass.' },
   '--diya-height-control-small': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-medium', '--diya-height-control-large'], ...v1_2 },
   '--diya-height-control-medium': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-small', '--diya-height-control-large'], ...v1_2 },
   '--diya-height-control-large': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-small', '--diya-height-control-medium'], ...v1_2 },

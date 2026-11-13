@@ -157,7 +157,7 @@ const onServer = () => typeof window === 'undefined'
 // On the server, ids only: nothing is stored, so one visitor's toast never reaches another.
 let serverCount = 0
 
-/** Shows a toast in the app's one stack and returns its id. Call it from client code, such as event handlers, effects and data code. On the server it does nothing. */
+/** Shows a toast in the app's one stack and returns its id. Call it from client code, such as event handlers, effects and data code. In an effect, pass an `id`, so React's development double run updates the toast instead of adding a second. On the server it does nothing. */
 function show(options: ToastOptions): string {
   if (onServer()) {
     if (process.env.NODE_ENV !== 'production') warnOnce('DIYA: toast() does nothing on the server. Return a result and call toast() in the client.')
@@ -190,7 +190,7 @@ function show(options: ToastOptions): string {
   return id
 }
 
-/** Closes the toast with this id, or every toast, shown and waiting, when called without one. */
+/** Closes the toast with this id, or every toast `toast()` showed, shown and waiting, when called without one. A `<Toast>` closes when you stop rendering it. */
 function dismiss(id?: string) {
   if (onServer()) return
   const state = store()
@@ -201,11 +201,11 @@ function dismiss(id?: string) {
   changed(state)
 }
 
-/** Shows a toast in the app's one stack and returns its id. Call it from client code, such as event handlers, effects and data code. On the server it does nothing. */
+/** Shows a toast in the app's one stack and returns its id. Call it from client code, such as event handlers, effects and data code. In an effect, pass an `id`, so React's development double run updates the toast instead of adding a second. On the server it does nothing. */
 export const toast: {
-  /** Shows a toast in the app's one stack and returns its id. Call it from client code, such as event handlers, effects and data code. On the server it does nothing. */
+  /** Shows a toast in the app's one stack and returns its id. Call it from client code, such as event handlers, effects and data code. In an effect, pass an `id`, so React's development double run updates the toast instead of adding a second. On the server it does nothing. */
   (options: ToastOptions): string
-  /** Closes the toast with this id, or every toast, shown and waiting, when called without one. */
+  /** Closes the toast with this id, or every toast `toast()` showed, shown and waiting, when called without one. A `<Toast>` closes when you stop rendering it. */
   dismiss(id?: string): void
 } = Object.assign(show, { dismiss })
 
