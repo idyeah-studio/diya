@@ -1816,6 +1816,12 @@
 .diya-root .diya-combobox .diya-combobox-control input:focus-visible { appearance:none; border:0; border-radius:0; outline:none; box-shadow:none; background:transparent; padding:0; height:24px; font-size:max(var(--diya-internal-field-min, 0px), var(--diya-text-body)); }
 .diya-root .diya-combobox[data-size='small'] .diya-combobox-control input { height:18px; font-size:max(var(--diya-internal-field-min, 0px), var(--diya-text-caption)); }
 .diya-root .diya-combobox[data-size='large'] .diya-combobox-control input { height:30px; font-size:var(--diya-text-large); }
+/* The control's height comes from the height tokens, like every other field's: its padding gives
+   way when a token is smaller than the default (Compact), so the 24px input (30px at Large) and the
+   toggle don't hold it taller. At the default heights the padding is 1.1.1's own. */
+.diya-root .diya-combobox-control { padding-block: min(6px, max(0px, calc((var(--diya-height-control-medium, 40px) - 26px) / 2))); }
+.diya-root .diya-combobox[data-size='small'] .diya-combobox-control { padding-block: min(3px, max(0px, calc((var(--diya-height-control-small, 32px) - 26px) / 2))); }
+.diya-root .diya-combobox[data-size='large'] .diya-combobox-control { padding-block: min(6px, max(0px, calc((var(--diya-height-control-large, 48px) - 32px) / 2))); }
 
 
 /* date-picker/DatePicker.css: portable component rules. */

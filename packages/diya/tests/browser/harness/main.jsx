@@ -494,7 +494,28 @@ function LoadingCase() {
   )
 }
 
-const cases = { spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+// Control heights (VIS-SITE2-01): a Combobox (one with chips that wrap) beside a Text Input at
+// each size, under the height tokens given as h=medium,small,large (none: the defaults).
+function HeightsCase() {
+  const [medium, small, large] = (query.get('h') || '').split(',')
+  const style = medium ? { '--diya-height-control-medium': `${medium}px`, '--diya-height-control-small': `${small}px`, '--diya-height-control-large': `${large}px` } : undefined
+  const options = [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }, { value: 'c', label: 'Charlie' }, { value: 'd', label: 'Delta' }]
+  return (
+    <DiyaProvider theme={theme} style={style}>
+      <div style={{ display: 'grid', gap: 24, padding: 24, width: 360 }}>
+        {['small', 'medium', 'large'].map((size) => (
+          <div key={size} style={{ display: 'grid', gap: 12 }}>
+            <Combobox id={`hc-${size}`} size={size} label={`Owner ${size}`} options={options} value={null} onValueChange={() => {}} />
+            <TextInput id={`ht-${size}`} size={size} label={`Name ${size}`} value="" onValueChange={() => {}} />
+          </div>
+        ))}
+        <div style={{ width: 220 }}><Combobox id="hc-chips" multiple label="Teams" options={options} value={['a', 'b', 'c', 'd']} onValueChange={() => {}} /></div>
+      </div>
+    </DiyaProvider>
+  )
+}
+
+const cases = { heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; }'
