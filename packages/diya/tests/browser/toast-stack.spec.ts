@@ -185,26 +185,41 @@ for (const theme of ['light', 'glass-dark'] as const) {
   })
 }
 
+// K10: under 10 burners this read the machine's frame clock, not the shift. A 450ms window with
+// nothing moving showed frames over 20ms as often as the slide did (2 of 80 idle windows, 0 of 40
+// slides). So the shift's own work is counted (no layout per frame: it's a transform), and its
+// frames are judged against the same page idle just before and after, which shows when the machine
+// itself is dropping frames.
 test('the shift holds every frame at 4x CPU (Chromium)', async ({ page }, testInfo) => {
   test.skip(engine(testInfo) !== 'chromium' || isPhone(testInfo), 'CPU throttling is a Chromium tool')
   await openCase(page, testInfo, 'case=stack&theme=dark&glass=1')
   const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Performance.enable')
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 })
   for (const name of ['Save', 'Copy link', 'Export']) await page.getByRole('button', { name, exact: true }).click()
   await expect.poll(() => titles(page)).toHaveLength(3)
   await page.waitForTimeout(600)
-  const frames = await page.evaluate(() => new Promise<number[]>((done) => {
+  const watch = (ms: number, slide = false) => page.evaluate(({ ms, slide }) => new Promise<number[]>((done) => {
     const out: number[] = []
     let last = performance.now()
     const start = last
-    document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')[1].querySelector<HTMLButtonElement>('.diya-alert-dismiss')!.click()
-    const tick = (now: number) => { out.push(now - last); last = now; if (now - start < 450) requestAnimationFrame(tick); else done(out.slice(1)) }
+    if (slide) document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')[1].querySelector<HTMLButtonElement>('.diya-alert-dismiss')!.click()
+    const tick = (now: number) => { out.push(now - last); last = now; if (now - start < ms) requestAnimationFrame(tick); else done(out.slice(1)) }
     requestAnimationFrame(tick)
-  }))
+  }), { ms, slide })
+  const layouts = async () => (await cdp.send('Performance.getMetrics')).metrics.find((metric) => metric.name === 'LayoutCount')!.value
+  const idleBefore = await watch(900)
+  const before = await layouts()
+  const frames = await watch(450, true)
+  const laidOut = (await layouts()) - before
+  const idleAfter = await watch(900)
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 })
-  testInfo.annotations.push({ type: 'frames', description: `${frames.length} frames, longest ${Math.round(Math.max(...frames))}ms, over 20ms: ${frames.filter((frame) => frame > 20).length}` })
-  // On a quiet machine this is 0 frames over 20ms; a busy CI runner gets some slack.
-  expect(frames.filter((frame) => frame > (process.env.CI ? 50 : 20)).length).toBeLessThanOrEqual(process.env.CI ? 2 : 0)
+  const long = (list: number[]) => list.filter((frame) => frame > (process.env.CI ? 50 : 20)).length
+  testInfo.annotations.push({ type: 'frames', description: `${frames.length} frames, longest ${Math.round(Math.max(...frames))}ms, over 20ms: ${long(frames)}; idle around it: ${long(idleBefore) + long(idleAfter)}; layouts: ${laidOut}` })
+  // The work: the toast leaves and the others' places are measured once; nothing lays out per frame.
+  expect(laidOut).toBeLessThanOrEqual(3)
+  // The frames: no more long ones than the same page shows idle, twice as long, on either side.
+  expect(long(frames)).toBeLessThanOrEqual(long(idleBefore) + long(idleAfter) + (process.env.CI ? 2 : 0))
 })
 
 test.describe('without the Popover API', () => {
