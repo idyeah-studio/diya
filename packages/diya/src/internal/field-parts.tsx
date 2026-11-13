@@ -107,8 +107,10 @@ function focusWithin(node: HTMLElement) {
  * (an iframe), it says it again each time focus arrives there with the error set: `arrived`
  * counts arrivals. With no provider's stack, it says nothing.
  */
-export function useErrorAnnouncement(label: string, shown: string | undefined, wrapper: RefObject<HTMLElement | null>, arrived = 0) {
+export function useErrorAnnouncement(label: string | (() => string), shown: string | undefined, wrapper: RefObject<HTMLElement | null>, arrived = 0) {
   const t = useDiyaMessages('field', fieldMessages)
+  // A label that isn't a string (Checkbox's, which may hold links) is read as text when said.
+  const name = () => (typeof label === 'function' ? label() : label)
   const said = useRef(shown)
   // The name of this field's words in the region, so they go when the error does (G10).
   const [key] = useState(() => `field:${++spoken}`)
@@ -119,12 +121,12 @@ export function useErrorAnnouncement(label: string, shown: string | undefined, w
     // Cleared or changed: the old words leave the region at once, as a toast's do when it goes.
     if (before && shown !== before) forgetPolite(key)
     if (!node || !shown || shown === before || focusWithin(node)) return
-    speak(node, t.errorAnnouncement(label, shown), key)
+    speak(node, t.errorAnnouncement(name(), shown), key)
   }, [shown])
   useEffect(() => {
     const node = wrapper.current
     if (!arrived || !node || !said.current) return
-    speak(node, t.errorAnnouncement(label, said.current), key)
+    speak(node, t.errorAnnouncement(name(), said.current), key)
   }, [arrived])
   useEffect(() => () => forgetPolite(key), [])
 }

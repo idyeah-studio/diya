@@ -8,6 +8,11 @@ import { renderToString } from 'react-dom/server'
 import * as lib from '../dist/index.js'
 import { FIXED_DATE, fieldCases, stepProps, type Fixture } from './fixtures/field-markup-cases.js'
 
+// The one markup change 1.2 makes to these fields, named by the build plan (frontend.md step 7,
+// MOT-1.2-05): a mixed Select all carries data-indeterminate="true", so its dash is in the server
+// HTML and doesn't grow in at hydration. Everything else must equal 1.1.1 byte for byte.
+const changed1_2 = (html: string) => html.replace(/ data-indeterminate="true"/g, '')
+
 const writeTo = process.env.DIYA_WRITE_FIXTURES
 const fixture: Fixture = writeTo ? {} : JSON.parse(readFileSync(resolve(process.cwd(), 'tests/fixtures/field-markup-1.1.1.json'), 'utf8'))
 const captured: Record<string, string> = {}
@@ -24,7 +29,7 @@ describe(`field server markup on React ${version}`, () => {
       for (const step of field.steps.filter(step => !step.act)) {
         const html = renderToString(createElement(lib.DiyaProvider, { theme: 'light' }, field.render(lib, stepProps(step))))
         if (writeTo) captured[`${field.name}/${step.name}`] = html
-        else expect(html, `${field.name} › ${step.name}`).toBe(fixture[version].server[`${field.name}/${step.name}`])
+        else expect(changed1_2(html), `${field.name} › ${step.name}`).toBe(fixture[version].server[`${field.name}/${step.name}`])
       }
     })
   }

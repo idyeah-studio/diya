@@ -1461,7 +1461,7 @@
   cursor: pointer;
 }
 .diya-root .diya-choice-option > span { min-width:0; overflow-wrap:anywhere; }
-.diya-root .diya-choice-option input {
+.diya-root :is(.diya-choice-option input, .diya-checkbox) {
   appearance: none;
   -webkit-appearance: none;
   width: var(--diya-internal-choice-control);
@@ -1480,7 +1480,7 @@
 .diya-root .diya-choice-option input[type='radio'] {
   border-radius: 50%;
 }
-.diya-root .diya-choice-option input:checked {
+.diya-root :is(.diya-choice-option input, .diya-checkbox):checked {
   background: var(--diya-color-accent);
   border-color: var(--diya-color-accent);
 }
@@ -1491,7 +1491,7 @@
   border-radius: 50%;
   background: var(--diya-color-accent-text);
 }
-.diya-root .diya-choice-option input[type='checkbox']:checked::before {
+.diya-root :is(.diya-choice-option input[type='checkbox'], .diya-checkbox):checked::before {
   content: '';
   width: 4px;
   height: 8px;
@@ -1529,17 +1529,17 @@
 /* A disabled Choice fades as one field, legend and message included. */
 .diya-root .diya-choice:disabled { opacity: 0.45; }
 .diya-root .diya-choice:disabled .diya-choice-option[data-disabled='true'] { opacity: 1; }
-.diya-root .diya-choice-option input:disabled {
+.diya-root :is(.diya-choice-option input, .diya-checkbox):disabled {
   cursor: not-allowed;
 }
 .diya-root .diya-choice-option:not([data-disabled='true']):hover input:not(:checked) {
   border-color: var(--diya-color-text);
 }
 @media (forced-colors: active) {
-  .diya-root .diya-choice-option input {
+  .diya-root :is(.diya-choice-option input, .diya-checkbox) {
     appearance: auto;
   }
-  .diya-root .diya-choice-option input::before {
+  .diya-root :is(.diya-choice-option input, .diya-checkbox)::before {
     display: none;
   }
   .diya-root .diya-choice-option[data-disabled='true'] {
@@ -1547,9 +1547,52 @@
     color: GrayText;
   }
 }
-.diya-root .diya-choice input[type='checkbox']:indeterminate { background: var(--diya-color-accent); border-color: var(--diya-color-accent); }
-.diya-root .diya-choice input[type='checkbox']:indeterminate::before { content: ''; width: 8px; height: 2px; border: 0; transform: none; background: var(--diya-color-accent-text); }
-@media (forced-colors: active) { .diya-root .diya-choice input[type='checkbox']:indeterminate::before { display: none; } }
+/* Mixed: keyed off data-indeterminate too, which is in the server HTML, so the mark is already
+   showing when hydration sets the property and nothing grows in on page load (MOT-1.2-05). */
+.diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true']) { background: var(--diya-color-accent); border-color: var(--diya-color-accent); }
+.diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true'])::before { content: ''; width: 8px; height: 2px; border: 0; transform: none; background: var(--diya-color-accent-text); }
+@media (forced-colors: active) { .diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true'])::before { display: none; } }
+
+/* Checkbox (1.2): a lone box, Choice's box value for value (the shared selectors above), 12px
+   from a label in the reader's voice; help and error under the label, 4px below. */
+.diya-root .diya-checkbox-field {
+  --diya-internal-choice-control: 18px;
+  --diya-internal-choice-font: var(--diya-text-body);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--diya-color-text);
+}
+.diya-root .diya-checkbox-field > div { min-width: 0; overflow-wrap: anywhere; }
+.diya-root .diya-checkbox-field[data-size='small'] {
+  --diya-internal-choice-control: 16px;
+  --diya-internal-choice-font: var(--diya-text-caption);
+}
+.diya-root .diya-checkbox-field[data-size='large'] {
+  --diya-internal-choice-control: 22px;
+  --diya-internal-choice-font: var(--diya-text-large);
+}
+.diya-root .diya-checkbox-label {
+  display: block;
+  font-size: var(--diya-internal-choice-font);
+  line-height: 20px;
+  cursor: pointer;
+}
+.diya-root .diya-checkbox-field[data-size='large'] .diya-checkbox-label { line-height: 24px; }
+.diya-root .diya-checkbox-field .diya-text-field-description { margin-top: 4px; }
+.diya-root .diya-checkbox-field[data-disabled='true'] { opacity: 0.45; }
+.diya-root .diya-checkbox-field[data-disabled='true'] .diya-checkbox-label { cursor: not-allowed; }
+.diya-root .diya-checkbox-field:not([data-disabled='true']):hover .diya-checkbox:not(:checked, [data-indeterminate='true']) {
+  border-color: var(--diya-color-text);
+}
+@media (pointer: coarse) {
+  .diya-root .diya-checkbox-field { min-height: 44px; }
+}
+@media (forced-colors: active) {
+  .diya-root .diya-checkbox-field[data-disabled='true'] { opacity: 1; color: GrayText; }
+}
 
 
 /* NewAtoms.css: portable component rules. */
@@ -2481,6 +2524,7 @@
 .diya-root .diya-field[data-invalid='true'] > .diya-text-field-description,
 .diya-root .diya-select-field[data-invalid='true'] .diya-text-field-description,
 .diya-root .diya-choice[aria-invalid='true'] > .diya-text-field-description,
+.diya-root .diya-checkbox-field[data-invalid='true'] .diya-text-field-description,
 .diya-root .diya-combobox[data-invalid='true'] .diya-field-help,
 .diya-root .diya-date-field[data-invalid='true'] .diya-field-help,
 .diya-root .diya-workflow-error {
@@ -2493,7 +2537,8 @@
 .diya-root .diya-combobox[data-invalid='true'] .diya-combobox-control,
 .diya-root .diya-date-field[data-invalid='true'] .diya-date-trigger,
 .diya-root .diya-switch[aria-invalid='true'],
-.diya-root .diya-choice[aria-invalid='true'] .diya-choice-option input:not(:checked) {
+.diya-root .diya-choice[aria-invalid='true'] .diya-choice-option input:not(:checked),
+.diya-root .diya-checkbox-field[data-invalid='true'] .diya-checkbox:not(:checked) {
   border-color: var(--diya-color-error);
 }
 
@@ -3680,12 +3725,12 @@
 /* Choice: the mark is always there, hidden, and grows in when checked. A transition, not a
    keyframe, so nothing plays on page load or when hidden content is shown again. Unchecking
    is instant. */
-.diya-root .diya-choice-option input {
+.diya-root :is(.diya-choice-option input, .diya-checkbox) {
   transition-property: background-color, border-color;
   transition-duration: var(--diya-internal-duration-fast);
   transition-timing-function: var(--diya-ease-move);
 }
-.diya-root .diya-choice-option input::before {
+.diya-root :is(.diya-choice-option input, .diya-checkbox)::before {
   content: '';
   opacity: 0;
   scale: calc(1 - 0.4 * var(--diya-internal-motion-travel));
@@ -3699,14 +3744,14 @@
   border-radius: 50%;
   background: var(--diya-color-accent-text);
 }
-.diya-root .diya-choice-option input[type='checkbox']::before {
+.diya-root :is(.diya-choice-option input[type='checkbox'], .diya-checkbox)::before {
   width: 4px;
   height: 8px;
   border: solid var(--diya-color-accent-text);
   border-width: 0 1.5px 1.5px 0;
   transform: translateY(-1px) rotate(45deg);
 }
-.diya-root .diya-choice-option input:is(:checked, :indeterminate)::before {
+.diya-root :is(.diya-choice-option input, .diya-checkbox):is(:checked, :indeterminate, [data-indeterminate='true'])::before {
   opacity: 1;
   scale: 1;
   transition-duration: var(--diya-internal-duration-fast);

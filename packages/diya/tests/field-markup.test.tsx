@@ -9,6 +9,11 @@ import { createElement, version } from 'react'
 import * as lib from '../dist/index.js'
 import { FIXED_DATE, fieldCases, stepProps, type Fixture } from './fixtures/field-markup-cases.js'
 
+// The one markup change 1.2 makes to these fields, named by the build plan (frontend.md step 7,
+// MOT-1.2-05): a mixed Select all carries data-indeterminate="true", so its dash is in the server
+// HTML and doesn't grow in at hydration. Everything else must equal 1.1.1 byte for byte.
+const changed1_2 = (html: string) => html.replace(/ data-indeterminate="true"/g, '')
+
 const writeTo = process.env.DIYA_WRITE_FIXTURES
 const fixture: Fixture = writeTo ? {} : JSON.parse(readFileSync(resolve(process.cwd(), 'tests/fixtures/field-markup-1.1.1.json'), 'utf8'))
 const captured: Record<string, string> = {}
@@ -46,7 +51,7 @@ describe(`field markup on React ${version}`, () => {
       const steps = walk(field)
       for (const [step, html] of Object.entries(steps)) {
         if (writeTo) captured[`${field.name}/${step}`] = html
-        else expect(html, `${field.name} › ${step}`).toBe(fixture[version].client[`${field.name}/${step}`])
+        else expect(changed1_2(html), `${field.name} › ${step}`).toBe(fixture[version].client[`${field.name}/${step}`])
       }
     })
   }

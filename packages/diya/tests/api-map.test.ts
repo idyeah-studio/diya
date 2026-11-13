@@ -185,8 +185,8 @@ describe('API map', () => {
         expect(owners.get(name), `${name} needs exactly one item`).toHaveLength(1)
       }
     }
-    // 47 with Field (1.2, api.md §2).
-    expect(Object.keys(api.items)).toHaveLength(47)
+    // 47 with Field (1.2, api.md §2), 48 with Checkbox (api.md §3).
+    expect(Object.keys(api.items)).toHaveLength(48)
     expect(api.items['data-viz'].exports.map(({ name }) => name)).toEqual(['DataViz', 'Chart'])
     expect(api.items['data-viz'].requires.peers).toEqual(['echarts'])
     // Ids are the first export's name in kebab-case.

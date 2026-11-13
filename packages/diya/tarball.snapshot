@@ -49,6 +49,8 @@ dist/calendar/month.d.ts
 dist/calendar/month.js
 dist/card/Card.d.ts
 dist/card/Card.js
+dist/checkbox/Checkbox.d.ts
+dist/checkbox/Checkbox.js
 dist/choice/Choice.d.ts
 dist/choice/Choice.js
 dist/choice/messages.d.ts

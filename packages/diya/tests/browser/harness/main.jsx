@@ -2,7 +2,8 @@
 // them in Chromium, WebKit and Firefox. Query: theme, glass, motion, scale (duration scale).
 import { useEffect, useRef, useState, version } from 'react'
 import { createPortal, flushSync } from 'react-dom'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
 import '@idyeah/diya/styles.css'
 import * as diya from '@idyeah/diya'
 import {
@@ -417,15 +418,48 @@ function ProvidersCase() {
   )
 }
 
-const cases = { providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+// Checkbox (1.2) beside Choice, whose box it shares: unchecked and checked boxes of each, a mixed
+// Checkbox and a mixed Select all (present from the first paint), a label with a link, and a
+// form whose submissions are counted.
+function CheckboxCase() {
+  const [sent, setSent] = useState(0)
+  const options = [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }, { value: 'c', label: 'Charlie' }]
+  return (
+    <form id="cb-form" onSubmit={(event) => { event.preventDefault(); setSent((count) => count + 1) }} style={{ display: 'grid', gap: 24, padding: 24, width: 420 }}>
+      <diya.Choice label="Teams" multiple selectAll options={options} defaultValue={['b']} />
+      <diya.Choice label="One" multiple options={[{ value: 'x', label: 'Unchecked option' }, { value: 'y', label: 'Checked option' }]} defaultValue={['y']} />
+      <diya.Checkbox id="cb-off" label="Unchecked box" />
+      <diya.Checkbox id="cb-on" label="Checked box" defaultChecked />
+      <diya.Checkbox id="cb-mixed" label="All 3 projects" indeterminate />
+      <diya.Checkbox id="cb-terms" name="terms" label={<>I agree to the <diya.TextLink href="#terms" inline>Terms</diya.TextLink></>} />
+      <Button type="submit">Create account</Button>
+      <output id="cb-sent">{sent}</output>
+    </form>
+  )
+}
+
+const cases = { checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; }'
 document.head.append(style)
 document.documentElement.dataset.react = version
-createRoot(document.getElementById('root')).render(
-  which === 'theme' || (which === 'tokens' && query.get('outer') === '1')
-    ? <Case />
-    : <DiyaProvider theme={theme} glass={glass} motion={motion} style={scale === null ? undefined : { '--diya-duration-scale': scale }}><Case /></DiyaProvider>,
-)
-requestAnimationFrame(() => document.documentElement.setAttribute('data-ready', ''))
+const app = which === 'theme' || (which === 'tokens' && query.get('outer') === '1')
+  ? <Case />
+  : <DiyaProvider theme={theme} glass={glass} motion={motion} style={scale === null ? undefined : { '--diya-duration-scale': scale }}><Case /></DiyaProvider>
+if (query.get('ssr') === '1') {
+  // As a server-rendered app arrives: the server's HTML paints first, then React hydrates it two
+  // frames later (data-hydrated marks when).
+  const root = document.getElementById('root')
+  root.innerHTML = renderToString(app)
+  requestAnimationFrame(() => {
+    document.documentElement.setAttribute('data-ready', '')
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      hydrateRoot(root, app)
+      requestAnimationFrame(() => document.documentElement.setAttribute('data-hydrated', ''))
+    }))
+  })
+} else {
+  createRoot(document.getElementById('root')).render(app)
+  requestAnimationFrame(() => document.documentElement.setAttribute('data-ready', ''))
+}

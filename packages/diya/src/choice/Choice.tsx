@@ -152,6 +152,9 @@ export const Choice = forwardRef<HTMLInputElement, ChoiceProps>(function Choice(
         {multiple && props.selectAll && <label className="diya-choice-option">
           <input type="checkbox" aria-label={t.selectAll} disabled={disabled || !enabled.length}
             ref={node => { if (node) node.indeterminate = someChosen && !allChosen }}
+            // The mixed look keys off this attribute, in the server HTML, so it doesn't grow in when
+            // hydration sets the property (MOT-1.2-05).
+            data-indeterminate={someChosen && !allChosen ? 'true' : undefined}
             checked={allChosen}
             onChange={event => toggleAll(event.target.checked)} />
           <span className="diya-choice-label">{t.selectAll}</span>

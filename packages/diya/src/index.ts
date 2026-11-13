@@ -20,6 +20,7 @@ export { Calendar, type CalendarProps, type CalendarSingleProps, type CalendarRa
 export { Combobox, type ComboboxProps, type ComboboxSingleProps, type ComboboxMultipleProps, type ComboboxOption } from './combobox/Combobox.js'
 export { Choice, type ChoiceProps, type ChoiceSingleProps, type ChoiceMultipleProps, type ChoiceOption } from './choice/Choice.js'
 export { Switch, type SwitchProps } from './switch/Switch.js'
+export { Checkbox, type CheckboxProps } from './checkbox/Checkbox.js'
 export { Slider, type SliderProps, type SliderSingleProps, type SliderRangeProps } from './slider/Slider.js'
 export { Search, type SearchProps } from './search/Search.js'
 export { TextLink, type TextLinkProps } from './link/TextLink.js'

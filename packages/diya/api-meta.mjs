@@ -85,6 +85,16 @@ export const items = {
       '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
     messages: 'field',
   },
+  checkbox: {
+    kind: 'component', title: 'Checkbox', ...stable1_2,
+    exports: ['Checkbox'],
+    slots: { label: { accepts: ['text-link'], content: ['text'] } },
+    children: none,
+    state: [{ value: 'checked', onChange: 'onCheckedChange', default: 'defaultChecked' }],
+    tokens: ['--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-focus', '--diya-color-muted', '--diya-color-text',
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-enter', '--diya-ease-move'],
+    messages: null,
+  },
   'text-input': {
     kind: 'component', title: 'Text Input', ...v1,
     exports: ['TextInput'],

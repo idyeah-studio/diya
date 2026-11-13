@@ -130,8 +130,10 @@ describe('Switch and Choice', () => {
   })
 
   it('keeps the Choice mark always present, grown in by a transition, never a keyframe', () => {
-    expect(css).toMatch(/\.diya-choice-option input::before \{\s*content: '';\s*opacity: 0;/)
-    expect(css).toMatch(/\.diya-choice-option input:is\(:checked, :indeterminate\)::before \{\s*opacity: 1;\s*scale: 1;\s*transition-duration: var\(--diya-internal-duration-fast\);/)
+    // Checkbox shares Choice's box as one selector (1.2, frontend.md step 7), and the mixed state
+    // also keys off data-indeterminate (MOT-1.2-05).
+    expect(css).toMatch(/:is\(\.diya-choice-option input, \.diya-checkbox\)::before \{\s*content: '';\s*opacity: 0;/)
+    expect(css).toMatch(/:is\(\.diya-choice-option input, \.diya-checkbox\):is\(:checked, :indeterminate, \[data-indeterminate='true'\]\)::before \{\s*opacity: 1;\s*scale: 1;\s*transition-duration: var\(--diya-internal-duration-fast\);/)
     // No animation hangs off a checked, indeterminate or selected state anywhere.
     const stateful = [...css.matchAll(/([^{}]*:(?:checked|indeterminate)[^{}]*)\{([^}]*)\}/g)]
     expect(stateful.length).toBeGreaterThan(5)
