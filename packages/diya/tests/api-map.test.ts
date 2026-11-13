@@ -305,6 +305,12 @@ describe('API map', () => {
     expect(readFileSync(resolve(root, 'README.md'), 'utf8')).toContain(rule)
   })
 
+  // L1 read whether `loading` was given, which dropped its default from api.json (and the site's
+  // props table). It's documented again.
+  it('documents Button loading\'s default, false', () => {
+    expect(api.components.Button.props.loading).toMatchObject({ default: false, type: 'boolean' })
+  })
+
   it('reads token defaults from the stylesheet and the provider', () => {
     expect(api.tokens['--diya-color-accent']).toMatchObject({ group: 'actions', kind: 'color', pairsWith: ['--diya-color-accent-text'], setBy: 'DiyaProvider.brandColor', defaults: { light: '#262626', dark: '#e8e8e8' } })
     expect(api.tokens['--diya-color-accent-text'].defaults).toEqual({ light: '#fafafa', dark: '#1c1c1c' })

@@ -54,9 +54,9 @@ function isLeadingIcon(node: ReactNode) {
 }
 
 /** A native button in DIYA's styles, or a link that looks like one with `href` or `asChild`; other button attributes pass through, and `type` defaults to 'button'. */
-export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(function Button({ variant = 'solid', size = 'medium', shape = 'pill', iconOnly = false, loading: loadingProp, disabled, children, className, type = 'button', href, target, rel, download, asChild = false, ...props }, ref) {
+export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(function Button(buttonProps, ref) {
+  const { variant = 'solid', size = 'medium', shape = 'pill', iconOnly = false, loading = false, disabled, children, className, type = 'button', href, target, rel, download, asChild = false, ...props } = buttonProps
   const Link = useDiyaLinkComponent()
-  const loading = !!loadingProp
   const inactive = !!disabled || loading
   // The label (or icon) fades back when loading ends only if the beat came and hid it: the
   // spinner's arrival (an animation) marks the beat. A load that ends sooner changes nothing (L2).
@@ -83,7 +83,7 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
   // it first loads.
   const [loaded, setLoaded] = useState(loading)
   if (loading && !loaded) setLoaded(true)
-  const wrapped = loadingProp !== undefined || loaded
+  const wrapped = buttonProps.loading !== undefined || loaded
   const spinner = loading && <span className="diya-spinner" data-size={size === 'large' ? 'medium' : 'small'} aria-hidden="true">{renderSpinnerRing(size === 'large' ? 'medium' : 'small')}</span>
   const content = (inner: ReactNode) => {
     if (iconOnly) return <>{spinner}{inner}</>
