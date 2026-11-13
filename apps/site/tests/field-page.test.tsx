@@ -50,7 +50,7 @@ describe('the Field page', () => {
       roles: {},
       note: 'The control inside is yours; Field draws only its frame.',
     })
-    expect(guidance.field.instead).toContain('Use its own label, helperText and error.')
+    expect(guidance.field.instead).toContain('Use its own `label`, `helperText` and `error`.')
     expect(itemReference('field')).toMatchObject({ exportName: 'Field', importFrom: '@idyeah/diya', kind: 'component', since: '1.2.0' })
   })
 

@@ -67,7 +67,7 @@ Also takes native \`<input>\` attributes, a ref, \`className\` and \`style\`.
 - Controlled: \`checked\` with \`onCheckedChange\`; uncontrolled: \`defaultChecked\`.
 
 ## Accessibility
-role="switch" with its state announced as on or off. Space toggles it.
+\`role="switch"\` with its state announced as on or off. Space toggles it.
 
 ## Complete file (\`SwitchExample.tsx\`)
 \`\`\`tsx
