@@ -7,16 +7,17 @@ import { homedir, platform, tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { expect, test, type Browser, type Page } from '@playwright/test'
 import { isPhone, isReact18, openCase } from './helpers'
+import { playwrightCache } from './playwright-cache'
 
 // Screenshots wait for the main thread, so only a recording sees a page that is busy. The ffmpeg
 // that Playwright installs with its browsers (it makes the recordings) cuts it into PNG frames,
 // found where `playwright install` puts it; the browser itself reads the PNGs. No Playwright
 // internals (K8).
 function ffmpeg() {
-  const env = process.env.PLAYWRIGHT_BROWSERS_PATH
-  const cache = env === '0'
+  const found = playwrightCache(process.env, platform(), homedir())
+  const cache = found === '0'
     ? join(dirname(createRequire(createRequire(realpathSync(createRequire(import.meta.url).resolve('@playwright/test'))).resolve('playwright')).resolve('playwright-core/package.json')), '.local-browsers')
-    : env || (platform() === 'darwin' ? join(homedir(), 'Library', 'Caches', 'ms-playwright') : platform() === 'win32' ? join(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), 'ms-playwright') : join(homedir(), '.cache', 'ms-playwright'))
+    : found
   const folders = existsSync(cache) ? readdirSync(cache).filter((name) => /^ffmpeg-\d+$/.test(name)).sort((a, b) => Number(b.slice(7)) - Number(a.slice(7))) : []
   for (const folder of folders) {
     const binary = readdirSync(join(cache, folder)).find((name) => /^ffmpeg-(mac|linux|win64\.exe)/.test(name))

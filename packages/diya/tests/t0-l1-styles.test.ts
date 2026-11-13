@@ -307,8 +307,7 @@ describe('enter styles', () => {
 
   it('starts only popups, Toast, an opening Dialog or Drawer and the phone menu', () => {
     expect(startingRules.length).toBeGreaterThan(0)
-    // F12 adds a loading Button's label or leading icon, wrapped as loading starts: shown until the beat.
-    const allowed = /^\.diya-root(\[data-glass='true'\])? (\.diya-floating|\.diya-toast-region|\.diya-toast|\.diya-dialog\[open\]|\.diya-drawer-modal\[open\]|:is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop|\.diya-site-mobile-nav:not\(\[hidden\]\)|\.diya-button\[aria-busy='true'\] > \.diya-button-label|\.diya-button\[aria-busy='true'\] > \.diya-button-lead > :not\(\.diya-spinner\))$/
+    const allowed = /^\.diya-root(\[data-glass='true'\])? (\.diya-floating|\.diya-toast-region|\.diya-toast|\.diya-dialog\[open\]|\.diya-drawer-modal\[open\]|:is\(\.diya-dialog, \.diya-drawer-modal\)\[open\]::backdrop|\.diya-site-mobile-nav:not\(\[hidden\]\))$/
     expect(startingRules.filter((selector) => !allowed.test(selector))).toEqual([])
   })
 
@@ -507,6 +506,10 @@ describe('Button loading (F12, F13)', () => {
 
   it('swaps in one frame on the beat and fades the label or icon back over fast', () => {
     expect(bare).toMatch(/\.diya-root :is\(\.diya-button, \.diya-button-lead\) > \.diya-spinner \{\s*animation: diya-spinner-arrive 0s linear var\(--diya-internal-beat\) both;\s*\}/)
-    expect(bare).toMatch(/\{\s*opacity: 0;\s*transition-duration: 0s;\s*transition-delay: var\(--diya-internal-beat\);\s*\}/)
+    // L2: hidden by a zero-length animation on the beat, which needs no @starting-style.
+    expect(bare).toMatch(/\{\s*animation: diya-spinner-arrive 0s linear var\(--diya-internal-beat\) reverse both;\s*\}/)
+    expect(bare).not.toMatch(/@starting-style\s*\{[^{}]*diya-button/)
+    // ...and back by an animation too, only once the beat has come (data-returning).
+    expect(bare).toMatch(/\.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\]\) > \.diya-button-label,[^{]*\{\s*animation: diya-button-return var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\);\s*\}/)
   })
 })

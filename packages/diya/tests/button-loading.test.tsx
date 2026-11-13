@@ -1,7 +1,7 @@
 // A loading Button keeps focus and does nothing: aria-disabled, not disabled, so a focused Send or Save
 // doesn't drop focus to <body> while it works. Plain `disabled` is still the native attribute.
 import { describe, expect, it, vi } from 'vitest'
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { Button, Dialog, DiyaProvider, Form, TextInput, Wizard } from '../dist/index.js'
@@ -211,5 +211,44 @@ describe('Button loading takes the place of the label or the leading icon (F12)'
     expect([...lead.children].map((node) => node.getAttribute('data-icon') ?? node.className)).toEqual(['plus', 'diya-spinner'])
     expect(button.querySelector('.diya-button-label')).toBeNull()
     expect(button.lastChild!.textContent).toBe('Add member')
+  })
+})
+
+// Round 2 (L1, L3, L4).
+describe('Button loading keeps its children (L1, L3, L4)', () => {
+  function Counter() {
+    const [count, setCount] = useState(0)
+    return <span data-testid="count" onClick={() => setCount((value) => value + 1)}>{count}</span>
+  }
+
+  it('a stateful child keeps its state through loading on and off when loading is given from the start (L1)', () => {
+    const view = render(<DiyaProvider><Button loading={false}>Saved <Counter /></Button></DiyaProvider>)
+    fireEvent.click(screen.getByTestId('count'))
+    fireEvent.click(screen.getByTestId('count'))
+    expect(screen.getByTestId('count').textContent).toBe('2')
+    view.rerender(<DiyaProvider><Button loading>Saved <Counter /></Button></DiyaProvider>)
+    expect(screen.getByTestId('count').textContent).toBe('2')
+    view.rerender(<DiyaProvider><Button loading={false}>Saved <Counter /></Button></DiyaProvider>)
+    expect(screen.getByTestId('count').textContent).toBe('2')
+  })
+
+  it('a Button without a loading prop renders exactly as 1.1.1 did; with loading={false} its label is wrapped from the start (L1)', () => {
+    render(<DiyaProvider><Button>Save</Button><Button loading={false}>Send</Button></DiyaProvider>)
+    expect(screen.getByRole('button', { name: 'Save' }).innerHTML).toBe('Save')
+    expect(screen.getByRole('button', { name: 'Send' }).innerHTML).toBe('<span class="diya-button-label">Send</span>')
+  })
+
+  it('only an svg (or DIYA\'s icon) leads: markup before the text stays in the label (L3)', () => {
+    render(<DiyaProvider><Button loading><strong>Save</strong> draft</Button></DiyaProvider>)
+    const button = screen.getByRole('button', { name: 'Save draft' })
+    expect(button.querySelector('.diya-button-lead')).toBeNull()
+    expect(button.querySelector(':scope > .diya-button-label')!.innerHTML).toBe('<strong>Save</strong> draft')
+  })
+
+  it('asChild keeps its wrapper when loading ends, so the label can fade back (L4)', () => {
+    const view = render(<DiyaProvider><Button asChild loading><a href="/billing">Open billing</a></Button></DiyaProvider>)
+    const link = screen.getByRole('link', { name: 'Open billing' })
+    view.rerender(<DiyaProvider><Button asChild loading={false}><a href="/billing">Open billing</a></Button></DiyaProvider>)
+    expect(link.innerHTML).toBe('<span class="diya-button-label">Open billing</span>')
   })
 })

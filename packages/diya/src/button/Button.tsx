@@ -1,5 +1,6 @@
 'use client'
-import { Children, cloneElement, forwardRef, isValidElement, useState, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode, type Ref } from 'react'
+import { Children, cloneElement, forwardRef, isValidElement, useRef, useState, type AnimationEvent, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode, type Ref } from 'react'
+import { Icon } from '../Icon.js'
 import { cx } from '../internal/cx.js'
 import { useDiyaLinkComponent } from '../internal/link.js'
 import { renderSpinnerRing } from '../spinner/Spinner.js'
@@ -46,34 +47,56 @@ function stopActivation(event: KeyboardEvent) {
   if (event.key === 'Enter' || event.key === ' ') event.preventDefault()
 }
 
+// A leading icon is an svg, or DIYA's own Icon, before the label (L3): not any element, so
+// `<strong>Save</strong> draft` stays one label.
+function isLeadingIcon(node: ReactNode) {
+  return isValidElement(node) && (node.type === 'svg' || node.type === Icon)
+}
+
 /** A native button in DIYA's styles, or a link that looks like one with `href` or `asChild`; other button attributes pass through, and `type` defaults to 'button'. */
-export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(function Button({ variant = 'solid', size = 'medium', shape = 'pill', iconOnly = false, loading = false, disabled, children, className, type = 'button', href, target, rel, download, asChild = false, ...props }, ref) {
+export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(function Button({ variant = 'solid', size = 'medium', shape = 'pill', iconOnly = false, loading: loadingProp, disabled, children, className, type = 'button', href, target, rel, download, asChild = false, ...props }, ref) {
   const Link = useDiyaLinkComponent()
+  const loading = !!loadingProp
   const inactive = !!disabled || loading
+  // The label (or icon) fades back when loading ends only if the beat came and hid it: the
+  // spinner's arrival (an animation) marks the beat. A load that ends sooner changes nothing (L2).
+  const beat = useRef(false)
+  const [returning, setReturning] = useState(false)
+  const [was, setWas] = useState(loading)
+  if (loading !== was) {
+    setWas(loading)
+    setReturning(!loading && beat.current)
+    if (loading) beat.current = false
+  }
   const shared = {
     className: cx('diya-button', className), 'data-variant': variant, 'data-size': size, 'data-shape': shape, 'data-icon-only': iconOnly || undefined, 'aria-busy': loading || undefined,
+    'data-returning': returning || undefined,
+    onAnimationEnd: (event: AnimationEvent<HTMLElement>) => { if (loading && event.animationName === 'diya-spinner-arrive') beat.current = true; props.onAnimationEnd?.(event as never) },
     onPointerDownCapture: (event: PointerEvent<HTMLElement>) => { pressFloor(event); props.onPointerDownCapture?.(event as never) },
     onKeyDownCapture: (event: KeyboardEvent<HTMLElement>) => { pressFloor(event); props.onKeyDownCapture?.(event as never) },
   }
   // Loading (F12): on the Spinner's 400ms beat the spinner takes the place of the first thing in
-  // the button, in one frame: a leading icon (the label stays), or else the label, which keeps its
-  // box so nothing moves. When loading ends the spinner goes and they fade back. Once a Button has
-  // been loading, its label (or leading icon) keeps a wrapper, so it has something to fade.
-  const [wrapped, setWrapped] = useState(loading)
-  if (loading && !wrapped) setWrapped(true)
+  // the button, in one frame: a leading icon (an svg, the label stays), or else the label, which
+  // keeps its box so nothing moves. When loading ends the spinner goes and they fade back. The
+  // label (or leading icon) has a wrapper from the first render whenever `loading` is given, even
+  // as false, so its children never remount (L1); a Button without it renders as 1.1.1 did, until
+  // it first loads.
+  const [loaded, setLoaded] = useState(loading)
+  if (loading && !loaded) setLoaded(true)
+  const wrapped = loadingProp !== undefined || loaded
   const spinner = loading && <span className="diya-spinner" data-size={size === 'large' ? 'medium' : 'small'} aria-hidden="true">{renderSpinnerRing(size === 'large' ? 'medium' : 'small')}</span>
   const content = (inner: ReactNode) => {
     if (iconOnly) return <>{spinner}{inner}</>
     if (!wrapped) return inner
     const parts = Children.toArray(inner)
-    if (parts.length > 1 && isValidElement(parts[0])) return <><span className="diya-button-lead">{parts[0]}{spinner}</span>{parts.slice(1)}</>
+    if (parts.length > 1 && isLeadingIcon(parts[0])) return <><span className="diya-button-lead">{parts[0]}{spinner}</span>{parts.slice(1)}</>
     return <>{spinner}<span className="diya-button-label">{inner}</span></>
   }
   if (asChild) {
     const child = onlyChild(children)
     if (!isValidElement(child)) return null
     const own = child as ReactElement<{ children?: ReactNode }>
-    const filled = loading ? cloneElement(own, undefined, content(own.props.children)) : own
+    const filled = wrapped ? cloneElement(own, undefined, content(own.props.children)) : own
     return renderSlot(filled, { ...props, ...shared, 'aria-disabled': inactive || undefined, onClickCapture: inactive ? stopClick : undefined }, ref)
   }
   if (href !== undefined) {

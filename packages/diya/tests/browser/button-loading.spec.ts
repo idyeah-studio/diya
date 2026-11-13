@@ -241,3 +241,30 @@ test('the accessible name is unchanged while loading: text, leading icon and ico
     await expect(page.locator(`#${id}`), id).toHaveAttribute('aria-busy', 'true')
   }
 })
+
+// L2 (FE R2-01): an engine without @starting-style (Safari before 17.5, Firefox before 129) must
+// not blank a Button on its first load either. Modelled by deleting every @starting-style rule.
+test('no blank frame on a first load without @starting-style', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const removed = await page.evaluate(() => {
+    let count = 0
+    const strip = (rules: CSSRuleList, owner: CSSStyleSheet | CSSGroupingRule) => {
+      for (let i = rules.length - 1; i >= 0; i--) {
+        const rule = rules[i]
+        if (rule.constructor.name === 'CSSStartingStyleRule') { owner.deleteRule(i); count++ }
+        else if ('cssRules' in rule) strip((rule as CSSGroupingRule).cssRules, rule as CSSGroupingRule)
+      }
+    }
+    for (const sheet of document.styleSheets) strip(sheet.cssRules, sheet)
+    return count
+  })
+  testInfo.annotations.push({ type: 'removed', description: `${removed} @starting-style rules` })
+  const ids = ['bl-medium-solid', 'bl-lead', 'bl-icon', 'bl-pad-12']
+  const list = await frames(page, ids, 700)
+  for (const id of ids) {
+    for (const row of of(list, id).filter((row) => row.t >= 0)) {
+      const shown = Math.max(row.labelOpacity === null || id === 'bl-lead' || id === 'bl-icon' ? 0 : row.labelOpacity, row.iconOpacity ?? 0, row.spinnerOpacity ?? 0)
+      expect(shown, `${id} at ${row.t.toFixed(0)}ms`).toBe(1)
+    }
+  }
+})

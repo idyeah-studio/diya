@@ -3753,33 +3753,28 @@
 }
 /* Loading (F12): the swap is instant on the beat, under every setting: the label (or the icon) goes
    and the spinner is there in the same frame, with no crossfade. When loading ends the spinner goes
-   at once and they fade back over fast, on the enter curve. */
+   at once and they fade back over fast, on the enter curve. All by animation, which needs no
+   @starting-style. */
 .diya-root :is(.diya-button, .diya-button-lead) > .diya-spinner {
   animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both;
-}
-.diya-root :is(.diya-button-label, .diya-button-lead > :not(.diya-spinner), .diya-button[data-icon-only='true'] > :not(.diya-spinner)) {
-  transition-property: opacity;
-  transition-duration: var(--diya-internal-duration-fast);
-  transition-timing-function: var(--diya-ease-enter);
 }
 .diya-root .diya-button[aria-busy='true'] > .diya-button-label,
 .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > :not(.diya-spinner),
 .diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > :not(.diya-spinner) {
-  opacity: 0;
-  transition-duration: 0s;
-  transition-delay: var(--diya-internal-beat);
+  /* Hidden by an animation, not a transition, so it holds visible until the beat even where it
+     first appears with loading and an engine has no @starting-style (L2): the arrive fade played
+     backwards, in no time. */
+  animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) reverse both;
 }
-/* The label's wrapper (and a leading icon's) first appears as loading starts: shown until the beat. */
-@starting-style {
-  .diya-root .diya-button[aria-busy='true'] > .diya-button-label {
-    opacity: 1;
-  }
+/* Back after the beat: Button marks it (data-returning) once the spinner has arrived, and the label
+   (or icon) fades in over fast. A load that ends before the beat changes nothing. */
+.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label,
+.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > :not(.diya-spinner),
+.diya-root .diya-button[data-icon-only='true'][data-returning='true']:not([aria-busy='true']) > :not(.diya-spinner) {
+  animation: diya-button-return var(--diya-internal-duration-fast) var(--diya-ease-enter);
 }
-@starting-style {
-  .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > :not(.diya-spinner) {
-    opacity: 1;
-  }
-}
+/* Its own name: the hide is diya-spinner-arrive, and an animation that keeps its name doesn't replay. */
+@keyframes diya-button-return { from { opacity: 0; } }
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active,
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active::after {
   transition-duration: 0s;

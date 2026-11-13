@@ -200,9 +200,10 @@ describe('Progress and loading rows', () => {
     expect(css).toMatch(/\.diya-table-skeleton \{\s*animation: diya-skeleton-pulse 1\.4s ease-in-out infinite;/)
     expect(css).toMatch(/@keyframes diya-skeleton-pulse \{ 50% \{ opacity: 0\.55; \} \}/)
     // 1.2 step 8 (E2, E3, motion.md §1–2): Spinner's arrive and turn, and Button's room for its spinner.
-    // F12 drops Button's slide, and its diya-button-make-room keyframe with it.
+    // F12 drops Button's slide, and its diya-button-make-room keyframe with it; L2 adds Button's fade
+    // back, diya-button-return.
     expect(css.match(/@keyframes [\w-]+/g)).toEqual(['@keyframes diya-progress-travel', '@keyframes diya-progress-spin', '@keyframes diya-progress-breathe',
-      '@keyframes diya-spinner-arrive', '@keyframes diya-spinner-turn', '@keyframes diya-skeleton-pulse'])
+      '@keyframes diya-spinner-arrive', '@keyframes diya-spinner-turn', '@keyframes diya-button-return', '@keyframes diya-skeleton-pulse'])
     // A fade: nothing in the Reduce Motion or motion settings stops it.
     expect(css).not.toMatch(/diya-table-skeleton[^{]*\{[^}]*animation:\s*none/)
   })
