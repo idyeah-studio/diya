@@ -133,3 +133,19 @@ describe('Customize: Fields', () => {
     expect(within(drawer).getByText('Field edges on the field, in Light')).toBeTruthy()
   })
 })
+
+// DS-SITE-04's two pairs (W10): a picked fill must keep placeholders readable and the error edge visible.
+describe('Customize: a picked field fill', () => {
+  it('checks quieter text at 4.5:1 and the error edge at 3:1 on it', () => {
+    // Text still reads on this fill (about 6:1), but placeholders and the error edge don't.
+    const issues = contrastIssues(effectiveAppearance({ 'tokens.light.field': '#9AA3A5' }))
+    const muted = issues.find((issue) => issue.label === 'Quieter text in fields')!
+    const error = issues.find((issue) => issue.label === 'Error edges on the field')!
+    expect(issues.find((issue) => issue.label === 'Text in fields')).toBeUndefined()
+    expect(muted).toMatchObject({ theme: 'light', minimum: 4.5, path: 'colors.light.text', paths: ['colors.light.text', 'tokens.light.field'] })
+    expect(error).toMatchObject({ theme: 'light', minimum: 3, path: 'tokens.light.field', paths: ['tokens.light.field', 'status.light.error'] })
+    // A fill that keeps them all, and Auto, add nothing.
+    expect(contrastIssues(effectiveAppearance({ 'tokens.light.field': '#F4F6F6' }))).toEqual([])
+    expect(contrastIssues(effectiveAppearance({ 'tokens.light.fieldLine': '#5E7476' }))).toEqual([])
+  })
+})

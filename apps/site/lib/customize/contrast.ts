@@ -78,6 +78,11 @@ export function contrastPairs(appearance: Appearance, item?: CustomizeItem): Con
       check('Text in fields', text, field, 4.5, own.field ? token('field') : color('text'), color('text'))
       check('Field edges on the field', composite(t.fieldLine, field), field, 3, own.fieldLine ? token('fieldLine') : token('field'), token('field'))
       check('Field edges on the background', composite(t.fieldLine, background), background, 3, own.fieldLine ? token('fieldLine') : color('text'), color('background'))
+      if (own.field) {
+        /* Placeholders and hints are the quieter text, and an invalid field keeps the error edge. */
+        check('Quieter text in fields', n.muted, field, 4.5, color('text'), token('field'))
+        check('Error edges on the field', statusSet(appearance, theme, 'error').tone, field, 3, token('field'), `status.${theme}.error` as AppearancePath)
+      }
     }
     if (!usesStatus) continue
     for (const status of statusNames) {
