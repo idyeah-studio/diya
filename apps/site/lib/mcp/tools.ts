@@ -21,7 +21,7 @@ const STOP = new Set(
 
 /** Words people say for things DIYA calls something else. Values are api.json ids. */
 const SYNONYMS: Record<string, string[]> = {
-  toggle: ['switch'], onoff: ['switch'], checkbox: ['checkbox'], tick: ['checkbox'], agree: ['checkbox'], consent: ['checkbox'], checkboxes: ['choice'], radio: ['choice'], radios: ['choice'],
+  toggle: ['switch'], onoff: ['switch'], checkbox: ['checkbox'], tick: ['checkbox'], agree: ['checkbox'], consent: ['checkbox'], remember: ['checkbox'], signed: ['checkbox'], optin: ['checkbox'], opt: ['checkbox'], subscribe: ['checkbox'], checkboxes: ['choice'], radio: ['choice'], radios: ['choice'],
   modal: ['dialog'], confirm: ['dialog'], popup: ['dialog', 'popover'], sheet: ['drawer'], panel: ['drawer'], sidepanel: ['drawer'],
   dropdown: ['select', 'menu'], picker: ['select', 'combobox', 'date-picker'], autocomplete: ['combobox'], typeahead: ['combobox'],
   multiselect: ['combobox'], pick: ['select', 'combobox', 'choice'], choose: ['select', 'combobox', 'choice'], option: ['select', 'choice'],
