@@ -1,5 +1,5 @@
 # Files in the @idyeah/diya npm tarball. Regenerate with: pnpm snapshot:tarball
-# budget packed <= 545000 bytes
+# budget packed <= 552000 bytes
 # budget unpacked <= 1500000 bytes
 CHANGELOG.md
 LICENSE
@@ -49,6 +49,8 @@ dist/calendar/month.d.ts
 dist/calendar/month.js
 dist/card/Card.d.ts
 dist/card/Card.js
+dist/checkbox/Checkbox.d.ts
+dist/checkbox/Checkbox.js
 dist/choice/Choice.d.ts
 dist/choice/Choice.js
 dist/choice/messages.d.ts
@@ -170,6 +172,8 @@ dist/slider/Slider.d.ts
 dist/slider/Slider.js
 dist/slider/messages.d.ts
 dist/slider/messages.js
+dist/spinner/Spinner.d.ts
+dist/spinner/Spinner.js
 dist/styles.css
 dist/switch/Switch.d.ts
 dist/switch/Switch.js
@@ -205,6 +209,8 @@ dist/toast/queue.d.ts
 dist/toast/queue.js
 dist/tooltip/Tooltip.d.ts
 dist/tooltip/Tooltip.js
+dist/visually-hidden/VisuallyHidden.d.ts
+dist/visually-hidden/VisuallyHidden.js
 dist/workflow/ContentState.d.ts
 dist/workflow/ContentState.js
 dist/workflow/Drawer.d.ts

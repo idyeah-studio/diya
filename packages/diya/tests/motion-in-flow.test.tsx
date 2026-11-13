@@ -130,8 +130,10 @@ describe('Switch and Choice', () => {
   })
 
   it('keeps the Choice mark always present, grown in by a transition, never a keyframe', () => {
-    expect(css).toMatch(/\.diya-choice-option input::before \{\s*content: '';\s*opacity: 0;/)
-    expect(css).toMatch(/\.diya-choice-option input:is\(:checked, :indeterminate\)::before \{\s*opacity: 1;\s*scale: 1;\s*transition-duration: var\(--diya-internal-duration-fast\);/)
+    // Checkbox shares Choice's box as one selector (1.2, frontend.md step 7), and the mixed state
+    // also keys off data-indeterminate (MOT-1.2-05).
+    expect(css).toMatch(/:is\(\.diya-choice-option input, \.diya-checkbox\)::before \{\s*content: '';\s*opacity: 0;/)
+    expect(css).toMatch(/:is\(\.diya-choice-option input, \.diya-checkbox\):is\(:checked, :indeterminate, \[data-indeterminate='true'\]\)::before \{\s*opacity: 1;\s*scale: 1;\s*transition-duration: var\(--diya-internal-duration-fast\);/)
     // No animation hangs off a checked, indeterminate or selected state anywhere.
     const stateful = [...css.matchAll(/([^{}]*:(?:checked|indeterminate)[^{}]*)\{([^}]*)\}/g)]
     expect(stateful.length).toBeGreaterThan(5)
@@ -196,7 +198,9 @@ describe('Progress and loading rows', () => {
   it('pulses Table\'s loading rows at full strength, as the Screens do, and adds no other keyframe', () => {
     expect(css).toMatch(/\.diya-table-skeleton \{\s*animation: diya-skeleton-pulse 1\.4s ease-in-out infinite;/)
     expect(css).toMatch(/@keyframes diya-skeleton-pulse \{ 50% \{ opacity: 0\.55; \} \}/)
-    expect(css.match(/@keyframes [\w-]+/g)).toEqual(['@keyframes diya-progress-travel', '@keyframes diya-progress-spin', '@keyframes diya-progress-breathe', '@keyframes diya-skeleton-pulse'])
+    // 1.2 step 8 (E2, E3, motion.md §1–2): Spinner's arrive and turn, and Button's room for its spinner.
+    expect(css.match(/@keyframes [\w-]+/g)).toEqual(['@keyframes diya-progress-travel', '@keyframes diya-progress-spin', '@keyframes diya-progress-breathe',
+      '@keyframes diya-spinner-arrive', '@keyframes diya-spinner-turn', '@keyframes diya-button-make-room', '@keyframes diya-skeleton-pulse'])
     // A fade: nothing in the Reduce Motion or motion settings stops it.
     expect(css).not.toMatch(/diya-table-skeleton[^{]*\{[^}]*animation:\s*none/)
   })

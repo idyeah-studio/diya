@@ -428,3 +428,29 @@ describe('theming tokens (1.2)', () => {
     expect(distRules.find(rule => rule.selector === '.diya-root .diya-dialog' && rule.body.includes('border-radius'))!.body).toContain('border-radius: var(--diya-radius-modal, calc(22px * var(--diya-corner-scale, 1)))')
   })
 })
+
+describe('Spinner (1.2)', () => {
+  // MOT-1.2-01/02: Chromium froze the rotate property on an <svg> while the page was busy, and
+  // WebKit froze a breathe on the inner circle, so the turn is a transform and Reduce Motion
+  // animates the svg.
+  const keyframes = (name: string) => bare.match(new RegExp(`@keyframes ${name} \\{[^{}]*(\\{[^{}]*\\}[^{}]*)*\\}`))?.[0] ?? ''
+
+  it('Spinner turns with transform, never the rotate property; Reduce Motion animates the svg, not a circle', () => {
+    const turn = keyframes('diya-spinner-turn')
+    expect(turn).toMatch(/transform: rotate\(360deg\)/)
+    expect(turn).not.toMatch(/(^|[{;\s])rotate\s*:/)
+    expect(bare).toMatch(/\.diya-root \.diya-spinner svg \{[^}]*animation: diya-spinner-turn 1s linear infinite;/)
+    // Reduced: motion="reduced", and the device setting unscoped from data-motion, as Progress.
+    expect(bare).toMatch(/\.diya-root\[data-motion='reduced'\] \.diya-spinner svg \{ animation: diya-progress-breathe 2s ease-in-out infinite alternate; \}/)
+    expect(bare).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.diya-root \.diya-spinner svg \{ animation: diya-progress-breathe 2s ease-in-out infinite alternate; \}\s*\.diya-root \.diya-spinner-arc \{ stroke-dashoffset: 0; \}\s*\}/)
+    // Nothing animates a circle.
+    for (const rule of bare.matchAll(/([^{}]+)\{([^{}]*animation[^{}]*)\}/g)) {
+      if (/diya-spinner/.test(rule[1])) expect(rule[1], rule[1]).not.toMatch(/circle|-arc|-track/)
+    }
+  })
+
+  it('waits the literal 400ms beat, never scaled, and fades in over the gated medium', () => {
+    expect(bare).toMatch(/\.diya-root \.diya-spinner \{[^}]*--diya-internal-beat: 400ms;[^}]*animation: diya-spinner-arrive var\(--diya-internal-duration-medium\) var\(--diya-ease-enter\) var\(--diya-internal-beat\) both;/)
+    expect(keyframes('diya-spinner-arrive')).toBe('@keyframes diya-spinner-arrive { from { opacity: 0; } }')
+  })
+})

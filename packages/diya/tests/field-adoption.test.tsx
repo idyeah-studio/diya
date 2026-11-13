@@ -19,6 +19,8 @@ const fields: [string, (error?: string) => ReactNode][] = [
   ['DatePicker', (error) => <lib.DatePicker label="Project name" error={error} />],
   ['Switch', (error) => <lib.Switch label="Project name" error={error} />],
   ['Choice', (error) => <lib.Choice label="Project name" options={options} error={error} />],
+  // Step 7 (frontend.md step 6 names Checkbox as the ninth).
+  ['Checkbox', (error) => <lib.Checkbox label="Project name" error={error} />],
 ]
 
 describe("DIYA's fields announce a blur error once (step 6)", () => {

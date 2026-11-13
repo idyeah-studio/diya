@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { Alert, AlertInStackContext, type AlertProps } from '../alert/Alert.js'
 import { ToastScopeContext, useDiyaMessages } from '../DiyaProvider.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
+import { isControl } from '../internal/opener.js'
 import { playOnCopy } from '../internal/presence.js'
 import { toastMessages } from './messages.js'
 import { addToastSlot, leaveToastSlot, nextToastOrder, nextToastSlotKey, removeToastSlot, returnToastFocus, subscribeToasts, toastCopies, toastSlotElement, toastsPaused, touchToasts, updateToastSlot } from './queue.js'
@@ -65,8 +66,9 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
   function dismiss(adjacent = false) {
     // Focus on <body> too: a click on × in Safari doesn't focus it, and focus would stay lost
     // (UX-R3-01). The chain then returns it where the person was, as Undo does.
+    // Or on a container: in Safari a click on × inside a Dialog focuses the dialog itself (H3).
     const active = document.activeElement
-    if (slotRef.current?.contains(active) || !active || active === document.body) returnToastFocus(key, returnFocus.current, adjacent)
+    if (slotRef.current?.contains(active) || !isControl(active)) returnToastFocus(key, returnFocus.current, adjacent)
     settle()
   }
   const dismissRef = useRef(dismiss)

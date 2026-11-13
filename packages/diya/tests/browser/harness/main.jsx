@@ -2,7 +2,8 @@
 // them in Chromium, WebKit and Firefox. Query: theme, glass, motion, scale (duration scale).
 import { useEffect, useRef, useState, version } from 'react'
 import { createPortal, flushSync } from 'react-dom'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
 import '@idyeah/diya/styles.css'
 import * as diya from '@idyeah/diya'
 import {
@@ -300,6 +301,9 @@ function ProbeCase() {
   return (
     <div style={{ padding: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'start' }}>
       {query.get('bg') === '1' && <div aria-hidden="true" style={{ position: 'fixed', right: 0, bottom: 0, width: 520, height: 560, background: 'repeating-linear-gradient(135deg, #e4572e 0 24px, #29335c 24px 48px, #f3a712 48px 72px)', zIndex: 0 }} />}
+      <p id="probe-blank" style={{ margin: 0 }}>Blank page</p>
+      <input id="extra" aria-label="Extra" />
+      <Button id="post-undo" onClick={() => window.comps.add({ title: 'Comment hidden', action: { label: 'Undo', onClick: () => note('undo-comment') } })}>Hide comment</Button>
       <Button id="post-comment" onClick={() => window.comps.add({ title: 'Comment posted' })}>Post comment</Button>
       <Button id="post-toast" onClick={() => diya.toast({ title: 'Comment saved', duration: 0 })}>Save comment</Button>
       <TextInput label="Project name" defaultValue="Atlas" />
@@ -307,6 +311,7 @@ function ProbeCase() {
       <Dialog title="Edit task" open={dialog} onOpenChange={setDialog}>
         <TextInput label="Task name" defaultValue="Write the brief" />
         <Button onClick={() => diya.toast({ title: 'Saved in the dialog', duration: 0 })}>Toast inside</Button>
+        <Button id="dialog-save" onClick={() => window.comps.add({ title: 'Brief saved' })}>Save brief</Button>
       </Dialog>
       <dialog ref={native} id="native" style={{ padding: 24 }}>
         <TextInput id="coupon" label="Coupon code" error={couponError} onBlur={(event) => setCouponError(event.target.value.length < 6 ? 'Enter all 6 characters of the code.' : undefined)} />
@@ -351,6 +356,21 @@ function FieldCase() {
   )
 }
 
+// React Stripe Elements' pattern: a component renders its own mount div and mounts the hosted
+// iframe into it once mounted (<CardElement />).
+function CardElement({ name }) {
+  const mount = useRef(null)
+  useEffect(() => {
+    const frame = document.createElement('iframe')
+    frame.title = name
+    frame.src = `${location.protocol}//127.0.0.1:${location.port}/card.html?component`
+    frame.setAttribute('style', 'border: none !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; height: 19.2px;')
+    mount.current.append(frame)
+    return () => frame.remove()
+  }, [])
+  return <div ref={mount} className="StripeElement" />
+}
+
 // Real hosted-field patterns inside Field framed (the front-end review, steps 5–6): Stripe's
 // mount div holding an iframe with !important inline sizing, a bare iframe, split card fields
 // (number, expiry), a native select and a textarea; plus a Dialog that mounts on its opener's
@@ -378,25 +398,145 @@ function ProvidersCase() {
       <Button id="later-open" onClick={() => { setMounted(true); setLater(true) }}>Open later</Button>
       {mounted && <Dialog title="Later" open={later} onOpenChange={setLater}><p>Body</p></Dialog>}
       <diya.Field label="Card (mount div)" framed><div id="stripe-mount" ref={stripe} /></diya.Field>
+      <diya.Field label="Card (component)" framed><CardElement name="Component card" /></diya.Field>
       <diya.Field label="Card (bare iframe)" framed><iframe title="Bare card" src={cross('bare')} /></diya.Field>
       <diya.Field label="Card number" framed><iframe title="Split number" src={cross('a')} /></diya.Field>
       <diya.Field label="Expiry" framed error={query.get('error') ? 'Enter the expiry date.' : undefined}><iframe title="Split expiry" src={cross('b')} /></diya.Field>
       <diya.Field label="Region" framed><select id="framed-select"><option>North</option><option>South</option></select></diya.Field>
+      <diya.Field label="Regions" framed><select id="framed-list" multiple><option>North</option><option>South</option><option>East</option></select></diya.Field>
       <diya.Field label="Notes" framed><textarea id="framed-notes" defaultValue={'one\ntwo\nthree'} /></diya.Field>
+      <div id="textareas" style={{ display: 'grid', gap: 16 }}>
+        {['small', 'medium', 'large'].map((size) => (
+          <div key={size} style={{ display: 'grid', gap: 16 }}>
+            <TextArea id={`ta-${size}`} label={`TextArea ${size}`} size={size} />
+            <diya.Field label={`Framed ${size}`} size={size} framed><textarea id={`fta-${size}`} /></diya.Field>
+          </div>
+        ))}
+      </div>
       <p id="blank" style={{ padding: 24 }}>Blank page</p>
     </div>
   )
 }
 
-const cases = { providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+// Checkbox (1.2) beside Choice, whose box it shares: unchecked and checked boxes of each, a mixed
+// Checkbox and a mixed Select all (present from the first paint), a label with a link, and a
+// form whose submissions are counted.
+function CheckboxCase() {
+  const [sent, setSent] = useState(0)
+  const options = [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }, { value: 'c', label: 'Charlie' }]
+  return (
+    <form id="cb-form" onSubmit={(event) => { event.preventDefault(); setSent((count) => count + 1) }} style={{ display: 'grid', gap: 24, padding: 24, width: 420 }}>
+      <diya.Choice label="Teams" multiple selectAll options={options} defaultValue={['b']} />
+      <diya.Choice label="One" multiple options={[{ value: 'x', label: 'Unchecked option' }, { value: 'y', label: 'Checked option' }]} defaultValue={['y']} />
+      <diya.Checkbox id="cb-off" label="Unchecked box" />
+      <diya.Checkbox id="cb-on" label="Checked box" defaultChecked />
+      <diya.Checkbox id="cb-mixed" label="All 3 projects" indeterminate />
+      <diya.Checkbox id="cb-terms" name="terms" label={<>I agree to the <diya.TextLink href="#terms" inline>Terms</diya.TextLink></>} />
+      <Button type="submit">Create account</Button>
+      <output id="cb-sent">{sent}</output>
+    </form>
+  )
+}
+
+// Spinner (1.2): one mounted on demand (for the 400ms beat), one beside text at each size's
+// type (14, 15, 17 and 20px, with a zero-size marker on the baseline), a labeled one, one with
+// its words, and a main-thread block on demand.
+function SpinnerCase() {
+  const [shown, setShown] = useState(false)
+  // Blocks the main thread for ms, with a flag that is red for the whole block (painted first).
+  window.__block = (ms) => {
+    const flag = document.getElementById('sp-flag')
+    flag.style.background = 'rgb(255, 0, 0)'
+    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => {
+      const start = performance.now()
+      while (performance.now() - start < ms);
+      flag.style.background = 'rgb(0, 0, 0)'
+    }, 20)))
+  }
+  return (
+    <div style={{ display: 'grid', gap: 24, padding: 24, width: 600 }}>
+      <button id="sp-mount" onClick={() => { note('mount', performance.now()); setShown((value) => !value) }}>Toggle</button>
+      <p style={{ margin: 0, minHeight: 24 }}>{shown && <diya.Spinner id="sp-new" label="Loading older invoices" />}</p>
+      {[[14, 'small'], [15, 'small'], [17, 'medium'], [20, 'large']].map(([px, size]) => (
+        <p key={px} data-px={px} style={{ fontSize: px, margin: 0 }}>Hamburg <diya.Spinner size={size} /><span className="sp-base" style={{ display: 'inline-block', width: 0, height: 0 }} /></p>
+      ))}
+      <p style={{ margin: 0 }}><diya.Spinner id="sp-labeled" label="Loading messages" /></p>
+      <p style={{ margin: 0 }}><diya.Spinner id="sp-words" size="small" label="Loading older invoices" showLabel /></p>
+      <p style={{ margin: 0, display: 'flex', gap: 24, alignItems: 'center' }}><span id="sp-flag" style={{ width: 24, height: 24, background: 'rgb(0, 0, 0)' }} /><diya.Spinner id="sp-block" size="large" /></p>
+    </div>
+  )
+}
+
+// Button loading (1.2): every size and variant with a neighbor, icon-only, a link, asChild, a
+// Button whose own class sets its padding, and a Dialog whose long confirm wraps. dir=rtl flips it.
+function LoadingCase() {
+  const [busy, setBusy] = useState(query.get('busy') === '1')
+  window.__setBusy = (value) => { note('busy', performance.now()); flushSync(() => setBusy(value)) }
+  const icon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+  return (
+    <div dir={query.get('dir') || 'ltr'} style={{ display: 'grid', gap: 16, padding: 24 }}>
+      {['small', 'medium', 'large'].flatMap((size) => ['solid', 'outline', 'quiet'].map((variant) => (
+        <div key={`${size}-${variant}`} style={{ display: 'flex', gap: 8 }}>
+          <Button id={`bl-${size}-${variant}`} size={size} variant={variant} loading={busy}>Save changes</Button>
+          <Button id={`bl-${size}-${variant}-next`} size={size} variant="outline">Cancel</Button>
+        </div>
+      )))}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Button id="bl-icon" iconOnly aria-label="Add" loading={busy}>{icon}</Button>
+        <Button id="bl-link" href="#saved" loading={busy}>Open report</Button>
+        <Button id="bl-child" asChild loading={busy}><a href="#child">Child link</a></Button>
+        <Button id="bl-pad" className="app-pad" loading={busy}>Save</Button>
+        <Button id="bl-pad-wide" className="app-pad-wide" loading={busy}>Save</Button>
+      </div>
+      <Dialog title="Delete the archive?" confirmLabel="Delete every archived conversation" confirmVariant="destructive" onConfirm={() => new Promise(() => {})}
+        trigger={<Button id="bl-dialog-open" variant="outline">Delete archive</Button>}>Archived conversations go for good.</Dialog>
+    </div>
+  )
+}
+
+// Control heights (VIS-SITE2-01): a Combobox (one with chips that wrap) beside a Text Input at
+// each size, under the height tokens given as h=medium,small,large (none: the defaults).
+function HeightsCase() {
+  const [medium, small, large] = (query.get('h') || '').split(',')
+  const style = medium ? { '--diya-height-control-medium': `${medium}px`, '--diya-height-control-small': `${small}px`, '--diya-height-control-large': `${large}px` } : undefined
+  const options = [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }, { value: 'c', label: 'Charlie' }, { value: 'd', label: 'Delta' }]
+  return (
+    <DiyaProvider theme={theme} style={style}>
+      <div style={{ display: 'grid', gap: 24, padding: 24, width: 360 }}>
+        {['small', 'medium', 'large'].map((size) => (
+          <div key={size} style={{ display: 'grid', gap: 12 }}>
+            <Combobox id={`hc-${size}`} size={size} label={`Owner ${size}`} options={options} value={null} onValueChange={() => {}} />
+            <TextInput id={`ht-${size}`} size={size} label={`Name ${size}`} value="" onValueChange={() => {}} />
+          </div>
+        ))}
+        <div style={{ width: 220 }}><Combobox id="hc-chips" multiple label="Teams" options={options} value={['a', 'b', 'c', 'd']} onValueChange={() => {}} /></div>
+      </div>
+    </DiyaProvider>
+  )
+}
+
+const cases = { heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
-style.textContent = '.classbg { background: rgb(220 38 38); color: white; }'
+style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; }'
 document.head.append(style)
 document.documentElement.dataset.react = version
-createRoot(document.getElementById('root')).render(
-  which === 'theme' || (which === 'tokens' && query.get('outer') === '1')
-    ? <Case />
-    : <DiyaProvider theme={theme} glass={glass} motion={motion} style={scale === null ? undefined : { '--diya-duration-scale': scale }}><Case /></DiyaProvider>,
-)
-requestAnimationFrame(() => document.documentElement.setAttribute('data-ready', ''))
+const app = which === 'theme' || (which === 'tokens' && query.get('outer') === '1')
+  ? <Case />
+  : <DiyaProvider theme={theme} glass={glass} motion={motion} style={scale === null ? undefined : { '--diya-duration-scale': scale }}><Case /></DiyaProvider>
+if (query.get('ssr') === '1') {
+  // As a server-rendered app arrives: the server's HTML paints first, then React hydrates it two
+  // frames later (data-hydrated marks when).
+  const root = document.getElementById('root')
+  root.innerHTML = renderToString(app)
+  requestAnimationFrame(() => {
+    document.documentElement.setAttribute('data-ready', '')
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      hydrateRoot(root, app)
+      requestAnimationFrame(() => document.documentElement.setAttribute('data-hydrated', ''))
+    }))
+  })
+} else {
+  createRoot(document.getElementById('root')).render(app)
+  requestAnimationFrame(() => document.documentElement.setAttribute('data-ready', ''))
+}

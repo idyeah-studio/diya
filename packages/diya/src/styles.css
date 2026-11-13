@@ -314,10 +314,35 @@
   pointer-events: auto;
 }
 
-.diya-root .diya-button-progress {
-  position: static;
-  font-size: var(--diya-text-caption);
-  line-height: 1;
+/* Loading shows a small Spinner, and the width never changes. Each size names its padding and
+   the room the spinner needs (its size plus the 8px gap, halved). On the Spinner's 400ms beat the
+   start padding grows by the room and the end padding shrinks by it, so the label slides over
+   while the box stays put. The spinner sits in the flow with margins that add up to nothing, so
+   it always ends 8px before the label, even when your own padding wins. */
+.diya-root .diya-button {
+  --diya-internal-button-pad: 20px;
+  --diya-internal-button-room: 12px;
+  --diya-internal-beat: 400ms;
+}
+.diya-root .diya-button[data-size='small'] {
+  --diya-internal-button-pad: 16px;
+}
+.diya-root .diya-button[data-size='large'] {
+  --diya-internal-button-pad: 24px;
+  --diya-internal-button-room: 14px;
+}
+.diya-root .diya-button[aria-busy='true']:not([data-icon-only='true']) {
+  padding-inline: calc(var(--diya-internal-button-pad) + var(--diya-internal-button-room)) calc(var(--diya-internal-button-pad) - var(--diya-internal-button-room));
+}
+.diya-root .diya-button > .diya-spinner {
+  margin-inline-start: calc(-2 * var(--diya-internal-button-room));
+}
+/* Icon-only: the spinner takes the icon's place on the beat, in the same square. The icon stays
+   until then, so the button is never blank. */
+.diya-root .diya-button[data-icon-only='true'] > .diya-spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
 }
 
 .diya-root .diya-button svg {
@@ -1221,11 +1246,24 @@
   color: var(--diya-color-muted);
   opacity: 1;
 }
-/* A framed native select keeps a menu indicator: Select's chevron, drawn by the frame (G2). A
-   framed textarea grows the frame to its lines instead of clipping them to one. */
-.diya-root .diya-field-frame:has(> select)::after {
+/* A framed native select keeps a menu indicator: Select's chevron, drawn over the select's own
+   right edge, as Select does, so a click on it opens the select (G2, H1). A list-box select
+   (multiple, or size above 1) has no chevron. A framed textarea grows the frame to its lines
+   instead of clipping them to one. */
+.diya-root .diya-field-frame:has(> select:not([multiple], [size]:not([size='1']))) {
+  position: relative;
+  padding-inline-end: 0;
+}
+.diya-root .diya-field-frame > select:not([multiple], [size]:not([size='1'])) {
+  padding-inline-end: 40px;
+  cursor: pointer;
+}
+.diya-root .diya-field-frame:has(> select:not([multiple], [size]:not([size='1'])))::after {
   content: '';
-  flex: none;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 14px;
   height: 14px;
   background-color: var(--diya-color-muted);
@@ -1233,17 +1271,31 @@
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
   pointer-events: none;
 }
+.diya-root .diya-field-frame:has(> select:is([multiple], [size]:not([size='1']))) {
+  height: auto;
+}
+.diya-root .diya-field-frame > select:is([multiple], [size]:not([size='1'])) {
+  height: auto;
+}
+/* A framed textarea has TextArea's box (H6): the frame wraps it with no padding, and the textarea
+   carries TextArea's inset and height (less the frame's 1px edges), so its grip sits in the
+   corner and the scrollbar hugs the edge. */
 .diya-root .diya-field-frame:has(> textarea) {
   height: auto;
-  padding-block: 12px;
+  padding: 0;
   align-items: stretch;
 }
 .diya-root .diya-field-frame > textarea {
   height: auto;
-  min-height: calc(1.6em * 3);
+  min-height: 110px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: inherit;
   line-height: 1.6;
   resize: vertical;
 }
+.diya-root .diya-field[data-size='small'] > .diya-field-frame > textarea { min-height: 86px; padding: 10px 12px; }
+.diya-root .diya-field[data-size='large'] > .diya-field-frame > textarea { min-height: 134px; padding: 14px 16px; }
 /* Whatever a provider hands over fills the frame (G1): Stripe's mount div, which holds an iframe
    sized width: 1px !important; min-width: 100% !important, or a bare iframe. */
 .diya-root .diya-field-frame > :not(input, select, textarea) {
@@ -1316,14 +1368,19 @@
 .diya-root .diya-text-field input:disabled {
   cursor: not-allowed;
 }
-.diya-root .diya-sr-only {
+/* Visually hidden: read, not seen. The same declarations as VisuallyHidden's inline style. */
+.diya-root .diya-sr-only,
+.diya-root .diya-table .diya-sr-only,
+.diya-root .diya-chat-sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
   padding: 0;
+  margin: -1px;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+  border: 0;
 }
 @media (forced-colors: active) {
   .diya-root .diya-text-field-control {
@@ -1434,7 +1491,7 @@
   cursor: pointer;
 }
 .diya-root .diya-choice-option > span { min-width:0; overflow-wrap:anywhere; }
-.diya-root .diya-choice-option input {
+.diya-root :is(.diya-choice-option input, .diya-checkbox) {
   appearance: none;
   -webkit-appearance: none;
   width: var(--diya-internal-choice-control);
@@ -1453,7 +1510,7 @@
 .diya-root .diya-choice-option input[type='radio'] {
   border-radius: 50%;
 }
-.diya-root .diya-choice-option input:checked {
+.diya-root :is(.diya-choice-option input, .diya-checkbox):checked {
   background: var(--diya-color-accent);
   border-color: var(--diya-color-accent);
 }
@@ -1464,7 +1521,7 @@
   border-radius: 50%;
   background: var(--diya-color-accent-text);
 }
-.diya-root .diya-choice-option input[type='checkbox']:checked::before {
+.diya-root :is(.diya-choice-option input[type='checkbox'], .diya-checkbox):checked::before {
   content: '';
   width: 4px;
   height: 8px;
@@ -1502,17 +1559,17 @@
 /* A disabled Choice fades as one field, legend and message included. */
 .diya-root .diya-choice:disabled { opacity: 0.45; }
 .diya-root .diya-choice:disabled .diya-choice-option[data-disabled='true'] { opacity: 1; }
-.diya-root .diya-choice-option input:disabled {
+.diya-root :is(.diya-choice-option input, .diya-checkbox):disabled {
   cursor: not-allowed;
 }
 .diya-root .diya-choice-option:not([data-disabled='true']):hover input:not(:checked) {
   border-color: var(--diya-color-text);
 }
 @media (forced-colors: active) {
-  .diya-root .diya-choice-option input {
+  .diya-root :is(.diya-choice-option input, .diya-checkbox) {
     appearance: auto;
   }
-  .diya-root .diya-choice-option input::before {
+  .diya-root :is(.diya-choice-option input, .diya-checkbox)::before {
     display: none;
   }
   .diya-root .diya-choice-option[data-disabled='true'] {
@@ -1520,9 +1577,52 @@
     color: GrayText;
   }
 }
-.diya-root .diya-choice input[type='checkbox']:indeterminate { background: var(--diya-color-accent); border-color: var(--diya-color-accent); }
-.diya-root .diya-choice input[type='checkbox']:indeterminate::before { content: ''; width: 8px; height: 2px; border: 0; transform: none; background: var(--diya-color-accent-text); }
-@media (forced-colors: active) { .diya-root .diya-choice input[type='checkbox']:indeterminate::before { display: none; } }
+/* Mixed: keyed off data-indeterminate too, which is in the server HTML, so the mark is already
+   showing when hydration sets the property and nothing grows in on page load (MOT-1.2-05). */
+.diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true']) { background: var(--diya-color-accent); border-color: var(--diya-color-accent); }
+.diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true'])::before { content: ''; width: 8px; height: 2px; border: 0; transform: none; background: var(--diya-color-accent-text); }
+@media (forced-colors: active) { .diya-root :is(.diya-choice input[type='checkbox'], .diya-checkbox):is(:indeterminate, [data-indeterminate='true'])::before { display: none; } }
+
+/* Checkbox (1.2): a lone box, Choice's box value for value (the shared selectors above), 12px
+   from a label in the reader's voice; help and error under the label, 4px below. */
+.diya-root .diya-checkbox-field {
+  --diya-internal-choice-control: 18px;
+  --diya-internal-choice-font: var(--diya-text-body);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--diya-color-text);
+}
+.diya-root .diya-checkbox-field > div { min-width: 0; overflow-wrap: anywhere; }
+.diya-root .diya-checkbox-field[data-size='small'] {
+  --diya-internal-choice-control: 16px;
+  --diya-internal-choice-font: var(--diya-text-caption);
+}
+.diya-root .diya-checkbox-field[data-size='large'] {
+  --diya-internal-choice-control: 22px;
+  --diya-internal-choice-font: var(--diya-text-large);
+}
+.diya-root .diya-checkbox-label {
+  display: block;
+  font-size: var(--diya-internal-choice-font);
+  line-height: 20px;
+  cursor: pointer;
+}
+.diya-root .diya-checkbox-field[data-size='large'] .diya-checkbox-label { line-height: 24px; }
+.diya-root .diya-checkbox-field .diya-text-field-description { margin-top: 4px; }
+.diya-root .diya-checkbox-field[data-disabled='true'] { opacity: 0.45; }
+.diya-root .diya-checkbox-field[data-disabled='true'] .diya-checkbox-label { cursor: not-allowed; }
+.diya-root .diya-checkbox-field:not([data-disabled='true']):hover .diya-checkbox:not(:checked, [data-indeterminate='true']) {
+  border-color: var(--diya-color-text);
+}
+@media (pointer: coarse) {
+  .diya-root .diya-checkbox-field { min-height: 44px; }
+}
+@media (forced-colors: active) {
+  .diya-root .diya-checkbox-field[data-disabled='true'] { opacity: 1; color: GrayText; }
+}
 
 
 /* NewAtoms.css: portable component rules. */
@@ -1716,6 +1816,12 @@
 .diya-root .diya-combobox .diya-combobox-control input:focus-visible { appearance:none; border:0; border-radius:0; outline:none; box-shadow:none; background:transparent; padding:0; height:24px; font-size:max(var(--diya-internal-field-min, 0px), var(--diya-text-body)); }
 .diya-root .diya-combobox[data-size='small'] .diya-combobox-control input { height:18px; font-size:max(var(--diya-internal-field-min, 0px), var(--diya-text-caption)); }
 .diya-root .diya-combobox[data-size='large'] .diya-combobox-control input { height:30px; font-size:var(--diya-text-large); }
+/* The control's height comes from the height tokens, like every other field's: its padding gives
+   way when a token is smaller than the default (Compact), so the 24px input (30px at Large) and the
+   toggle don't hold it taller. At the default heights the padding is 1.1.1's own. */
+.diya-root .diya-combobox-control { padding-block: min(6px, max(0px, calc((var(--diya-height-control-medium, 40px) - 26px) / 2))); }
+.diya-root .diya-combobox[data-size='small'] .diya-combobox-control { padding-block: min(3px, max(0px, calc((var(--diya-height-control-small, 32px) - 26px) / 2))); }
+.diya-root .diya-combobox[data-size='large'] .diya-combobox-control { padding-block: min(6px, max(0px, calc((var(--diya-height-control-large, 48px) - 32px) / 2))); }
 
 
 /* date-picker/DatePicker.css: portable component rules. */
@@ -1856,6 +1962,45 @@
 }
 @media (forced-colors: active) { .diya-root .diya-progress-track { outline: 1px solid CanvasText; } .diya-root .diya-progress-track > span { background: Highlight; } .diya-root .diya-progress-fill-circle { stroke: Highlight; } }
 
+/* Spinner: a ring in the text color, drawn at its exact size (16, 20 or 24px), centered on the
+   cap height of the text beside it (DIYA Sans caps are 0.729em). It waits 400ms, then fades in
+   over medium on enter, as a delayed Tooltip arrives, so a quick load shows nothing. The wait
+   isn't motion: a literal 400ms (the beat), never scaled or gated. The fade is gated (instant
+   under off). */
+.diya-root .diya-spinner {
+  --diya-internal-spinner: 20px;
+  --diya-internal-beat: 400ms;
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--diya-internal-spinner);
+  height: var(--diya-internal-spinner);
+  vertical-align: calc(0.365em - var(--diya-internal-spinner) / 2);
+  animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both;
+}
+.diya-root .diya-spinner[data-size='small'] { --diya-internal-spinner: 16px; }
+.diya-root .diya-spinner[data-size='large'] { --diya-internal-spinner: 24px; }
+@keyframes diya-spinner-arrive { from { opacity: 0; } }
+/* One turn a second with transform, not the rotate property: Chromium runs rotate on an <svg> on
+   the main thread, so it froze whenever the page was busy, which is when spinners show. A status
+   loop, like Progress's: a literal 1s, never scaled, and it keeps turning with motion off. */
+.diya-root .diya-spinner svg { display: block; overflow: visible; animation: diya-spinner-turn 1s linear infinite; }
+@keyframes diya-spinner-turn { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.diya-root .diya-spinner-track { stroke-opacity: 0.16; }
+/* With showLabel, the words sit 8px after the ring and arrive with it. */
+.diya-root .diya-spinner[data-show-label='true'] { display: inline; width: auto; height: auto; vertical-align: baseline; }
+.diya-root .diya-spinner[data-show-label='true'] svg { display: inline-block; vertical-align: calc(0.365em - var(--diya-internal-spinner) / 2); margin-inline-end: 8px; }
+/* Under Reduce Motion, and with motion="reduced", the turn stops and the ring closes and breathes
+   with Progress's keyframe, on the <svg> (WebKit froze a breathe on the inner circle while busy).
+   Unscoped from data-motion in the media query, as Progress's rule is. */
+.diya-root[data-motion='reduced'] .diya-spinner svg { animation: diya-progress-breathe 2s ease-in-out infinite alternate; }
+.diya-root[data-motion='reduced'] .diya-spinner-arc { stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .diya-root .diya-spinner svg { animation: diya-progress-breathe 2s ease-in-out infinite alternate; }
+  .diya-root .diya-spinner-arc { stroke-dashoffset: 0; }
+}
+/* A Button's spinner keeps the button's own forced color. */
+@media (forced-colors: active) { .diya-root .diya-spinner svg { stroke: CanvasText; } .diya-root .diya-button > .diya-spinner svg { stroke: currentColor; } }
+
 
 /* card/Card.css: portable component rules. */
 .diya-root .diya-card { width:100%; border:1px solid var(--diya-color-line); border-radius:var(--diya-radius-surface); background:var(--diya-color-surface); color:var(--diya-color-text);  overflow:hidden; }
@@ -1943,7 +2088,6 @@
 .diya-root .diya-table .diya-pagination { margin-top:20px; }
 .diya-root .diya-table-bulk { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 16px; margin-bottom:8px; border:1px solid var(--diya-color-line); border-radius:calc(12px * var(--diya-corner-scale, 1)); background:var(--diya-color-selected); }
 .diya-root .diya-table-bulk > span { margin-right:auto; }
-.diya-root .diya-table .diya-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
 .diya-root .diya-table-empty { padding:40px 16px; text-align:center; }
 .diya-root .diya-table-empty p { color:var(--diya-color-muted); margin:8px 0 20px; }
 .diya-root .diya-table-project { display:block; font-weight:500; white-space:nowrap; }
@@ -2174,7 +2318,7 @@
 /* application-patterns/ApplicationPatterns.css: portable component rules. */
 .diya-root .diya-app-pattern-surface{background:var(--diya-color-raised,var(--diya-color-surface));color:var(--diya-color-text);border:1px solid var(--diya-color-line);border-radius:var(--diya-radius-surface);overflow:hidden}
 .diya-root .diya-chat{width:100%;max-width:620px;display:flex;flex-direction:column}
-.diya-root .diya-chat-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
 .diya-root .diya-chat[data-presentation='floating']{max-width:380px;margin-left:auto;box-shadow:0 calc(12px * var(--diya-elevation, 1)) calc(32px * var(--diya-elevation, 1)) #0002}
 .diya-root .diya-chat[data-presentation='full-page']{max-width:none;height:100%;min-height:0}
 .diya-root .diya-chat-header{flex:none;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--diya-color-line)}
@@ -2454,6 +2598,7 @@
 .diya-root .diya-field[data-invalid='true'] > .diya-text-field-description,
 .diya-root .diya-select-field[data-invalid='true'] .diya-text-field-description,
 .diya-root .diya-choice[aria-invalid='true'] > .diya-text-field-description,
+.diya-root .diya-checkbox-field[data-invalid='true'] .diya-text-field-description,
 .diya-root .diya-combobox[data-invalid='true'] .diya-field-help,
 .diya-root .diya-date-field[data-invalid='true'] .diya-field-help,
 .diya-root .diya-workflow-error {
@@ -2466,7 +2611,8 @@
 .diya-root .diya-combobox[data-invalid='true'] .diya-combobox-control,
 .diya-root .diya-date-field[data-invalid='true'] .diya-date-trigger,
 .diya-root .diya-switch[aria-invalid='true'],
-.diya-root .diya-choice[aria-invalid='true'] .diya-choice-option input:not(:checked) {
+.diya-root .diya-choice[aria-invalid='true'] .diya-choice-option input:not(:checked),
+.diya-root .diya-checkbox-field[data-invalid='true'] .diya-checkbox:not(:checked) {
   border-color: var(--diya-color-error);
 }
 
@@ -3597,6 +3743,39 @@
   transition-duration: var(--diya-internal-duration-fast);
   transition-timing-function: var(--diya-ease-move);
 }
+/* Loading: the 0.8 dim eases at once, as the answer to the press. On the 400ms beat the label
+   slides over by the room (fast, on move; it steps when nothing travels), and slides back at once
+   when loading ends. Start and end padding move the same amount the other way, so the width is
+   the same on every frame. ([data-variant] outranks the shared list above; every Button has it.) */
+.diya-root .diya-button[data-variant] {
+  transition-property: background-color, border-color, color, box-shadow, scale, opacity, padding-inline-start, padding-inline-end;
+  transition-duration: var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast), var(--diya-internal-duration-fast),
+    calc(var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel)), calc(var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel));
+}
+.diya-root .diya-button[data-variant][aria-busy='true'] {
+  transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, var(--diya-internal-beat), var(--diya-internal-beat);
+}
+/* The spinner's margins move with the padding, the other way, so it holds still while the label
+   slides; it fades in once the label is halfway across, so the two never overlap. */
+.diya-root .diya-button > .diya-spinner {
+  animation:
+    diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) calc(var(--diya-internal-beat) + var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel) / 2) both,
+    diya-button-make-room calc(var(--diya-internal-duration-fast) * var(--diya-internal-motion-travel)) var(--diya-ease-move) var(--diya-internal-beat) both;
+}
+@keyframes diya-button-make-room {
+  from {
+    margin-inline-start: calc(-1 * var(--diya-internal-button-room));
+    margin-inline-end: calc(-1 * var(--diya-internal-button-room));
+  }
+}
+/* Icon-only, nothing moves: the icon gives way on the beat and the spinner fades in there. */
+.diya-root .diya-button[data-icon-only='true'] > .diya-spinner {
+  animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both;
+}
+/* The icon goes on the beat: the arrive fade played backwards, in no time. */
+.diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > :not(.diya-spinner) {
+  animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) reverse both;
+}
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active,
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active::after {
   transition-duration: 0s;
@@ -3653,12 +3832,12 @@
 /* Choice: the mark is always there, hidden, and grows in when checked. A transition, not a
    keyframe, so nothing plays on page load or when hidden content is shown again. Unchecking
    is instant. */
-.diya-root .diya-choice-option input {
+.diya-root :is(.diya-choice-option input, .diya-checkbox) {
   transition-property: background-color, border-color;
   transition-duration: var(--diya-internal-duration-fast);
   transition-timing-function: var(--diya-ease-move);
 }
-.diya-root .diya-choice-option input::before {
+.diya-root :is(.diya-choice-option input, .diya-checkbox)::before {
   content: '';
   opacity: 0;
   scale: calc(1 - 0.4 * var(--diya-internal-motion-travel));
@@ -3672,14 +3851,14 @@
   border-radius: 50%;
   background: var(--diya-color-accent-text);
 }
-.diya-root .diya-choice-option input[type='checkbox']::before {
+.diya-root :is(.diya-choice-option input[type='checkbox'], .diya-checkbox)::before {
   width: 4px;
   height: 8px;
   border: solid var(--diya-color-accent-text);
   border-width: 0 1.5px 1.5px 0;
   transform: translateY(-1px) rotate(45deg);
 }
-.diya-root .diya-choice-option input:is(:checked, :indeterminate)::before {
+.diya-root :is(.diya-choice-option input, .diya-checkbox):is(:checked, :indeterminate, [data-indeterminate='true'])::before {
   opacity: 1;
   scale: 1;
   transition-duration: var(--diya-internal-duration-fast);

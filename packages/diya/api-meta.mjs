@@ -2,7 +2,7 @@
 //
 // items: keyed by permanent id, the first export's name in kebab-case (TextLink is text-link).
 // slots, children and state describe the item's first export; any other export is a variant
-// of it (Chart is DataViz without its card). kind: provider, layout, component or pattern.
+// of it (Chart is DataViz without its card). kind: provider, layout, utility, component or pattern.
 //   slots     every ReactNode prop except children. A key may be a path into an array prop,
 //             such as `items[].content`. accepts: DIYA item ids that fit, or 'any'.
 //             content: plain content that fits, from text, icon, image. as: 'render' when the
@@ -60,6 +60,18 @@ export const items = {
     messages: null,
   },
 
+  // Utilities: not counted as components, no catalog page.
+  'visually-hidden': {
+    kind: 'utility', title: 'Visually Hidden', ...stable1_2,
+    exports: ['VisuallyHidden'],
+    requires: { provider: false },
+    slots: {},
+    children: { allowed: true, accepts: [], content: ['text'] },
+    state: [],
+    tokens: [],
+    messages: null,
+  },
+
   // Components
   button: {
     kind: 'component', title: 'Button', ...v1,
@@ -69,7 +81,9 @@ export const items = {
     state: [],
     tokens: ['--diya-radius-control', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-destructive', '--diya-color-line', '--diya-color-muted',
       '--diya-color-raised', '--diya-color-selected', '--diya-color-text', '--diya-corner-scale',
-      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Its loading spinner (1.2) arrives over medium on enter.
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: null,
   },
   field: {
@@ -84,6 +98,16 @@ export const items = {
       '--diya-corner-scale', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-control',
       '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
     messages: 'field',
+  },
+  checkbox: {
+    kind: 'component', title: 'Checkbox', ...stable1_2,
+    exports: ['Checkbox'],
+    slots: { label: { accepts: ['text-link'], content: ['text'] } },
+    children: none,
+    state: [{ value: 'checked', onChange: 'onCheckedChange', default: 'defaultChecked' }],
+    tokens: ['--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-focus', '--diya-color-muted', '--diya-color-text',
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-enter', '--diya-ease-move'],
+    messages: null,
   },
   'text-input': {
     kind: 'component', title: 'Text Input', ...v1,
@@ -211,7 +235,9 @@ export const items = {
     tokens: ['--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover', '--diya-color-line',
       '--diya-color-muted', '--diya-color-raised', '--diya-color-selected', '--diya-color-surface',
       '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption',
-      '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
+      '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'pagination',
   },
   tabs: {
@@ -351,7 +377,9 @@ export const items = {
     state: [],
     tokens: ['--diya-radius-control', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-destructive', '--diya-color-line',
       '--diya-color-muted', '--diya-color-raised', '--diya-color-recessed', '--diya-color-selected', '--diya-color-text',
-      '--diya-corner-scale', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
+      '--diya-corner-scale', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'codeBlock',
   },
   badge: {
@@ -408,6 +436,16 @@ export const items = {
     state: [],
     tokens: ['--diya-color-accent', '--diya-color-selected', '--diya-color-text', '--diya-text-caption', '--diya-duration-slow', '--diya-ease-move'],
     messages: 'progress',
+  },
+  spinner: {
+    kind: 'component', title: 'Spinner', ...stable1_2,
+    exports: ['Spinner'],
+    slots: {},
+    children: none,
+    state: [],
+    // Its arrive (medium, enter), and in a Button the slide it waits for (fast, move).
+    tokens: ['--diya-duration-fast', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-move'],
+    messages: null,
   },
   tooltip: {
     kind: 'component', title: 'Tooltip', ...v1,
@@ -529,7 +567,9 @@ export const items = {
       '--diya-color-destructive', '--diya-color-hover', '--diya-color-line', '--diya-color-muted',
       '--diya-color-raised', '--diya-color-selected', '--diya-color-text', '--diya-corner-scale',
       '--diya-leading-tight', '--diya-shadow-raised', '--diya-text-body', '--diya-text-caption',
-      '--diya-text-display', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
+      '--diya-text-display', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'chart',
   },
   form: {
@@ -548,7 +588,9 @@ export const items = {
     tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line',
       '--diya-color-muted', '--diya-color-raised', '--diya-color-selected', '--diya-color-surface',
       '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-text-body',
-      '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
+      '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'form',
   },
   wizard: {
@@ -563,7 +605,9 @@ export const items = {
     tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line',
       '--diya-color-muted', '--diya-color-raised', '--diya-color-selected', '--diya-color-surface',
       '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-text-body',
-      '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
+      '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'wizard',
   },
   'file-upload': {
@@ -575,7 +619,9 @@ export const items = {
     tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover',
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-selected',
       '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight',
-      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'fileUpload',
   },
   chatbot: {
@@ -609,7 +655,9 @@ export const items = {
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-scrim',
       '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale',
       '--diya-leading-tight', '--diya-shadow-raised', '--diya-text-body', '--diya-text-caption',
-      '--diya-text-large', '--diya-text-title', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-modal'],
+      '--diya-text-large', '--diya-text-title', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-modal',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium'],
     messages: 'dialog',
   },
   drawer: {
@@ -621,7 +669,9 @@ export const items = {
     },
     children: { allowed: true, accepts: 'any', content: ['text'], multiple: true },
     state: [{ value: 'open', onChange: 'onOpenChange' }],
-    tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-scrim', '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-shadow-raised', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
+    tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-scrim', '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-shadow-raised', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium'],
     messages: 'drawer',
   },
   'content-state': {
@@ -633,7 +683,9 @@ export const items = {
     tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover',
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-selected',
       '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight',
-      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: null,
   },
 }

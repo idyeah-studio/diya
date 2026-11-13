@@ -166,3 +166,82 @@ test("a field error in the app's own modal dialog is said inside it (G9)", async
   await expect(page.locator('#coupon')).toHaveAttribute('aria-invalid', 'true')
   await expect(page.locator('dialog#native .diya-toast-host > [aria-live=polite]')).toHaveText('Coupon code: Enter all 6 characters of the code.')
 })
+
+// H1 (FE G-01, VIS-G-03): the framed select's chevron sits over the select, as Select's does, so a
+// click on it opens the select; a list-box select (multiple, or size > 1) has none.
+test.describe('the framed select’s chevron (H1)', () => {
+  test('a click on the chevron reaches the select', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=providers&theme=light')
+    const frame = (await page.locator('#framed-select').locator('..').boundingBox())!
+    const point = { x: frame.x + frame.width - 20, y: frame.y + frame.height / 2 }
+    expect(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.id, point)).toBe('framed-select')
+    await page.mouse.click(point.x, point.y)
+    await page.keyboard.press('Escape')
+    // A click on a select focuses it in Chromium and Firefox; Safari's clicks don't focus, but
+    // the click lands on the select all the same (above).
+    if (testInfo.project.name.startsWith('webkit')) return
+    await expect(page.locator('#framed-select')).toBeFocused()
+  })
+
+  test('a list-box select has no chevron', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=providers&theme=light')
+    const after = await page.locator('#framed-list').evaluate((node) => getComputedStyle(node.parentElement!, '::after').content)
+    expect(['none', 'normal']).toContain(after)
+  })
+})
+
+// H4 (VIS-G-01): a component child that mounts a hosted iframe (React Stripe Elements'
+// <CardElement />) gets the frame's ring, as a DOM child does, in all three engines.
+test('a framed component child that mounts an iframe shows the ring when focus is in it (H4)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=providers&theme=light')
+  const card = page.frameLocator('iframe[title="Component card"]').locator('#card')
+  await card.waitFor()
+  const frame = page.locator('.diya-field-frame').filter({ has: page.locator('iframe[title="Component card"]') })
+  await card.click()
+  await expect(frame).toHaveAttribute('data-focused', '')
+  await page.locator('#blank').click()
+  await expect(frame).not.toHaveAttribute('data-focused', '')
+})
+
+// H5 (FE G-04): the focus watcher polls only while focus or the pointer is in an iframe; a page at
+// rest with framed hosted fields does no work. (Every G5 spec above still passes with it.)
+test('with focus in a page field and the pointer away from iframes, nothing polls focus (H5)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=providers&theme=light')
+  await page.frameLocator('iframe[title="Split number"]').locator('#card').waitFor()
+  await page.mouse.move(2, 2)
+  await page.locator('#framed-notes').focus()
+  const reads = await page.evaluate(async () => {
+    const read = Object.getOwnPropertyDescriptor(Document.prototype, 'activeElement')!.get!
+    let count = 0
+    Object.defineProperty(document, 'activeElement', { configurable: true, get() { count += 1; return read.call(document) } })
+    await new Promise((done) => setTimeout(done, 1500))
+    delete (document as unknown as Record<string, unknown>).activeElement
+    return count
+  })
+  expect(reads).toBeLessThan(3)
+})
+
+// H6 (VIS-G-02): a framed textarea has TextArea's box at each size: the same height, the same
+// text inset, and the resize grip in the frame's corner.
+test('a framed textarea matches TextArea at each size (H6)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=providers&theme=light')
+  for (const size of ['small', 'medium', 'large']) {
+    const m = await page.evaluate((size) => {
+      const reference = document.getElementById(`ta-${size}`)!
+      const area = document.getElementById(`fta-${size}`)!
+      const frame = area.parentElement!
+      const r = reference.getBoundingClientRect(), f = frame.getBoundingClientRect(), a = area.getBoundingClientRect()
+      const ra = getComputedStyle(reference), aa = getComputedStyle(area)
+      return {
+        height: [Math.round(r.height), Math.round(f.height)],
+        inset: [ra.paddingTop, aa.paddingTop, ra.paddingLeft, aa.paddingLeft],
+        // The textarea reaches the frame's inner corner (1px border), so its grip sits in the corner.
+        corner: [Math.round(f.right - a.right), Math.round(f.bottom - a.bottom)],
+      }
+    }, size)
+    expect(m.height[1], size).toBe(m.height[0])
+    expect(m.inset[1], size).toBe(m.inset[0])
+    expect(m.inset[3], size).toBe(m.inset[2])
+    expect(m.corner, size).toEqual([1, 1])
+  }
+})

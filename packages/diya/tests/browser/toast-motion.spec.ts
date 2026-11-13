@@ -726,7 +726,9 @@ test.describe('a second change while a toast is sliding (S2)', () => {
         await settle(page)
       }
       const track = await frames(page, `window.diya.toast.dismiss('Link copied'); setTimeout(() => window.diya.toast({ title: 'Invoice sent', duration: 0 }), ${gap})`, gap + 650)
-      oneWay(track.filter((frame) => frame.t >= gap + 20), 'Draft saved')
+      // From the frame the second change lands on (its timer can fire late under load), not the clock.
+      const second = track.findIndex((frame) => frame.live.some((box) => box.title === 'Invoice sent'))
+      oneWay(track.slice(second), 'Draft saved')
       seeThrough(track, 'Invoice sent')
     })
   }
@@ -746,8 +748,9 @@ test.describe('a second change while a toast is sliding (S2)', () => {
     await page.mouse.up()
     const track = await endFrames(page)
     // From the click, the restore arrives about 150ms later.
-    const clicked = track.find((frame) => !frame.live.some((box) => box.title === '3 emails archived'))?.t ?? 0
-    oneWay(track.filter((frame) => frame.t >= clicked + 170), 'Draft saved')
+    // From the frame the restore lands on (its 150ms timer can fire late under load), not the clock.
+    const second = track.findIndex((frame) => frame.live.some((box) => box.title === 'Emails restored'))
+    oneWay(track.slice(second), 'Draft saved')
     seeThrough(track, 'Emails restored')
   })
 })

@@ -11,6 +11,7 @@ import { useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { subscribeModals, topModal } from '../internal/modal-stack.js'
+import { isControl } from '../internal/opener.js'
 import { motionTiming, playOnCopy } from '../internal/presence.js'
 import { createAnnouncer, createToastHost, lowerToastHost, raiseToastHost, type ToastHost } from './host.js'
 import { elapsed, live as playing, moved, offsetY, overlaps, remaining as timeLeft, RIDE_ANIMATION, SHIFT_ANIMATION, showingCopies, type Shift, type Span } from './motion.js'
@@ -98,7 +99,8 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
   const outside = useRef<HTMLElement | null>(null)
   // The element in the stack that focus last went to.
   const focused = useRef<Element | null>(null)
-  // Where focus was when it came into the stack from outside: where × sends it back (G8).
+  // Where focus was when it came into the stack from outside, for this visit only: where × sends
+  // it back (G8). Forgotten when focus leaves the stack or the stack empties (H2).
   const cameFrom = useRef<HTMLElement | null>(null)
   const nativeModal = useRef<HTMLDialogElement | null>(null)
   // Each toast's shifts, so one still waiting to start can fold into the next (R3).
@@ -499,8 +501,11 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     // A <Toast>'s own place (where it was raised, as in 1.1.1) comes before the last place
     // focused outside the stack, which a click in Safari can leave on a Dialog itself (R5).
     // Where focus came into the stack from comes before a <Toast>'s raise point: a click on ×
-    // while typing goes back to the field, not the button that raised the toast (G8).
-    for (const candidate of [origin.current, cameFrom.current, fallback, outside.current]) {
+    // while typing goes back to the field, not the button that raised the toast (G8). Past where
+    // F8 was pressed, focus only ever returns to a control: never to a <dialog> or another
+    // container recorded as the raise point (UX-H-01).
+    for (const [index, candidate] of [origin.current, cameFrom.current, fallback, outside.current].entries()) {
+      if (index > 0 && !isControl(candidate)) continue
       if (takesFocus(candidate)) { origin.current = null; return }
     }
     const nextToast = Array.from(document.querySelectorAll<HTMLElement>('.diya-toast-list > .diya-toast')).find((slot) => slot.dataset.key !== leaving)?.querySelector<HTMLElement>(focusable)
@@ -531,8 +536,9 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     const slots = reachable()
     const slot = slots.find((item) => item.dataset.key === id)
     if (!document || !slot) return
-    // A click on × in Safari leaves focus on <body>: back by the chain, where the person was (UX-R3-01).
-    if (document.activeElement === document.body || !document.activeElement) { returnFocus(id, fallback); return }
+    // A click on × in Safari leaves focus on <body>, or on the Dialog around the stack: back by the
+    // chain, where the person was (UX-R3-01, H3).
+    if (!slot.contains(document.activeElement) && !isControl(document.activeElement)) { returnFocus(id, fallback); return }
     if (!slot.contains(document.activeElement)) return
     const index = slots.indexOf(slot)
     const neighbor = slots[index - 1] ?? slots[index + 1]
@@ -603,13 +609,23 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     const leave = (event: MouseEvent) => { if (!node.contains(event.relatedTarget as Node | null)) setPointer(false) }
     const focusIn = (event: globalThis.FocusEvent) => {
       focused.current = event.target as Element
+      // Coming in from outside (or from <body>, which leaves nothing to go back to), this visit's
+      // entry point replaces any earlier one (H2).
       const from = event.relatedTarget as HTMLElement | null
-      if (from && !node.contains(from)) cameFrom.current = from
+      if (!from || !node.contains(from)) cameFrom.current = from
       setFocusInside(true)
+    }
+    // In Safari a press on × or Undo never moves focus into the stack: where focus was is read at
+    // the press instead (UX-H-01). Chromium and Firefox record it on focusin too.
+    const press = () => {
+      const active = node.ownerDocument.activeElement
+      if (active && !node.contains(active) && isControl(active)) cameFrom.current = active as HTMLElement
     }
     const focusOut = (event: globalThis.FocusEvent) => {
       if (node.contains(event.relatedTarget as Node)) return
       setFocusInside(false)
+      // The visit is over: where it came in from is forgotten with it (H2).
+      cameFrom.current = null
       // Focus left the stack: any F8 walk is over.
       walking.current = false
       origin.current = null
@@ -618,12 +634,14 @@ export function ToastStack({ portal, outermost, owner }: { portal: HTMLElement |
     node.addEventListener('mouseover', enter)
     node.addEventListener('mouseout', leave)
     node.addEventListener('focusin', focusIn)
+    node.addEventListener('pointerdown', press, true)
     node.addEventListener('focusout', focusOut)
     node.addEventListener('keydown', keydown)
     return () => {
       node.removeEventListener('mouseover', enter)
       node.removeEventListener('mouseout', leave)
       node.removeEventListener('focusin', focusIn)
+      node.removeEventListener('pointerdown', press, true)
       node.removeEventListener('focusout', focusOut)
       node.removeEventListener('keydown', keydown)
     }
