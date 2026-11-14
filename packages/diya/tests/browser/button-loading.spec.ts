@@ -435,6 +435,40 @@ for (const at of [600, 200]) for (const lean of [true, false]) {
   })
 }
 
+// O3 with motion's other flips (MOT-N-01), after the beat on a lean page: two flips in one task
+// (never blank, never both), and off then on in the next task (never both; a frame may paint
+// between, which starts the fade back).
+for (const how of ['two flips in one task', 'off, then on in the next task'] as const) {
+  test(`loading ${how} after the beat never draws the spinner over the words (O3)`, async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=loading&theme=light&lean=1')
+    const bad = await page.evaluate((how) => new Promise<string[]>((done) => {
+      const alpha = (color: string) => { const parts = color.match(/[\d.]+/g)!.map(Number); return parts.length > 3 ? parts[3] : 1 }
+      const ids = ['bl-medium-solid', 'bl-n1-text', 'bl-link', 'bl-child']
+      const out: string[] = []
+      const win = window as unknown as { __setBusy(value: boolean): void; __flip(): void }
+      win.__setBusy(true)
+      const start = performance.now()
+      setTimeout(() => {
+        if (how === 'two flips in one task') { win.__flip(); win.__flip() } else { win.__setBusy(false); setTimeout(() => win.__setBusy(true), 0) }
+      }, 600)
+      const tick = () => {
+        const t = performance.now() - start
+        for (const id of ids) {
+          const button = document.getElementById(id)!
+          const spinner = button.querySelector<HTMLElement>('.diya-button-spinner')
+          const ring = spinner && getComputedStyle(spinner).display !== 'none' ? Number(getComputedStyle(spinner).opacity) : 0
+          const words = alpha(getComputedStyle(button).getPropertyValue('-webkit-text-fill-color')) * alpha(getComputedStyle(button).color)
+          if (button.getAttribute('aria-busy') === 'true' && ring > 0.01 && words > 0.02) out.push(`${id} at ${t.toFixed(0)}ms: spinner over the words`)
+          if (how === 'two flips in one task' && t > 400 && ring < 1 && words < 1) out.push(`${id} at ${t.toFixed(0)}ms: blank`)
+        }
+        if (t < 1300) requestAnimationFrame(tick); else done(out)
+      }
+      tick()
+    }), how)
+    expect(bad).toEqual([])
+  })
+}
+
 // Forced colors force the words' color, so the label keeps ButtonText itself while busy, and still
 // goes on the beat (Chromium emulates forced colors).
 test('in forced colors the label still goes on the beat, and reads ButtonText before it', async ({ page }, testInfo) => {
