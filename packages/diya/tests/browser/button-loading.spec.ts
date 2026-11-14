@@ -3,6 +3,7 @@
 // stays), or else the label, which keeps its box. Nothing moves, the width holds, the spinner stays
 // inside the button at any padding, and when loading ends the label (or icon) fades back. A loading
 // Button looks busy, not disabled. (F12 replaces step 8's slide, whose tests these replace.)
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
 import { openCase } from './helpers'
 
@@ -887,7 +888,13 @@ for (const theme of ['light', 'dark']) {
       }
       return out
     }, ids)
-    for (const id of ids) expect((await pixelDiff(page, await shot(id), rest[id])).max, `${id} 30ms into loading, against rest`).toBeLessThanOrEqual(8)
+    for (const id of ids) {
+      const busy = await shot(id)
+      const diff = await pixelDiff(page, busy, rest[id])
+      // On a failure, both frames are kept in the results folder (CI uploads it).
+      if (diff.max > 8) { mkdirSync(testInfo.outputDir, { recursive: true }); writeFileSync(testInfo.outputPath(`${id}-rest.png`), rest[id]); writeFileSync(testInfo.outputPath(`${id}-30ms.png`), busy) }
+      expect(diff.max, `${id} 30ms into loading, against rest`).toBeLessThanOrEqual(8)
+    }
     expect(moving, 'no color transition on a busy Button').toEqual([])
   })
 

@@ -1,7 +1,7 @@
 // Spinner (1.2) in a real browser: the 400ms beat and its fade, the turn surviving a busy main
 // thread (MOT-1.2-01/02), and the ring centered on the cap height of the text beside it.
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { homedir, platform, tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -135,6 +135,12 @@ for (const motion of ['system', 'reduced'] as const) {
         if (read.change[index] > 1) changed++
       }
       // A turn changes every frame; a breathe slows at its ends, so most frames.
+      if (changed / total <= (motion === 'system' ? 0.9 : 0.6)) {
+        // On a failure, the recording and the per-frame numbers are kept in the results folder (CI uploads it).
+        mkdirSync(testInfo.outputDir, { recursive: true })
+        copyFileSync(file, testInfo.outputPath('recording.webm'))
+        writeFileSync(testInfo.outputPath('frames.json'), JSON.stringify({ red, change: read.change, flag: read.flag }, null, 1))
+      }
       expect(changed / total, `${changed}/${total} frames changed while blocked`).toBeGreaterThan(motion === 'system' ? 0.9 : 0.6)
     } finally {
       rmSync(dir, { recursive: true, force: true })
