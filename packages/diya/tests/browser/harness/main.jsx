@@ -481,6 +481,9 @@ function IconText() { return <><svg width="16" height="16" viewBox="0 0 24 24" f
 // A link component that takes its label from a prop when it has no children (P1).
 const NavLink = forwardRef(function NavLink({ label, children, ...rest }, ref) { return <a ref={ref} {...rest}>{children ?? label}</a> })
 
+// A link component that ignores its children and renders its label prop (Q1).
+const SelfLink = forwardRef(function SelfLink({ label, children, ...rest }, ref) { return <a ref={ref} {...rest}>{label}</a> })
+
 function ReaderSpinners({ busy }) {
   const [shown, setShown] = useState(false)
   window.__showRs = () => flushSync(() => setShown(true))
@@ -620,6 +623,7 @@ function LoadingCase() {
           <Button id="bl-void-img-plain" asChild iconOnly aria-label="Home"><img alt="" width={16} height={16} src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" /></Button>
           <Button id="bl-void-nav" asChild loading={busy}><NavLink href="#/home" label="Go home" /></Button>
           <Button id="bl-void-nav-plain" asChild><NavLink href="#/home" label="Go home" /></Button>
+          <Button id="bl-void-self" asChild loading={busy}><SelfLink href="#/home" label="Go home" /></Button>
         </div>
       )}
       {/* Destructive Buttons for forced colors (O2): words, an icon-only one, a disabled one, and a

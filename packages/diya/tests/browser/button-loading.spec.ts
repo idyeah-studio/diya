@@ -1091,6 +1091,28 @@ test('a reduced-motion reset never puts the spinner over the words (P3)', async 
   expect(Object.keys(result.landed)).toHaveLength(8)
 })
 
+// Q1 (VIS-P-01): an asChild child that ignores its children (a component rendering its own label)
+// never shows the spinner, so it keeps its words while it loads, as in 1.1.1, in normal and forced
+// colors; an asChild submit input too. A Button that holds its spinner still hides its words.
+for (const forced of [false, true]) {
+  test(`an asChild child with no spinner keeps its words while loading${forced ? ', in forced colors' : ''} (Q1)`, async ({ page }, testInfo) => {
+    if (forced) test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
+    if (forced) await page.emulateMedia({ forcedColors: 'active' })
+    const { errors } = await openCase(page, testInfo, 'case=loading&theme=light&void=1')
+    await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.getElementById('bl-medium-solid')!).getPropertyValue('-webkit-text-fill-color')), { timeout: 3000 }).toBe('rgba(0, 0, 0, 0)')
+    await page.waitForTimeout(200)
+    const fill = (id: string) => page.evaluate((id) => getComputedStyle(document.getElementById(id)!).getPropertyValue('-webkit-text-fill-color'), id)
+    for (const id of ['bl-void-self', 'bl-void-input']) {
+      expect(await page.locator(`#${id}`).getAttribute('aria-busy'), id).toBe('true')
+      expect(await fill(id), `${id} keeps its words`).not.toBe('rgba(0, 0, 0, 0)')
+      expect(await inkInside(page, id), `${id}'s words show`).toBeGreaterThan(20)
+    }
+    expect(await page.locator('#bl-void-self').textContent()).toBe('Go home')
+    expect(errors).toEqual([])
+  })
+}
+
 // N8 (QA-R3): a loading link keeps focus, and a middle click opens nothing.
 test('a loading link keeps focus, and a middle click or Enter opens nothing (N8, M7)', async ({ page, context }, testInfo) => {
   await openCase(page, testInfo, 'case=loading&theme=light')

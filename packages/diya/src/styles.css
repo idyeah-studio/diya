@@ -3834,7 +3834,8 @@
      for 400ms (P3). */
   animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both !important;
 }
-/* Not an empty one: an asChild <input> or <img> can't hold the spinner, so its words stay (P1). */
+/* Not an empty one: an asChild <input> or <img> can't hold the spinner, so its words stay (P1;
+   with :has(), Q1 below covers it and more). */
 .diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :empty) {
   /* !important, as on the turn, the fade back and the leading icon's rule below: an animation an app
      puts on the Button (its own class, a utility such as animate-pulse, an inline style) would
@@ -3846,6 +3847,15 @@
    Button's hide restarts with it: the same keyframes, a new beat (data-busy-turn, set by Button). */
 .diya-root .diya-button[aria-busy='true'][data-busy-turn='b']:not([data-icon-only='true'], :empty) {
   animation-name: diya-button-hide-again !important;
+}
+/* Where :has() works, the words hide only from a Button that holds its spinner: an asChild child
+   that ignores its children (a component that renders its own `label`) never shows the spinner, so
+   it keeps its words while it loads, as in 1.1.1, as does a void <input> (Q1). Elsewhere the
+   :empty exception above still keeps an <input>'s words. */
+@supports selector(:has(*)) {
+  .diya-root .diya-button[aria-busy='true']:not([data-icon-only='true']):not(:has(.diya-button-spinner)) {
+    animation: none !important;
+  }
 }
 .diya-root .diya-button[aria-busy='true'] > .diya-button-label > *,
 .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > *,
