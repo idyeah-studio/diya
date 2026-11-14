@@ -586,6 +586,16 @@ function LoadingCase() {
           <Button id="bl-anim-lead" className="app-pulse" loading={busy}><Plus size={18} strokeWidth={1.6} />Add member</Button>
         </div>
       )}
+      {/* Destructive Buttons for forced colors (O2): words, an icon-only one, a disabled one, and a
+          leading icon. dz=1 only. */}
+      {query.get('dz') === '1' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button id="bl-dz" variant="destructive" loading={busy}>Delete files</Button>
+          <Button id="bl-dz-icon" variant="destructive" iconOnly aria-label="Remove" loading={busy}>{icon}</Button>
+          <Button id="bl-dz-disabled" variant="destructive" disabled>Delete files</Button>
+          <Button id="bl-dz-lead" variant="destructive" loading={busy}><Download size={18} strokeWidth={1.6} />Delete export</Button>
+        </div>
+      )}
       {/* A Spinner of the reader's own in a loading Button's label, first, last, after a leading icon,
           and as an icon-only Button's icon, mounted on demand (O9). rs=1 only. */}
       {query.get('rs') === '1' && <ReaderSpinners busy={busy} />}

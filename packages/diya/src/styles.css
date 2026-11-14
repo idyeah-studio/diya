@@ -353,6 +353,13 @@
   margin: 0;
   translate: -50% -50%;
 }
+/* Forced colors keep a system color an author gives, so Destructive's text (the page surface,
+   Canvas there) would land on its forced Canvas background: its words and icon take ButtonText,
+   GrayText when disabled, as every other Button's do (O2). */
+@media (forced-colors: active) {
+  .diya-root .diya-button[data-variant='destructive'] { color: ButtonText; }
+  .diya-root .diya-button[data-variant='destructive']:disabled { color: GrayText; }
+}
 /* Forced colors repaint the words whatever their fill, so while busy the Button stops being forced
    and paints the same system colors itself; its fill can then go on the beat. The label's elements
    stay forced. A leading icon's Button keeps its words, and an icon-only one hides its icon by

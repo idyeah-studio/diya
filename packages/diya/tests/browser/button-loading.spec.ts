@@ -696,6 +696,59 @@ for (const theme of ['light', 'dark']) {
   })
 }
 
+// O2 (VIS-N-02, also in 1.1.1): in forced colors a Destructive Button's words and icon show, at rest,
+// on hover, disabled, while loading (before the beat; after it the spinner) and after: by pixels,
+// each draws ink inside its frame, and a disabled one draws it in GrayText.
+for (const theme of ['light', 'dark']) {
+  test(`forced colors (${theme}): a Destructive Button's words and icon show (O2)`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
+    await page.emulateMedia({ forcedColors: 'active' })
+    await openCase(page, testInfo, `case=loading&theme=${theme}&lean=1&dz=1`)
+    // Pixels well inside the frame (the middle band, clear of the pill's rounded ends) that differ
+    // from its background, the most common color there.
+    const ink = async (id: string) => {
+      const png = (await page.locator(`#${id}`).screenshot({ animations: 'disabled' })).toString('base64')
+      return page.evaluate(async (png) => {
+        const image = new Image()
+        image.src = `data:image/png;base64,${png}`
+        await image.decode()
+        const canvas = document.createElement('canvas')
+        canvas.width = image.width
+        canvas.height = image.height
+        const context = canvas.getContext('2d')!
+        context.drawImage(image, 0, 0)
+        const scale = window.devicePixelRatio
+        const x = Math.round(image.height / 2)
+        const y = Math.round(image.height * 0.2)
+        const data = context.getImageData(Math.min(x, Math.round(image.width * 0.25)), y, Math.max(1, image.width - 2 * Math.min(x, Math.round(image.width * 0.25))), image.height - 2 * y).data
+        const counts = new Map<number, number>()
+        for (let i = 0; i < data.length; i += 4) { const key = (data[i] << 16) | (data[i + 1] << 8) | data[i + 2]; counts.set(key, (counts.get(key) ?? 0) + 1) }
+        const background = [...counts].sort((a, b) => b[1] - a[1])[0][0]
+        let inked = 0
+        for (let i = 0; i < data.length; i += 4) {
+          const diff = Math.abs(data[i] - (background >> 16)) + Math.abs(data[i + 1] - ((background >> 8) & 255)) + Math.abs(data[i + 2] - (background & 255))
+          if (diff > 192) inked++
+        }
+        return inked / (scale * scale)
+      }, png)
+    }
+    const shown = async (ids: string[], state: string) => { for (const id of ids) expect(await ink(id), `${id} ${state}`).toBeGreaterThan(20) }
+    const all = ['bl-dz', 'bl-dz-icon', 'bl-dz-disabled', 'bl-dz-lead']
+    await shown(all, 'at rest')
+    const plain = await page.evaluate(() => getComputedStyle(document.getElementById('bl-fc-disabled-plain')!).color)
+    expect(await page.evaluate(() => getComputedStyle(document.getElementById('bl-dz-disabled')!).color), 'disabled reads GrayText').toBe(plain)
+    for (const id of ['bl-dz', 'bl-dz-icon', 'bl-dz-lead']) { await page.hover(`#${id}`); await shown([id], 'on hover') }
+    await page.mouse.move(0, 0)
+    await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+    await shown(['bl-dz', 'bl-dz-icon', 'bl-dz-lead'], 'loading, before the beat')
+    await page.waitForTimeout(700)
+    await shown(['bl-dz', 'bl-dz-icon', 'bl-dz-lead'], 'loading, after the beat')
+    await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(false))
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('[data-returning]').length), { timeout: 3000 }).toBe(0)
+    await shown(all, 'after loading')
+  })
+}
+
 // N5 (QA-M-01): SiteHeader's utilities size a wrapped leading icon at 20px, as an unwrapped one.
 test('SiteHeader utilities size the icon of a Button given loading at 20px (N5)', async ({ page }, testInfo) => {
   await openCase(page, testInfo, 'case=loading&theme=light')
