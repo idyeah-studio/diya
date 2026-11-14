@@ -862,6 +862,25 @@ test('translated plain labels survive loading on and off, however loading comes 
   for (const id of ids) await expect(page.locator(`#${id}`), id).toHaveCount(1)
 })
 
+// O7 (FE-N-08): labels holding elements, given loading from the start (L1 wraps them from the
+// first render), survive loading on and off on a translated page too: text and an element, an
+// element first, an icon first, an element last, a kbd, and asChild. (Given late, an element label
+// still crashes there: documented.)
+test('translated labels holding elements, given loading from the start, survive loading on and off (O7)', async ({ page }, testInfo) => {
+  const { errors } = await openCase(page, testInfo, 'case=loading&theme=light')
+  const ids = ['bl-n1-strong', 'bl-strong', 'bl-lucide', 'bl-multi', 'bl-kbd', 'bl-n1-next', 'bl-fc-red', 'bl-logo']
+  await translate(page, ids)
+  const win = (value: boolean) => page.evaluate((value) => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(value), value)
+  for (let round = 0; round < 2; round++) {
+    await win(true)
+    await page.waitForTimeout(500)
+    await win(false)
+    await page.waitForTimeout(300)
+  }
+  expect(errors).toEqual([])
+  for (const id of ids) await expect(page.locator(`#${id}`), id).toHaveCount(1)
+})
+
 // N8 (QA-R3): a loading link keeps focus, and a middle click opens nothing.
 test('a loading link keeps focus, and a middle click or Enter opens nothing (N8, M7)', async ({ page, context }, testInfo) => {
   await openCase(page, testInfo, 'case=loading&theme=light')
