@@ -730,9 +730,11 @@ While it loads, the Button's words turn transparent, and they fade back
 through its `color`. So put a gradient made with `background-clip: text` on
 an element inside the label, not on the Button itself, where it stays drawn
 under the spinner. A border or ring you draw in `currentColor` on the Button
-fades back with the words, and an animation you set on the Button pauses
-until the label is back. Style your own elements in a label, not the Button's
-inner spans.
+fades back with the words. An animation you set on the Button itself stops
+when loading starts and starts over when the label is back, so put entrance
+animations on an element around the Button. Style your own elements in a
+label, not the Button's inner spans, and don't put a Spinner in a Button you
+give `loading`: it shows its own.
 
 If the label holds an element, such as an icon or `<strong>`, pass `loading`
 from the start (`loading={false}` until it's busy). Then nothing in the label

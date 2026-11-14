@@ -213,12 +213,17 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   - The fade back animates the Button's `color`, so a border or ring you draw
     in `currentColor` on the Button (Tailwind's `border-current` or
     `ring-current`) goes out with the words and fades back with them.
-  - While loading, a Button runs its own animation; one you set on it, such as
-    Tailwind's `animate-pulse`, pauses until the label is back, then runs
-    again.
+  - While it loads, a Button runs its own animation. One you set on the Button
+    itself stops when loading starts and starts over when the label is back, so
+    an entrance animation (such as `animate-in`) plays again after each load,
+    and a loop (such as `animate-pulse`) jumps back to its start once. Put
+    entrance animations on an element around the Button. Pulsing only while
+    saving is fine: DIYA's spinner takes its place.
   - A part of the label with its own CSS animation stops while the Button is
     busy and starts over after each load. A Spinner you put in the label keeps
     its own wait and turn.
+  - Don't put a Spinner in a Button you give `loading`: the Button shows its
+    own, and after an icon you'd see two rings.
   - Style your own elements in a label, not the Button's inner spans: CSS that
     restyles those spans on hover garbles the Button's accessible name in
     Safari while it's hovered.
