@@ -227,6 +227,8 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
     and a loop (such as `animate-pulse`) jumps back to its start once. Put
     entrance animations on an element around the Button. Pulsing only while
     saving is fine: DIYA's spinner takes its place.
+  - Neither an animation on the Button nor a reduced-motion reset that sets
+    every animation delay can change how a Button loads.
   - A part of the label with its own CSS animation stops while the Button is
     busy and starts over after each load. A Spinner you put in the label keeps
     its own wait and turn.
