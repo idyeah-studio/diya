@@ -599,6 +599,19 @@ function LoadingCase() {
           <Button id="bl-anim-lead" className="app-pulse" loading={busy}><Plus size={18} strokeWidth={1.6} />Add member</Button>
         </div>
       )}
+      {/* Disabled and loading, beside a twin that is only disabled, in every look (F16, Q3). dis=1 only. */}
+      {query.get('dis') === '1' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {['solid', 'outline', 'quiet', 'destructive'].flatMap((variant) => [
+            <Button key={variant} id={`bl-dis-${variant}`} variant={variant} disabled loading={busy}>Send</Button>,
+            <Button key={`${variant}-plain`} id={`bl-dis-${variant}-plain`} variant={variant} disabled>Send</Button>,
+          ])}
+          <Button id="bl-dis-link" href="#sent" disabled loading={busy}>Open report</Button>
+          <Button id="bl-dis-link-plain" href="#sent" disabled>Open report</Button>
+          <Button id="bl-dis-child" asChild disabled loading={busy}><a href="#child">Child link</a></Button>
+          <Button id="bl-dis-child-plain" asChild disabled><a href="#child">Child link</a></Button>
+        </div>
+      )}
       {/* An app's own colors on loading Buttons, for forced colors (P2, P4): white text on an outline,
           Tailwind-style bg-violet-600 text-white (a later layer), disabled with white text, a box
           shadow, a gradient, and a link. fcapp=1 only. */}

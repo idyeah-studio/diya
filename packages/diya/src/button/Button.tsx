@@ -113,6 +113,8 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     className: cx('diya-button', className), 'data-variant': variant, 'data-size': size, 'data-shape': shape, 'data-icon-only': iconOnly || undefined, 'aria-busy': loading || undefined,
     'data-returning': returning || undefined,
     'data-busy-turn': loading ? (turn ? 'b' : 'a') : undefined,
+    // Disabled as well as loading: it looks disabled, dimmed as any disabled Button (F16, Q3).
+    'data-busy-disabled': (loading && !!disabled) || undefined,
     onAnimationEnd: (event: AnimationEvent<HTMLElement>) => {
       // Only the Button's own spinner marks the beat (a Spinner inside the label doesn't), and only
       // its own fade back ends it (M6, M8).

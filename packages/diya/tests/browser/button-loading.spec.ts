@@ -1113,6 +1113,51 @@ for (const forced of [false, true]) {
   })
 }
 
+// Q3 (F16): a Button that is both disabled and loading looks disabled: the same dim and cursor as
+// its twin that is only disabled, in every frame from loading start through the fade back (the dim
+// never animates); after the beat, by pixels, it is itself at rest (only disabled) but for its
+// spinner, which shows, dimmed with it. (Pixels against itself: the twin sits at another subpixel
+// offset.) Every look (solid, outline, quiet, destructive, a link, asChild), Light, Dark and Glass.
+for (const [theme, glass] of [['light', 0], ['dark', 0], ['light', 1], ['dark', 1]] as const) {
+  test(`disabled and loading looks disabled (${theme}${glass ? ', glass' : ''}) (Q3)`, async ({ page }, testInfo) => {
+    await openCase(page, testInfo, `case=loading&theme=${theme}&glass=${glass}&lean=1&dis=1`)
+    const ids = ['bl-dis-solid', 'bl-dis-outline', 'bl-dis-quiet', 'bl-dis-destructive', 'bl-dis-link', 'bl-dis-child']
+    const shot = (id: string) => page.locator(`#${id}`).screenshot({ animations: 'disabled' })
+    let undo = await removeWords(page, ids, { spinner: 'hidden' })
+    const rest: Record<string, Buffer> = {}
+    for (const id of ids) rest[id] = await shot(id)
+    await undo()
+    const frames = await page.evaluate((ids) => new Promise<string[]>((done) => {
+      const out: string[] = []
+      const win = window as unknown as { __setBusy(value: boolean): void }
+      win.__setBusy(true)
+      const start = performance.now()
+      setTimeout(() => win.__setBusy(false), 600)
+      const tick = () => {
+        const t = performance.now() - start
+        for (const id of ids) {
+          const button = document.getElementById(id)!
+          const twin = getComputedStyle(document.getElementById(`${id}-plain`)!).opacity
+          const own = getComputedStyle(button).opacity
+          if (own !== twin) out.push(`${id} at ${t.toFixed(0)}ms: ${own} against ${twin}`)
+        }
+        if (t < 1000) requestAnimationFrame(tick); else done(out)
+      }
+      tick()
+    }), ids)
+    expect(frames, 'the same dim in every frame').toEqual([])
+    // Busy after the beat: only the spinner differs.
+    await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+    await page.waitForTimeout(700)
+    for (const id of ids) expect(await page.locator(`#${id}`).evaluate((node) => getComputedStyle(node).cursor), id).toBe(await page.locator(`#${id}-plain`).evaluate((node) => getComputedStyle(node).cursor))
+    undo = await removeWords(page, ids, { spinner: 'hidden' })
+    for (const id of ids) expect((await pixelDiff(page, await shot(id), rest[id])).max, `${id} busy, without words or spinner, against itself at rest`).toBeLessThanOrEqual(8)
+    await undo()
+    // The spinner shows, dimmed with the Button.
+    for (const id of ids) expect(await page.locator(`#${id} .diya-button-spinner`).evaluate((node) => [getComputedStyle(node).display !== 'none', Number(getComputedStyle(node).opacity)]), id).toEqual([true, 1])
+  })
+}
+
 // N8 (QA-R3): a loading link keeps focus, and a middle click opens nothing.
 test('a loading link keeps focus, and a middle click or Enter opens nothing (N8, M7)', async ({ page, context }, testInfo) => {
   await openCase(page, testInfo, 'case=loading&theme=light')

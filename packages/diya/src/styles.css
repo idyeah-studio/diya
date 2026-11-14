@@ -309,11 +309,17 @@
 }
 
 /* Loading looks busy, not disabled (F13): full color and the progress cursor. It stays focusable
-   and inert: the button takes its own clicks, and drops them. */
+   and inert: the button takes its own clicks, and drops them. A Button that is disabled as well
+   looks disabled: the same dim, spinner and all, and its cursor (F16, Q3). */
 .diya-root .diya-button[aria-busy='true'] {
-  opacity: 1;
   cursor: progress;
   pointer-events: auto;
+}
+.diya-root .diya-button[aria-busy='true']:not([data-busy-disabled]) {
+  opacity: 1;
+}
+.diya-root .diya-button[aria-busy='true'][data-busy-disabled] {
+  cursor: not-allowed;
 }
 
 /* Loading's spinner (F12): on the Spinner's 400ms beat it takes the place of the first thing in

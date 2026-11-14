@@ -534,8 +534,11 @@ describe('step 9 refinements (1.2)', () => {
 })
 
 describe('Button loading (F12, F13)', () => {
-  it('looks busy, not disabled: full color and the progress cursor', () => {
-    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\] \{\s*opacity: 1;\s*cursor: progress;\s*pointer-events: auto;\s*\}/)
+  // Q3 (F16, named edit): unless it's disabled as well, which looks disabled.
+  it('looks busy, not disabled: full color and the progress cursor, unless disabled as well', () => {
+    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\] \{\s*cursor: progress;\s*pointer-events: auto;\s*\}/)
+    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\]:not\(\[data-busy-disabled\]\) \{\s*opacity: 1;\s*\}/)
+    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\]\[data-busy-disabled\] \{\s*cursor: not-allowed;\s*\}/)
   })
 
   it('moves nothing: no padding or margin is animated or transitioned for loading', () => {
