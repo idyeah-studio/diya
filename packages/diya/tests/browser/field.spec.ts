@@ -282,3 +282,40 @@ test.describe('submit announcements (R1)', () => {
     await quiet(page)
   })
 })
+
+// S1 (QA-R-01): with react-hook-form, which validates asynchronously and moves focus to the first
+// error before React commits the errors, a click on Submit says nothing (the field focus lands on
+// reads its own), and Enter in the empty Email says Email's error, once. Typing right after a submit
+// stays silent: the remembered submit is forgotten at the next key.
+test.describe('submit announcements with react-hook-form (S1)', () => {
+  const region = (page: Page) => page.locator('.diya-toast-host > [aria-live=polite]')
+  const words = (page: Page) => region(page).textContent()
+  test('click Submit: nothing from the region; focus lands on Email, which reads its own error', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=signin-rhf&theme=light')
+    await page.locator('#si-submit').click()
+    await expect(page.locator('#si-email')).toBeFocused()
+    await expect(page.locator('#si-email')).toHaveAttribute('aria-invalid', 'true')
+    await page.waitForTimeout(400)
+    expect(await words(page)).toBe('')
+  })
+  test('Enter in the empty Email says Email\'s error, once', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=signin-rhf&theme=light')
+    await page.locator('#si-email').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#si-password')).toHaveAttribute('aria-invalid', 'true')
+    await expect(region(page)).toHaveText('Email: Enter your email address.')
+    await page.waitForTimeout(400)
+    expect(await words(page)).toBe('Email: Enter your email address.')
+  })
+  test('typing right after a submit stays silent', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=signin-rhf&theme=light')
+    await page.locator('#si-email').focus()
+    await page.keyboard.press('Enter')
+    await expect(region(page)).toHaveText('Email: Enter your email address.')
+    await page.keyboard.type('a')
+    // react-hook-form revalidates as you type: the error changes under your cursor.
+    await expect(page.locator('#si')).toContainText('Enter an email address like name@example.com.')
+    await page.waitForTimeout(400)
+    expect(await words(page)).not.toContain('name@example.com')
+  })
+})

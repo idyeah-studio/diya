@@ -755,7 +755,24 @@ function SignInCase() {
   )
 }
 
-const cases = { signin: SignInCase, rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+// The same sign-in form with react-hook-form (S1): it validates asynchronously and, by default,
+// moves focus to the first invalid field before React commits the errors.
+function SignInRhfCase() {
+  const { register, handleSubmit, formState: { errors } } = useForm({ defaultValues: { email: '', password: '' } })
+  const [sent, setSent] = useState(0)
+  return (
+    <form id="si" noValidate onSubmit={handleSubmit(() => setSent((count) => count + 1))} style={{ display: 'grid', gap: 16, padding: 24, width: 360 }}>
+      <diya.TextInput id="si-email" label="Email" error={errors.email?.message}
+        {...register('email', { required: 'Enter your email address.', pattern: { value: /@/, message: 'Enter an email address like name@example.com.' } })} />
+      <diya.TextInput id="si-password" label="Password" type="password" error={errors.password?.message}
+        {...register('password', { required: 'Enter your password.' })} />
+      <Button type="submit" id="si-submit">Sign in</Button>
+      <output id="si-sent">{sent}</output>
+    </form>
+  )
+}
+
+const cases = { signin: SignInCase, 'signin-rhf': SignInRhfCase, rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; } @keyframes app-pulse { 50% { opacity: 0.5; } } .app-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @layer utilities { .animate-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } .bg-violet-600 { background-color: #7c3aed; } .text-white { color: #fff; } .transition-colors { transition-property: color, background-color, border-color; transition-duration: 150ms; } }'

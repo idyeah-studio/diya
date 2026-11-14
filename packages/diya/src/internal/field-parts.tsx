@@ -91,17 +91,25 @@ function speak(node: HTMLElement, text: string, key: string, held = false) {
   }
   batch.push({ text, node, key, held })
 }
-// A form submit in this task: an error that appears then on the field you're in is counted, since
-// focus can't move to it. Errors while you type stay silent.
-const submitting = new WeakSet<Document>()
+// What had focus when a form was last submitted: an error that appears then on the field you're in
+// is counted, since focus can't move to it, and it's `held` if you submitted from that field (Enter).
+// An async validator (react-hook-form) commits its errors after a timer of 0 may have run, and may
+// move focus first, so it's kept for up to a second, until your next key or press (S1). Errors
+// while you type stay silent.
+const submittedFrom = new WeakMap<Document, Element>()
 const watched = new WeakSet<Document>()
 function watchSubmit(document: Document) {
   if (watched.has(document)) return
   watched.add(document)
+  const forget = () => submittedFrom.delete(document)
   document.addEventListener('submit', () => {
-    submitting.add(document)
-    setTimeout(() => submitting.delete(document), 0)
+    const from = document.activeElement
+    if (!from) return
+    submittedFrom.set(document, from)
+    setTimeout(() => { if (submittedFrom.get(document) === from) forget() }, 1000)
   }, true)
+  document.addEventListener('keydown', forget, true)
+  document.addEventListener('pointerdown', forget, true)
 }
 let spoken = 0
 
@@ -138,8 +146,9 @@ export function useErrorAnnouncement(label: string | (() => string), shown: stri
     if (before && shown !== before) forgetPolite(key)
     if (!node || !shown || shown === before) return
     const inside = focusWithin(node)
-    if (inside && !submitting.has(node.ownerDocument)) return
-    speak(node, t.errorAnnouncement(name(), shown), key, inside)
+    const from = submittedFrom.get(node.ownerDocument)
+    if (inside && !from) return
+    speak(node, t.errorAnnouncement(name(), shown), key, inside && !!from && node.contains(from))
   }, [shown])
   // Arriving in a framed iframe with its error set: focus is there and was put there, so it's said.
   useEffect(() => {
