@@ -734,8 +734,9 @@ fades back with the words. An animation you set on the Button itself stops
 when loading starts and starts over when the label is back, so put entrance
 animations on an element around the Button. Style your own elements in a
 label, not the Button's inner spans, and don't put a Spinner in a Button you
-give `loading`: it shows its own. With `asChild` on an `<input>`, there's no
-spinner; its words stay while it loads.
+give `loading`: it shows its own. With `asChild`, your element must render its
+children for the spinner to show; an `<input>`, or a component that ignores
+its children, keeps its words while it loads.
 
 If the label holds an element, such as an icon or `<strong>`, pass `loading`
 from the start (`loading={false}` until it's busy). Then nothing in the label

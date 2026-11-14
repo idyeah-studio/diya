@@ -203,9 +203,10 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
     "Open in new tab" from the context menu still works. See Fixed.
   - With `asChild` on an `<input>`, an `<img>` or another element that can't
     hold children, there's no spinner: a loading submit input keeps its words,
-    turns its cursor to `progress` and ignores clicks. A component that takes
-    its label from a prop rather than its children shows the spinner in place
-    of its label, as in 1.1.1, so it has no accessible name while it loads.
+    turns its cursor to `progress` and ignores clicks. A component that
+    ignores its children, such as one that renders a `label` prop, keeps its
+    words while loading, as in 1.1.1, but shows no spinner. With `asChild`,
+    your element must render its children for the spinner to show.
   - Dialog's confirm button, Form's Submit and Wizard's forward button show it
     too.
   - Under Reduce Motion the spinner breathes in place.
