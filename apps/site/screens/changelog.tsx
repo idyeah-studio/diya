@@ -2,7 +2,7 @@
 // Changelog & roadmap: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/changelog/page.tsx. Vite: save as src/Changelog.tsx and render it inside your DiyaProvider.
 import { useState, useSyncExternalStore, type FormEvent, type ReactNode } from 'react'
-import { Alert, Button, Dialog, Prose, SiteHeader, Tabs, Tag, TextArea, TextInput, Toast, type Tone } from '@idyeah/diya'
+import { Alert, Button, Dialog, Prose, SiteHeader, Tabs, Tag, TextArea, TextInput, toast, type Tone } from '@idyeah/diya'
 import { ChevronUp, LucideProvider } from 'lucide-react'
 
 // Your product, its release notes (newest first) and the public roadmap.
@@ -279,7 +279,6 @@ function Roadmap({ latest }: { latest: string }) {
   const [ideaOpen, setIdeaOpen] = useState(false)
   const [idea, setIdea] = useState('')
   const [ideaError, setIdeaError] = useState<string>()
-  const [toast, setToast] = useState<string>()
   const toggle = (id: string) => setVotes(votes.includes(id) ? votes.filter((vote) => vote !== id) : [...votes, id])
 
   async function sendIdea() {
@@ -289,7 +288,7 @@ function Roadmap({ latest }: { latest: string }) {
     }
     await api('/ideas', { idea })
     setIdea('')
-    setToast('Thanks. Your idea went straight to the team.')
+    toast({ tone: 'success', title: 'Idea sent', description: 'Thanks. It went straight to the team.' })
   }
 
   return (
@@ -333,7 +332,6 @@ function Roadmap({ latest }: { latest: string }) {
         confirmLabel="Send idea" onConfirm={sendIdea}>
         <TextArea label="Your idea" rows={4} value={idea} error={ideaError} onValueChange={(value) => { setIdea(value); setIdeaError(undefined) }} />
       </Dialog>
-      {toast && <Toast tone="success" onDismiss={() => setToast(undefined)}>{toast}</Toast>}
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { nextPath, screens, thumbnailSrc, vitePath, type ScreenEntry } from '../components/screens/screens-data'
-import { cssBlock, cssClasses, importSources, jsxClasses, nativeTitles, smallFontSizes } from './screens-rules'
+import { cssBlock, cssClasses, importSources, jsxClasses, nativeTitles, smallFontSizes, toastIds, toastState, toastsInEffects } from './screens-rules'
 
 /*
  * Every rule in screens/README.md that a script can check, for every file in
@@ -119,6 +119,13 @@ describe.each(live.map((screen) => [screen.id, screen] as const))('screens/%s.ts
     }
   })
 
+  it('shows feedback with toast() from its handlers: no <Toast>, no toast state, no toast() in an effect', () => {
+    expect(toastState(source), 'call toast(); never keep toast state').toEqual([])
+    expect(toastsInEffects(source), 'StrictMode runs effects twice in development; toast from the handler').toEqual([])
+    const foreign = toastIds(source).filter((toastId) => !toastId.startsWith(`${id}-`))
+    expect(foreign, `toast ids start with "${id}-", so two screens never share one`).toEqual([])
+  })
+
   it('writes plain US English with invented people: no lorem ipsum, emails at example.com', () => {
     expect(source).not.toMatch(/lorem|ipsum/i)
     for (const [email] of source.matchAll(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g)) expect(email, 'emails use example.com').toMatch(/@example\.com$/)
@@ -142,5 +149,20 @@ describe('the contract checks catch what they say', () => {
     expect(jsxClasses('<div className="sign-in-a sign-in-b" /><p className={`sign-in-c ${x ? "y" : ""}`} />')).toEqual(['sign-in-a', 'sign-in-b', 'sign-in-c'])
     expect(nativeTitles('<Card title="Fine" /><span title="Not fine" />')).toEqual(['<span title='])
     expect(importSources("import { A } from 'react'\nimport type { B } from 'next/link'\nimport './x.css'")).toEqual(['react', 'next/link', './x.css'])
+  })
+
+  it('flags toast state and toasts fired from effects, and leaves handlers and banners alone', () => {
+    const kept = "import { Alert, Toast } from '@idyeah/diya'\nconst [notice, setNotice] = useState<string>()\nconst [toast, setToast] = useState('')\n{notice && <Toast onDismiss={() => setNotice(undefined)}>{notice}</Toast>}"
+    expect(toastState(kept)).toEqual(['<Toast', 'import { Toast }', 'const [notice, setNotice]', 'const [toast, setToast]'])
+    expect(toastState("import { toast, type ToastOptions } from '@idyeah/diya'\nconst [trialNotice, setTrialNotice] = useState(true)\ntoast({ title: 'Saved' })")).toEqual([])
+    const effects = "useEffect(() => {\n  if (done) toast({ title: `${n} files (uploaded)` })\n}, [done])\nuseLayoutEffect(() => toast.dismiss('x'))\nfunction save() { toast({ title: 'Saved' }) }"
+    expect(toastsInEffects(effects)).toEqual(['useEffect(… toast(', 'useLayoutEffect(… toast.dismiss('])
+    expect(toastsInEffects("useEffect(() => { const say = ')'; setOpen(true) }, [])\nconst save = () => toast({ title: 'Saved' })")).toEqual([])
+    // A cleanup may dismiss the Screen's own toast (SITE-FE-01), but never raise one.
+    expect(toastsInEffects("useEffect(() => () => toast.dismiss('task-list-done'), [])")).toEqual([])
+    expect(toastsInEffects("useEffect(() => {\n  if (!x) return\n  return () => { toast.dismiss('a') }\n}, [x])")).toEqual([])
+    expect(toastsInEffects("useEffect(() => { toast.dismiss('a') }, [])\nuseEffect(() => () => toast({ title: 'Bye' }), [])")).toEqual(['useEffect(… toast.dismiss(', 'useEffect(… toast('])
+    const ids = "toast({ id: 'saved', title: 'Saved' })\ntoast({ tone: 'info', id: `sign-in-${n}`, title: 'Hi' })\nconst id = 'sign-in-step'\ntoast({ id, title: 'Done' })\ntoast({ title: 'No id', description: `About ${id}` })"
+    expect(toastIds(ids)).toEqual(['saved', 'sign-in-', 'sign-in-step'])
   })
 })

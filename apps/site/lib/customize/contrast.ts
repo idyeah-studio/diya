@@ -1,7 +1,7 @@
 import { statusNames, themes, type Appearance, type AppearancePath, type Theme } from './appearance'
 import type { CustomizeItem } from './registry'
-import { composite, contrast } from './color'
-import { neutralSet, statusSet } from './tokens'
+import { composite, contrast, withAlpha } from './color'
+import { neutralSet, statusSet, tokenColors } from './tokens'
 
 export type ContrastIssue = {
   theme: Theme
@@ -19,6 +19,13 @@ export type ContrastIssue = {
 }
 
 const round = (n: number) => Math.floor(n * 100) / 100
+/*
+ * The page behind a Glass Light field, as the visual designer measured it over
+ * DIYA's Glass backdrop (after Glass's blur and brightness). A field mixes its
+ * fill at 66% over it, so a white fill renders about #EDEEED.
+ */
+const GLASS_LIGHT_PAGE = '#CACDCA'
+const GLASS_FIELD_STRENGTH = 0.66
 const STATUS_LABEL = { success: 'Success', warning: 'Warning', error: 'Error', info: 'Info' } as const
 
 /**
@@ -60,6 +67,37 @@ export function contrastPairs(appearance: Appearance, item?: CustomizeItem): Con
     }
     check('Field and control edges', composite(n.controlLine, raised), raised, 3, color('text'), color('raised'))
     check('Field and control edges on the background', composite(n.controlLine, background), background, 3, color('text'), color('background'))
+    /* 1.2's theming colors, as they render: set, or following text and the field defaults. */
+    const own = appearance.tokens?.[theme] ?? {}
+    const token = (name: 'focus' | 'heading' | 'field' | 'fieldLine') => `tokens.${theme}.${name}` as AppearancePath
+    const t = tokenColors(appearance, theme)
+    const focusPath = own.focus ? token('focus') : color('text')
+    check('Focus rings on the background', t.focus, background, 3, focusPath, color('background'))
+    check('Focus rings on raised surfaces', t.focus, raised, 3, focusPath, color('raised'))
+    /* Over Glass Light's real backdrop a ring that passes on white can fall under 3:1, so in Light it needs 5.1:1 on white. */
+    if (theme === 'light') check('Focus rings on white, so they hold over Glass', t.focus, '#FFFFFF', 5.1, focusPath)
+    if (own.heading) {
+      check('Headings on the background', t.heading, background, 4.5, token('heading'), color('background'))
+      check('Headings on raised surfaces', t.heading, raised, 4.5, token('heading'), color('raised'))
+    }
+    if (own.field || own.fieldLine) {
+      const field = composite(t.field, background)
+      check('Text in fields', text, field, 4.5, own.field ? token('field') : color('text'), color('text'))
+      check('Field edges on the field', composite(t.fieldLine, field), field, 3, own.fieldLine ? token('fieldLine') : token('field'), token('field'))
+      check('Field edges on the background', composite(t.fieldLine, background), background, 3, own.fieldLine ? token('fieldLine') : color('text'), color('background'))
+      /* Over Glass Light's backdrop an edge that passes on white can fall under 3:1, so in Light a picked edge needs 3.8:1 on white. */
+      if (theme === 'light' && own.fieldLine) check('Field edges on white, so they hold over Glass', composite(t.fieldLine, '#FFFFFF'), '#FFFFFF', 3.8, token('fieldLine'))
+      /* Under Glass Light the field is see-through, so the edge must also hold 3:1 on the field as it renders there. */
+      if (theme === 'light' && appearance.translucent) {
+        const glassField = composite(withAlpha(t.field, GLASS_FIELD_STRENGTH), GLASS_LIGHT_PAGE)
+        check('Field edges on the Glass field', composite(t.fieldLine, glassField), glassField, 3, own.fieldLine ? token('fieldLine') : token('field'), token('field'), 'translucent')
+      }
+      if (own.field) {
+        /* Placeholders and hints are the quieter text, and an invalid field keeps the error edge. */
+        check('Quieter text in fields', n.muted, field, 4.5, color('text'), token('field'))
+        check('Error edges on the field', statusSet(appearance, theme, 'error').tone, field, 3, token('field'), `status.${theme}.error` as AppearancePath)
+      }
+    }
     if (!usesStatus) continue
     for (const status of statusNames) {
       const s = statusSet(appearance, theme, status)

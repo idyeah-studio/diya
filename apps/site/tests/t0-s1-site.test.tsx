@@ -29,7 +29,7 @@ describe('the phone catalog sheet', () => {
     expect((sheet as HTMLDialogElement).open).toBe(true)
     expect(sheet.classList.contains('diya-drawer-modal')).toBe(true)
     expect(sheet.getAttribute('data-side')).toBe('left')
-    expect(within(within(sheet).getByRole('navigation', { name: 'Choose a component' })).getAllByRole('link')).toHaveLength(29)
+    expect(within(within(sheet).getByRole('navigation', { name: 'Choose a component' })).getAllByRole('link')).toHaveLength(32)
     expect(document.activeElement).toBe(within(sheet).getByRole('searchbox', { name: 'Search components' }))
     expect(document.documentElement.dataset.catalogSheet).toBe('open')
     await user.keyboard('{Escape}')

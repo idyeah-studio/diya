@@ -3,7 +3,7 @@
 // Next.js: save as app/getting-started/page.tsx. Vite: save as src/GettingStarted.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
-  Avatar, Button, Card, Choice, Drawer, List, PageHeader, Progress, SideNavigation, SiteHeader, Stack, Switch, Tag, TextInput, TextLink, Toast, useDiyaAppearance,
+  Avatar, Button, Card, Choice, Drawer, List, PageHeader, Progress, SideNavigation, SiteHeader, Stack, Switch, Tag, TextInput, TextLink, toast, useDiyaAppearance,
 } from '@idyeah/diya'
 import {
   BookOpen, Circle, CircleCheck, CircleDashed, FileText, FolderKanban, House, Inbox, LayoutTemplate, ListChecks, LucideProvider, MessageCircle, Plus, Settings, Users,
@@ -81,21 +81,17 @@ async function api(route: Route, body: Record<string, unknown>) {
   return true
 }
 
-type Notice = { id: number; title: string; text: string }
-
 export default function GettingStartedScreen() {
   const { glass } = useDiyaAppearance()
   const [status, setStatus] = useState(STARTING)
   const [open, setOpen] = useState<TaskId>()
   const [hidden, setHidden] = useState(false)
-  const [notice, setNotice] = useState<Notice>()
   const heading = useRef<HTMLSpanElement>(null)
   const checklist = useRef<HTMLElement>(null)
 
   const doneCount = TASKS.filter((task) => status[task.id] === 'done').length
   const left = TASKS.filter((task) => status[task.id] === 'todo')
   const finished = left.length === 0
-  const say = (title: string, text: string) => setNotice({ id: Date.now(), title, text })
 
   function settle(task: Task, to: Status) {
     const next = { ...status, [task.id]: to }
@@ -103,13 +99,14 @@ export default function GettingStartedScreen() {
     const done = TASKS.filter((item) => next[item.id] === 'done').length
     setStatus(next)
     setOpen(undefined)
-    if (to === 'todo') say('Back on your list', `${task.label} is waiting whenever you are.`)
-    if (to === 'done') say(task.cheer ?? 'Done', todo.length ? `${done} of ${TASKS.length} done. Next up: ${todo[0].label.toLowerCase()}.` : 'That’s every step. You can hide the checklist now.')
+    const id = 'getting-started-step'
+    if (to === 'todo') toast({ id, tone: 'success', title: 'Back on your list', description: `${task.label} is waiting whenever you are.`, duration: 5000 })
+    if (to === 'done') toast({ id, tone: 'success', title: task.cheer ?? 'Done', description: todo.length ? `${done} of ${TASKS.length} done. Next up: ${todo[0].label.toLowerCase()}.` : 'That’s every step. You can hide the checklist now.', duration: 5000 })
   }
 
   function hide() {
     setHidden(true)
-    say('Checklist hidden', 'You can bring it back from the help card any time.')
+    toast({ tone: 'success', title: 'Checklist hidden', description: 'You can bring it back from the help card any time.', duration: 5000 })
     heading.current?.focus()
   }
 
@@ -215,11 +212,6 @@ export default function GettingStartedScreen() {
         </main>
 
         {task && <TaskDrawer task={task} status={status[task.id]} onClose={() => setOpen(undefined)} onSettle={(to) => settle(task, to)} />}
-        {notice && (
-          <Toast key={notice.id} tone="success" title={notice.title} onDismiss={() => setNotice(undefined)} duration={5000}>
-            {notice.text}
-          </Toast>
-        )}
       </div>
     </LucideProvider>
   )

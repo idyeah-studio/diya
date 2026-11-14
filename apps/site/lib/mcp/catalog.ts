@@ -70,6 +70,11 @@ export const MCP_API = API as unknown as McpApi
 
 let cached: McpEntry[] | undefined
 
+/** Forget the entries, for tests that change the api.json they're read from. */
+export function resetMcpEntriesForTests() {
+  cached = undefined
+}
+
 /** Every api.json item, joined to its catalog page when it has one. */
 export function mcpEntries(): McpEntry[] {
   if (cached) return cached

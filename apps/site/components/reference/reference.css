@@ -40,6 +40,10 @@
   font-family: var(--code-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
   font-size: 0.93em;
 }
+:where(html[data-catalog='true']) .item-reference-guide code {
+  /* A call such as toast() never breaks across lines. */
+  white-space: nowrap;
+}
 :where(html[data-catalog='true']) .item-reference-quiet {
   color: var(--diya-color-muted);
 }

@@ -5,6 +5,8 @@ import { Badge, Button, DiyaProvider, Switch, Tag } from '@idyeah/diya'
 import { useAppearance } from '../../app/Appearance'
 import {
   brandSet,
+  CONTROL_HEIGHT_NAMES,
+  controlHeight,
   CORNERS_MAX,
   DEFAULT_APPEARANCE,
   effectiveAppearance,
@@ -13,6 +15,7 @@ import {
   statusNames,
   type Appearance,
   type AppearancePath,
+  type ControlHeight,
   type Elevation,
   type Motion,
   type FontId,
@@ -21,8 +24,8 @@ import {
 } from '../../lib/customize/appearance'
 import { contrastIssues, type ContrastIssue } from '../../lib/customize/contrast'
 import { customizeItems, type ItemId } from '../../lib/customize/registry'
-import { clearBrandColor, clearBrandValue, resetBrand, resetItem, restoreItem, setBrand, setBrandColor, setBrandValue } from '../../lib/customize/store'
-import { appearanceCss } from '../../lib/customize/tokens'
+import { clearBrandColor, clearBrandValue, resetBrand, resetItem, restoreItem, setBrand, setBrandColor, setBrandValue, setControlHeight } from '../../lib/customize/store'
+import { appearanceCss, tokenColors } from '../../lib/customize/tokens'
 import { contrast, ensureContrast } from '../../lib/customize/color'
 import { Icon } from '../Icon'
 import { BrandDarkChoice, BrandPicker, ColorRow, FontPicker, OwnValue, Segmented } from './controls'
@@ -38,6 +41,19 @@ const CORNER_PRESETS = [
   { value: '16', label: 'Round' },
 ] as const
 
+/** 1.2's theming tokens, by their setting's name. */
+const TOKEN_LABEL = {
+  focus: 'Focus ring',
+  heading: 'Headings',
+  field: 'Field fill',
+  fieldLine: 'Field edge',
+  heightSmall: 'Small control height',
+  heightMedium: 'Medium control height',
+  heightLarge: 'Large control height',
+  radiusPopup: 'Popup corners',
+  radiusModal: 'Dialog corners',
+} as const
+
 /** Plain names for settings, for messages and the brand summary. */
 export function settingName(path: string) {
   if (path === 'font') return 'Font'
@@ -46,6 +62,7 @@ export function settingName(path: string) {
   if (path === 'translucent') return 'Glass'
   if (path === 'motion') return 'Motion'
   const [group, theme, name] = path.split('.')
+  if (group === 'tokens') return name ? `${TOKEN_LABEL[name as keyof typeof TOKEN_LABEL]} (${theme === 'light' ? 'Light' : 'Dark'})` : TOKEN_LABEL[theme as keyof typeof TOKEN_LABEL]
   const label =
     group === 'status'
       ? STATUS_LABEL[name as keyof typeof STATUS_LABEL]
@@ -268,6 +285,7 @@ export function CustomizePanel({
   const lifted = lift(shown.colors.light.accent)
   const lighterForDark = lifted === shown.colors.light.accent ? null : lifted
   const corners = shown.corners
+  const height = controlHeight(shown)
   const buttonPill = id === 'button' && options?.shape !== 'rounded'
   return createPortal(
     <aside ref={panel} id={`customize-panel-${id}`} className="customize-inspector" aria-labelledby={titleId} onKeyDown={onKeyDown}>
@@ -399,7 +417,41 @@ export function CustomizePanel({
               />
             ) : null,
           )}
-          <p className="customize-help">Quieter text adjusts itself to stay readable.</p>
+          {/* F11: every field's fill and edge, Auto (DIYA's own, following these colors) until picked. */}
+          {(['field', 'fieldLine'] as const).map((name) => {
+            const path = `tokens.${theme}.${name}` as AppearancePath
+            const label = name === 'field' ? 'Field fill' : 'Field edge'
+            const picked = Object.hasOwn(brand, path)
+            return (
+              <ColorRow
+                key={name}
+                id={fieldId(path)}
+                label={label}
+                hint={name === 'field' ? 'Inside every field' : 'Around every field. An invalid one keeps the error color.'}
+                value={tokenColors(shown, theme)[name]}
+                onChange={(v) => {
+                  set(path, v)
+                  say(`${label} set to ${v} in ${theme === 'light' ? 'Light' : 'Dark'}.`)
+                }}
+                own={
+                  picked ? (
+                    <OwnValue
+                      followLabel="Use Auto"
+                      name={label}
+                      onFollow={() => {
+                        clearBrandValue(path)
+                        say(`${label} is Auto again.`)
+                        focusField(path)
+                      }}
+                    />
+                  ) : (
+                    <span className="customize-auto">Auto</span>
+                  )
+                }
+              />
+            )
+          })}
+          <p className="customize-help">Quieter text adjusts itself to stay readable. Fields follow your colors until you pick their own.</p>
         </section>
 
         {item.status && (
@@ -457,6 +509,35 @@ export function CustomizePanel({
               ? 'These buttons are pills, which keep their shape. Choose Rounded under Button’s own settings to see corners change.'
               : 'Fields use this radius; cards and panels scale with it. Pills and circles keep their shape.'}
           </p>
+          {/* F11 and DS-SITE-03: the three control heights move together. */}
+          <div className="customize-field-group" data-path="tokens.heightMedium">
+            <div className="customize-color-text">
+              <span>Control height</span>
+              {height !== 'default' && (
+                <OwnValue
+                  followLabel="Use default"
+                  name="Control height"
+                  onFollow={() => {
+                    setUndo(null)
+                    setControlHeight('default')
+                    say('Control height now uses DIYA’s default.')
+                  }}
+                />
+              )}
+            </div>
+            <Segmented
+              legend="Control height"
+              hideLegend
+              value={(height ?? '') as ControlHeight}
+              onChange={(next: ControlHeight) => {
+                setUndo(null)
+                setControlHeight(next)
+                say(`Control height: ${CONTROL_HEIGHT_NAMES[next]}.`)
+              }}
+              options={(['compact', 'default', 'roomy'] as const).map((value) => ({ value, label: CONTROL_HEIGHT_NAMES[value] }))}
+            />
+          </div>
+          <p className="customize-help">Buttons, fields, tabs and calendar days: small, medium and large step together.</p>
         </section>
 
         <section aria-labelledby={titleId + '-finish'}>

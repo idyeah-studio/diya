@@ -2,7 +2,7 @@
 // Sign in: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/sign-in/page.tsx. Vite: save as src/SignIn.tsx and render it inside your DiyaProvider.
 import { useEffect, useId, useRef, useState, type ReactNode, type Ref } from 'react'
-import { Alert, Button, Choice, Form, Inline, Stack, TextInput, TextLink } from '@idyeah/diya'
+import { Alert, Button, Checkbox, Form, Inline, Stack, TextInput, TextLink } from '@idyeah/diya'
 import { ArrowLeft, ArrowRight, LucideProvider } from 'lucide-react'
 
 // Your product, and what the demo account shows.
@@ -67,7 +67,7 @@ export default function SignInScreen() {
 
 function SignInStep({ email, setEmail, go, titleRef, onEmailed }: StepProps & { onEmailed: (kind: Sent) => void }) {
   const [password, setPassword] = useState('')
-  const [keep, setKeep] = useState<string[]>([])
+  const [keep, setKeep] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
   const [failed, setFailed] = useState(false)
   const [busy, setBusy] = useState<'password' | 'link' | 'google' | 'github'>()
@@ -81,7 +81,7 @@ function SignInStep({ email, setEmail, go, titleRef, onEmailed }: StepProps & { 
     setFailed(false)
     if (found.email || found.password) return focus(found.email ? emailField.current : passwordField.current)
     setBusy('password')
-    const ok = await api('/session', { email, password, remember: keep.length > 0 })
+    const ok = await api('/session', { email, password, remember: keep })
     if (ok) return go('code')
     setBusy(undefined)
     setFailed(true)
@@ -118,10 +118,10 @@ function SignInStep({ email, setEmail, go, titleRef, onEmailed }: StepProps & { 
       footer={<>New here? <TextLink href="/sign-up" inline>Create an account</TextLink></>}
     >
       <Stack gap={3}>
-        <Button variant="outline" className="sign-in-wide" loading={busy === 'google'} onClick={() => continueWith('google')}>
+        <Button variant="outline" className="sign-in-wide sign-in-logo-button" loading={busy === 'google'} onClick={() => continueWith('google')}>
           <GoogleLogo /> Continue with Google
         </Button>
-        <Button variant="outline" className="sign-in-wide" loading={busy === 'github'} onClick={() => continueWith('github')}>
+        <Button variant="outline" className="sign-in-wide sign-in-logo-button" loading={busy === 'github'} onClick={() => continueWith('github')}>
           <GitHubLogo /> Continue with GitHub
         </Button>
       </Stack>
@@ -137,7 +137,7 @@ function SignInStep({ email, setEmail, go, titleRef, onEmailed }: StepProps & { 
         <TextInput ref={passwordField} label="Password" type="password" autoComplete="current-password" value={password} error={errors.password}
           onValueChange={(value) => { setPassword(value); setErrors({ ...errors, password: undefined }) }} />
         <Inline justify="between" gap={3}>
-          <Choice multiple hideLabel label="Session" options={[{ value: 'keep', label: 'Keep me signed in' }]} value={keep} onValueChange={setKeep} />
+          <Checkbox className="sign-in-keep" label="Keep me signed in" checked={keep} onCheckedChange={setKeep} />
           <LinkButton onClick={() => go('forgot')}>Forgot password?</LinkButton>
         </Inline>
       </Stack>
@@ -458,7 +458,10 @@ const css = `
 .sign-in-hint { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: var(--diya-leading-body); text-wrap: pretty; }
 .sign-in-strong { color: var(--diya-color-text); font-weight: 600; overflow-wrap: anywhere; }
 .sign-in-wide { width: 100%; }
-.sign-in-logo { width: 20px; height: 20px; flex-shrink: 0; margin-inline-end: 2px; }
+.sign-in-keep { padding-block: 9px; }
+.sign-in-logo { width: 20px; height: 20px; flex-shrink: 0; }
+/* The logo sits 10px from the words through the Button's own gap, not a margin, so a loading spinner centers on it. */
+.sign-in-logo-button { column-gap: 10px; }
 .sign-in-github { fill: currentColor; fill: light-dark(#000, #fff); }
 .sign-in-google-sweep {
   width: 100%;

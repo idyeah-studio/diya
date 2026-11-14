@@ -59,13 +59,13 @@ const launchedImage = {
 }
 const launchedSocial = {
   title: 'DIYA — a library for your next app',
-  description: `30 components, 13 patterns and ${readyScreens} screens for React. Free, MIT, yours to own.`,
+  description: `33 components, 13 patterns and ${readyScreens} screens for React. Free, MIT, yours to own.`,
 }
 const launchedMetadata: Metadata = {
   ...metadata,
   title: 'DIYA — React components and patterns, free under MIT',
   description:
-    `30 components, 13 patterns and ${readyScreens} screens for React, with Light, Dark and Glass. Free, MIT, yours to own. npm install @idyeah/diya`,
+    `33 components, 13 patterns and ${readyScreens} screens for React, with Light, Dark and Glass. Free, MIT, yours to own. npm install @idyeah/diya`,
   openGraph: { ...launchedSocial, type: 'website', siteName: 'DIYA', url: '/', images: [launchedImage] },
   twitter: { card: 'summary_large_image', ...launchedSocial, images: [launchedImage] },
   icons,

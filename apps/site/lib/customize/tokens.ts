@@ -3,6 +3,8 @@ import {
   DEFAULT_APPEARANCE,
   statusNames,
   themes,
+  TOKEN_LENGTHS,
+  tokenLengthNames,
   type Appearance,
   type Status,
   type Theme,
@@ -132,6 +134,23 @@ export function accentSet(appearance: Appearance, theme: Theme) {
   return { accent, text: textOnBrand(accent), soft, ink: ensureContrast(accent, against, 4.5, text) }
 }
 
+/**
+ * What DIYA's 1.2 theming colors resolve to when unset: focus rings and headings
+ * follow the text color, fields are filled with raised (Light) or hover (Dark) and
+ * edged with the control line (packages/diya: --diya-internal-field-fill and
+ * --diya-internal-control-line).
+ */
+export function tokenColorDefaults(appearance: Appearance, theme: Theme) {
+  const { text, raised } = appearance.colors[theme]
+  const n = neutralSet(appearance, theme)
+  return { focus: text, heading: text, field: theme === 'light' ? raised : n.hover, fieldLine: n.controlLine }
+}
+
+/** The theming colors in effect: each set one, else its default. */
+export function tokenColors(appearance: Appearance, theme: Theme) {
+  return { ...tokenColorDefaults(appearance, theme), ...appearance.tokens?.[theme] }
+}
+
 /** Neutral derivations that follow text, background and raised. */
 export function neutralSet(appearance: Appearance, theme: Theme) {
   const { text, background, raised, accent } = appearance.colors[theme]
@@ -206,6 +225,14 @@ export function themeOutput(appearance: Appearance, theme: Theme): ThemeOutput {
     out['--diya-color-accent-ink'] = brand.ink
   }
   if (c.lines !== d.lines) out['--diya-color-line'] = c.lines
+  /* 1.2's theming colors: only those set to something other than what they'd be anyway. */
+  const fallback = tokenColorDefaults(appearance, theme)
+  const own = appearance.tokens?.[theme] ?? {}
+  const names = { focus: '--diya-color-focus', heading: '--diya-color-heading', field: '--diya-color-field', fieldLine: '--diya-color-field-line' } as const
+  for (const [key, token] of Object.entries(names) as [keyof typeof names, `--diya-${string}`][]) {
+    const value = own[key]
+    if (value && value.toUpperCase() !== fallback[key].toUpperCase()) out[token] = value
+  }
 
   for (const status of statusNames) {
     const s = statusSet(appearance, theme, status)
@@ -236,6 +263,13 @@ export function sharedTokens(appearance: Appearance): Tokens {
     out['--diya-corner-scale'] = String(Math.round((appearance.corners / CORNERS_DEFAULT) * 100) / 100)
   if (appearance.elevation === 'flat') out['--diya-elevation'] = '0'
   else if (appearance.elevation === 'lifted') out['--diya-elevation'] = '1.6'
+  /* 1.2's control heights and popup and modal corners, in px, when set to something new. */
+  for (const name of tokenLengthNames) {
+    const value = appearance.tokens?.[name]
+    /* The corners' defaults scale with the corner setting, as the SDK's do. */
+    const fallback = TOKEN_LENGTHS[name].fallback * (name.startsWith('radius') ? appearance.corners / CORNERS_DEFAULT : 1)
+    if (value !== undefined && value !== fallback) out[TOKEN_LENGTHS[name].token] = `${value}px`
+  }
   return out
 }
 

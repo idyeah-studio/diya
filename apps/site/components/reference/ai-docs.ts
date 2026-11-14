@@ -30,7 +30,11 @@ import { DiyaProvider } from '${API.package}'
 
 /** The rules every DIYA screen follows, as a Markdown list. Also served by the MCP server. */
 export const RULES = `- Every component renders inside \`DiyaProvider\`; popups, tooltips and toasts need it. Its \`theme\` defaults to \`"system"\` (follows the OS light or dark setting, in CSS, with no flash); pass \`"light"\` or \`"dark"\` to fix it. It paints its own background and text color; \`surface={false}\` leaves that to your page.
-- Fields work controlled (\`value\` with \`onValueChange\`; Switch: \`checked\` with \`onCheckedChange\`) or uncontrolled (\`defaultValue\`; Switch: \`defaultChecked\`). Native \`name\`, \`onChange\` and \`onBlur\` reach the native control, so react-hook-form \`register()\` works on TextInput, TextArea, Select, Switch, Choice and Slider without a Controller. Labels are required, even when hidden with \`hideLabel\`.
+- Fields work controlled (\`value\` with \`onValueChange\`; Switch and Checkbox: \`checked\` with \`onCheckedChange\`) or uncontrolled (\`defaultValue\`; Switch and Checkbox: \`defaultChecked\`). Native \`name\`, \`onChange\` and \`onBlur\` reach the native control, so react-hook-form \`register()\` works on TextInput, TextArea, Select, Switch, Checkbox, Choice and Slider without a Controller. Labels are required, even when hidden with \`hideLabel\`.
+- Switch acts now. Checkbox is a yes or no you send with a form. Choice picks from a list.
+- DIYA's fields take \`label\`, \`helperText\` and \`error\` themselves; wrap only other controls in \`Field\` (\`framed\` for a hosted iframe).
+- Show a toast with \`toast({ title, description, tone })\` from any client code; don't keep toast state yourself. Use \`<Toast>\` only when a toast's life is tied to a component's state.
+- Busy: Button \`loading\`, then Progress, then Spinner; never your own Spinner inside a Button.
 - Lay screens out with \`Stack\` (vertical) and \`Inline\` (horizontal, wrapping): \`gap\` takes a spacing step (1–8) or any CSS length, plus \`align\`, \`justify\`, \`wrap\` and \`as\`.
 - One brand color, set once: \`<DiyaProvider brandColor="#1F4E7A">\`, or \`{ light, dark }\`. Components take no color props (chart series aside); \`tone\` picks a status.
 - Every component takes \`className\`, \`style\` and its root element's attributes. Theme with public \`--diya-*\` tokens on \`.diya-root\`, never by overriding internal classes. DIYA's CSS sits in \`@layer diya\`, so your CSS and Tailwind utilities win.
@@ -38,6 +42,7 @@ export const RULES = `- Every component renders inside \`DiyaProvider\`; popups,
 - DIYA ships no icon set. Pass any React icon (for example from lucide-react) to icon slots.
 - Charts import from \`${API.package}/charts\` and need \`echarts@6\` installed.
 - Next.js App Router: DIYA components are client components; a file that passes functions as props needs \`'use client'\`.
+- A popup from another library inside Dialog or Drawer: pass \`useDiyaPortalContainer()\` as its portal container.
 - DIYA animates popups, dialogs, toggles and selection, and follows the device's Reduce Motion setting. \`motion="reduced"\` (fades only) or \`"off"\` on DiyaProvider changes it for everything inside; nested providers inherit it. Tune the speed with \`--diya-duration-scale\`. In browser tests, render with \`motion="off"\`.`
 
 function propsTable(reference: Pick<ItemReference, 'props' | 'extendsDom'> & Partial<Pick<ItemReference, 'modes'>>) {
@@ -122,6 +127,22 @@ ${lines.join('\n')}
 `
 }
 
+/** api.json items of kind `utility` (such as a visually hidden helper): listed on their own, never counted as components, with no catalog page. */
+export function utilityItems() {
+  return Object.values(API.items)
+    .filter((item) => item.kind === 'utility')
+    .map((item) => {
+      const { name, entry } = item.exports[0]
+      return { name, title: item.title, importFrom: entry === '.' ? API.package : `${API.package}/${entry.replace(/^\.\//, '')}`, component: API.components[name] }
+    })
+}
+
+/** The Utilities section of llms.txt, or nothing while there are none. */
+function utilitiesIndex() {
+  const lines = utilityItems().map(({ name, importFrom, component }) => `- \`${name}\` from \`${importFrom}\`: ${component?.description ?? ''}`.trimEnd())
+  return lines.length ? `\n## Utilities\n\nHelpers, not components: they aren't counted among the components and have no catalog page.\n\n${lines.join('\n')}\n` : ''
+}
+
 /** /llms.txt: the index, per llmstxt.org. */
 export function llmsIndex() {
   const line = (id: ItemId) => {
@@ -152,7 +173,7 @@ ${componentIds.map(line).filter(Boolean).join('\n')}
 ## Patterns
 
 ${patternIds.map(line).filter(Boolean).join('\n')}
-${screensSection() ? `\n${screensSection().trimEnd()}\n` : ''}`
+${utilitiesIndex()}${screensSection() ? `\n${screensSection().trimEnd()}\n` : ''}`
 }
 
 /** /llms-full.txt: the whole library in one Markdown file. */
@@ -189,15 +210,26 @@ ${ids.map((id) => itemSection(id, 2, false)).filter(Boolean).join('\n\n---\n\n')
 
 ---
 
-${screensSection()}## Other exports
+${screensSection()}${utilitiesFull()}## Other exports
 
 ${otherExports()}
 `
 }
 
-/** Exports no catalog page documents on its own: the provider, Toast, Chart. */
+/** The Utilities section of llms-full.txt: each with its props, or nothing while there are none. */
+function utilitiesFull() {
+  const items = utilityItems()
+  if (!items.length) return ''
+  const sections = items.map(({ name, title, importFrom, component }) => {
+    const props = Object.entries(component?.props ?? {}).sort((a, b) => Number(b[1].required) - Number(a[1].required) || a[0].localeCompare(b[0]))
+    return `### ${title} (\`${name}\`)\n\n${component?.description ?? ''} Import from \`${importFrom}\`. A utility: not counted among the components, and no catalog page.\n\n${propsTable({ props, extendsDom: component?.extendsDom })}`
+  })
+  return `## Utilities\n\n${sections.join('\n\n')}\n\n`
+}
+
+/** Exports no catalog page documents on its own: the provider, Toast, Chart. Utilities have their own section. */
 function otherExports() {
-  const documented = new Set(ids.map((id) => itemReference(id)?.exportName))
+  const documented = new Set([...ids.map((id) => itemReference(id)?.exportName), ...utilityItems().map((item) => item.name)])
   return Object.entries(API.components)
     .filter(([name]) => !documented.has(name))
     .map(([name, component]) => {

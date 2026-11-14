@@ -99,10 +99,11 @@ describe('catalog search continuity', () => {
     const user = userEvent.setup()
     const preview = render(<Preview area="components" component="text-input" />)
     await user.type(screen.getByRole('searchbox', { name: 'Search components' }), 'field')
-    // Two components, then the Form pattern from the other area.
+    // Three components (Field since 1.2), then the Form pattern from the other area.
     expect(links('Choose a component').map((link) => link.textContent)).toEqual([
       'Text Input',
       'Text Area',
+      'Field',
       'Form',
     ])
     preview.rerender(<Preview area="components" component="text-area" />)
@@ -112,13 +113,14 @@ describe('catalog search continuity', () => {
     expect(links('Choose a component').map((link) => link.textContent)).toEqual([
       'Text Input',
       'Text Area',
+      'Field',
       'Form',
     ])
     expect(screen.getByRole('link', { name: 'Text Area' }).getAttribute('aria-current')).toBe(
       'page'
     )
     expect(screen.getByRole('link', { name: 'Form' }).getAttribute('href')).toBe('/explore?pattern=form')
-    expect(searchStatus().textContent).toBe('2 components and 1 pattern found')
+    expect(searchStatus().textContent).toBe('3 components and 1 pattern found')
   })
 
   it('retains pattern search when a matching preview replaces and remounts its sidebar', async () => {
@@ -158,7 +160,7 @@ describe('catalog search continuity', () => {
     await user.click(screen.getByRole('button', { name: 'Clear Search components' }))
     expect(componentSearch.value).toBe('')
     expect(document.activeElement).toBe(componentSearch)
-    expect(links('Choose a component')).toHaveLength(29)
+    expect(links('Choose a component')).toHaveLength(32)
 
     preview.rerender(<Preview area="patterns" pattern="site-header" />)
     const returnedPatternSearch = screen.getByRole('searchbox', {
@@ -174,7 +176,7 @@ describe('catalog search continuity', () => {
     expect(
       (screen.getByRole('searchbox', { name: 'Search components' }) as HTMLInputElement).value
     ).toBe('')
-    expect(links('Choose a component')).toHaveLength(29)
+    expect(links('Choose a component')).toHaveLength(32)
   })
 
   it('still supports isolated sidebar previews without a catalog search provider', async () => {

@@ -198,11 +198,15 @@ export function AlertLibrary() {
               </div>
             </fieldset>
             <PreviewOptions
-              items={[
-                { label: 'Title', checked: title, onChange: setTitle },
-                { label: 'Action', checked: action, onChange: setAction },
-                { label: 'Dismiss', checked: dismiss, onChange: setDismiss },
-              ].map((option) => ({
+              /* toast() always has a title and a close button, so a toast's only option is its action. */
+              items={(kind === 'Toast'
+                ? [{ label: 'Action', checked: action, onChange: setAction }]
+                : [
+                    { label: 'Title', checked: title, onChange: setTitle },
+                    { label: 'Action', checked: action, onChange: setAction },
+                    { label: 'Dismiss', checked: dismiss, onChange: setDismiss },
+                  ]
+              ).map((option) => ({
                 ...option,
                 onChange: (checked: boolean) => {
                   option.onChange(checked)
@@ -256,11 +260,16 @@ export function AlertLibrary() {
                 </span>
               )}
               {kind === 'Toast' && toast > 0 && (
+                /*
+                 * Get code gives toast(), which shows the same toast from any handler. The preview
+                 * renders it as a <Toast> so it takes this preview's provider: Customize, the
+                 * previewed theme and Motion reach it, as your theme will reach toast() in your app.
+                 * It shares the page's one toast column either way.
+                 */
                 <Toast
                   key={toast}
                   tone={tone}
-                  title={title ? example.title : undefined}
-                  showClose={dismiss}
+                  title={example.title}
                   onDismiss={() => setToast(0)}
                   action={action ? { label: example.action, onClick: act } : undefined}
                 >
