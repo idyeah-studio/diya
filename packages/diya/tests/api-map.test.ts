@@ -343,7 +343,8 @@ describe('API map', () => {
     const schema = JSON.parse(readFileSync(resolve(root, 'api.schema.json'), 'utf8'))
     expect(schema.$defs.token.properties.description).toEqual({ type: 'string', description: expect.any(String) })
     const described = Object.entries(api.tokens).filter(([, token]) => 'description' in token)
-    expect(described.map(([name]) => name).sort()).toEqual(['--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-color-heading'])
+    // R3 (named edit): the heights and the popup and modal radii are described too.
+    expect(described.map(([name]) => name).sort()).toEqual(['--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-modal', '--diya-radius-popup'])
     expect((api.tokens['--diya-color-focus'] as { description?: string }).description).toContain('5.1:1 against white')
   })
 
@@ -460,5 +461,15 @@ describe('API map', () => {
     expect(text).not.toContain(root)
     expect(text).not.toMatch(/"\/(Users|private|tmp|home)\//)
     expect(text).not.toMatch(/[A-Za-z]:\\\\/)
+  })
+})
+
+// R3 (DS-F-02): the CHANGELOG says the nine 1.2 tokens each have a description; they do.
+describe('the 1.2 theming tokens (R3)', () => {
+  it('each has a description', () => {
+    const tokens = (api as unknown as { tokens: Record<string, { since?: string; description?: string }> }).tokens
+    const new12 = Object.entries(tokens).filter(([, token]) => token.since === '1.2.0')
+    expect(new12.map(([name]) => name).sort()).toEqual(['--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-modal', '--diya-radius-popup'])
+    for (const [name, token] of new12) expect(token.description, name).toMatch(/\S/)
   })
 })

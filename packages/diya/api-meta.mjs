@@ -731,13 +731,18 @@ const theming = {
   '--diya-color-field-line': { group: 'fields', kind: 'color', pairsWith: ['--diya-color-field', '--diya-color-surface'], ...v1_2,
     defaults: { light: 'color-mix(in srgb, var(--diya-color-muted) 70%, transparent)', dark: 'color-mix(in srgb, var(--diya-color-muted) 70%, transparent)' },
     description: "The edge needs 3:1 against the field fill and against the page behind it. A color you set is used as is in every appearance, so in Light use at least 3.8:1 against white; it then still holds 3:1 over Glass. DIYA's default edge follows the muted text color, which Glass makes stronger, so it holds on its own." },
-  '--diya-height-control-small': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-medium', '--diya-height-control-large'], ...v1_2 },
-  '--diya-height-control-medium': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-small', '--diya-height-control-large'], ...v1_2 },
-  '--diya-height-control-large': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-small', '--diya-height-control-medium'], ...v1_2 },
+  '--diya-height-control-small': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-medium', '--diya-height-control-large'], ...v1_2,
+    description: 'Buttons (and icon-only squares), every field, Tabs and calendar days: 32, 40 and 48px. Set the three together. Type sizes don\'t change. Combobox can\'t go below 26px (32px at large).' },
+  '--diya-height-control-medium': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-small', '--diya-height-control-large'], ...v1_2,
+    description: 'Buttons (and icon-only squares), every field, Tabs and calendar days: 32, 40 and 48px. Set the three together. Type sizes don\'t change. Combobox can\'t go below 26px (32px at large).' },
+  '--diya-height-control-large': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-small', '--diya-height-control-medium'], ...v1_2,
+    description: 'Buttons (and icon-only squares), every field, Tabs and calendar days: 32, 40 and 48px. Set the three together. Type sizes don\'t change. Combobox can\'t go below 26px (32px at large).' },
   '--diya-radius-popup': { group: 'shape', kind: 'length', pairsWith: [], ...v1_2,
-    defaults: { light: 'calc(16px * var(--diya-corner-scale, 1))', dark: 'calc(16px * var(--diya-corner-scale, 1))' } },
+    defaults: { light: 'calc(16px * var(--diya-corner-scale, 1))', dark: 'calc(16px * var(--diya-corner-scale, 1))' },
+    description: 'Menu, Popover and the Combobox and Date Picker popups.' },
   '--diya-radius-modal': { group: 'shape', kind: 'length', pairsWith: [], ...v1_2,
-    defaults: { light: 'calc(22px * var(--diya-corner-scale, 1))', dark: 'calc(22px * var(--diya-corner-scale, 1))' } },
+    defaults: { light: 'calc(22px * var(--diya-corner-scale, 1))', dark: 'calc(22px * var(--diya-corner-scale, 1))' },
+    description: "Dialog and the Drawer's open edge; square when a Drawer fills a phone." },
 }
 
 export const tokens = {
