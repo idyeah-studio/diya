@@ -247,8 +247,17 @@ describe('motion house rules', () => {
     expect(uses.filter(name => name !== 'transition-behavior')).toEqual([])
   })
 
-  it('adds no !important', () => {
-    expect(bare.match(/!\s*important/g) ?? []).toEqual([])
+  // O4 (named edit): the one exception is the loading Button's own animation (the hide, its turn,
+  // the fade back and the leading icon's none), which an app's animation on the Button must not
+  // replace. Nothing else.
+  it('adds no !important, except to the loading Button\'s own animation', () => {
+    const important = [...bare.matchAll(/([^{}]*)\{([^{}]*!\s*important[^{}]*)\}/g)].map((m) => `${m[1].trim()} { ${m[2].trim()} }`)
+    expect(important).toEqual([
+      ".diya-root .diya-button[aria-busy='true']:not([data-icon-only='true']) { animation: diya-button-hide 0s linear var(--diya-internal-beat) both !important; }",
+      ".diya-root .diya-button[aria-busy='true'][data-busy-turn='b']:not([data-icon-only='true']) { animation-name: diya-button-hide-again !important; }",
+      ".diya-root .diya-button[data-returning='true']:not([aria-busy='true'], [data-icon-only='true']) { animation: diya-button-return-text var(--diya-internal-duration-fast) var(--diya-ease-enter) !important; }",
+      ".diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child):is([aria-busy='true'], [data-returning='true']) { animation: none !important; }",
+    ])
   })
 
   it('never transitions filter, backdrop-filter or outline', () => {
@@ -511,8 +520,10 @@ describe('Button loading (F12, F13)', () => {
     expect(bare).not.toMatch(/@starting-style\s*\{[^{}]*diya-button/)
     // N1 (named edit of M2's version): the words go and come back from the Button, never by a style
     // of the box-less wrappers, which WebKit's accessible name can't take; the elements by opacity.
-    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\]:not\(\[data-icon-only='true'\]\) \{\s*animation: diya-button-hide 0s linear var\(--diya-internal-beat\) both;\s*\}/)
-    expect(bare).toMatch(/\.diya-root \.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\], \[data-icon-only='true'\]\) \{\s*animation: diya-button-return-text var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\);\s*\}/)
+    // O4 (named edit): the Button's own hide and fade back are important, so an app's animation on
+    // the Button can't replace them.
+    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\]:not\(\[data-icon-only='true'\]\) \{\s*animation: diya-button-hide 0s linear var\(--diya-internal-beat\) both !important;\s*\}/)
+    expect(bare).toMatch(/\.diya-root \.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\], \[data-icon-only='true'\]\) \{\s*animation: diya-button-return-text var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\) !important;\s*\}/)
     expect(bare).toMatch(/\.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\]\) > \.diya-button-label > \*,[^{]*\{\s*animation: diya-button-return var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\);\s*\}/)
     expect(bare).toMatch(/@keyframes diya-button-hide \{ to \{ -webkit-text-fill-color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; \} \}/)
     for (const [selector, body] of [...bare.matchAll(/([^{}]*diya-button-(?:label|lead-item)[^{}]*)\{([^{}]*)\}/g)].map((m) => [m[1].trim(), m[2]])) {

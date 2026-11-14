@@ -469,6 +469,34 @@ for (const how of ['two flips in one task', 'off, then on in the next task'] as 
   })
 }
 
+// O4 (FE-N-02, QA-N-01): an app's own animation on a loading Button (a class, a utility in a later
+// layer, an inline style) can't replace the hide or the fade back: after the beat the words are
+// gone, data-returning clears once they're back, and the app's animation then runs again. After a
+// leading icon the words stay.
+test('an app\'s own animation on a loading Button neither keeps its words under the spinner nor keeps it returning (O4)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light&anim=1')
+  const ids = ['bl-anim-class', 'bl-anim-layer', 'bl-anim-inline']
+  const read = () => page.evaluate((ids) => Object.fromEntries([...ids, 'bl-anim-lead'].map((id) => {
+    const button = document.getElementById(id)!
+    const fill = getComputedStyle(button).getPropertyValue('-webkit-text-fill-color')
+    const parts = fill.match(/[\d.]+/g)!.map(Number)
+    return [id, { words: parts.length > 3 ? parts[3] : 1, returning: button.hasAttribute('data-returning'), names: button.getAnimations().map((a) => (a as CSSAnimation).animationName).join(' ') }]
+  })), ids)
+  const win = (value: boolean) => page.evaluate((value) => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(value), value)
+  await win(true)
+  await page.waitForTimeout(700)
+  await expect.poll(async () => Object.entries(await read()).filter(([id, v]) => ids.includes(id) && v.words > 0).map(([id]) => id), { timeout: 2000 }).toEqual([])
+  const busy = await read()
+  expect(busy['bl-anim-lead'].words, 'after a leading icon the words stay').toBe(1)
+  await win(false)
+  await expect.poll(async () => Object.entries(await read()).filter(([, v]) => v.returning).map(([id]) => id), { timeout: 2000 }).toEqual([])
+  const after = await read()
+  for (const id of [...ids, 'bl-anim-lead']) {
+    expect(after[id].words, `${id} after`).toBe(1)
+    if (id !== 'bl-anim-layer') expect(after[id].names, `${id}'s own animation runs again`).toBe('app-pulse')
+  }
+})
+
 // Forced colors force the words' color, so the label keeps ButtonText itself while busy, and still
 // goes on the beat (Chromium emulates forced colors).
 test('in forced colors the label still goes on the beat, and reads ButtonText before it', async ({ page }, testInfo) => {
