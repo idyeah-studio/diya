@@ -538,6 +538,33 @@ test('a Spinner of your own in a loading Button keeps its own beat (O9)', async 
   expect(bad).toEqual([])
 })
 
+// O10 (MOT-N-03): with the pointer on a Solid Button as its loading ends, the hover tint (a mix of
+// currentColor) follows the words' fade back in every frame, instead of trailing it by its own
+// transition.
+test('the hover tint comes back in step with the words (O10)', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.endsWith('-phone'), 'hover needs a pointer')
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  await page.hover('#bl-medium-solid')
+  await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+  await page.waitForTimeout(700)
+  const off = await page.evaluate(() => new Promise<string[]>((done) => {
+    const alpha = (color: string) => { const parts = color.match(/[\d.]+/g)!.map(Number); return parts.length > 3 ? parts[3] : 1 }
+    const button = document.getElementById('bl-medium-solid')!
+    const out: string[] = []
+    ;(window as unknown as { __setBusy(value: boolean): void }).__setBusy(false)
+    const start = performance.now()
+    const tick = () => {
+      const t = performance.now() - start
+      const tint = alpha(getComputedStyle(button, '::after').backgroundColor)
+      const words = alpha(getComputedStyle(button).color)
+      if (Math.abs(tint - 0.1 * words) > 0.015) out.push(`at ${t.toFixed(0)}ms: tint ${tint.toFixed(3)}, words ${words.toFixed(2)}`)
+      if (t < 300) requestAnimationFrame(tick); else done(out)
+    }
+    requestAnimationFrame(tick)
+  }))
+  expect(off).toEqual([])
+})
+
 // Forced colors force the words' color, so the label keeps ButtonText itself while busy, and still
 // goes on the beat (Chromium emulates forced colors).
 test('in forced colors the label still goes on the beat, and reads ButtonText before it', async ({ page }, testInfo) => {
