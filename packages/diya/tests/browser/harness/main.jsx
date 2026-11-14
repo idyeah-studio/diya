@@ -493,7 +493,10 @@ function ReaderSpinners({ busy }) {
 
 function LoadingCase() {
   const [busy, setBusy] = useState(query.get('busy') === '1')
-  window.__setBusy = (value) => { note('busy', performance.now()); flushSync(() => setBusy(value)) }
+  // Whether loading ever started: a Button whose loading state starts undefined (useState()) gets it
+  // only then (O5).
+  const [started, setStarted] = useState(query.get('busy') === '1')
+  window.__setBusy = (value) => { note('busy', performance.now()); flushSync(() => { setBusy(value); if (value) setStarted(true) }) }
   // Loading off and on again within one frame: two commits, no frame between (M5).
   window.__flip = () => { flushSync(() => setBusy(false)); flushSync(() => setBusy(true)) }
   const icon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
@@ -563,6 +566,9 @@ function LoadingCase() {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', minHeight: 48 }}>
         <Button id="bl-late" loading={busy || undefined}>Sync now</Button>
         <Button id="bl-late-icon" loading={busy || undefined}><Plus size={18} strokeWidth={1.6} />Add</Button>
+        {/* Plain labels of several parts whose loading comes late, or starts undefined (O5). */}
+        <Button id="bl-tr-late" variant="outline" loading={busy || undefined}>Delete {3} files</Button>
+        <Button id="bl-tr-undef" variant="outline" loading={started ? busy : undefined}>Move {3} files</Button>
         {busy && <Button id="bl-mounted" loading>Mounted busy</Button>}
       </div>
       {/* Labels of more than one part (L7), each beside a twin that has no loading prop. */}

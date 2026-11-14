@@ -202,18 +202,22 @@ describe('Button loading markup (F12, L1, M1, M3)', () => {
   }
   const kids = (node: Element) => [...node.children].map((child) => child.className || child.tagName.toLowerCase())
 
-  it('a plain-text label is wrapped only while loading, so at rest getByText finds the button (M3)', () => {
+  // O5 (named edit of M3's version): a plain-text label is never wrapped; its words stay the same
+  // text node in every phase, and the spinner comes and goes after them.
+  it('a plain-text label is never wrapped, so getByText finds the button in every phase, and its text node stays (M3, O5)', () => {
     const view = render(<DiyaProvider><Button loading={false}>Delete</Button></DiyaProvider>)
     const button = screen.getByRole('button', { name: 'Delete' })
     expect(button.innerHTML).toBe('Delete')
     expect(screen.getByText('Delete')).toBe(button)
+    const words = button.firstChild
     view.rerender(<DiyaProvider><Button loading>Delete</Button></DiyaProvider>)
-    expect(kids(button)).toEqual(['diya-spinner diya-button-spinner', 'diya-button-label'])
-    expect(button.querySelector('.diya-button-label')!.textContent).toBe('Delete')
-    // Ended before the beat (happy-dom runs no animations), so nothing fades back: unwrapped at once.
+    expect(kids(button)).toEqual(['diya-spinner diya-button-spinner'])
+    expect(button.firstChild).toBe(words)
+    expect(screen.getByText('Delete')).toBe(button)
+    // Ended before the beat (happy-dom runs no animations), so nothing fades back: the spinner goes at once.
     view.rerender(<DiyaProvider><Button loading={false}>Delete</Button></DiyaProvider>)
     expect(button.innerHTML).toBe('Delete')
-    expect(screen.getByText('Delete')).toBe(button)
+    expect(button.firstChild).toBe(words)
   })
 
   it('Dialog\'s confirm, Form\'s Submit and Wizard\'s Continue are found by their text at rest, as in 1.1.1 (M3)', async () => {

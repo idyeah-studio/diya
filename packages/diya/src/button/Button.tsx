@@ -88,9 +88,9 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
   //   as every icon library's icon does (M1): the spinner then sits on it.
   // - A label holding elements is wrapped from the first render whenever `loading` is given, even
   //   as false, so nothing in it remounts (L1); a Button without `loading` keeps 1.1.1's markup
-  //   until it first loads. A label of plain text is wrapped only while loading and its fade back
-  //   (M3). The spinner is there whenever the wrappers are, hidden at rest, so loading that stops
-  //   and restarts within a frame never blanks the Button (M5).
+  //   until it first loads. A label of plain text is never wrapped (O5); its spinner is there while
+  //   loading and its fade back (M3). The spinner is there whenever the wrappers are, hidden at
+  //   rest, so loading that stops and restarts within a frame never blanks the Button (M5).
   const given = buttonProps.loading !== undefined
   const [loaded, setLoaded] = useState(loading)
   if (loading && !loaded) setLoaded(true)
@@ -124,20 +124,23 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     onKeyDownCapture: (event: KeyboardEvent<HTMLElement>) => { pressFloor(event); props.onKeyDownCapture?.(event as never) },
   }
   const content = (raw: ReactNode) => {
-    // A plain-text label given `loading` is one string, so React sets it as text content and never
-    // removes text nodes a page translator may have replaced (N2).
-    const inner = given && !iconOnly && plainText(raw) ? Children.toArray(raw).join('') : raw
-    if (iconOnly) return <>{spinner}{inner}</>
-    if (!wrapped) return inner
-    const parts = labelParts(inner)
+    if (iconOnly) return <>{spinner}{raw}</>
+    // A plain-text label needs no wrapper, as its words hide from the Button (N1): it stays as it
+    // is, in every phase, and the spinner (centered, so its place in the DOM doesn't show) comes and
+    // goes after it. React never moves or replaces its text nodes, so a page translator that swapped
+    // them can't crash the app, however late `loading` comes (O5, FE-N-04).
+    if (plainText(raw)) return <>{raw}{spinner}</>
+    if (!wrapped) return raw
+    const parts = labelParts(raw)
     if (parts.length > 1 && isValidElement(parts[0])) return <><span className="diya-button-lead"><span className="diya-button-lead-item">{parts[0]}</span>{spinner}</span><span className="diya-button-label">{parts.slice(1)}</span></>
-    return <>{spinner}<span className="diya-button-label">{inner}</span></>
+    return <>{spinner}<span className="diya-button-label">{raw}</span></>
   }
   if (asChild) {
     const child = onlyChild(children)
     if (!isValidElement(child)) return null
     const own = child as ReactElement<{ children?: ReactNode }>
-    const filled = wrapped || given ? cloneElement(own, undefined, content(own.props.children)) : own
+    // Always cloned, so the child's own children keep one shape whether or not it loads (O5).
+    const filled = cloneElement(own, undefined, content(own.props.children))
     return renderSlot(filled, { ...props, ...shared, 'aria-disabled': inactive || undefined, onClickCapture: inactive ? stopClick : undefined, onAuxClickCapture: inactive ? stopClick : undefined }, ref)
   }
   if (href !== undefined) {

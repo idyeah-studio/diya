@@ -5,6 +5,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode, forwardRef, useState, version, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
+import { renderToString } from 'react-dom/server'
 import { Button, DiyaProvider, Spinner } from '../dist/index.js'
 
 let mounts = 0
@@ -65,14 +66,15 @@ describe('the beat and the fade back (M6, M8)', () => {
     expect(button.getAttribute('data-returning')).toBe('true')
   })
 
-  it('data-returning clears when the fade back ends, and a plain-text label is unwrapped then (M8, M3)', () => {
+  it('data-returning clears when the fade back ends, and the spinner goes then (M8, M3, O5)', () => {
     const view = render(<DiyaProvider><Button loading>Save</Button></DiyaProvider>)
     const button = screen.getByRole('button', { name: 'Save' })
     act(() => { end(button.querySelector(':scope > .diya-spinner')!, 'diya-spinner-arrive') })
     view.rerender(<DiyaProvider><Button loading={false}>Save</Button></DiyaProvider>)
     expect(button.getAttribute('data-returning')).toBe('true')
-    expect(button.querySelector('.diya-button-label')).not.toBeNull()
-    act(() => { end(button.querySelector('.diya-button-label')!, 'diya-button-return-text') })
+    // O5 (named edit): a plain-text label is never wrapped; its fade back runs on the Button.
+    expect(button.querySelector('.diya-button-label')).toBeNull()
+    act(() => { end(button, 'diya-button-return-text') })
     expect(button.hasAttribute('data-returning')).toBe(false)
     expect(button.innerHTML).toBe('Save')
   })
@@ -120,16 +122,29 @@ it.runIf(version.startsWith('19'))('real lucide icons, alone and in a fragment, 
 })
 
 describe('round N', () => {
-  it('a plain label of several parts given loading is one text node, at rest and while loading (N2)', () => {
+  // O5 (named edit, replaces N2's join): a plain label of several parts keeps 1.1.1's text nodes, the
+  // same nodes in every phase, whether loading is given from the start, late, or starts undefined;
+  // and the server writes 1.1.1's HTML for it, separators included (QA-N-02).
+  it('a plain label of several parts keeps 1.1.1\'s text nodes in every phase, however loading comes (O5)', () => {
     const count = 3
-    const view = render(<DiyaProvider><Button loading={false}>Delete {count} files</Button><Button>Keep {count} files</Button></DiyaProvider>)
-    const given = screen.getByRole('button', { name: 'Delete 3 files' })
-    expect(given.childNodes).toHaveLength(1)
-    expect(screen.getByText('Delete 3 files')).toBe(given)
-    // No loading prop: 1.1.1's three text nodes.
-    expect(screen.getByRole('button', { name: 'Keep 3 files' }).childNodes).toHaveLength(3)
-    view.rerender(<DiyaProvider><Button loading>Delete {count} files</Button><Button>Keep {count} files</Button></DiyaProvider>)
-    expect(given.querySelector('.diya-button-label')!.childNodes).toHaveLength(1)
+    const Case = ({ busy, late }: { busy: boolean; late?: boolean }) => <DiyaProvider>
+      <Button loading={busy}>Delete {count} files</Button>
+      <Button loading={late ? busy || undefined : undefined}>Move {count} files</Button>
+      <Button>Keep {count} files</Button>
+    </DiyaProvider>
+    const view = render(<Case busy={false} late />)
+    const buttons = ['Delete 3 files', 'Move 3 files', 'Keep 3 files'].map((name) => screen.getByRole('button', { name }))
+    const nodes = buttons.map((button) => [...button.childNodes])
+    for (const list of nodes) expect(list.map((node) => node.nodeType)).toEqual([3, 3, 3])
+    for (const busy of [true, false, true, false]) {
+      view.rerender(<Case busy={busy} late />)
+      buttons.forEach((button, index) => expect([...button.childNodes].slice(0, 3), `${button.textContent} busy=${busy}`).toEqual(nodes[index]))
+      expect(buttons[0].childNodes).toHaveLength(busy ? 4 : 3)
+      expect(buttons[1].childNodes).toHaveLength(busy ? 4 : 3)
+    }
+    const server = (loading?: boolean) => renderToString(<DiyaProvider><Button loading={loading}>Delete {count} files</Button></DiyaProvider>)
+    expect(server(false)).toBe(server())
+    expect(server(false)).toContain('>Delete <!-- -->3<!-- --> files</button>')
   })
 
   it('the Button\'s own spinner has its own class; a Spinner you put in a Button doesn\'t (N6)', () => {

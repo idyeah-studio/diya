@@ -19,6 +19,30 @@ type Frame = { t: number; rows: Row[] }
 const grid = ['small', 'medium', 'large'].flatMap((size) => ['solid', 'outline', 'quiet'].map((variant) => `bl-${size}-${variant}`))
 const padded = ['bl-pad-10', 'bl-pad-12', 'bl-pad', 'bl-pad-16', 'bl-pad-wide']
 
+/**
+ * Removes the listed Buttons' words outright, for a reference shot: the label and leading part by
+ * visibility, and a plain-text label's own text nodes (O5: never wrapped) by holding each run of them
+ * in a hidden span for the shot; the spinner goes too, or stays. Returns the undo, which puts the same
+ * text nodes back (React renders nothing between).
+ */
+async function removeWords(page: Page, ids: string[], { spinner }: { spinner: 'hidden' | 'visible' }) {
+  const tag = await page.addStyleTag({ content: ids.map((id) => `#${id} .diya-button-label, #${id} .diya-button-lead { visibility: hidden !important; } #${id} .diya-button-spinner { visibility: ${spinner} !important; }`).join(' ') })
+  await page.evaluate((ids) => {
+    for (const id of ids) {
+      let run: HTMLSpanElement | null = null
+      for (const node of [...document.getElementById(id)!.childNodes]) {
+        if (node.nodeType !== Node.TEXT_NODE) { run = null; continue }
+        if (!run) { run = document.createElement('span'); run.dataset.wordsRemoved = ''; run.style.visibility = 'hidden'; node.before(run) }
+        run.append(node)
+      }
+    }
+  }, ids)
+  return async () => {
+    await page.evaluate(() => { for (const run of document.querySelectorAll('[data-words-removed]')) run.replaceWith(...run.childNodes) })
+    await tag.evaluate((node) => node.remove())
+  }
+}
+
 /** Turns loading on (or ends it after `endAfter` ms) and measures the listed Buttons on every frame for `ms`. */
 function frames(page: Page, ids: string[], ms: number, { endAfter, busy = true }: { endAfter?: number; busy?: boolean } = {}) {
   return page.evaluate(({ ids, ms, endAfter, busy }) => new Promise<Frame[]>((done) => {
@@ -218,7 +242,9 @@ test('href and asChild Buttons show the spinner too', async ({ page }, testInfo)
     await expect(link.locator(':scope > .diya-spinner svg')).toHaveCount(1)
     await expect(link.locator(':scope > .diya-spinner')).toHaveCSS('opacity', '1')
     // M2, N1: the label's wrapper has no box, so its words hide by their fill, from the Button.
-    await expect(link.locator(':scope > .diya-button-label')).toHaveCSS('-webkit-text-fill-color', 'rgba(0, 0, 0, 0)')
+    // O5 (named edit): a plain-text label has no wrapper; the Button's fill is its words'.
+    await expect(link).toHaveCSS('-webkit-text-fill-color', 'rgba(0, 0, 0, 0)')
+    await expect(link.locator(':scope > .diya-button-label')).toHaveCount(0)
   }
 })
 
@@ -230,10 +256,10 @@ test('Dialog footer at 320px: the label\'s line count is unchanged while loading
   await expect(confirm).toBeVisible()
   // The dialog's own animations: the case now holds a reader's Spinner, which turns forever (N6).
   await page.waitForFunction(() => document.querySelector('dialog[open]')!.getAnimations({ subtree: true }).length === 0)
+  // O5 (named edit): the words are the Button's own text nodes (the spinner beside them is not a line).
   const lines = () => confirm.evaluate((button) => {
-    const range = document.createRange()
-    range.selectNodeContents(button.querySelector('.diya-button-label') ?? button)
-    return { lines: new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size, width: button.getBoundingClientRect().width, height: button.getBoundingClientRect().height }
+    const tops = [...button.childNodes].filter((node) => node.nodeType === Node.TEXT_NODE).flatMap((node) => { const range = document.createRange(); range.selectNodeContents(node); return [...range.getClientRects()].map((rect) => Math.round(rect.top)) })
+    return { lines: new Set(tops).size, width: button.getBoundingClientRect().width, height: button.getBoundingClientRect().height }
   })
   const before = await lines()
   expect(before.lines).toBeGreaterThan(1)
@@ -607,13 +633,15 @@ test('an app\'s text-shadow and text fill on the Button leave no ghost words whi
   await page.waitForTimeout(600)
   for (const id of ['bl-shadow', 'bl-fill']) {
     const button = page.locator(`#${id}`)
-    const style = await button.evaluate((node) => { const s = getComputedStyle(node.querySelector('.diya-button-label')!); return [s.getPropertyValue('-webkit-text-fill-color'), s.textShadow] })
+    // O5 (named edit): a plain-text label is never wrapped, so its words are the Button's own.
+    const style = await button.evaluate((node) => { const s = getComputedStyle(node); return [s.getPropertyValue('-webkit-text-fill-color'), s.textShadow] })
     expect(style[0], id).toBe('rgba(0, 0, 0, 0)')
     expect(style[1], id).toMatch(/^(none|rgba\(0, 0, 0, 0\) 0px 0px 0px)$/)
     // Pixels: the busy Button looks the same as with its words removed outright.
     const busy = await button.screenshot({ animations: 'disabled' })
-    await page.addStyleTag({ content: `#${id} .diya-button-label { visibility: hidden !important; }` })
+    const undo = await removeWords(page, [id], { spinner: 'visible' })
     expect(await button.screenshot({ animations: 'disabled' }), id).toEqual(busy)
+    await undo()
   }
 })
 
@@ -669,30 +697,28 @@ for (const theme of ['light', 'dark']) {
     const words = ['bl-medium-solid', 'bl-medium-outline', 'bl-medium-quiet', 'bl-link', 'bl-child', 'bl-n1-text', 'bl-fc-disabled']
     const elements = ['bl-strong', 'bl-multi', 'bl-n1-strong', 'bl-fc-red', 'bl-kbd']
     const shot = (id: string) => page.locator(`#${id}`).screenshot({ animations: 'disabled' })
-    const style = async (css: string) => { const tag = await page.addStyleTag({ content: css }); return () => tag.evaluate((node) => node.remove()) }
-    // The label and leading part go; the spinner (which may sit in the leading part) goes too, or stays.
-    const bare = (ids: string[], spinner: boolean) => ids.map((id) => `#${id} .diya-button-label, #${id} .diya-button-lead { visibility: hidden !important; } #${id} .diya-button-spinner { visibility: ${spinner ? 'hidden' : 'visible'} !important; }`).join(' ')
+    const all = [...words, ...elements]
     const rest: Record<string, Buffer> = {}
-    for (const id of [...words, ...elements]) rest[id] = await shot(id)
-    let undo = await style(bare(elements, true))
+    for (const id of all) rest[id] = await shot(id)
+    let undo = await removeWords(page, all, { spinner: 'hidden' })
     const restFrame: Record<string, Buffer> = {}
-    for (const id of elements) restFrame[id] = await shot(id)
+    for (const id of all) restFrame[id] = await shot(id)
     await undo()
     const disabledRest = await page.evaluate(() => { const s = getComputedStyle(document.getElementById('bl-fc-disabled-plain')!); return [s.color, s.borderTopColor] })
     await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
     await expect.poll(() => page.evaluate(() => getComputedStyle(document.getElementById('bl-medium-solid')!).getPropertyValue('-webkit-text-fill-color')), { timeout: 3000 }).toBe('rgba(0, 0, 0, 0)')
     const busy: Record<string, Buffer> = {}
-    for (const id of [...words, ...elements]) busy[id] = await shot(id)
+    for (const id of all) busy[id] = await shot(id)
     expect(await page.evaluate(() => { const s = getComputedStyle(document.getElementById('bl-fc-disabled')!); return [s.color, s.borderTopColor] }), 'a disabled loading Button keeps GrayText').toEqual(disabledRest)
-    undo = await style(bare([...words, ...elements], false))
-    for (const id of [...words, ...elements]) expect(await shot(id), `${id}: busy, against its label removed`).toEqual(busy[id])
+    undo = await removeWords(page, all, { spinner: 'visible' })
+    for (const id of all) expect(await shot(id), `${id}: busy, against its words removed`).toEqual(busy[id])
     await undo()
-    undo = await style(bare(elements, true))
-    for (const id of elements) expect(await shot(id), `${id}: busy frame, against rest`).toEqual(restFrame[id])
+    undo = await removeWords(page, all, { spinner: 'hidden' })
+    for (const id of all) expect(await shot(id), `${id}: busy frame, against rest`).toEqual(restFrame[id])
     await undo()
     await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(false))
     await expect.poll(() => page.evaluate(() => document.querySelectorAll('[data-returning]').length), { timeout: 3000 }).toBe(0)
-    for (const id of [...words, ...elements]) expect(await shot(id), `${id}: after, against rest`).toEqual(rest[id])
+    for (const id of all) expect(await shot(id), `${id}: after, against rest`).toEqual(rest[id])
   })
 }
 
@@ -806,6 +832,34 @@ test('a translated plain label of several parts survives loading on and off (N2)
   expect(errors).toEqual([])
   await expect(page.locator('#bl-n1-text')).toHaveCount(1)
   await expect(page.locator('#bl-medium-solid')).toHaveCount(1)
+})
+
+// O5 (FE-N-04): a plain-text label is never wrapped, so React never moves or replaces its text
+// nodes: on a translated page (Google Translate swaps each text node for <font>) every plain label
+// survives loading on and off, given from the start, late, or starting undefined, plain, several
+// parts, href and asChild, on React 18 and 19.
+const translate = (page: Page, ids: string[]) => page.evaluate((ids) => {
+  for (const id of ids) {
+    const button = document.getElementById(id)!
+    const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT)
+    const texts: Text[] = []
+    while (walker.nextNode()) if (!(walker.currentNode.parentElement!.closest('.diya-spinner')) && walker.currentNode.textContent!.trim()) texts.push(walker.currentNode as Text)
+    for (const node of texts) { const outer = document.createElement('font'); const inner = document.createElement('font'); inner.textContent = node.textContent; outer.append(inner); node.replaceWith(outer) }
+  }
+}, ids)
+test('translated plain labels survive loading on and off, however loading comes (O5)', async ({ page }, testInfo) => {
+  const { errors } = await openCase(page, testInfo, 'case=loading&theme=light')
+  const ids = ['bl-n1-text', 'bl-tr-late', 'bl-tr-undef', 'bl-medium-solid', 'bl-late', 'bl-link', 'bl-child', 'bl-n1-emoji']
+  await translate(page, ids)
+  const win = (value: boolean) => page.evaluate((value) => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(value), value)
+  for (let round = 0; round < 2; round++) {
+    await win(true)
+    await page.waitForTimeout(500)
+    await win(false)
+    await page.waitForTimeout(300)
+  }
+  expect(errors).toEqual([])
+  for (const id of ids) await expect(page.locator(`#${id}`), id).toHaveCount(1)
 })
 
 // N8 (QA-R3): a loading link keeps focus, and a middle click opens nothing.

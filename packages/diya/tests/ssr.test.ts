@@ -93,7 +93,10 @@ it('provider server markup matches 1.1.1', async () => {
     const ring = '<span class="diya-spinner diya-button-spinner" data-size="small" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false"><circle class="diya-spinner-track" cx="8" cy="8" r="7.125"></circle><circle class="diya-spinner-arc" cx="8" cy="8" r="7.125" pathLength="100" stroke-dasharray="100" stroke-dashoffset="72" stroke-linecap="round" transform="rotate(-90 8 8)"></circle></svg></span>'
     // F12: the label is wrapped while loading (it fades back when loading ends), so the wrapper maps
     // back to the bare label too.
-    const changed1_2 = (markup: string) => markup.split(ring).join('<span class="diya-button-progress" aria-hidden="true">···</span>').replace(/<span class="diya-button-label">([^<]*)<\/span>/g, '$1').replace(/ data-busy-turn="a"/g, '')
+    // O5 (named edit): a plain-text label is never wrapped, and its spinner comes after the words
+    // (it's centered, so its place doesn't show), so the ring maps back to the dots before them.
+    const dots = '<span class="diya-button-progress" aria-hidden="true">···</span>'
+    const changed1_2 = (markup: string) => markup.split(`${ring}`).join('\u0000').replace(/>([^<\u0000]*)\u0000/g, `>${dots}$1`).split('\u0000').join(dots).replace(/<span class="diya-button-label">([^<]*)<\/span>/g, '$1').replace(/ data-busy-turn="a"/g, '')
     expect(Object.fromEntries(Object.entries(html).map(([name, markup]) => [name, changed1_2(markup)])))
       .toEqual(JSON.parse(readFileSync(resolve(process.cwd(), 'tests/fixtures/provider-ssr-1.1.1.json'), 'utf8'))[version])
   }
