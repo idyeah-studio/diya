@@ -118,10 +118,10 @@ function SignInStep({ email, setEmail, go, titleRef, onEmailed }: StepProps & { 
       footer={<>New here? <TextLink href="/sign-up" inline>Create an account</TextLink></>}
     >
       <Stack gap={3}>
-        <Button variant="outline" className="sign-in-wide" loading={busy === 'google'} onClick={() => continueWith('google')}>
+        <Button variant="outline" className="sign-in-wide sign-in-logo-button" loading={busy === 'google'} onClick={() => continueWith('google')}>
           <GoogleLogo /> Continue with Google
         </Button>
-        <Button variant="outline" className="sign-in-wide" loading={busy === 'github'} onClick={() => continueWith('github')}>
+        <Button variant="outline" className="sign-in-wide sign-in-logo-button" loading={busy === 'github'} onClick={() => continueWith('github')}>
           <GitHubLogo /> Continue with GitHub
         </Button>
       </Stack>
@@ -459,7 +459,9 @@ const css = `
 .sign-in-strong { color: var(--diya-color-text); font-weight: 600; overflow-wrap: anywhere; }
 .sign-in-wide { width: 100%; }
 .sign-in-keep { padding-block: 9px; }
-.sign-in-logo { width: 20px; height: 20px; flex-shrink: 0; margin-inline-end: 2px; }
+.sign-in-logo { width: 20px; height: 20px; flex-shrink: 0; }
+/* The logo sits 10px from the words through the Button's own gap, not a margin, so a loading spinner centers on it. */
+.sign-in-logo-button { column-gap: 10px; }
 .sign-in-github { fill: currentColor; fill: light-dark(#000, #fff); }
 .sign-in-google-sweep {
   width: 100%;
