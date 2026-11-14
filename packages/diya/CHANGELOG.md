@@ -199,11 +199,19 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   - A loading Button with `href` stays a link, with its `href`, and keeps
     focus. Clicks (modified and middle clicks too) and Enter do nothing;
     "Open in new tab" from the context menu still works. See Fixed.
+  - With `asChild` on an `<input>`, an `<img>` or another element that can't
+    hold children, there's no spinner: a loading submit input keeps its words,
+    turns its cursor to `progress` and ignores clicks. A component that takes
+    its label from a prop rather than its children shows the spinner in place
+    of its label, as in 1.1.1, so it has no accessible name while it loads.
   - Dialog's confirm button, Form's Submit and Wizard's forward button show it
     too.
   - Under Reduce Motion the spinner breathes in place.
   - In forced colors (such as Windows high contrast), a busy Button hides its
-    words too, and draws its own button colors and border while it does.
+    words too and draws the system's button colors and border, with no
+    background image or shadow, over any colors you set on the Button. When
+    loading ends, the words come back at once, without a fade. In forced
+    colors a Button doesn't animate its colors.
   - The button's text no longer includes "···".
   - On the beat, the words' fill turns transparent, with any text shadow,
     stroke or underline you gave them, and elements in the label fade out.
@@ -231,7 +239,10 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
     `loading` from the start: `loading={false}` until it's busy. Then nothing
     in the label starts over when loading begins, and a page the browser has
     translated keeps working. (`loading={undefined}` counts as not passed.) A
-    label of plain text is safe either way.
+    label of plain text is safe either way. Two things on a translated page
+    work as in 1.1.1: without a `loading` prop, a label that swaps from plain
+    text to elements crashes, and a plain label that changes its words
+    (`'Save'` to `'Saved'`) keeps its old translation.
 - **The Drawer's open edge is rounded like Dialog:** 22px × the corner scale,
   where it was 16px. A Drawer that fills a phone screen (440px or narrower) is
   square, so no dim shows in wedges at the screen's edge.
@@ -261,6 +272,8 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   blocked.
 - A disabled or loading Button with `asChild` blocks middle clicks too, so it
   can't open in a new tab.
+- A loading Button with `asChild` on an `<input>` or `<img>` no longer
+  crashes.
 - In forced colors (such as Windows high contrast), a Destructive Button's
   words and icon show in the system's button text color, or its disabled
   color when disabled. Before, they were invisible.
@@ -350,7 +363,8 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
     component. The label sits in `span.diya-button-label`, the first element
     of a label with several parts in
     `span.diya-button-lead > span.diya-button-lead-item`, and a hidden spinner
-    is added. Without a `loading` prop at first, the wrappers appear when it
+    is added. A space after the first element is a text node between the
+    two spans. Without a `loading` prop at first, the wrappers appear when it
     first loads, what's inside mounts once more, and they stay.
   - **Find that Button by its role:**
     `getByRole('button', { name: 'Save', busy: true })`. `getByText('Save')`
