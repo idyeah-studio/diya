@@ -373,9 +373,7 @@
 @media (forced-colors: active) {
   .diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) {
     forced-color-adjust: none;
-    /* !important, as forced colors would be: unforced, an app's own colors on the Button (a class,
-       an inline style, a gradient) would otherwise win, and a light theme could show a white
-       spinner on white (P2). Only here, and only while busy. */
+    /* !important, as forced colors would be: else an app's own colors win (P2). */
     color: ButtonText !important;
     background-color: ButtonFace !important;
     background-image: none !important;
@@ -390,15 +388,10 @@
   .diya-root .diya-button[aria-busy='true'] > .diya-button-leading > .diya-button-leading-content > * {
     forced-color-adjust: auto;
   }
-  /* Unforced, a busy Button's colors would transition from its own (a Destructive red, an app's
-     bg-* with its transition-colors) to the system ones: a red flash as loading starts. It paints
-     them at once instead; hover is off while busy, so nothing else is lost (P5). */
+  /* No color transitions in or out of busy: unforced, they'd flash a Button's own colors (P5). */
   .diya-root .diya-button[aria-busy='true'] {
     transition: none !important;
   }
-  /* And back: Chromium paints a color mid-transition unforced, so when loading ends the system
-     colors would fade to the Button's own (red, an app's violet) for the transition's length. Forced
-     colors repaint every color anyway, so a Button transitions only what moves (P5). */
   .diya-root .diya-button {
     transition-property: opacity, scale, translate, rotate, transform !important;
   }
@@ -3834,10 +3827,8 @@
    back the Button's color fades in, which every engine interpolates. The label's elements go and
    come back by their opacity. */
 .diya-root .diya-button-spinner {
-  /* !important, as every rule of the loading choreography here: a common reduced-motion reset
-     (`* { animation-delay: -1ms !important; animation-duration: 1ms !important }`) would otherwise
-     show the spinner at once while the words, held by O4's rules, go only on the beat: both at once
-     for 400ms (P3). */
+  /* !important, as all this choreography: a reduced-motion reset forcing `animation-delay` would
+     otherwise show the spinner over the words for 400ms (P3). */
   animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both !important;
 }
 /* Not an empty one: an asChild <input> or <img> can't hold the spinner, so its words stay (P1). */
