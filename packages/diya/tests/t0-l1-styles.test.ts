@@ -471,8 +471,9 @@ describe('Spinner (1.2)', () => {
   })
 
   it('beside words, a quarter em of air on each side; not with showLabel, not in a Button (K4)', () => {
-    // N6: only the Button's own spinner is excluded; a Spinner you put in a Button keeps its air.
-    expect(bare).toMatch(/\.diya-root \.diya-spinner:not\(\[data-show-label\], \.diya-button-spinner\) \{ margin-inline: 0\.25em; \}/)
+    // O6 (named edit of N6's version): a Spinner that is a part of a Button, the Button's own or one
+    // you put in it, has no air of its own; the Button's gap places it, as an icon.
+    expect(bare).toMatch(/\.diya-root \.diya-spinner:not\(\[data-show-label\], \.diya-button-spinner, \.diya-button > \*, \.diya-button-label > \*, \.diya-button-lead-item > \*\) \{ margin-inline: 0\.25em; \}/)
   })
 
   it('waits the literal 400ms beat, never scaled, and fades in over the gated medium', () => {

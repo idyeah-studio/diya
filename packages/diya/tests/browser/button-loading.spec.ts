@@ -766,6 +766,22 @@ test('a reader\'s own Spinner in a Button shows (N6)', async ({ page }, testInfo
   expect(seen).toEqual([[true, '1', 'static'], [true, '1', 'static']])
 })
 
+// O6 (FE-N-07): a Spinner of the reader's own beside a Button's words sits where a 16px icon would:
+// the same Button width and the same distance from its edge, in the flow and while the Button loads.
+test('a reader\'s own Spinner in a Button sits where an icon would (O6)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light&rs=1')
+  const place = (selectors: [string, string][]) => page.evaluate((selectors) => selectors.map(([button, part]) => {
+    const b = document.querySelector(button)!.getBoundingClientRect()
+    const p = document.querySelector(`${button} ${part}`)!.getBoundingClientRect()
+    return [Math.round(b.width * 100) / 100, Math.round((b.right - p.right) * 100) / 100]
+  }), selectors)
+  const [spinner, icon] = await place([['#bl-own-spinner', '.diya-spinner'], ['#bl-own-icon', 'svg']])
+  expect(spinner).toEqual(icon)
+  await page.evaluate(() => (window as unknown as { __showRs(): void }).__showRs())
+  const margins = await page.evaluate(() => ['#bl-rs-first', '#bl-rs-last', '#bl-rs-lead', '#bl-rs-icon'].map((id) => getComputedStyle(document.querySelector(`${id} .diya-spinner:not(.diya-button-spinner)`)!).marginInline))
+  expect(margins).toEqual(['0px', '0px', '0px', '0px'])
+})
+
 // N9 (FE-M-04): a component of an icon and words, before another part, lays out at rest as without
 // loading.
 test('an icon-and-words component before a kbd lays out at rest as without loading (N9)', async ({ page }, testInfo) => {

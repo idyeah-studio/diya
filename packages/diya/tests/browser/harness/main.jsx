@@ -545,6 +545,7 @@ function LoadingCase() {
         <Button id="bl-fill" variant="outline" loading={busy} style={{ WebkitTextFillColor: 'rgb(220 38 38)' }}>Archive</Button>
         <Button id="bl-own-spinner" variant="outline">Syncing <diya.Spinner size="small" /></Button>
         <Button id="bl-own-spinner-icon" variant="outline" iconOnly aria-label="Syncing"><diya.Spinner size="small" /></Button>
+        <Button id="bl-own-icon" variant="outline">Syncing <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9" /></svg></Button>
       </div>
       {/* Forced colors (N4): an own-colored element in the label, and a disabled Button that's loading.
           A component of an icon and words before a kbd (N9), beside its twin. */}
