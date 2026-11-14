@@ -364,8 +364,8 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
     `<strong>`, or a component that renders text, such as a translation
     component. The label sits in `span.diya-button-label`, the first element
     of a label with several parts in
-    `span.diya-button-lead > span.diya-button-lead-item`, and a hidden spinner
-    is added. A space after the first element is a text node between the
+    `span.diya-button-leading > span.diya-button-leading-content`, and a
+    hidden spinner is added. A space after the first element is a text node between the
     two spans. Without a `loading` prop at first, the wrappers appear when it
     first loads, what's inside mounts once more, and they stay.
   - **Find that Button by its role:**
