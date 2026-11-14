@@ -333,20 +333,22 @@
 .diya-root .diya-button-lead:has(> .diya-button-lead-item > svg:only-child) {
   position: relative;
   display: inline-flex;
+  align-items: center;
+  gap: inherit;
   flex-shrink: 0;
 }
-/* The spinner is there whenever the wrappers are, and shows only while busy (M5). */
-.diya-root .diya-button:not([aria-busy='true']) > .diya-spinner,
-.diya-root .diya-button:not([aria-busy='true']) > .diya-button-lead > .diya-spinner {
+/* The Button's own spinner (its own class: a Spinner you put in a Button is yours, and shows as it
+   does beside words, N6) is there whenever the wrappers are, and shows only while busy (M5). */
+.diya-root .diya-button:not([aria-busy='true']) .diya-button-spinner {
   display: none;
 }
-.diya-root :is(.diya-button, .diya-button-lead) > .diya-spinner {
+.diya-root .diya-button-spinner {
   position: absolute;
   inset: 0;
   margin: auto;
 }
 /* Centered on the icon whatever their sizes: a large Button's 20px spinner over an 18px icon. */
-.diya-root .diya-button-lead:has(> .diya-button-lead-item > svg:only-child) > .diya-spinner {
+.diya-root .diya-button-lead:has(> .diya-button-lead-item > svg:only-child) > .diya-button-spinner {
   inset: 50% auto auto 50%;
   margin: 0;
   translate: -50% -50%;
@@ -2006,7 +2008,7 @@
 .diya-root .diya-spinner-track { stroke-opacity: 0.16; }
 /* Beside words, a quarter em of air on each side (about 8px with the word space, as with
    showLabel). Not in a Button, which places its own. */
-.diya-root .diya-spinner:not([data-show-label], .diya-button > *, .diya-button-lead > *) { margin-inline: 0.25em; }
+.diya-root .diya-spinner:not([data-show-label], .diya-button-spinner) { margin-inline: 0.25em; }
 /* With showLabel, the words sit 8px after the ring and arrive with it. */
 .diya-root .diya-spinner[data-show-label='true'] { display: inline; width: auto; height: auto; vertical-align: baseline; }
 .diya-root .diya-spinner[data-show-label='true'] svg { display: inline-block; vertical-align: calc(0.365em - var(--diya-internal-spinner) / 2); margin-inline-end: 8px; }
@@ -2020,7 +2022,7 @@
   .diya-root .diya-spinner-arc { stroke-dashoffset: 0; }
 }
 /* A Button's spinner keeps the button's own forced color. */
-@media (forced-colors: active) { .diya-root .diya-spinner svg { stroke: CanvasText; } .diya-root :is(.diya-button, .diya-button-lead) > .diya-spinner svg { stroke: currentColor; } }
+@media (forced-colors: active) { .diya-root .diya-spinner svg { stroke: CanvasText; } .diya-root .diya-button-spinner svg { stroke: currentColor; } }
 
 
 /* card/Card.css: portable component rules. */
@@ -2260,7 +2262,7 @@
 .diya-root .diya-site-avatar { display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .diya-root .diya-site-account { display:flex; align-items:center; gap:8px; }
 .diya-root .diya-site-header .diya-button[data-icon-only='true'] { width:var(--diya-height-control-medium, 40px); height:var(--diya-height-control-medium, 40px); min-height:var(--diya-height-control-medium, 40px); flex-shrink:0; padding:0; }
-.diya-root .diya-site-tools .diya-button > svg { width:20px; height:20px; }
+.diya-root .diya-site-tools :is(.diya-button, .diya-button-lead-item) > svg { width:20px; height:20px; }
 .diya-root .diya-site-tools .diya-button[data-icon-only='true'][data-variant='quiet'] { color:var(--diya-color-muted); }
 .diya-root .diya-site-tools .diya-button[data-icon-only='true'][data-variant='quiet']:not(:disabled):hover { color:var(--diya-color-text); }
 .diya-root .diya-site-avatar .diya-button[data-icon-only='true'] { border-radius:50%; }
@@ -3773,52 +3775,51 @@
 /* Loading (F12): the swap is instant on the beat, under every setting: the label (or the icon) goes
    and the spinner is there in the same frame, with no crossfade. When loading ends the spinner goes
    at once and they fade back over fast, on the enter curve. All by animation, which needs no
-   @starting-style (L2). The wrappers have no box, so their words go by their color and their
-   elements by their opacity. */
-.diya-root :is(.diya-button, .diya-button-lead) > .diya-spinner {
+   @starting-style (L2).
+   The words are hidden and brought back from the Button itself, never by a style of the label's
+   box-less wrappers: WebKit's accessible name repeats a display: contents element's words when that
+   element's own style changes (N1). While busy their fill goes (the spinner, an svg stroke in
+   currentColor, keeps its color), with any shadow, stroke or underline an app gave them; on the way
+   back the Button's color fades in, which every engine interpolates. The label's elements go and
+   come back by their opacity. */
+.diya-root .diya-button-spinner {
   animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both;
 }
-.diya-root .diya-button[aria-busy='true'] > .diya-button-label,
-.diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item {
+.diya-root .diya-button[aria-busy='true']:not([data-icon-only='true']) {
   animation: diya-button-hide 0s linear var(--diya-internal-beat) both;
+}
+/* A new spinner (loading that stopped and restarted within one frame) gets the other name, so the
+   Button's hide restarts with it: the same keyframes, a new beat (data-busy-turn, set by Button). */
+.diya-root .diya-button[aria-busy='true'][data-busy-turn='b']:not([data-icon-only='true']) {
+  animation-name: diya-button-hide-again;
 }
 .diya-root .diya-button[aria-busy='true'] > .diya-button-label > *,
 .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > *,
-.diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > :not(.diya-spinner) {
+.diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > :not(.diya-button-spinner) {
   /* The arrive fade played backwards, in no time. */
   animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) reverse both;
 }
 /* Back after the beat: Button marks it (data-returning) once its spinner has arrived, and clears
    the mark when the fade back ends (M8). A load that ends before the beat changes nothing. */
-.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label,
-.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > .diya-button-lead-item {
+.diya-root .diya-button[data-returning='true']:not([aria-busy='true'], [data-icon-only='true']) {
   animation: diya-button-return-text var(--diya-internal-duration-fast) var(--diya-ease-enter);
 }
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label > *,
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > .diya-button-lead-item > *,
-.diya-root .diya-button[data-icon-only='true'][data-returning='true']:not([aria-busy='true']) > :not(.diya-spinner) {
+.diya-root .diya-button[data-icon-only='true'][data-returning='true']:not([aria-busy='true']) > :not(.diya-button-spinner) {
   animation: diya-button-return var(--diya-internal-duration-fast) var(--diya-ease-enter);
 }
-/* After a leading icon the label stays: only the icon goes, and only it comes back. */
-.diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child) > .diya-button-label,
+/* After a leading icon the words stay: only the icon goes, by its opacity, and only it comes back,
+   once (N3). */
+.diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child):is([aria-busy='true'], [data-returning='true']),
 .diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child) > .diya-button-label > * {
   animation: none;
 }
-/* Forced colors would force the words' color back to a system color, so while busy and fading back
-   the label takes ButtonText itself, and its color is free to go transparent on the beat. */
-@media (forced-colors: active) {
-  .diya-root .diya-button[aria-busy='true'] > .diya-button-label,
-  .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item,
-  .diya-root .diya-button[data-returning='true'] > .diya-button-label,
-  .diya-root .diya-button[data-returning='true'] > .diya-button-lead > .diya-button-lead-item {
-    forced-color-adjust: none;
-    color: ButtonText;
-  }
-}
-@keyframes diya-button-hide { to { color: transparent; } }
+@keyframes diya-button-hide { to { -webkit-text-fill-color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; } }
+@keyframes diya-button-hide-again { to { -webkit-text-fill-color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; } }
 /* Their own names: the hide uses diya-spinner-arrive, and an animation that keeps its name doesn't replay. */
 @keyframes diya-button-return { from { opacity: 0; } }
-@keyframes diya-button-return-text { from { color: transparent; } }
+@keyframes diya-button-return-text { from { color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; } }
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active,
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active::after {
   transition-duration: 0s;

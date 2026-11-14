@@ -193,7 +193,8 @@ describe('Button loading shows a spinner', () => {
 // `loading` is given (L1); a label of plain text only while loading (M3). The first element of
 // a label of more than one part is held apart (span.diya-button-lead), and CSS decides whether it's
 // a leading icon (M1). The Button's spinner is there whenever the wrappers are, hidden at rest (M5).
-// (These replace the F12 and L1/L3/L4 DOM tests: M1 and M3 changed the markup they asserted.)
+// (These replace the F12 and L1/L3/L4 DOM tests: M1 and M3 changed the markup they asserted. N6
+// gives the Button's own spinner its own class, diya-button-spinner.)
 describe('Button loading markup (F12, L1, M1, M3)', () => {
   function Counter() {
     const [count, setCount] = useState(0)
@@ -207,7 +208,7 @@ describe('Button loading markup (F12, L1, M1, M3)', () => {
     expect(button.innerHTML).toBe('Delete')
     expect(screen.getByText('Delete')).toBe(button)
     view.rerender(<DiyaProvider><Button loading>Delete</Button></DiyaProvider>)
-    expect(kids(button)).toEqual(['diya-spinner', 'diya-button-label'])
+    expect(kids(button)).toEqual(['diya-spinner diya-button-spinner', 'diya-button-label'])
     expect(button.querySelector('.diya-button-label')!.textContent).toBe('Delete')
     // Ended before the beat (happy-dom runs no animations), so nothing fades back: unwrapped at once.
     view.rerender(<DiyaProvider><Button loading={false}>Delete</Button></DiyaProvider>)
@@ -230,7 +231,7 @@ describe('Button loading markup (F12, L1, M1, M3)', () => {
   it('a label holding elements is wrapped from the first render when loading is given, with the spinner there and hidden (L1, M5)', () => {
     render(<DiyaProvider><Button loading={false}>Saved <Counter /></Button><Button>Kept <Counter /></Button></DiyaProvider>)
     const given = screen.getByRole('button', { name: 'Saved 0' })
-    expect(kids(given)).toEqual(['diya-spinner', 'diya-button-label'])
+    expect(kids(given)).toEqual(['diya-spinner diya-button-spinner', 'diya-button-label'])
     expect(given.getAttribute('aria-busy')).toBeNull()
     // Without a loading prop: 1.1.1's markup.
     expect(screen.getByRole('button', { name: 'Kept 0' }).innerHTML).toBe('Kept <span data-testid="count">0</span>')
@@ -241,7 +242,7 @@ describe('Button loading markup (F12, L1, M1, M3)', () => {
     const button = screen.getByRole('button', { name: 'Add member' })
     expect(kids(button)).toEqual(['diya-button-lead', 'diya-button-label'])
     const lead = button.querySelector(':scope > .diya-button-lead')!
-    expect(kids(lead)).toEqual(['diya-button-lead-item', 'diya-spinner'])
+    expect(kids(lead)).toEqual(['diya-button-lead-item', 'diya-spinner diya-button-spinner'])
     expect(lead.querySelector('.diya-button-lead-item > svg')!.getAttribute('data-icon')).toBe('plus')
     expect(button.querySelector(':scope > .diya-button-label')!.textContent).toBe('Add member')
   })
@@ -267,6 +268,6 @@ describe('Button loading markup (F12, L1, M1, M3)', () => {
     const view = render(<DiyaProvider><Button asChild loading><a href="/billing">Open <b>billing</b></a></Button></DiyaProvider>)
     const link = screen.getByRole('link', { name: 'Open billing' })
     view.rerender(<DiyaProvider><Button asChild loading={false}><a href="/billing">Open <b>billing</b></a></Button></DiyaProvider>)
-    expect(kids(link)).toEqual(['diya-spinner', 'diya-button-label'])
+    expect(kids(link)).toEqual(['diya-spinner diya-button-spinner', 'diya-button-label'])
   })
 })

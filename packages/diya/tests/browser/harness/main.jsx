@@ -5,7 +5,7 @@ import { createPortal, flushSync } from 'react-dom'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
 import { useForm } from 'react-hook-form'
-import { Plus, Send, Download } from 'lucide-react'
+import { Plus, Send, Download, Bell } from 'lucide-react'
 import '@idyeah/diya/styles.css'
 import * as diya from '@idyeah/diya'
 import {
@@ -476,6 +476,8 @@ function SpinnerCase() {
 function Logo() { return <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#4285f4" /></svg> }
 const arrow = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
 
+function IconText() { return <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 12h14" /></svg>Save</> }
+
 function LoadingCase() {
   const [busy, setBusy] = useState(query.get('busy') === '1')
   window.__setBusy = (value) => { note('busy', performance.now()); flushSync(() => setBusy(value)) }
@@ -519,6 +521,29 @@ function LoadingCase() {
         <Button id="bl-auto" loading={busy} style={{ width: 320 }}>Pay now <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" style={{ marginInlineStart: 'auto' }}><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
         <Button id="bl-auto-plain" style={{ width: 320 }}>Pay now <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" style={{ marginInlineStart: 'auto' }}><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
       </div>
+      {/* Labels of several parts whose WebKit name once repeated, an app's text-shadow and text fill on
+          the Button (N1), and a Spinner of the reader's own inside a Button (N6). */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Button id="bl-n1-text" loading={busy}>Delete {3} files</Button>
+        <Button id="bl-n1-strong" variant="outline" loading={busy}><>Delete <strong>{3}</strong> files</></Button>
+        <Button id="bl-n1-next" loading={busy}><>Next {3} <Plus size={16} strokeWidth={1.6} /></></Button>
+        <Button id="bl-n1-emoji" variant="outline" loading={busy}><>{'🚀'} Launch {2}</></Button>
+        <Button id="bl-shadow" loading={busy} style={{ textShadow: '0 1px 0 rgb(220 38 38)' }}>Publish</Button>
+        <Button id="bl-fill" variant="outline" loading={busy} style={{ WebkitTextFillColor: 'rgb(220 38 38)' }}>Archive</Button>
+        <Button id="bl-own-spinner" variant="outline">Syncing <diya.Spinner size="small" /></Button>
+        <Button id="bl-own-spinner-icon" variant="outline" iconOnly aria-label="Syncing"><diya.Spinner size="small" /></Button>
+      </div>
+      {/* Forced colors (N4): an own-colored element in the label, and a disabled Button that's loading.
+          A component of an icon and words before a kbd (N9), beside its twin. */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Button id="bl-fc-red" variant="outline" loading={busy}>Save <span style={{ color: '#e11d48' }}>now</span></Button>
+        <Button id="bl-fc-disabled" disabled loading={busy}>Send</Button>
+        <Button id="bl-fc-disabled-plain" disabled>Send</Button>
+        <Button id="bl-icontext" variant="outline" loading={busy}><><IconText /><kbd>⌘S</kbd></></Button>
+        <Button id="bl-icontext-plain" variant="outline"><><IconText /><kbd>⌘S</kbd></></Button>
+      </div>
+      {/* SiteHeader's utilities size their icons at 20px (N5). */}
+      <diya.SiteHeader brand="Oriel" utilities={<><Button id="bl-tools" variant="quiet" loading={busy}><Bell />Alerts</Button><Button id="bl-tools-plain" variant="quiet"><Bell />Alerts</Button></>} />
       {/* loading given only once it's true, and a Button that mounts already loading (M4, L2). */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', minHeight: 48 }}>
         <Button id="bl-late" loading={busy || undefined}>Sync now</Button>

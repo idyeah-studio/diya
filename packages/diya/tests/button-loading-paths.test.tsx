@@ -117,3 +117,33 @@ it.runIf(version.startsWith('19'))('real lucide icons, alone and in a fragment, 
     expect(button.querySelector(':scope > .diya-button-label')!.textContent!.trim()).toBe(name)
   }
 })
+
+describe('round N', () => {
+  it('a plain label of several parts given loading is one text node, at rest and while loading (N2)', () => {
+    const count = 3
+    const view = render(<DiyaProvider><Button loading={false}>Delete {count} files</Button><Button>Keep {count} files</Button></DiyaProvider>)
+    const given = screen.getByRole('button', { name: 'Delete 3 files' })
+    expect(given.childNodes).toHaveLength(1)
+    expect(screen.getByText('Delete 3 files')).toBe(given)
+    // No loading prop: 1.1.1's three text nodes.
+    expect(screen.getByRole('button', { name: 'Keep 3 files' }).childNodes).toHaveLength(3)
+    view.rerender(<DiyaProvider><Button loading>Delete {count} files</Button><Button>Keep {count} files</Button></DiyaProvider>)
+    expect(given.querySelector('.diya-button-label')!.childNodes).toHaveLength(1)
+  })
+
+  it('the Button\'s own spinner has its own class; a Spinner you put in a Button doesn\'t (N6)', () => {
+    render(<DiyaProvider><Button loading>Sync <Spinner size="small" /></Button></DiyaProvider>)
+    const button = screen.getByRole('button')
+    const spinners = [...button.querySelectorAll('.diya-spinner')]
+    expect(spinners.map((node) => node.classList.contains('diya-button-spinner'))).toEqual([true, false])
+  })
+
+  it('a loading href Button still calls your onKeyDown, with Enter stopped (N7)', () => {
+    const keys: string[] = []
+    render(<DiyaProvider><Button href="/report" loading onKeyDown={(event) => keys.push(`${event.key}${event.defaultPrevented ? ' stopped' : ''}`)}>Open report</Button></DiyaProvider>)
+    const link = screen.getByRole('link', { name: 'Open report' })
+    fireEvent.keyDown(link, { key: 'ArrowRight' })
+    fireEvent.keyDown(link, { key: 'Enter' })
+    expect(keys).toEqual(['ArrowRight', 'Enter stopped'])
+  })
+})

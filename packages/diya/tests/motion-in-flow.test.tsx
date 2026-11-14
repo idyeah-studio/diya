@@ -203,8 +203,9 @@ describe('Progress and loading rows', () => {
     // F12 drops Button's slide, and its diya-button-make-room keyframe with it; L2 adds Button's fade
     // back, diya-button-return.
     expect(css.match(/@keyframes [\w-]+/g)).toEqual(['@keyframes diya-progress-travel', '@keyframes diya-progress-spin', '@keyframes diya-progress-breathe',
-      // M2: the label's wrapper has no box, so its words hide and come back by their color.
-      '@keyframes diya-spinner-arrive', '@keyframes diya-spinner-turn', '@keyframes diya-button-hide', '@keyframes diya-button-return', '@keyframes diya-button-return-text', '@keyframes diya-skeleton-pulse'])
+      // M2: the label's wrapper has no box, so its words hide and come back from the Button; N1: the
+      // hide has a second name, so a new spinner restarts it.
+      '@keyframes diya-spinner-arrive', '@keyframes diya-spinner-turn', '@keyframes diya-button-hide', '@keyframes diya-button-hide-again', '@keyframes diya-button-return', '@keyframes diya-button-return-text', '@keyframes diya-skeleton-pulse'])
     // A fade: nothing in the Reduce Motion or motion settings stops it.
     expect(css).not.toMatch(/diya-table-skeleton[^{]*\{[^}]*animation:\s*none/)
   })

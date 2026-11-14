@@ -462,8 +462,8 @@ describe('Spinner (1.2)', () => {
   })
 
   it('beside words, a quarter em of air on each side; not with showLabel, not in a Button (K4)', () => {
-    // F12 puts a leading icon's spinner in .diya-button-lead, so that's excluded too.
-    expect(bare).toMatch(/\.diya-root \.diya-spinner:not\(\[data-show-label\], \.diya-button > \*, \.diya-button-lead > \*\) \{ margin-inline: 0\.25em; \}/)
+    // N6: only the Button's own spinner is excluded; a Spinner you put in a Button keeps its air.
+    expect(bare).toMatch(/\.diya-root \.diya-spinner:not\(\[data-show-label\], \.diya-button-spinner\) \{ margin-inline: 0\.25em; \}/)
   })
 
   it('waits the literal 400ms beat, never scaled, and fades in over the gated medium', () => {
@@ -505,16 +505,20 @@ describe('Button loading (F12, F13)', () => {
   })
 
   it('swaps in one frame on the beat and fades the label or icon back over fast', () => {
-    expect(bare).toMatch(/\.diya-root :is\(\.diya-button, \.diya-button-lead\) > \.diya-spinner \{\s*animation: diya-spinner-arrive 0s linear var\(--diya-internal-beat\) both;\s*\}/)
+    expect(bare).toMatch(/\.diya-root \.diya-button-spinner \{\s*animation: diya-spinner-arrive 0s linear var\(--diya-internal-beat\) both;\s*\}/)
     // L2: hidden by a zero-length animation on the beat, which needs no @starting-style.
     expect(bare).toMatch(/\{\s*animation: diya-spinner-arrive 0s linear var\(--diya-internal-beat\) reverse both;\s*\}/)
     expect(bare).not.toMatch(/@starting-style\s*\{[^{}]*diya-button/)
-    // ...and back by an animation too, only once the beat has come (data-returning). M2: the
-    // label's wrapper has no box, so its words go and come back by their color, its elements by
-    // their opacity.
-    expect(bare).toMatch(/\.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\]\) > \.diya-button-label,[^{]*\{\s*animation: diya-button-return-text var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\);\s*\}/)
+    // N1 (named edit of M2's version): the words go and come back from the Button, never by a style
+    // of the box-less wrappers, which WebKit's accessible name can't take; the elements by opacity.
+    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\]:not\(\[data-icon-only='true'\]\) \{\s*animation: diya-button-hide 0s linear var\(--diya-internal-beat\) both;\s*\}/)
+    expect(bare).toMatch(/\.diya-root \.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\], \[data-icon-only='true'\]\) \{\s*animation: diya-button-return-text var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\);\s*\}/)
     expect(bare).toMatch(/\.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\]\) > \.diya-button-label > \*,[^{]*\{\s*animation: diya-button-return var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\);\s*\}/)
-    expect(bare).toMatch(/@keyframes diya-button-hide \{ to \{ color: transparent; \} \}/)
+    expect(bare).toMatch(/@keyframes diya-button-hide \{ to \{ -webkit-text-fill-color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; \} \}/)
+    for (const [selector, body] of [...bare.matchAll(/([^{}]*diya-button-(?:label|lead-item)[^{}]*)\{([^{}]*)\}/g)].map((m) => [m[1].trim(), m[2]])) {
+      const last = selector.split(',').map((part) => part.trim().split(/[\s>]+/).at(-1))
+      if (last.some((part) => /^\.diya-button-(label|lead-item)$/.test(part!))) expect(body, selector).not.toMatch(/animation|color|text-shadow|opacity/)
+    }
   })
 })
 
@@ -522,7 +526,7 @@ describe('Button loading at rest (M2, M1)', () => {
   it('the label\'s wrappers have no box, so the Button lays out as without them; a leading part gets one only when it renders a single svg', () => {
     expect(bare).toMatch(/\.diya-root :is\(\.diya-button-label, \.diya-button-lead, \.diya-button-lead-item\) \{\s*display: contents;\s*\}/)
     expect(bare).toMatch(/\.diya-root \.diya-button-lead:has\(> \.diya-button-lead-item > svg:only-child\) \{\s*position: relative;\s*display: inline-flex;/)
-    // The spinner is hidden at rest (M5).
-    expect(bare).toMatch(/\.diya-root \.diya-button:not\(\[aria-busy='true'\]\) > \.diya-spinner,\s*\.diya-root \.diya-button:not\(\[aria-busy='true'\]\) > \.diya-button-lead > \.diya-spinner \{\s*display: none;\s*\}/)
+    // The Button's own spinner is hidden at rest (M5; N6: by its own class).
+    expect(bare).toMatch(/\.diya-root \.diya-button:not\(\[aria-busy='true'\]\) \.diya-button-spinner \{\s*display: none;\s*\}/)
   })
 })

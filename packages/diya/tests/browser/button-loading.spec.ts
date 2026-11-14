@@ -47,7 +47,7 @@ function frames(page: Page, ids: string[], ms: number, { endAfter, busy = true }
         const style = getComputedStyle(button)
         return {
           id, button: box(button)!, next: document.getElementById(`${id}-next`)?.getBoundingClientRect().left ?? null,
-          label: box(range), labelOpacity: text ? alpha(getComputedStyle(words).color) : null,
+          label: box(range), labelOpacity: text ? alpha(getComputedStyle(words).getPropertyValue('-webkit-text-fill-color')) : null,
           icon: box(icon), iconOpacity: icon ? Math.min(shown(icon), iconLead || button.dataset.iconOnly ? alpha(getComputedStyle(icon).color) : 1) : null,
           spinner: box(spinner), spinnerOpacity: spinner ? Number(getComputedStyle(spinner).opacity) : null,
           opacity: Number(style.opacity), cursor: style.cursor, color: style.color,
@@ -211,8 +211,8 @@ test('href and asChild Buttons show the spinner too', async ({ page }, testInfo)
     await expect(link).toHaveAttribute('aria-busy', 'true')
     await expect(link.locator(':scope > .diya-spinner svg')).toHaveCount(1)
     await expect(link.locator(':scope > .diya-spinner')).toHaveCSS('opacity', '1')
-    // M2: the label's wrapper has no box, so its words hide by their color.
-    await expect(link.locator(':scope > .diya-button-label')).toHaveCSS('color', 'rgba(0, 0, 0, 0)')
+    // M2, N1: the label's wrapper has no box, so its words hide by their fill, from the Button.
+    await expect(link.locator(':scope > .diya-button-label')).toHaveCSS('-webkit-text-fill-color', 'rgba(0, 0, 0, 0)')
   }
 })
 
@@ -222,7 +222,8 @@ test('Dialog footer at 320px: the label\'s line count is unchanged while loading
   await page.locator('#bl-dialog-open').click()
   const confirm = page.getByRole('button', { name: 'Delete every archived conversation' })
   await expect(confirm).toBeVisible()
-  await page.waitForFunction(() => document.getAnimations().length === 0)
+  // The dialog's own animations: the case now holds a reader's Spinner, which turns forever (N6).
+  await page.waitForFunction(() => document.querySelector('dialog[open]')!.getAnimations({ subtree: true }).length === 0)
   const lines = () => confirm.evaluate((button) => {
     const range = document.createRange()
     range.selectNodeContents(button.querySelector('.diya-button-label') ?? button)
@@ -325,7 +326,7 @@ test('a library icon, a logo and an icon in a fragment are leading icons; rich t
   // <strong>Save</strong> draft: both parts go, and the spinner sits in the middle of the Button.
   const strong = await page.locator('#bl-strong').evaluate((button) => ({
     strong: Number(getComputedStyle(button.querySelector('strong')!).opacity),
-    words: getComputedStyle(button.querySelector('.diya-button-label')!).color,
+    words: getComputedStyle(button.querySelector('.diya-button-label')!).getPropertyValue('-webkit-text-fill-color'),
     spinner: (() => { const s = button.querySelector('.diya-spinner')!.getBoundingClientRect(); const b = button.getBoundingClientRect(); return [s.left + s.width / 2 - (b.left + b.width / 2), s.top + s.height / 2 - (b.top + b.height / 2)] })(),
   }))
   expect(strong.strong).toBe(0)
@@ -366,7 +367,7 @@ test('no blank frame when the wrapper appears with loading, or the Button mounts
     const visible = (button: HTMLElement) => {
       const spinner = button.querySelector<HTMLElement>('.diya-spinner')
       const ring = spinner && getComputedStyle(spinner).display !== 'none' ? Number(getComputedStyle(spinner).opacity) : 0
-      const words = alpha(getComputedStyle(button.querySelector('.diya-button-label') ?? button).color)
+      const words = alpha(getComputedStyle(button.querySelector('.diya-button-label') ?? button).getPropertyValue('-webkit-text-fill-color'))
       return Math.max(ring, words)
     }
     const out: string[] = []
@@ -399,7 +400,7 @@ for (const at of [600, 200]) {
         const ring = spinner && getComputedStyle(spinner).display !== 'none' ? Number(getComputedStyle(spinner).opacity) : 0
         const first = button.querySelector('.diya-button-lead svg, :scope > svg') as SVGElement | null
         const icon = first ? Number(getComputedStyle(first).opacity) * alpha(getComputedStyle(first).color) : 0
-        const words = button.dataset.iconOnly ? 0 : alpha(getComputedStyle(button.querySelector('.diya-button-label') ?? button).color)
+        const words = button.dataset.iconOnly ? 0 : alpha(getComputedStyle(button.querySelector('.diya-button-label') ?? button).getPropertyValue('-webkit-text-fill-color'))
         return Math.max(ring, icon, words)
       }
       const out: string[] = []
@@ -424,10 +425,149 @@ test('in forced colors the label still goes on the beat, and reads ButtonText be
   test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
   await page.emulateMedia({ forcedColors: 'active' })
   await openCase(page, testInfo, 'case=loading&theme=light')
-  const color = () => page.locator('#bl-medium-solid').evaluate((button) => getComputedStyle(button.querySelector('.diya-button-label') ?? button).color)
+  const color = () => page.locator('#bl-medium-solid').evaluate((button) => getComputedStyle(button.querySelector('.diya-button-label') ?? button).getPropertyValue('-webkit-text-fill-color'))
   const rest = await color()
   await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
   expect(await color()).toBe(rest)
   await page.waitForTimeout(600)
   expect(await color()).toBe('rgba(0, 0, 0, 0)')
+})
+
+// N1 (a): WebKit repeats a display: contents element's words in the accessible name when that
+// element's own style changes, so the label's box-less wrappers never get a style or an animation of
+// their own; the words go and come back from the Button. (WebKit's own tree, read with Playwright
+// 1.56, is in the round's evidence; 1.57 no longer exposes it.)
+test('the label\'s box-less wrappers never animate or change their own style, in every phase (N1)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const touched = await page.evaluate(() => new Promise<string[]>((done) => {
+    const out = new Set<string>()
+    const wrappers = () => [...document.querySelectorAll<HTMLElement>('.diya-button-label, .diya-button-lead-item')]
+    const own = (el: HTMLElement) => { const parent = getComputedStyle(el.parentElement!); const mine = getComputedStyle(el); return ['color', '-webkit-text-fill-color', 'text-shadow', 'opacity'].filter((name) => mine.getPropertyValue(name) !== (name === 'opacity' ? '1' : parent.getPropertyValue(name))) }
+    const check = (t: number) => { for (const el of wrappers()) { const id = el.closest('.diya-button')!.id; if (el.getAnimations().length) out.add(`${id} animates at ${t.toFixed(0)}`); const changed = own(el); if (changed.length) out.add(`${id} ${changed} at ${t.toFixed(0)}`) } }
+    const win = window as unknown as { __setBusy(value: boolean): void }
+    win.__setBusy(true)
+    const start = performance.now()
+    setTimeout(() => win.__setBusy(false), 600)
+    const tick = () => { const t = performance.now() - start; check(t); if (t < 900) requestAnimationFrame(tick); else done([...out].slice(0, 20)) }
+    tick()
+  }))
+  expect(touched).toEqual([])
+})
+
+// N1 (c): an app's text-shadow and text fill on the Button leave no ghost words around the spinner.
+test('an app\'s text-shadow and text fill on the Button leave no ghost words while loading (N1)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+  await page.waitForTimeout(600)
+  for (const id of ['bl-shadow', 'bl-fill']) {
+    const button = page.locator(`#${id}`)
+    const style = await button.evaluate((node) => { const s = getComputedStyle(node.querySelector('.diya-button-label')!); return [s.getPropertyValue('-webkit-text-fill-color'), s.textShadow] })
+    expect(style[0], id).toBe('rgba(0, 0, 0, 0)')
+    expect(style[1], id).toMatch(/^(none|rgba\(0, 0, 0, 0\) 0px 0px 0px)$/)
+    // Pixels: the busy Button looks the same as with its words removed outright.
+    const busy = await button.screenshot({ animations: 'disabled' })
+    await page.addStyleTag({ content: `#${id} .diya-button-label { visibility: hidden !important; }` })
+    expect(await button.screenshot({ animations: 'disabled' }), id).toEqual(busy)
+  }
+})
+
+// N3 (MOT-M-01): a text-colored leading icon fades back once, by its opacity: its color holds.
+test('a lucide leading icon fades back once, by its opacity alone (N3)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const samples = await page.evaluate(() => new Promise<{ t: number; opacity: number; color: string }[]>((done) => {
+    const out: { t: number; opacity: number; color: string }[] = []
+    const win = window as unknown as { __setBusy(value: boolean): void }
+    win.__setBusy(true)
+    setTimeout(() => {
+      win.__setBusy(false)
+      const start = performance.now()
+      const tick = () => {
+        const icon = document.querySelector('#bl-lucide svg.lucide') as SVGElement
+        out.push({ t: performance.now() - start, opacity: Number(getComputedStyle(icon).opacity), color: getComputedStyle(icon).color })
+        if (performance.now() - start < 250) requestAnimationFrame(tick); else done(out)
+      }
+      tick()
+    }, 600)
+  }))
+  const rest = samples.at(-1)!.color
+  for (const sample of samples) expect(sample.color, `${sample.t.toFixed(0)}ms`).toBe(rest)
+  expect(samples.some((sample) => sample.opacity > 0 && sample.opacity < 1)).toBe(true)
+})
+
+// N4: in forced colors the label's own elements keep their forced colors before the beat, and a
+// disabled Button that's loading shows GrayText words, as a disabled Button does.
+test('forced colors: the label\'s elements stay forced, and a disabled loading Button reads GrayText (N4)', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
+  await page.emulateMedia({ forcedColors: 'active' })
+  await openCase(page, testInfo, 'case=loading&theme=dark')
+  await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+  const read = () => page.evaluate(() => ({
+    red: getComputedStyle(document.querySelector('#bl-fc-red span:not(.diya-button-label):not(.diya-spinner)')!).color,
+    disabled: getComputedStyle(document.getElementById('bl-fc-disabled')!).color,
+    plain: getComputedStyle(document.getElementById('bl-fc-disabled-plain')!).color,
+  }))
+  const before = await read()
+  expect(before.red).not.toBe('rgb(225, 29, 72)')
+  expect(before.disabled).toBe(before.plain)
+})
+
+// N5 (QA-M-01): SiteHeader's utilities size a wrapped leading icon at 20px, as an unwrapped one.
+test('SiteHeader utilities size the icon of a Button given loading at 20px (N5)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const sizes = await page.evaluate(() => ['bl-tools', 'bl-tools-plain'].map((id) => { const r = document.querySelector(`#${id} svg.lucide`)!.getBoundingClientRect(); return [r.width, r.height, document.getElementById(id)!.getBoundingClientRect().width] }))
+  sizes[0].forEach((value, index) => expect(value).toBeCloseTo(sizes[1][index], 2))
+  expect(sizes[0].slice(0, 2)).toEqual([20, 20])
+})
+
+// N6 (QA-M-02): a Spinner of the reader's own, in a Button with no loading, shows: in the flow
+// beside the words, and as an icon-only Button's only child.
+test('a reader\'s own Spinner in a Button shows (N6)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  await page.waitForTimeout(600)
+  const seen = await page.evaluate(() => ['bl-own-spinner', 'bl-own-spinner-icon'].map((id) => { const s = document.querySelector(`#${id} .diya-spinner`) as HTMLElement; const style = getComputedStyle(s); return [style.display !== 'none', style.opacity, style.position] }))
+  expect(seen).toEqual([[true, '1', 'static'], [true, '1', 'static']])
+})
+
+// N9 (FE-M-04): a component of an icon and words, before another part, lays out at rest as without
+// loading.
+test('an icon-and-words component before a kbd lays out at rest as without loading (N9)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const places = await page.evaluate(() => ['bl-icontext', 'bl-icontext-plain'].map((id) => { const b = document.getElementById(id)!; const k = b.querySelector('kbd')!.getBoundingClientRect(); return [b.getBoundingClientRect().width, k.left - b.getBoundingClientRect().left] }))
+  places[0].forEach((value, index) => expect(value).toBeCloseTo(places[1][index], 2))
+})
+
+// N2 (FE-M-02): on a translated page (Google Translate swaps text nodes for <font>), the first load
+// of a plain label of several parts keeps the app alive, on React 18 and 19.
+test('a translated plain label of several parts survives loading on and off (N2)', async ({ page }, testInfo) => {
+  const { errors } = await openCase(page, testInfo, 'case=loading&theme=light')
+  await page.evaluate(() => {
+    const button = document.getElementById('bl-n1-text')!
+    for (const node of [...button.childNodes]) if (node.nodeType === Node.TEXT_NODE) { const font = document.createElement('font'); font.textContent = `${node.textContent}`; node.replaceWith(font) }
+  })
+  const win = (value: boolean) => page.evaluate((value) => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(value), value)
+  await win(true)
+  await page.waitForTimeout(500)
+  await win(false)
+  await page.waitForTimeout(300)
+  expect(errors).toEqual([])
+  await expect(page.locator('#bl-n1-text')).toHaveCount(1)
+  await expect(page.locator('#bl-medium-solid')).toHaveCount(1)
+})
+
+// N8 (QA-R3): a loading link keeps focus, and a middle click opens nothing.
+test('a loading link keeps focus, and a middle click or Enter opens nothing (N8, M7)', async ({ page, context }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const link = page.locator('#bl-link')
+  await link.focus()
+  await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+  await expect(link).toBeFocused()
+  let opened = 0
+  context.on('page', () => { opened++ })
+  await link.click({ button: 'middle', force: true })
+  await link.click({ force: true, modifiers: ['ControlOrMeta'] })
+  await link.press('Enter')
+  await page.waitForTimeout(500)
+  expect(opened).toBe(0)
+  expect(page.url()).not.toContain('#saved')
+  await expect(link).toBeFocused()
 })
