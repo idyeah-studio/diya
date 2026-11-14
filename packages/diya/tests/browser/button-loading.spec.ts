@@ -43,6 +43,37 @@ async function removeWords(page: Page, ids: string[], { spinner }: { spinner: 'h
   }
 }
 
+/**
+ * Pixels well inside a Button's frame (the middle band, clear of the pill's rounded ends) that differ
+ * from its background, the most common color there: its words, icon or spinner (O2; shared, P2).
+ */
+async function inkInside(page: Page, id: string) {
+  const png = (await page.locator(`#${id}`).screenshot({ animations: 'disabled' })).toString('base64')
+  return page.evaluate(async (png) => {
+    const image = new Image()
+    image.src = `data:image/png;base64,${png}`
+    await image.decode()
+    const canvas = document.createElement('canvas')
+    canvas.width = image.width
+    canvas.height = image.height
+    const context = canvas.getContext('2d')!
+    context.drawImage(image, 0, 0)
+    const scale = window.devicePixelRatio
+    const x = Math.round(image.height / 2)
+    const y = Math.round(image.height * 0.2)
+    const data = context.getImageData(Math.min(x, Math.round(image.width * 0.25)), y, Math.max(1, image.width - 2 * Math.min(x, Math.round(image.width * 0.25))), image.height - 2 * y).data
+    const counts = new Map<number, number>()
+    for (let i = 0; i < data.length; i += 4) { const key = (data[i] << 16) | (data[i + 1] << 8) | data[i + 2]; counts.set(key, (counts.get(key) ?? 0) + 1) }
+    const background = [...counts].sort((a, b) => b[1] - a[1])[0][0]
+    let inked = 0
+    for (let i = 0; i < data.length; i += 4) {
+      const diff = Math.abs(data[i] - (background >> 16)) + Math.abs(data[i + 1] - ((background >> 8) & 255)) + Math.abs(data[i + 2] - (background & 255))
+      if (diff > 192) inked++
+    }
+    return inked / (scale * scale)
+  }, png)
+}
+
 /** Turns loading on (or ends it after `endAfter` ms) and measures the listed Buttons on every frame for `ms`. */
 function frames(page: Page, ids: string[], ms: number, { endAfter, busy = true }: { endAfter?: number; busy?: boolean } = {}) {
   return page.evaluate(({ ids, ms, endAfter, busy }) => new Promise<Frame[]>((done) => {
@@ -730,34 +761,7 @@ for (const theme of ['light', 'dark']) {
     test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
     await page.emulateMedia({ forcedColors: 'active' })
     await openCase(page, testInfo, `case=loading&theme=${theme}&lean=1&dz=1`)
-    // Pixels well inside the frame (the middle band, clear of the pill's rounded ends) that differ
-    // from its background, the most common color there.
-    const ink = async (id: string) => {
-      const png = (await page.locator(`#${id}`).screenshot({ animations: 'disabled' })).toString('base64')
-      return page.evaluate(async (png) => {
-        const image = new Image()
-        image.src = `data:image/png;base64,${png}`
-        await image.decode()
-        const canvas = document.createElement('canvas')
-        canvas.width = image.width
-        canvas.height = image.height
-        const context = canvas.getContext('2d')!
-        context.drawImage(image, 0, 0)
-        const scale = window.devicePixelRatio
-        const x = Math.round(image.height / 2)
-        const y = Math.round(image.height * 0.2)
-        const data = context.getImageData(Math.min(x, Math.round(image.width * 0.25)), y, Math.max(1, image.width - 2 * Math.min(x, Math.round(image.width * 0.25))), image.height - 2 * y).data
-        const counts = new Map<number, number>()
-        for (let i = 0; i < data.length; i += 4) { const key = (data[i] << 16) | (data[i + 1] << 8) | data[i + 2]; counts.set(key, (counts.get(key) ?? 0) + 1) }
-        const background = [...counts].sort((a, b) => b[1] - a[1])[0][0]
-        let inked = 0
-        for (let i = 0; i < data.length; i += 4) {
-          const diff = Math.abs(data[i] - (background >> 16)) + Math.abs(data[i + 1] - ((background >> 8) & 255)) + Math.abs(data[i + 2] - (background & 255))
-          if (diff > 192) inked++
-        }
-        return inked / (scale * scale)
-      }, png)
-    }
+    const ink = (id: string) => inkInside(page, id)
     const shown = async (ids: string[], state: string) => { for (const id of ids) expect(await ink(id), `${id} ${state}`).toBeGreaterThan(20) }
     const all = ['bl-dz', 'bl-dz-icon', 'bl-dz-disabled', 'bl-dz-lead']
     await shown(all, 'at rest')
@@ -772,6 +776,31 @@ for (const theme of ['light', 'dark']) {
     await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(false))
     await expect.poll(() => page.evaluate(() => document.querySelectorAll('[data-returning]').length), { timeout: 3000 }).toBe(0)
     await shown(all, 'after loading')
+  })
+}
+
+// P2 (FE-O-02, VIS-O-01): in forced colors an app's own colors on a busy Button (white text, a
+// Tailwind bg-* text-white in a later layer, an inline box-shadow or gradient) don't come through:
+// it shows ButtonText on ButtonFace (GrayText when disabled), as DIYA's own looks do, so its spinner
+// shows in a light and a dark high-contrast theme; and its focus ring keeps its system color.
+for (const theme of ['light', 'dark']) {
+  test(`forced colors (${theme}): an app's own colors on a busy Button don't hide its spinner (P2)`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
+    await page.emulateMedia({ forcedColors: 'active', colorScheme: theme as 'light' | 'dark' })
+    await openCase(page, testInfo, `case=loading&theme=${theme}&lean=1&fcapp=1`)
+    await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.getElementById('bl-medium-solid')!).getPropertyValue('-webkit-text-fill-color')), { timeout: 3000 }).toBe('rgba(0, 0, 0, 0)')
+    const look = (id: string) => page.evaluate((id) => { const s = getComputedStyle(document.getElementById(id)!); return { color: s.color, background: s.backgroundColor, image: s.backgroundImage, border: s.borderTopColor, shadow: s.boxShadow } }, id)
+    const own = await look('bl-medium-solid')
+    const disabled = await look('bl-fc-disabled')
+    for (const id of ['bl-app-white', 'bl-app-violet', 'bl-app-shadow', 'bl-app-gradient', 'bl-app-link']) expect(await look(id), id).toEqual(own)
+    expect(await look('bl-app-disabled'), 'disabled: GrayText').toEqual(disabled)
+    // Pixels: each spinner shows against its background.
+    for (const id of ['bl-app-white', 'bl-app-violet', 'bl-app-disabled', 'bl-app-shadow', 'bl-app-gradient', 'bl-app-link']) expect(await inkInside(page, id), `${id}'s spinner`).toBeGreaterThan(20)
+    // The focus ring keeps its system color.
+    const ring = (id: string) => page.evaluate((id) => { const b = document.getElementById(id)!; (b as HTMLElement).focus({ focusVisible: true } as FocusOptions); const s = getComputedStyle(b); return [s.outlineStyle, s.outlineColor, s.outlineWidth] }, id)
+    await page.keyboard.press('Shift')
+    expect(await ring('bl-app-violet')).toEqual(await ring('bl-medium-solid'))
   })
 }
 

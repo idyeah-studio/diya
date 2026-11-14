@@ -367,15 +367,18 @@
 @media (forced-colors: active) {
   .diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) {
     forced-color-adjust: none;
-    color: ButtonText;
-    background-color: ButtonFace;
-    background-image: none;
-    border-color: ButtonText;
-    box-shadow: none;
+    /* !important, as forced colors would be: unforced, an app's own colors on the Button (a class,
+       an inline style, a gradient) would otherwise win, and a light theme could show a white
+       spinner on white (P2). Only here, and only while busy. */
+    color: ButtonText !important;
+    background-color: ButtonFace !important;
+    background-image: none !important;
+    border-color: ButtonText !important;
+    box-shadow: none !important;
   }
   .diya-root .diya-button[aria-busy='true']:disabled:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) {
-    color: GrayText;
-    border-color: GrayText;
+    color: GrayText !important;
+    border-color: GrayText !important;
   }
   .diya-root .diya-button[aria-busy='true'] > .diya-button-label > *,
   .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > * {

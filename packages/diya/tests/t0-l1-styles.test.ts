@@ -249,10 +249,13 @@ describe('motion house rules', () => {
 
   // O4 (named edit): the one exception is the loading Button's own animation (the hide, its turn,
   // the fade back and the leading icon's none), which an app's animation on the Button must not
-  // replace. Nothing else.
-  it('adds no !important, except to the loading Button\'s own animation', () => {
-    const important = [...bare.matchAll(/([^{}]*)\{([^{}]*!\s*important[^{}]*)\}/g)].map((m) => `${m[1].trim()} { ${m[2].trim()} }`)
+  // replace. P2 (named edit): and a busy Button's system colors in forced colors, which an app's
+  // own colors must not replace. Nothing else.
+  it('adds no !important, except to the loading Button\'s own animation and its forced colors', () => {
+    const important = [...bare.matchAll(/([^{}]*)\{([^{}]*!\s*important[^{}]*)\}/g)].map((m) => `${m[1].trim()} { ${m[2].trim().replace(/\s+/g, ' ')} }`)
     expect(important).toEqual([
+      ".diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) { forced-color-adjust: none; color: ButtonText !important; background-color: ButtonFace !important; background-image: none !important; border-color: ButtonText !important; box-shadow: none !important; }",
+      ".diya-root .diya-button[aria-busy='true']:disabled:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) { color: GrayText !important; border-color: GrayText !important; }",
       ".diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :empty) { animation: diya-button-hide 0s linear var(--diya-internal-beat) both !important; }",
       ".diya-root .diya-button[aria-busy='true'][data-busy-turn='b']:not([data-icon-only='true'], :empty) { animation-name: diya-button-hide-again !important; }",
       ".diya-root .diya-button[data-returning='true']:not([aria-busy='true'], [data-icon-only='true']) { animation: diya-button-return-text var(--diya-internal-duration-fast) var(--diya-ease-enter) !important; }",

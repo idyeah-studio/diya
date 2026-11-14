@@ -596,6 +596,19 @@ function LoadingCase() {
           <Button id="bl-anim-lead" className="app-pulse" loading={busy}><Plus size={18} strokeWidth={1.6} />Add member</Button>
         </div>
       )}
+      {/* An app's own colors on loading Buttons, for forced colors (P2, P4): white text on an outline,
+          Tailwind-style bg-violet-600 text-white (a later layer), disabled with white text, a box
+          shadow, a gradient, and a link. fcapp=1 only. */}
+      {query.get('fcapp') === '1' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button id="bl-app-white" variant="outline" loading={busy} style={{ color: '#fff' }}>Save changes</Button>
+          <Button id="bl-app-violet" className="bg-violet-600 text-white" loading={busy}>Save changes</Button>
+          <Button id="bl-app-disabled" disabled className="text-white" loading={busy}>Send</Button>
+          <Button id="bl-app-shadow" loading={busy} style={{ boxShadow: 'rgba(0, 0, 0, 0.35) 0 2px 6px' }}>Publish</Button>
+          <Button id="bl-app-gradient" loading={busy} style={{ backgroundImage: 'linear-gradient(90deg, #e11d48, #7c3aed)', color: '#fff' }}>Upgrade</Button>
+          <Button id="bl-app-link" href="#app" className="bg-violet-600 text-white" loading={busy}>Open report</Button>
+        </div>
+      )}
       {/* asChild with a child that has no children of its own (P1): a submit input, an img, and a
           link component that labels itself from a prop; each given loading and not. void=1 only. */}
       {query.get('void') === '1' && (
@@ -698,7 +711,7 @@ function RhfCase() {
 const cases = { rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
-style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; } @keyframes app-pulse { 50% { opacity: 0.5; } } .app-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @layer utilities { .animate-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } }'
+style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; } @keyframes app-pulse { 50% { opacity: 0.5; } } .app-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @layer utilities { .animate-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } .bg-violet-600 { background-color: #7c3aed; } .text-white { color: #fff; } }'
 document.head.append(style)
 document.documentElement.dataset.react = version
 const app = which === 'theme' || (which === 'tokens' && query.get('outer') === '1')
