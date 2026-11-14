@@ -875,11 +875,12 @@ for (const theme of ['light', 'dark']) {
     const shot = (id: string) => page.locator(`#${id}`).screenshot()
     const rest: Record<string, Buffer> = {}
     for (const id of ids) rest[id] = await shot(id)
-    // Loading starts, and anything moving on the Buttons is slowed 50 times from 30ms in.
+    // Loading starts, and anything moving on the Buttons or in them (the spinner's arrive too, so a
+    // slow machine's screenshots never reach the beat) is slowed 50 times from 30ms in.
     const moving = await page.evaluate((ids) => {
       ;(window as unknown as { __setBusy(value: boolean): void }).__setBusy(true)
       const out: string[] = []
-      for (const id of ids) for (const animation of document.getElementById(id)!.getAnimations()) {
+      for (const id of ids) for (const animation of document.getElementById(id)!.getAnimations({ subtree: true })) {
         if (animation instanceof CSSTransition) out.push(`${id} ${animation.transitionProperty}`)
         animation.currentTime = 30
         animation.playbackRate = 0.02
