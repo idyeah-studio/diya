@@ -181,22 +181,52 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   once the press ends,** so the button you pressed doesn't move under the
   pointer or your finger.
 - **Button `loading` shows a small spinner instead of "···".** The cursor
-  turns to `progress` at once. After 400ms the spinner takes the label's
-  place: the label hides but keeps its width, so the button keeps its exact
-  size and nothing moves. With an icon before the label, the spinner takes the
-  icon's place and the label stays. An icon-only button swaps its icon for
-  the spinner. When loading ends, the label, or the icon, fades back.
+  turns to `progress` at once. After 400ms the spinner takes the place of the
+  icon before the label, and the words stay. Without such an icon it takes the
+  label's place: the words turn transparent but keep their width, so the
+  button keeps its exact size and nothing moves. An icon-only button swaps its
+  icon for the spinner. When loading ends, the label, or the icon, fades back.
+  - Any single `<svg>` rendered first counts as the icon: icons from
+    lucide-react or any other library, your own icon and logo components, an
+    `<svg>` in a Fragment. An `<img>`, an icon font, or an icon inside your own
+    wrapper counts as label, as does every icon in browsers without CSS
+    `:has()`. Space the icon with the Button's `gap` (or `column-gap` on the
+    Button), not a margin on the icon: a margin shifts the spinner by half its
+    width.
   - A loading Button looks busy, not disabled: full color and a `progress`
     cursor. Clicks, Enter and Space still do nothing; `aria-busy` and
     `aria-disabled` are unchanged.
+  - A loading Button with `href` stays a link, with its `href`, and keeps
+    focus. Clicks (modified and middle clicks too) and Enter do nothing;
+    "Open in new tab" from the context menu still works. See Fixed.
   - Dialog's confirm button, Form's Submit and Wizard's forward button show it
     too.
   - Under Reduce Motion the spinner breathes in place.
+  - In forced colors (such as Windows high contrast), a busy Button hides its
+    words too, and draws its own button colors and border while it does.
   - The button's text no longer includes "···".
-  - If a Button's label holds something with its own state, pass `loading`
-    from the start (`loading={false}` until it's busy). The label is then
-    wrapped from the first render, and nothing inside it starts over when
-    loading begins.
+  - On the beat, the words' fill turns transparent, with any text shadow,
+    stroke or underline you gave them, and elements in the label fade out.
+    One thing stays drawn: put a gradient made with `background-clip: text`
+    on an element inside the label, not on the Button itself; on the Button it
+    stays drawn under the spinner while it loads.
+  - The fade back animates the Button's `color`, so a border or ring you draw
+    in `currentColor` on the Button (Tailwind's `border-current` or
+    `ring-current`) goes out with the words and fades back with them.
+  - While loading, a Button runs its own animation; one you set on it, such as
+    Tailwind's `animate-pulse`, pauses until the label is back, then runs
+    again.
+  - A part of the label with its own CSS animation stops while the Button is
+    busy and starts over after each load. A Spinner you put in the label keeps
+    its own wait and turn.
+  - Style your own elements in a label, not the Button's inner spans: CSS that
+    restyles those spans on hover garbles the Button's accessible name in
+    Safari while it's hovered.
+  - If a Button's label holds an element, such as an icon or `<strong>`, pass
+    `loading` from the start: `loading={false}` until it's busy. Then nothing
+    in the label starts over when loading begins, and a page the browser has
+    translated keeps working. (`loading={undefined}` counts as not passed.) A
+    label of plain text is safe either way.
 - **The Drawer's open edge is rounded like Dialog:** 22px × the corner scale,
   where it was 16px. A Drawer that fills a phone screen (440px or narrower) is
   square, so no dim shows in wedges at the screen's edge.
@@ -217,6 +247,18 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   covers a Dialog or Drawer mounted by its opener's click too.
 - Closing a toast, or running its Undo, while you're typing elsewhere keeps
   your place: the next keystroke goes where you were typing.
+- A Button with `href` keeps its link while it loads. It used to drop its
+  `href`, so focus fell off it; now focus stays, as `loading` always promised.
+  The link gets `aria-disabled="true"`, and clicks, middle clicks and Enter do
+  nothing until loading ends. Your own `onKeyDown` still runs, with Enter
+  stopped. A disabled `href` Button still drops its `href`. If your `linkComponent` is a
+  wrapper, pass every prop through to the anchor; that's how the clicks are
+  blocked.
+- A disabled or loading Button with `asChild` blocks middle clicks too, so it
+  can't open in a new tab.
+- In forced colors (such as Windows high contrast), a Destructive Button's
+  words and icon show in the system's button text color, or its disabled
+  color when disabled. Before, they were invisible.
 
 ### Not breaking, but worth a line
 
@@ -276,8 +318,6 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   `findBy…` after the click. Under fake timers, advance timers after it.
 - **Spinner waits 400ms.** Use `findBy…` (or advance fake timers) to see it or
   hear its label.
-- **Button `loading`:** the button's text no longer includes "···", and the
-  spinner is `aria-hidden`. The accessible name is unchanged.
 - **Checkbox with react-hook-form:** `register('terms')` gives `true` or
   `false`, as a native checkbox does. With a `value`, it gives that value, or
   `false`.
@@ -287,13 +327,52 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   whole stack, and each toast is a `.diya-toast` in it. Class names and DOM
   aren't covered by semver; a placement override on `.diya-toast-region`
   still applies.
-- **A Button with a `loading` prop gains wrappers.** From the first render,
-  even with `loading={false}`, its label sits in `span.diya-button-label`,
-  and an icon before the label in `span.diya-button-lead`. The label stays
-  the button's accessible name. A Button without a `loading` prop renders as
-  before; if `loading` first appears later, the wrappers appear then and
-  stay. CSS that targets a Button's direct children won't match inside the
-  wrappers.
+- **Button `loading` changes markup, not names.** The accessible name, the
+  text and the layout are the same as in 1.1.1. A Button without a `loading`
+  prop renders as in 1.1.1 until it first loads. A plain-text label renders as
+  in 1.1.1 at rest, in the client and in server HTML (React's `<!-- -->`
+  separators included), and its text is never moved or replaced. What
+  changes:
+  - **A plain-text label while loading** keeps its words where they are. A
+    hidden spinner is added after them, where 1.1.1 put "···" before them, so
+    `lastChild`, `:last-child` and snapshots change. The text is the words
+    alone, so Playwright's exact `getByText('Save')` now finds the Button,
+    where 1.1.1 found nothing ("···Save"). `getByText` finds the Button, as at
+    rest.
+  - **A label holding an element is wrapped from the first render** if the
+    Button has a `loading` prop, even `loading={false}`. That counts an icon,
+    `<strong>`, or a component that renders text, such as a translation
+    component. The label sits in `span.diya-button-label`, the first element
+    of a label with several parts in
+    `span.diya-button-lead > span.diya-button-lead-item`, and a hidden spinner
+    is added. Without a `loading` prop at first, the wrappers appear when it
+    first loads, what's inside mounts once more, and they stay.
+  - **Find that Button by its role:**
+    `getByRole('button', { name: 'Save', busy: true })`. `getByText('Save')`
+    finds the wrapper span, not the button, so
+    `expect(getByText('Save')).toHaveAttribute('aria-busy', 'true')` fails. A
+    click on the span reaches the button's `onClick`, but in happy-dom it
+    doesn't submit a form (browsers and jsdom do). In Playwright, `getByText`
+    finds a span with no box of its own: clicks, hovers and `toBeVisible()`
+    work, but in Chromium its `boundingBox()` is `null` and a screenshot of it
+    throws.
+  - **An icon-only Button given `loading`** has a hidden spinner before its
+    icon from the first render, so `:first-child` selectors and snapshots
+    change. While it loads, its icon stays in the page, hidden.
+  - **CSS on a Button's direct children,** such as `.diya-button > svg` or
+    `> *`, misses the wrapped parts. Use `.diya-button svg`. The wrappers have
+    no box, so gaps, `justify-content` and auto margins work as before.
+  - **The Button's own spinner** is `span.diya-spinner.diya-button-spinner`,
+    `aria-hidden`, and not displayed until it's needed. The
+    `.diya-button-progress` element is gone. A `<Spinner>` you put in a Button
+    is yours: it shows as it would beside words.
+  - **While loading,** a Button carries `data-busy-turn`, and while its label
+    fades back, `data-returning`. Snapshots taken then change.
+  - **An `href` Button keeps its `href` while it loads,** with
+    `aria-disabled="true"` and no `role` attribute. A test that expected no
+    `href` now fails; expect the `href`. It also keeps `target`, `rel` and
+    `download`, stays a Tab stop, and can be dragged; the status bar shows its
+    URL on hover. Your `onKeyDown` still runs, with Enter stopped.
 - **Development warnings:** test setups that fail on `console.warn` may see
   DIYA's new "DIYA: …" warnings. Each says what to do instead.
 - **Translations typed as `DiyaMessages`** need the new keys
