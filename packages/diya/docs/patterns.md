@@ -103,6 +103,16 @@ Match field sizes and keep errors next to the relevant field. In `Form`, call
 `event.preventDefault()` in your submission handler when handling data in
 React. Your callback owns persistence and loading/error state.
 
+Say once that everything is required, and mark the rare optional field
+"(optional)" in its label. `required` tells screen readers and draws nothing:
+no asterisk and no red. Show errors on submit, or on leaving a field someone
+typed in; never while they're typing.
+
+For a hosted card field, such as a payment provider's iframe, use
+`Field framed`: it draws DIYA's field box around the iframe, so it matches
+the fields beside it in every theme. Pass the same label to the provider's
+own label option.
+
 Dialog confirmation can return `false` to stay open, or a Promise for an
 asynchronous action. A rejected Promise leaves it open and displays an error.
 A custom `footer` replaces the built-in actions, so provide your own dismissal
@@ -112,6 +122,32 @@ Drawer and Dialog use native modal focus behavior. Keep their open state in
 sync through `onOpenChange`; Escape requests dismissal and closing restores
 focus. Use labels and a clear close action. Avoid nesting modal dialogs.
 Keep them mounted and toggle `open`: unmounting one skips its exit.
+
+Every DIYA popup works inside an open Dialog or Drawer: Menu, Popover,
+Tooltip, Select, Combobox, DatePicker and Toast. They open above it, stay
+inside its focus boundary, follow its theme, and Esc closes one layer at a
+time. There's nothing to set up.
+
+A popup from another library needs one thing: render it into the open modal.
+Pass `useDiyaPortalContainer()` as its portal container. Inside a Dialog or
+Drawer it returns that modal; anywhere else it returns DIYA's own portal, so
+the same component works in both places.
+
+```tsx
+import { useDiyaPortalContainer } from '@idyeah/diya'
+
+function LabelPicker() {
+  const container = useDiyaPortalContainer()
+  return <ThirdPartySelect portalContainer={container} />
+}
+```
+
+In development, DIYA warns when a popup opens outside the open modal, where
+it can't be clicked.
+
+Toasts work inside modals too. While a Dialog or Drawer is open, a toast shows
+inside it, above the dim, and can be clicked. When it closes, the toasts move
+back to their corner.
 
 Wizard's `onStepChange` receives an attempted destination. Validate the current
 step before updating `activeStep`; leaving it unchanged keeps the user on that
