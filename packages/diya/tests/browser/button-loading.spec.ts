@@ -497,6 +497,47 @@ test('an app\'s own animation on a loading Button neither keeps its words under 
   }
 })
 
+// O9 (MOT-N-02): a Spinner of the reader's own in a loading Button keeps its own beat. It waits 400ms
+// when it mounts, after a leading icon too; it stays until the Button's beat and goes with the
+// words (after a leading icon it stays, as the words do); and it doesn't blink out after the fade back.
+test('a Spinner of your own in a loading Button keeps its own beat (O9)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light&rs=1')
+  const bad = await page.evaluate(() => new Promise<string[]>((done) => {
+    const ids = ['bl-rs-first', 'bl-rs-last', 'bl-rs-lead', 'bl-rs-icon']
+    const win = window as unknown as { __setBusy(value: boolean): void; __showRs(): void }
+    const out: string[] = []
+    const ring = (id: string) => Number(getComputedStyle(document.getElementById(id)!.querySelector('.diya-spinner:not(.diya-button-spinner)')!).opacity)
+    const watch = (ms: number, check: (t: number) => void) => new Promise<void>((next) => {
+      const start = performance.now()
+      const tick = () => { const t = performance.now() - start; check(t); if (t < ms) requestAnimationFrame(tick); else next() }
+      tick()
+    })
+    void (async () => {
+      win.__showRs()
+      await watch(1000, (t) => { if (t < 300) for (const id of ids) if (ring(id) > 0.05) out.push(`${id} at ${t.toFixed(0)}ms after mount: shown before its beat`) })
+      win.__setBusy(true)
+      await watch(900, (t) => {
+        for (const id of ids) {
+          const v = ring(id)
+          if (t < 300 && v < 0.99) out.push(`${id} at ${t.toFixed(0)}ms busy: gone before the Button's beat`)
+          if (t > 550 && id !== 'bl-rs-lead' && v > 0.01) out.push(`${id} at ${t.toFixed(0)}ms busy: still there after the beat`)
+          if (id === 'bl-rs-lead' && v < 0.99) out.push(`${id} at ${t.toFixed(0)}ms busy: gone after a leading icon`)
+        }
+      })
+      win.__setBusy(false)
+      const back: Record<string, number> = {}
+      await watch(1200, (t) => {
+        for (const id of ids) {
+          if (!document.getElementById(id)!.hasAttribute('data-returning')) back[id] ??= t
+          if ((back[id] !== undefined || id === 'bl-rs-lead') && ring(id) < 0.99) out.push(`${id} at ${t.toFixed(0)}ms after loading: blinked out (${ring(id).toFixed(2)})`)
+        }
+      })
+      done(out.filter((line, i, all) => all.findIndex((other) => other.split(' at ')[0] === line.split(' at ')[0] && other.split(': ')[1] === line.split(': ')[1]) === i))
+    })()
+  }))
+  expect(bad).toEqual([])
+})
+
 // Forced colors force the words' color, so the label keeps ButtonText itself while busy, and still
 // goes on the beat (Chromium emulates forced colors).
 test('in forced colors the label still goes on the beat, and reads ButtonText before it', async ({ page }, testInfo) => {

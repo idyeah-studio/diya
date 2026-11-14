@@ -478,6 +478,19 @@ const arrow = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke
 
 function IconText() { return <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 12h14" /></svg>Save</> }
 
+function ReaderSpinners({ busy }) {
+  const [shown, setShown] = useState(false)
+  window.__showRs = () => flushSync(() => setShown(true))
+  return shown && (
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <Button id="bl-rs-first" variant="outline" loading={busy}><diya.Spinner size="small" /> Syncing</Button>
+      <Button id="bl-rs-last" variant="outline" loading={busy}>Refresh <diya.Spinner size="small" /></Button>
+      <Button id="bl-rs-lead" variant="outline" loading={busy}><Plus size={18} strokeWidth={1.6} />Refresh <diya.Spinner size="small" /></Button>
+      <Button id="bl-rs-icon" variant="outline" iconOnly aria-label="Sync" loading={busy}><diya.Spinner size="small" /></Button>
+    </div>
+  )
+}
+
 function LoadingCase() {
   const [busy, setBusy] = useState(query.get('busy') === '1')
   window.__setBusy = (value) => { note('busy', performance.now()); flushSync(() => setBusy(value)) }
@@ -573,6 +586,9 @@ function LoadingCase() {
           <Button id="bl-anim-lead" className="app-pulse" loading={busy}><Plus size={18} strokeWidth={1.6} />Add member</Button>
         </div>
       )}
+      {/* A Spinner of the reader's own in a loading Button's label, first, last, after a leading icon,
+          and as an icon-only Button's icon, mounted on demand (O9). rs=1 only. */}
+      {query.get('rs') === '1' && <ReaderSpinners busy={busy} />}
       <Dialog title="Delete the archive?" confirmLabel="Delete every archived conversation" confirmVariant="destructive" onConfirm={() => new Promise(() => {})}
         trigger={<Button id="bl-dialog-open" variant="outline">Delete archive</Button>}>Archived conversations go for good.</Dialog>
     </div>
