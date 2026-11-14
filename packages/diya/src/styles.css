@@ -3816,7 +3816,11 @@
    back the Button's color fades in, which every engine interpolates. The label's elements go and
    come back by their opacity. */
 .diya-root .diya-button-spinner {
-  animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both;
+  /* !important, as every rule of the loading choreography here: a common reduced-motion reset
+     (`* { animation-delay: -1ms !important; animation-duration: 1ms !important }`) would otherwise
+     show the spinner at once while the words, held by O4's rules, go only on the beat: both at once
+     for 400ms (P3). */
+  animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both !important;
 }
 /* Not an empty one: an asChild <input> or <img> can't hold the spinner, so its words stay (P1). */
 .diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :empty) {
@@ -3835,7 +3839,7 @@
 .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > *,
 .diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > :not(.diya-button-spinner) {
   /* The arrive fade played backwards, in no time. */
-  animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) reverse both;
+  animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) reverse both !important;
 }
 /* Back after the beat: Button marks it (data-returning) once its spinner has arrived, and clears
    the mark when the fade back ends (M8). A load that ends before the beat changes nothing. */
@@ -3855,7 +3859,7 @@
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label > *,
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > .diya-button-lead-item > *,
 .diya-root .diya-button[data-icon-only='true'][data-returning='true']:not([aria-busy='true']) > :not(.diya-button-spinner) {
-  animation: diya-button-return var(--diya-internal-duration-fast) var(--diya-ease-enter);
+  animation: diya-button-return var(--diya-internal-duration-fast) var(--diya-ease-enter) !important;
 }
 /* After a leading icon the words stay: only the icon goes, by its opacity, and only it comes back,
    once (N3). The Button's own none must beat its important hide; the label's parts aren't the
@@ -3865,6 +3869,10 @@
 }
 .diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child) > .diya-button-label > * {
   animation: none;
+}
+/* While busy and fading back, the label's parts must beat their own important hide (P3). */
+.diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child):is([aria-busy='true'], [data-returning='true']) > .diya-button-label > * {
+  animation: none !important;
 }
 /* While the words fade back the hover tint, a mix of currentColor, follows the Button's color
    directly, with no transition of its own to trail it (O10). */
@@ -3876,15 +3884,19 @@
 .diya-root .diya-button[aria-busy='true'] > .diya-button-label > .diya-spinner,
 .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > .diya-spinner,
 .diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > .diya-spinner:not(.diya-button-spinner) {
-  animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both, diya-button-hide-part 0s linear var(--diya-internal-beat) both;
+  animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both, diya-button-hide-part 0s linear var(--diya-internal-beat) both !important;
 }
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label > .diya-spinner,
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > .diya-button-lead-item > .diya-spinner,
 .diya-root .diya-button[data-icon-only='true'][data-returning='true']:not([aria-busy='true']) > .diya-spinner:not(.diya-button-spinner) {
-  animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both, diya-button-return var(--diya-internal-duration-fast) var(--diya-ease-enter);
+  animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both, diya-button-return var(--diya-internal-duration-fast) var(--diya-ease-enter) !important;
 }
 .diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child) > .diya-button-label > .diya-spinner {
   animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both;
+}
+/* The same while busy and fading back, where it must beat the parts' important none (P3). */
+.diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child):is([aria-busy='true'], [data-returning='true']) > .diya-button-label > .diya-spinner {
+  animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both !important;
 }
 @keyframes diya-button-hide-part { to { opacity: 0; } }
 @keyframes diya-button-hide { to { -webkit-text-fill-color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; } }

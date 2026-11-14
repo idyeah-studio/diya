@@ -993,6 +993,44 @@ test('asChild with a void element or a self-labeled component renders and loads 
   expect(errors).toEqual([])
 })
 
+// P3 (FE-O-03): with Reduce Motion and a common reset that forces every animation's delay and
+// duration, the Button's own choreography holds: the spinner never shows over visible words or
+// label parts, plain, href, asChild, rich text, several parts and a reader's Spinner (O9), and the
+// beat still lands.
+test('a reduced-motion reset never puts the spinner over the words (P3)', async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openCase(page, testInfo, 'case=loading&theme=light&rs=1')
+  await page.addStyleTag({ content: '@media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation-delay: -1ms !important; animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; } }' })
+  await page.evaluate(() => (window as unknown as { __showRs(): void }).__showRs())
+  await page.waitForTimeout(600)
+  const result = await page.evaluate(() => new Promise<{ bad: string[]; landed: Record<string, number> }>((done) => {
+    const ids = ['bl-medium-solid', 'bl-link', 'bl-child', 'bl-strong', 'bl-multi', 'bl-n1-text', 'bl-rs-last', 'bl-rs-first']
+    const alpha = (color: string) => { const parts = color.match(/[\d.]+/g)!.map(Number); return parts.length > 3 ? parts[3] : 1 }
+    const bad: string[] = []
+    const landed: Record<string, number> = {}
+    ;(window as unknown as { __setBusy(value: boolean): void }).__setBusy(true)
+    const start = performance.now()
+    const tick = () => {
+      const t = performance.now() - start
+      for (const id of ids) {
+        const button = document.getElementById(id)!
+        const spinner = button.querySelector<HTMLElement>('.diya-button-spinner')
+        const ring = spinner && getComputedStyle(spinner).display !== 'none' ? Number(getComputedStyle(spinner).opacity) : 0
+        const style = getComputedStyle(button)
+        const words = alpha(style.getPropertyValue('-webkit-text-fill-color')) * alpha(style.color)
+        const parts = Math.max(0, ...[...button.querySelectorAll<HTMLElement>(':scope > .diya-button-label > *, :scope > .diya-button-lead > .diya-button-lead-item > *')].map((part) => Number(getComputedStyle(part).opacity)))
+        if (ring > 0.01) landed[id] ??= t
+        if (button.getAttribute('aria-busy') === 'true' && ring > 0.01 && (words > 0.02 || parts > 0.02)) bad.push(`${id} at ${t.toFixed(0)}ms`)
+      }
+      if (t < 900) requestAnimationFrame(tick); else done({ bad: bad.filter((line, i) => bad.findIndex((other) => other.split(' at ')[0] === line.split(' at ')[0]) === i), landed })
+    }
+    tick()
+  }))
+  expect(result.bad, 'the spinner over the words (first frame of each)').toEqual([])
+  for (const [id, t] of Object.entries(result.landed)) expect(t, `${id}'s beat`).toBeGreaterThan(300)
+  expect(Object.keys(result.landed)).toHaveLength(8)
+})
+
 // N8 (QA-R3): a loading link keeps focus, and a middle click opens nothing.
 test('a loading link keeps focus, and a middle click or Enter opens nothing (N8, M7)', async ({ page, context }, testInfo) => {
   await openCase(page, testInfo, 'case=loading&theme=light')

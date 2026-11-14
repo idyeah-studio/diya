@@ -247,21 +247,41 @@ describe('motion house rules', () => {
     expect(uses.filter(name => name !== 'transition-behavior')).toEqual([])
   })
 
-  // O4 (named edit): the one exception is the loading Button's own animation (the hide, its turn,
-  // the fade back and the leading icon's none), which an app's animation on the Button must not
-  // replace. P2 (named edit): and a busy Button's system colors in forced colors, which an app's
-  // own colors must not replace. Nothing else.
-  it('adds no !important, except to the loading Button\'s own animation and its forced colors', () => {
-    const important = [...bare.matchAll(/([^{}]*)\{([^{}]*!\s*important[^{}]*)\}/g)].map((m) => `${m[1].trim()} { ${m[2].trim().replace(/\s+/g, ' ')} }`)
+  // O4, P2, P3, P4 (named edits): the only !important declarations are the loading Button's own
+  // choreography, which neither an app's animation on the Button nor a reduced-motion reset that
+  // forces every delay may replace, and a busy Button's system colors in forced colors, which an
+  // app's own colors may not replace. Each is named here; nothing else.
+  it('adds no !important, except to the loading Button\'s own choreography and its forced colors', () => {
+    const important = [...bare.matchAll(/([^{}]*)\{([^{}]*!\s*important[^{}]*)\}/g)].map((m) => `${m[1].trim()} { ${m[2].trim()} }`.replace(/\s+/g, ' '))
     expect(important).toEqual([
+      // P2: a busy Button's system colors in forced colors
       ".diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) { forced-color-adjust: none; color: ButtonText !important; background-color: ButtonFace !important; background-image: none !important; border-color: ButtonText !important; box-shadow: none !important; }",
+      // P2: and GrayText when disabled
       ".diya-root .diya-button[aria-busy='true']:disabled:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) { color: GrayText !important; border-color: GrayText !important; }",
+      // P3: the Button's spinner arrives on the beat
+      ".diya-root .diya-button-spinner { animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both !important; }",
+      // O4 (P1: not an empty Button): the Button's hide
       ".diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :empty) { animation: diya-button-hide 0s linear var(--diya-internal-beat) both !important; }",
+      // O4: its turn
       ".diya-root .diya-button[aria-busy='true'][data-busy-turn='b']:not([data-icon-only='true'], :empty) { animation-name: diya-button-hide-again !important; }",
+      // P3: the label's parts hide on the beat
+      ".diya-root .diya-button[aria-busy='true'] > .diya-button-label > *, .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > *, .diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > :not(.diya-button-spinner) { animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) reverse both !important; }",
+      // O4: the Button's fade back
       ".diya-root .diya-button[data-returning='true']:not([aria-busy='true'], [data-icon-only='true']) { animation: diya-button-return-text var(--diya-internal-duration-fast) var(--diya-ease-enter) !important; }",
-      // P4 (named edit): in forced colors the fade back touches no color.
+      // P4: in forced colors, a fade back that touches no color
       ".diya-root .diya-button[data-returning='true']:not([aria-busy='true'], [data-icon-only='true']) { animation-name: diya-button-return-forced !important; }",
+      // P3: the label's parts fade back
+      ".diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label > *, .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > .diya-button-lead-item > *, .diya-root .diya-button[data-icon-only='true'][data-returning='true']:not([aria-busy='true']) > :not(.diya-button-spinner) { animation: diya-button-return var(--diya-internal-duration-fast) var(--diya-ease-enter) !important; }",
+      // O4: after a leading icon, the Button has no hide or fade back
       ".diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child):is([aria-busy='true'], [data-returning='true']) { animation: none !important; }",
+      // P3: nor have the label's parts, while busy and fading back
+      ".diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child):is([aria-busy='true'], [data-returning='true']) > .diya-button-label > * { animation: none !important; }",
+      // P3 (O9): a Spinner of your own in the label, while busy
+      ".diya-root .diya-button[aria-busy='true'] > .diya-button-label > .diya-spinner, .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > .diya-spinner, .diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > .diya-spinner:not(.diya-button-spinner) { animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both, diya-button-hide-part 0s linear var(--diya-internal-beat) both !important; }",
+      // P3 (O9): and while fading back
+      ".diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label > .diya-spinner, .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > .diya-button-lead-item > .diya-spinner, .diya-root .diya-button[data-icon-only='true'][data-returning='true']:not([aria-busy='true']) > .diya-spinner:not(.diya-button-spinner) { animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both, diya-button-return var(--diya-internal-duration-fast) var(--diya-ease-enter) !important; }",
+      // P3 (O9): after a leading icon, while busy and fading back
+      ".diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child):is([aria-busy='true'], [data-returning='true']) > .diya-button-label > .diya-spinner { animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both !important; }",
     ])
   })
 
@@ -520,9 +540,10 @@ describe('Button loading (F12, F13)', () => {
   })
 
   it('swaps in one frame on the beat and fades the label or icon back over fast', () => {
-    expect(bare).toMatch(/\.diya-root \.diya-button-spinner \{\s*animation: diya-spinner-arrive 0s linear var\(--diya-internal-beat\) both;\s*\}/)
+    // P3 (named edit): the spinner, the parts' hide and their fade back are important too.
+    expect(bare).toMatch(/\.diya-root \.diya-button-spinner \{\s*animation: diya-spinner-arrive 0s linear var\(--diya-internal-beat\) both !important;\s*\}/)
     // L2: hidden by a zero-length animation on the beat, which needs no @starting-style.
-    expect(bare).toMatch(/\{\s*animation: diya-spinner-arrive 0s linear var\(--diya-internal-beat\) reverse both;\s*\}/)
+    expect(bare).toMatch(/\{\s*animation: diya-spinner-arrive 0s linear var\(--diya-internal-beat\) reverse both !important;\s*\}/)
     expect(bare).not.toMatch(/@starting-style\s*\{[^{}]*diya-button/)
     // N1 (named edit of M2's version): the words go and come back from the Button, never by a style
     // of the box-less wrappers, which WebKit's accessible name can't take; the elements by opacity.
@@ -531,7 +552,7 @@ describe('Button loading (F12, F13)', () => {
     // P1 (named edit): not an empty Button (an asChild <input> or <img>, which can't hold the spinner).
     expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\]:not\(\[data-icon-only='true'\], :empty\) \{\s*animation: diya-button-hide 0s linear var\(--diya-internal-beat\) both !important;\s*\}/)
     expect(bare).toMatch(/\.diya-root \.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\], \[data-icon-only='true'\]\) \{\s*animation: diya-button-return-text var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\) !important;\s*\}/)
-    expect(bare).toMatch(/\.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\]\) > \.diya-button-label > \*,[^{]*\{\s*animation: diya-button-return var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\);\s*\}/)
+    expect(bare).toMatch(/\.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\]\) > \.diya-button-label > \*,[^{]*\{\s*animation: diya-button-return var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\) !important;\s*\}/)
     expect(bare).toMatch(/@keyframes diya-button-hide \{ to \{ -webkit-text-fill-color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; \} \}/)
     for (const [selector, body] of [...bare.matchAll(/([^{}]*diya-button-(?:label|lead-item)[^{}]*)\{([^{}]*)\}/g)].map((m) => [m[1].trim(), m[2]])) {
       const last = selector.split(',').map((part) => part.trim().split(/[\s>]+/).at(-1))
