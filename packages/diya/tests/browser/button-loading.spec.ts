@@ -74,6 +74,32 @@ async function inkInside(page: Page, id: string) {
   }, png)
 }
 
+/** The largest difference in any channel between two same-sized screenshots, and how many pixels differ. */
+async function pixelDiff(page: Page, a: Buffer, b: Buffer) {
+  return page.evaluate(async ([a, b]) => {
+    const read = async (png: string) => {
+      const image = new Image()
+      image.src = `data:image/png;base64,${png}`
+      await image.decode()
+      const canvas = document.createElement('canvas')
+      canvas.width = image.width
+      canvas.height = image.height
+      const context = canvas.getContext('2d')!
+      context.drawImage(image, 0, 0)
+      return context.getImageData(0, 0, image.width, image.height)
+    }
+    const [x, y] = [await read(a), await read(b)]
+    if (x.width !== y.width || x.height !== y.height) return { max: 255, count: -1 }
+    let max = 0
+    let count = 0
+    for (let i = 0; i < x.data.length; i += 4) {
+      const d = Math.max(Math.abs(x.data[i] - y.data[i]), Math.abs(x.data[i + 1] - y.data[i + 1]), Math.abs(x.data[i + 2] - y.data[i + 2]))
+      if (d) { count++; max = Math.max(max, d) }
+    }
+    return { max, count }
+  }, [a.toString('base64'), b.toString('base64')])
+}
+
 /** Turns loading on (or ends it after `endAfter` ms) and measures the listed Buttons on every frame for `ms`. */
 function frames(page: Page, ids: string[], ms: number, { endAfter, busy = true }: { endAfter?: number; busy?: boolean } = {}) {
   return page.evaluate(({ ids, ms, endAfter, busy }) => new Promise<Frame[]>((done) => {
@@ -801,6 +827,38 @@ for (const theme of ['light', 'dark']) {
     const ring = (id: string) => page.evaluate((id) => { const b = document.getElementById(id)!; (b as HTMLElement).focus({ focusVisible: true } as FocusOptions); const s = getComputedStyle(b); return [s.outlineStyle, s.outlineColor, s.outlineWidth] }, id)
     await page.keyboard.press('Shift')
     expect(await ring('bl-app-violet')).toEqual(await ring('bl-medium-solid'))
+  })
+}
+
+// P4 (VIS-O-01): in forced colors a Button's words come back at once when loading ends: 20ms into
+// the fade back a link Button, an asChild link, an app-styled Button and a plain one each look as
+// they do once it's over (links no longer flash LinkText), and data-returning still clears. Against
+// the frame after, to a few levels: Chromium's antialiasing on the pill's edge can differ by a level
+// or two between frames (QA-M-04); a LinkText flash differs by about 160.
+for (const theme of ['light', 'dark']) {
+  test(`forced colors (${theme}): the words come back at once, with no LinkText flash (P4)`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
+    await page.emulateMedia({ forcedColors: 'active', colorScheme: theme as 'light' | 'dark' })
+    await openCase(page, testInfo, `case=loading&theme=${theme}&lean=1&fcapp=1`)
+    const ids = ['bl-link', 'bl-child', 'bl-app-link', 'bl-app-violet', 'bl-medium-solid']
+    const shot = (id: string) => page.locator(`#${id}`).screenshot()
+    const win = (value: boolean) => page.evaluate((value) => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(value), value)
+    await win(true)
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.getElementById('bl-medium-solid')!).getPropertyValue('-webkit-text-fill-color')), { timeout: 3000 }).toBe('rgba(0, 0, 0, 0)')
+    // Loading ends, and every fade back is slowed 50 times from 20ms in (held still, Chromium could
+    // keep a stale paint, which a running fade doesn't).
+    await page.evaluate((ids) => {
+      ;(window as unknown as { __setBusy(value: boolean): void }).__setBusy(false)
+      for (const id of ids) for (const animation of document.getElementById(id)!.getAnimations({ subtree: true })) { animation.currentTime = 20; animation.playbackRate = 0.02 }
+    }, ids)
+    const mid: Record<string, Buffer> = {}
+    for (const id of ids) {
+      expect(await page.locator(`#${id}`).getAttribute('data-returning'), `${id} is fading back`).toBe('true')
+      mid[id] = await shot(id)
+    }
+    await page.evaluate((ids) => { for (const id of ids) for (const animation of document.getElementById(id)!.getAnimations({ subtree: true })) animation.playbackRate = 1 }, ids)
+    await expect.poll(() => page.evaluate((ids) => ids.filter((id) => document.getElementById(id)!.hasAttribute('data-returning')), ids), { timeout: 3000 }).toEqual([])
+    for (const id of ids) expect((await pixelDiff(page, mid[id], await shot(id))).max, `${id} 20ms into the fade back, against after`).toBeLessThanOrEqual(8)
   })
 }
 

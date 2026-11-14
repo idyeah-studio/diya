@@ -259,6 +259,8 @@ describe('motion house rules', () => {
       ".diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :empty) { animation: diya-button-hide 0s linear var(--diya-internal-beat) both !important; }",
       ".diya-root .diya-button[aria-busy='true'][data-busy-turn='b']:not([data-icon-only='true'], :empty) { animation-name: diya-button-hide-again !important; }",
       ".diya-root .diya-button[data-returning='true']:not([aria-busy='true'], [data-icon-only='true']) { animation: diya-button-return-text var(--diya-internal-duration-fast) var(--diya-ease-enter) !important; }",
+      // P4 (named edit): in forced colors the fade back touches no color.
+      ".diya-root .diya-button[data-returning='true']:not([aria-busy='true'], [data-icon-only='true']) { animation-name: diya-button-return-forced !important; }",
       ".diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child):is([aria-busy='true'], [data-returning='true']) { animation: none !important; }",
     ])
   })

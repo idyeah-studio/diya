@@ -206,7 +206,9 @@ describe('Progress and loading rows', () => {
       // M2: the label's wrapper has no box, so its words hide and come back from the Button; N1: the
       // hide has a second name, so a new spinner restarts it. O9 (named edit): a Spinner of your own
       // in the label hides by its own name, after its arrive.
-      '@keyframes diya-spinner-arrive', '@keyframes diya-spinner-turn', '@keyframes diya-button-hide-part', '@keyframes diya-button-hide', '@keyframes diya-button-hide-again', '@keyframes diya-button-return', '@keyframes diya-button-return-text', '@keyframes diya-skeleton-pulse'])
+      '@keyframes diya-spinner-arrive', '@keyframes diya-spinner-turn',
+      // P4 (named edit): forced colors' fade back, which touches no color.
+      '@keyframes diya-button-return-forced', '@keyframes diya-button-hide-part', '@keyframes diya-button-hide', '@keyframes diya-button-hide-again', '@keyframes diya-button-return', '@keyframes diya-button-return-text', '@keyframes diya-skeleton-pulse'])
     // A fade: nothing in the Reduce Motion or motion settings stops it.
     expect(css).not.toMatch(/diya-table-skeleton[^{]*\{[^}]*animation:\s*none/)
   })

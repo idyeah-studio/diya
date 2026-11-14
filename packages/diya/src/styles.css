@@ -3842,6 +3842,16 @@
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true'], [data-icon-only='true']) {
   animation: diya-button-return-text var(--diya-internal-duration-fast) var(--diya-ease-enter) !important;
 }
+/* In forced colors the words come back at once, as a <button>'s already do there: a color that
+   isn't a system color is forced, so a link Button's fading words would flash LinkText. This
+   fade touches no color, and its end still clears data-returning (P4). Scoping O1's block to the
+   fade back instead would bring back Chromium's stale unforced paint after the load. */
+@media (forced-colors: active) {
+  .diya-root .diya-button[data-returning='true']:not([aria-busy='true'], [data-icon-only='true']) {
+    animation-name: diya-button-return-forced !important;
+  }
+}
+@keyframes diya-button-return-forced { from { -webkit-text-stroke-color: transparent; } }
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label > *,
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > .diya-button-lead-item > *,
 .diya-root .diya-button[data-icon-only='true'][data-returning='true']:not([aria-busy='true']) > :not(.diya-button-spinner) {
