@@ -31,7 +31,8 @@ async function removeWords(page: Page, ids: string[], { spinner }: { spinner: 'h
     for (const id of ids) {
       let run: HTMLSpanElement | null = null
       for (const node of [...document.getElementById(id)!.childNodes]) {
-        if (node.nodeType !== Node.TEXT_NODE) { run = null; continue }
+        // A space alone makes no box in the flex row (P6: the one after a leading part), so it stays.
+        if (node.nodeType !== Node.TEXT_NODE || !node.textContent!.trim()) { run = null; continue }
         if (!run) { run = document.createElement('span'); run.dataset.wordsRemoved = ''; run.style.visibility = 'hidden'; node.before(run) }
         run.append(node)
       }

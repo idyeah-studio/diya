@@ -255,7 +255,9 @@ describe('Button loading markup (F12, L1, M1, M3)', () => {
     render(<DiyaProvider><Button loading={false}><><svg data-icon="send" aria-hidden="true" /> Send</></Button></DiyaProvider>)
     const button = screen.getByRole('button', { name: 'Send' })
     expect(button.querySelector('.diya-button-lead-item > svg')!.getAttribute('data-icon')).toBe('send')
-    expect(button.querySelector('.diya-button-label')!.textContent).toBe(' Send')
+    // P6 (named edit): the space after the leading part is the Button's own text node, between the spans.
+    expect(button.querySelector('.diya-button-label')!.textContent).toBe('Send')
+    expect(button.querySelector('.diya-button-label')!.previousSibling!.textContent).toBe(' ')
   })
 
   it('a stateful child keeps its state through loading on and off when loading is given from the start (L1)', () => {

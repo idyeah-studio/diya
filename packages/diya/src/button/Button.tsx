@@ -56,10 +56,10 @@ function labelParts(node: ReactNode, prefix = ''): ReactNode[] {
   })
 }
 
-// Text holds no state, so a label of plain text needn't keep a wrapper at rest (M3).
 // HTML elements that can't have children (an asChild <input type="submit"> or <img>).
 const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'])
 
+// Text holds no state, so a label of plain text needn't keep a wrapper at rest (M3).
 const plainText = (node: ReactNode) => Children.toArray(node).every((part) => typeof part === 'string' || typeof part === 'number')
 
 /** A native button in DIYA's styles, or a link that looks like one with `href` or `asChild`; other button attributes pass through, and `type` defaults to 'button'. */
@@ -135,7 +135,15 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     if (plainText(raw)) return <>{raw}{spinner}</>
     if (!wrapped) return raw
     const parts = labelParts(raw)
-    if (parts.length > 1 && isValidElement(parts[0])) return <><span className="diya-button-lead"><span className="diya-button-lead-item">{parts[0]}</span>{spinner}</span><span className="diya-button-label">{parts.slice(1)}</span></>
+    if (parts.length > 1 && isValidElement(parts[0])) {
+      // The space after the leading part stays a text node of the Button's own, between the two
+      // spans, as in 1.1.1: jsdom's accessible name drops a span's leading space, so
+      // "<strong>Save</strong> now" read "Savenow" there (P6). A space makes no box in the flex row.
+      const rest = parts.slice(1)
+      const space = typeof rest[0] === 'string' ? /^\s+/.exec(rest[0])?.[0] : undefined
+      if (space) rest[0] = (rest[0] as string).slice(space.length)
+      return <><span className="diya-button-lead"><span className="diya-button-lead-item">{parts[0]}</span>{spinner}</span>{space}<span className="diya-button-label">{rest[0] === '' ? rest.slice(1) : rest}</span></>
+    }
     return <>{spinner}<span className="diya-button-label">{raw}</span></>
   }
   if (asChild) {
