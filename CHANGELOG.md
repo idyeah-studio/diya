@@ -401,7 +401,8 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   - **The Button's own spinner** is `span.diya-spinner.diya-button-spinner`,
     `aria-hidden`, and not displayed until it's needed. The
     `.diya-button-progress` element is gone. A `<Spinner>` you put in a Button
-    is yours: it shows as it would beside words.
+    is yours: it sits where an icon would. Don't also give that Button
+    `loading`.
   - **While loading,** a Button carries `data-busy-turn` (and
     `data-busy-disabled` if it's also disabled); while its label fades back,
     `data-returning`. Snapshots taken then change. These attributes and the
