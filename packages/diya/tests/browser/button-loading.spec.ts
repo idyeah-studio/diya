@@ -58,7 +58,8 @@ function frames(page: Page, ids: string[], ms: number, { endAfter, busy = true }
     const out = [measure(-1)]
     setBusy(busy)
     const start = performance.now()
-    if (endAfter !== undefined) setTimeout(() => setBusy(false), endAfter)
+    // When loading really ended: under load a timer fires late, so the checks after it read this.
+    if (endAfter !== undefined) setTimeout(() => { (window as unknown as { __endedAt: number }).__endedAt = performance.now() - start; setBusy(false) }, endAfter)
     out.push(measure(0))
     const tick = () => {
       const t = performance.now() - start
@@ -161,8 +162,9 @@ test('when loading ends the spinner goes at once and the label fades back; a loa
   await openCase(page, testInfo, 'case=loading&theme=light')
   const ids = ['bl-medium-solid', 'bl-lead', 'bl-icon']
   const long = await frames(page, ids, 1000, { endAfter: 600 })
+  const ended = await page.evaluate(() => (window as unknown as { __endedAt: number }).__endedAt)
   for (const id of ids) {
-    const rows = of(long, id).filter((row) => row.t > 640)
+    const rows = of(long, id).filter((row) => row.t > ended + 40)
     for (const row of rows) expect(row.spinner, `${id} spinner at ${row.t.toFixed(0)}ms`).toBeNull()
     const back = rows.map((row) => (id === 'bl-medium-solid' ? row.labelOpacity : row.iconOpacity)!)
     // It fades: at least one frame part of the way, and fully back by the end.
@@ -172,6 +174,10 @@ test('when loading ends the spinner goes at once and the label fades back; a loa
   await page.reload()
   await page.waitForSelector('html[data-ready]')
   const quick = await frames(page, ids, 700, { endAfter: 200 })
+  // A load that really ended before the beat; under heavy load the 200ms timer can fire after it,
+  // and then this run can't judge a quick load.
+  const quickEnded = await page.evaluate(() => (window as unknown as { __endedAt: number }).__endedAt)
+  if (quickEnded >= 380) { testInfo.annotations.push({ type: 'quick load not judged', description: `the 200ms timer fired at ${quickEnded.toFixed(0)}ms` }); return }
   for (const id of ids) {
     for (const row of of(quick, id)) {
       expect(row.labelOpacity ?? 1, `${id} label at ${row.t.toFixed(0)}ms`).toBe(1)
