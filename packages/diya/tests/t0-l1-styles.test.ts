@@ -509,7 +509,20 @@ describe('Button loading (F12, F13)', () => {
     // L2: hidden by a zero-length animation on the beat, which needs no @starting-style.
     expect(bare).toMatch(/\{\s*animation: diya-spinner-arrive 0s linear var\(--diya-internal-beat\) reverse both;\s*\}/)
     expect(bare).not.toMatch(/@starting-style\s*\{[^{}]*diya-button/)
-    // ...and back by an animation too, only once the beat has come (data-returning).
-    expect(bare).toMatch(/\.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\]\) > \.diya-button-label,[^{]*\{\s*animation: diya-button-return var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\);\s*\}/)
+    // ...and back by an animation too, only once the beat has come (data-returning). M2: the
+    // label's wrapper has no box, so its words go and come back by their color, its elements by
+    // their opacity.
+    expect(bare).toMatch(/\.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\]\) > \.diya-button-label,[^{]*\{\s*animation: diya-button-return-text var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\);\s*\}/)
+    expect(bare).toMatch(/\.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\]\) > \.diya-button-label > \*,[^{]*\{\s*animation: diya-button-return var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\);\s*\}/)
+    expect(bare).toMatch(/@keyframes diya-button-hide \{ to \{ color: transparent; \} \}/)
+  })
+})
+
+describe('Button loading at rest (M2, M1)', () => {
+  it('the label\'s wrappers have no box, so the Button lays out as without them; a leading part gets one only when it renders a single svg', () => {
+    expect(bare).toMatch(/\.diya-root :is\(\.diya-button-label, \.diya-button-lead, \.diya-button-lead-item\) \{\s*display: contents;\s*\}/)
+    expect(bare).toMatch(/\.diya-root \.diya-button-lead:has\(> \.diya-button-lead-item > svg:only-child\) \{\s*position: relative;\s*display: inline-flex;/)
+    // The spinner is hidden at rest (M5).
+    expect(bare).toMatch(/\.diya-root \.diya-button:not\(\[aria-busy='true'\]\) > \.diya-spinner,\s*\.diya-root \.diya-button:not\(\[aria-busy='true'\]\) > \.diya-button-lead > \.diya-spinner \{\s*display: none;\s*\}/)
   })
 })

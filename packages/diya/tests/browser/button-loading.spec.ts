@@ -31,17 +31,24 @@ function frames(page: Page, ids: string[], ms: number, { endAfter, busy = true }
       t,
       rows: ids.map((id) => {
         const button = document.getElementById(id)!
+        // The label's words: the wrapper has no box (display: contents), so its place is read from
+        // a range over its words, and how visible they are from their color's alpha (M2).
         const wrapper = button.querySelector<HTMLElement>(':scope > .diya-button-label')
-        const text = [...button.childNodes].find((node) => node.nodeType === Node.TEXT_NODE)
+        const words = wrapper ?? button
+        const text = [...words.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent!.trim())
         const range = text ? document.createRange() : null
         if (range && text) range.selectNodeContents(text)
-        const icon = button.querySelector<SVGElement>(':scope > svg, :scope > .diya-button-lead > svg')
-        const spinner = button.querySelector<HTMLElement>('.diya-spinner')
+        const alpha = (color: string) => { const parts = color.match(/[\d.]+/g)!.map(Number); return parts.length > 3 ? parts[3] : 1 }
+        const icon = [...button.querySelectorAll<SVGElement>('svg')].find((svg) => !svg.closest('.diya-spinner')) ?? null
+        const iconLead = icon && button.querySelector('.diya-button-lead')?.contains(icon)
+        const shown = (node: Element) => { let value = 1; for (let at: Element | null = node; at && at !== button.parentElement; at = at.parentElement) value *= Number(getComputedStyle(at).opacity); return value }
+        const spinnerNode = button.querySelector<HTMLElement>('.diya-spinner')
+        const spinner = spinnerNode && getComputedStyle(spinnerNode).display !== 'none' ? spinnerNode : null
         const style = getComputedStyle(button)
         return {
           id, button: box(button)!, next: document.getElementById(`${id}-next`)?.getBoundingClientRect().left ?? null,
-          label: box(wrapper ?? range), labelOpacity: wrapper ? Number(getComputedStyle(wrapper).opacity) : text ? 1 : null,
-          icon: box(icon), iconOpacity: icon ? Number(getComputedStyle(icon).opacity) : null,
+          label: box(range), labelOpacity: text ? alpha(getComputedStyle(words).color) : null,
+          icon: box(icon), iconOpacity: icon ? Math.min(shown(icon), iconLead || button.dataset.iconOnly ? alpha(getComputedStyle(icon).color) : 1) : null,
           spinner: box(spinner), spinnerOpacity: spinner ? Number(getComputedStyle(spinner).opacity) : null,
           opacity: Number(style.opacity), cursor: style.cursor, color: style.color,
         }
@@ -204,7 +211,8 @@ test('href and asChild Buttons show the spinner too', async ({ page }, testInfo)
     await expect(link).toHaveAttribute('aria-busy', 'true')
     await expect(link.locator(':scope > .diya-spinner svg')).toHaveCount(1)
     await expect(link.locator(':scope > .diya-spinner')).toHaveCSS('opacity', '1')
-    await expect(link.locator(':scope > .diya-button-label')).toHaveCSS('opacity', '0')
+    // M2: the label's wrapper has no box, so its words hide by their color.
+    await expect(link.locator(':scope > .diya-button-label')).toHaveCSS('color', 'rgba(0, 0, 0, 0)')
   }
 })
 
@@ -294,4 +302,132 @@ test('a large Button\'s spinner is centered on its leading icon', async ({ page 
   const [sx, sy] = center(end.spinner!)
   expect(Math.abs(sx - ix)).toBeLessThanOrEqual(0.25)
   expect(Math.abs(sy - iy)).toBeLessThanOrEqual(0.25)
+})
+
+// M1: any icon before the label is the leading icon (lucide, a logo component, an svg in a
+// fragment); rich text before it is part of the label.
+test('a library icon, a logo and an icon in a fragment are leading icons; rich text is part of the label (M1)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const icons = ['bl-lucide', 'bl-lucide-large', 'bl-frag', 'bl-logo']
+  const list = await frames(page, [...icons, 'bl-strong'], 700)
+  for (const id of icons) {
+    const rows = of(list, id).filter((row) => row.t >= 0)
+    for (const row of rows) {
+      expect(row.labelOpacity, `${id} label at ${row.t.toFixed(0)}ms`).toBe(1)
+      expect([[1, 0], [0, 1]], `${id} at ${row.t.toFixed(0)}ms`).toContainEqual([row.iconOpacity, row.spinnerOpacity])
+    }
+    const end = rows.at(-1)!
+    const [ix, iy] = center(end.icon!)
+    const [sx, sy] = center(end.spinner!)
+    expect(Math.abs(sx - ix), `${id} x`).toBeLessThanOrEqual(0.5)
+    expect(Math.abs(sy - iy), `${id} y`).toBeLessThanOrEqual(0.5)
+  }
+  // <strong>Save</strong> draft: both parts go, and the spinner sits in the middle of the Button.
+  const strong = await page.locator('#bl-strong').evaluate((button) => ({
+    strong: Number(getComputedStyle(button.querySelector('strong')!).opacity),
+    words: getComputedStyle(button.querySelector('.diya-button-label')!).color,
+    spinner: (() => { const s = button.querySelector('.diya-spinner')!.getBoundingClientRect(); const b = button.getBoundingClientRect(); return [s.left + s.width / 2 - (b.left + b.width / 2), s.top + s.height / 2 - (b.top + b.height / 2)] })(),
+  }))
+  expect(strong.strong).toBe(0)
+  expect(strong.words).toBe('rgba(0, 0, 0, 0)')
+  for (const off of strong.spinner) expect(Math.abs(off)).toBeLessThanOrEqual(0.5)
+})
+
+// M2 (QA-L-01): a Button given loading lays out as 1.1.1 at rest, a trailing icon spread with
+// space-between or an auto margin included, and nothing moves while it loads.
+test('a trailing icon spread to the edge stays there, at rest and while loading (M2)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const arrowLeft = (id: string) => page.locator(`#${id}`).evaluate((button) => [...button.querySelectorAll('svg')].find((svg) => !svg.closest('.diya-spinner'))!.getBoundingClientRect().left - button.getBoundingClientRect().left)
+  for (const id of ['bl-spread', 'bl-auto']) expect(await arrowLeft(id), id).toBe(await arrowLeft(`${id}-plain`))
+  const atRest = { spread: await arrowLeft('bl-spread'), auto: await arrowLeft('bl-auto') }
+  const list = await page.evaluate(() => new Promise<number[][]>((done) => {
+    const out: number[][] = []
+    const read = () => ['bl-spread', 'bl-auto'].map((id) => { const button = document.getElementById(id)!; return [...button.querySelectorAll('svg')].find((svg) => !svg.closest('.diya-spinner'))!.getBoundingClientRect().left - button.getBoundingClientRect().left })
+    ;(window as unknown as { __setBusy(value: boolean): void }).__setBusy(true)
+    const start = performance.now()
+    setTimeout(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(false), 600)
+    const tick = () => { out.push(read()); if (performance.now() - start < 900) requestAnimationFrame(tick); else done(out) }
+    tick()
+  }))
+  for (const [spread, auto] of list) expect([spread, auto]).toEqual([atRest.spread, atRest.auto])
+})
+
+// M4 (QA-L-03): L2 guards the Buttons whose wrapper is made the moment loading starts: loading given
+// only when true, a plain-text label (M3), and a Button that mounts already loading. With every
+// @starting-style rule removed, none of them is ever blank before the beat.
+test('no blank frame when the wrapper appears with loading, or the Button mounts loading (M4, L2)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const blank = await page.evaluate(() => new Promise<string[]>((done) => {
+    for (const sheet of document.styleSheets) {
+      const strip = (rules: CSSRuleList, owner: CSSStyleSheet | CSSGroupingRule) => { for (let i = rules.length - 1; i >= 0; i--) { const rule = rules[i]; if (rule.constructor.name === 'CSSStartingStyleRule') owner.deleteRule(i); else if ('cssRules' in rule) strip((rule as CSSGroupingRule).cssRules, rule as CSSGroupingRule) } }
+      strip(sheet.cssRules, sheet)
+    }
+    const alpha = (color: string) => { const parts = color.match(/[\d.]+/g)!.map(Number); return parts.length > 3 ? parts[3] : 1 }
+    const visible = (button: HTMLElement) => {
+      const spinner = button.querySelector<HTMLElement>('.diya-spinner')
+      const ring = spinner && getComputedStyle(spinner).display !== 'none' ? Number(getComputedStyle(spinner).opacity) : 0
+      const words = alpha(getComputedStyle(button.querySelector('.diya-button-label') ?? button).color)
+      return Math.max(ring, words)
+    }
+    const out: string[] = []
+    ;(window as unknown as { __setBusy(value: boolean): void }).__setBusy(true)
+    const start = performance.now()
+    const tick = () => {
+      const t = performance.now() - start
+      for (const id of ['bl-late', 'bl-late-icon', 'bl-mounted', 'bl-medium-solid']) {
+        const button = document.getElementById(id)
+        if (!button) out.push(`${id} missing at ${t.toFixed(0)}`)
+        else if (visible(button) < 1) out.push(`${id} at ${t.toFixed(0)}ms: ${visible(button)}`)
+      }
+      if (t < 700) requestAnimationFrame(tick); else done(out)
+    }
+    tick()
+  }))
+  expect(blank).toEqual([])
+})
+
+// M5 (MOT-L-01): loading off and on again within one frame, after the beat and before it, never
+// blanks the Button: the spinner stays mounted while the wrappers are, so the two keep one beat.
+for (const at of [600, 200]) {
+  test(`loading off and on within one frame at ${at}ms never blanks the Button (M5)`, async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=loading&theme=light')
+    const blank = await page.evaluate((at) => new Promise<string[]>((done) => {
+      const alpha = (color: string) => { const parts = color.match(/[\d.]+/g)!.map(Number); return parts.length > 3 ? parts[3] : 1 }
+      const ids = ['bl-medium-solid', 'bl-lucide', 'bl-icon', 'bl-multi']
+      const visible = (button: HTMLElement) => {
+        const spinner = button.querySelector<HTMLElement>(':scope > .diya-spinner, :scope > .diya-button-lead > .diya-spinner')
+        const ring = spinner && getComputedStyle(spinner).display !== 'none' ? Number(getComputedStyle(spinner).opacity) : 0
+        const first = button.querySelector('.diya-button-lead svg, :scope > svg') as SVGElement | null
+        const icon = first ? Number(getComputedStyle(first).opacity) * alpha(getComputedStyle(first).color) : 0
+        const words = button.dataset.iconOnly ? 0 : alpha(getComputedStyle(button.querySelector('.diya-button-label') ?? button).color)
+        return Math.max(ring, icon, words)
+      }
+      const out: string[] = []
+      const win = window as unknown as { __setBusy(value: boolean): void; __flip(): void }
+      win.__setBusy(true)
+      const start = performance.now()
+      setTimeout(() => win.__flip(), at)
+      const tick = () => {
+        const t = performance.now() - start
+        for (const id of ids) { const v = visible(document.getElementById(id)!); if (v < 1) out.push(`${id} at ${t.toFixed(0)}ms: ${v.toFixed(2)}`) }
+        if (t < at + 700) requestAnimationFrame(tick); else done(out)
+      }
+      tick()
+    }), at)
+    expect(blank).toEqual([])
+  })
+}
+
+// Forced colors force the words' color, so the label keeps ButtonText itself while busy, and still
+// goes on the beat (Chromium emulates forced colors).
+test('in forced colors the label still goes on the beat, and reads ButtonText before it', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
+  await page.emulateMedia({ forcedColors: 'active' })
+  await openCase(page, testInfo, 'case=loading&theme=light')
+  const color = () => page.locator('#bl-medium-solid').evaluate((button) => getComputedStyle(button.querySelector('.diya-button-label') ?? button).color)
+  const rest = await color()
+  await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+  expect(await color()).toBe(rest)
+  await page.waitForTimeout(600)
+  expect(await color()).toBe('rgba(0, 0, 0, 0)')
 })

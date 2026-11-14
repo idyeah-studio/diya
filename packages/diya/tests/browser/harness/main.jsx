@@ -5,6 +5,7 @@ import { createPortal, flushSync } from 'react-dom'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
 import { useForm } from 'react-hook-form'
+import { Plus, Send, Download } from 'lucide-react'
 import '@idyeah/diya/styles.css'
 import * as diya from '@idyeah/diya'
 import {
@@ -472,9 +473,14 @@ function SpinnerCase() {
 
 // Button loading (1.2): every size and variant with a neighbor, icon-only, a link, asChild, a
 // Button whose own class sets its padding, and a Dialog whose long confirm wraps. dir=rtl flips it.
+function Logo() { return <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#4285f4" /></svg> }
+const arrow = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+
 function LoadingCase() {
   const [busy, setBusy] = useState(query.get('busy') === '1')
   window.__setBusy = (value) => { note('busy', performance.now()); flushSync(() => setBusy(value)) }
+  // Loading off and on again within one frame: two commits, no frame between (M5).
+  window.__flip = () => { flushSync(() => setBusy(false)); flushSync(() => setBusy(true)) }
   const icon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
   return (
     <div dir={query.get('dir') || 'ltr'} style={{ display: 'grid', gap: 16, padding: 24 }}>
@@ -497,6 +503,27 @@ function LoadingCase() {
         <Button id="bl-lead-large" size="large" loading={busy}>{icon}Add member</Button>
         <Button id="bl-lead-pad" className="app-pad-12" size="small" loading={busy}>{icon}Add</Button>
         <Button id="bl-short" size="small" loading={busy}>OK</Button>
+      </div>
+      {/* Leading icons from an icon library, a logo component and a fragment, and rich text (M1). */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Button id="bl-lucide" loading={busy}><Plus size={18} strokeWidth={1.6} />Add member</Button>
+        <Button id="bl-lucide-large" size="large" variant="outline" loading={busy}><Download size={18} strokeWidth={1.6} />Export CSV</Button>
+        <Button id="bl-frag" loading={busy}><><Send size={18} strokeWidth={1.6} /> Send</></Button>
+        <Button id="bl-logo" variant="outline" loading={busy}><Logo /> Continue with Google</Button>
+        <Button id="bl-strong" loading={busy}><strong>Save</strong> draft</Button>
+      </div>
+      {/* A trailing icon spread to the edge (M2), each beside a twin with no loading prop. */}
+      <div style={{ display: 'grid', gap: 8, width: 320 }}>
+        <Button id="bl-spread" loading={busy} style={{ width: 320, justifyContent: 'space-between' }}>Continue {arrow}</Button>
+        <Button id="bl-spread-plain" style={{ width: 320, justifyContent: 'space-between' }}>Continue {arrow}</Button>
+        <Button id="bl-auto" loading={busy} style={{ width: 320 }}>Pay now <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" style={{ marginInlineStart: 'auto' }}><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
+        <Button id="bl-auto-plain" style={{ width: 320 }}>Pay now <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" style={{ marginInlineStart: 'auto' }}><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
+      </div>
+      {/* loading given only once it's true, and a Button that mounts already loading (M4, L2). */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', minHeight: 48 }}>
+        <Button id="bl-late" loading={busy || undefined}>Sync now</Button>
+        <Button id="bl-late-icon" loading={busy || undefined}><Plus size={18} strokeWidth={1.6} />Add</Button>
+        {busy && <Button id="bl-mounted" loading>Mounted busy</Button>}
       </div>
       {/* Labels of more than one part (L7), each beside a twin that has no loading prop. */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

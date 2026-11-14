@@ -189,66 +189,84 @@ describe('Button loading shows a spinner', () => {
   })
 })
 
-// F12: on the beat the spinner takes the place of the leading icon, or else of the label. The label
-// (or icon) gets a wrapper when loading first starts and keeps it, so it can fade back.
-describe('Button loading takes the place of the label or the leading icon (F12)', () => {
-  it('wraps the label while loading, and keeps the wrapper after', () => {
-    const view = render(<DiyaProvider><Button>Save</Button></DiyaProvider>)
-    const button = screen.getByRole('button', { name: 'Save' })
-    expect(button.innerHTML).toBe('Save')
-    view.rerender(<DiyaProvider><Button loading>Save</Button></DiyaProvider>)
-    expect([...button.children].map((node) => node.className)).toEqual(['diya-spinner', 'diya-button-label'])
-    expect(button.querySelector('.diya-button-label')!.textContent).toBe('Save')
-    view.rerender(<DiyaProvider><Button>Save</Button></DiyaProvider>)
-    expect([...button.children].map((node) => node.className)).toEqual(['diya-button-label'])
-    expect(screen.getByRole('button', { name: 'Save' })).toBe(button)
-  })
-
-  it('with a leading icon, the spinner joins the icon and the label stays as it is', () => {
-    render(<DiyaProvider><Button loading><svg data-icon="plus" aria-hidden="true" />Add member</Button></DiyaProvider>)
-    const button = screen.getByRole('button', { name: 'Add member' })
-    const lead = button.querySelector(':scope > .diya-button-lead')!
-    expect([...lead.children].map((node) => node.getAttribute('data-icon') ?? node.className)).toEqual(['plus', 'diya-spinner'])
-    expect(button.querySelector('.diya-button-label')).toBeNull()
-    expect(button.lastChild!.textContent).toBe('Add member')
-  })
-})
-
-// Round 2 (L1, L3, L4).
-describe('Button loading keeps its children (L1, L3, L4)', () => {
+// F12, M1 and M3. The DOM: a label holding elements is wrapped from the first render whenever
+// `loading` is given (L1); a label of plain text only while loading (M3). The first element of
+// a label of more than one part is held apart (span.diya-button-lead), and CSS decides whether it's
+// a leading icon (M1). The Button's spinner is there whenever the wrappers are, hidden at rest (M5).
+// (These replace the F12 and L1/L3/L4 DOM tests: M1 and M3 changed the markup they asserted.)
+describe('Button loading markup (F12, L1, M1, M3)', () => {
   function Counter() {
     const [count, setCount] = useState(0)
     return <span data-testid="count" onClick={() => setCount((value) => value + 1)}>{count}</span>
   }
+  const kids = (node: Element) => [...node.children].map((child) => child.className || child.tagName.toLowerCase())
+
+  it('a plain-text label is wrapped only while loading, so at rest getByText finds the button (M3)', () => {
+    const view = render(<DiyaProvider><Button loading={false}>Delete</Button></DiyaProvider>)
+    const button = screen.getByRole('button', { name: 'Delete' })
+    expect(button.innerHTML).toBe('Delete')
+    expect(screen.getByText('Delete')).toBe(button)
+    view.rerender(<DiyaProvider><Button loading>Delete</Button></DiyaProvider>)
+    expect(kids(button)).toEqual(['diya-spinner', 'diya-button-label'])
+    expect(button.querySelector('.diya-button-label')!.textContent).toBe('Delete')
+    // Ended before the beat (happy-dom runs no animations), so nothing fades back: unwrapped at once.
+    view.rerender(<DiyaProvider><Button loading={false}>Delete</Button></DiyaProvider>)
+    expect(button.innerHTML).toBe('Delete')
+    expect(screen.getByText('Delete')).toBe(button)
+  })
+
+  it('Dialog\'s confirm, Form\'s Submit and Wizard\'s Continue are found by their text at rest, as in 1.1.1 (M3)', async () => {
+    const user = userEvent.setup()
+    const steps = [{ id: 'a', label: 'Details', content: 'One' }, { id: 'b', label: 'Review', content: 'Two' }]
+    render(<DiyaProvider>
+      <Dialog trigger={<Button>Delete chat</Button>} title="Delete this chat?" confirmLabel="Delete" onConfirm={noop}>Gone for good.</Dialog>
+      <Form title="Project" onSubmit={noop}><TextInput label="Name" value="Atlas" onValueChange={noop} /></Form>
+      <Wizard steps={steps} activeStep={0} onStepChange={noop} onComplete={noop} />
+    </DiyaProvider>)
+    await user.click(screen.getByRole('button', { name: 'Delete chat' }))
+    for (const name of ['Delete', 'Submit', 'Continue']) expect(screen.getByText(name), name).toBe(screen.getByRole('button', { name }))
+  })
+
+  it('a label holding elements is wrapped from the first render when loading is given, with the spinner there and hidden (L1, M5)', () => {
+    render(<DiyaProvider><Button loading={false}>Saved <Counter /></Button><Button>Kept <Counter /></Button></DiyaProvider>)
+    const given = screen.getByRole('button', { name: 'Saved 0' })
+    expect(kids(given)).toEqual(['diya-spinner', 'diya-button-label'])
+    expect(given.getAttribute('aria-busy')).toBeNull()
+    // Without a loading prop: 1.1.1's markup.
+    expect(screen.getByRole('button', { name: 'Kept 0' }).innerHTML).toBe('Kept <span data-testid="count">0</span>')
+  })
+
+  it('the first element of a label of more than one part is held apart, with the spinner beside it (M1)', () => {
+    render(<DiyaProvider><Button loading><svg data-icon="plus" aria-hidden="true" />Add member</Button></DiyaProvider>)
+    const button = screen.getByRole('button', { name: 'Add member' })
+    expect(kids(button)).toEqual(['diya-button-lead', 'diya-button-label'])
+    const lead = button.querySelector(':scope > .diya-button-lead')!
+    expect(kids(lead)).toEqual(['diya-button-lead-item', 'diya-spinner'])
+    expect(lead.querySelector('.diya-button-lead-item > svg')!.getAttribute('data-icon')).toBe('plus')
+    expect(button.querySelector(':scope > .diya-button-label')!.textContent).toBe('Add member')
+  })
+
+  it('an icon and words in one fragment are two parts (M1)', () => {
+    render(<DiyaProvider><Button loading={false}><><svg data-icon="send" aria-hidden="true" /> Send</></Button></DiyaProvider>)
+    const button = screen.getByRole('button', { name: 'Send' })
+    expect(button.querySelector('.diya-button-lead-item > svg')!.getAttribute('data-icon')).toBe('send')
+    expect(button.querySelector('.diya-button-label')!.textContent).toBe(' Send')
+  })
 
   it('a stateful child keeps its state through loading on and off when loading is given from the start (L1)', () => {
     const view = render(<DiyaProvider><Button loading={false}>Saved <Counter /></Button></DiyaProvider>)
     fireEvent.click(screen.getByTestId('count'))
     fireEvent.click(screen.getByTestId('count'))
-    expect(screen.getByTestId('count').textContent).toBe('2')
-    view.rerender(<DiyaProvider><Button loading>Saved <Counter /></Button></DiyaProvider>)
-    expect(screen.getByTestId('count').textContent).toBe('2')
-    view.rerender(<DiyaProvider><Button loading={false}>Saved <Counter /></Button></DiyaProvider>)
-    expect(screen.getByTestId('count').textContent).toBe('2')
+    for (const loading of [true, false, true, false]) {
+      view.rerender(<DiyaProvider><Button loading={loading}>Saved <Counter /></Button></DiyaProvider>)
+      expect(screen.getByTestId('count').textContent).toBe('2')
+    }
   })
 
-  it('a Button without a loading prop renders exactly as 1.1.1 did; with loading={false} its label is wrapped from the start (L1)', () => {
-    render(<DiyaProvider><Button>Save</Button><Button loading={false}>Send</Button></DiyaProvider>)
-    expect(screen.getByRole('button', { name: 'Save' }).innerHTML).toBe('Save')
-    expect(screen.getByRole('button', { name: 'Send' }).innerHTML).toBe('<span class="diya-button-label">Send</span>')
-  })
-
-  it('only an svg (or DIYA\'s icon) leads: markup before the text stays in the label (L3)', () => {
-    render(<DiyaProvider><Button loading><strong>Save</strong> draft</Button></DiyaProvider>)
-    const button = screen.getByRole('button', { name: 'Save draft' })
-    expect(button.querySelector('.diya-button-lead')).toBeNull()
-    expect(button.querySelector(':scope > .diya-button-label')!.innerHTML).toBe('<strong>Save</strong> draft')
-  })
-
-  it('asChild keeps its wrapper when loading ends, so the label can fade back (L4)', () => {
-    const view = render(<DiyaProvider><Button asChild loading><a href="/billing">Open billing</a></Button></DiyaProvider>)
+  it('asChild keeps the wrapper of a label holding elements when loading ends (L4)', () => {
+    const view = render(<DiyaProvider><Button asChild loading><a href="/billing">Open <b>billing</b></a></Button></DiyaProvider>)
     const link = screen.getByRole('link', { name: 'Open billing' })
-    view.rerender(<DiyaProvider><Button asChild loading={false}><a href="/billing">Open billing</a></Button></DiyaProvider>)
-    expect(link.innerHTML).toBe('<span class="diya-button-label">Open billing</span>')
+    view.rerender(<DiyaProvider><Button asChild loading={false}><a href="/billing">Open <b>billing</b></a></Button></DiyaProvider>)
+    expect(kids(link)).toEqual(['diya-spinner', 'diya-button-label'])
   })
 })

@@ -35,6 +35,8 @@ export default async function setup() {
             { find: /^react(\/.*)?$/, replacement: `${paths.react}$1` },
             { find: /^@idyeah\/diya\/styles\.css$/, replacement: join(pkg, 'dist', 'styles.css') },
             { find: /^@idyeah\/diya$/, replacement: join(pkg, 'dist', 'index.js') },
+            // lucide-react (the site's copy) for the leading-icon cases (M1).
+            { find: /^lucide-react$/, replacement: dirname(site.resolve('lucide-react/package.json')) },
           ],
         },
         build: { outDir: join(output, mode === 'production' ? name : `${name}-dev`), emptyOutDir: true, minify: false },

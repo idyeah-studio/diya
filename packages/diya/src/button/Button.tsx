@@ -1,6 +1,5 @@
 'use client'
-import { Children, cloneElement, forwardRef, isValidElement, useRef, useState, type AnimationEvent, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode, type Ref } from 'react'
-import { Icon } from '../Icon.js'
+import { Children, Fragment, cloneElement, forwardRef, isValidElement, useRef, useState, type AnimationEvent, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode, type Ref } from 'react'
 import { cx } from '../internal/cx.js'
 import { useDiyaLinkComponent } from '../internal/link.js'
 import { renderSpinnerRing } from '../spinner/Spinner.js'
@@ -15,7 +14,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   shape?: 'pill' | 'rounded'
   /** Square button for a single icon child; give it an `aria-label`, since the icon is its only content. */
   iconOnly?: boolean
-  /** Shows a small spinner and sets `aria-busy`: after 400ms it takes the place of the leading icon, or else of the label, which keeps its width. The button stays focusable, so focus isn't lost while it works, but it is inert: `aria-disabled="true"`, and clicks, Enter and Space do nothing, so it can't submit twice. */
+  /** Shows a small spinner and sets `aria-busy`: after 400ms it takes the place of the leading icon, or else of the label, which keeps its width. If the label holds something with its own state, pass `loading` from the start (`loading={false}`); `undefined` counts as not passed. The button stays focusable, so focus isn't lost while it works, but it is inert: `aria-disabled="true"`, and clicks, Enter and Space do nothing, so it can't submit twice. */
   loading?: boolean
   /** Renders a link to this URL that looks like a Button, through the provider's `linkComponent` (a plain anchor by default). */
   href?: string
@@ -47,11 +46,18 @@ function stopActivation(event: KeyboardEvent) {
   if (event.key === 'Enter' || event.key === ' ') event.preventDefault()
 }
 
-// A leading icon is an svg, or DIYA's own Icon, before the label (L3): not any element, so
-// `<strong>Save</strong> draft` stays one label.
-function isLeadingIcon(node: ReactNode) {
-  return isValidElement(node) && (node.type === 'svg' || node.type === Icon)
+// The label's parts, with fragments opened up (an icon and words in one fragment are two parts).
+function labelParts(node: ReactNode, prefix = ''): ReactNode[] {
+  return Children.toArray(node).flatMap((part) => {
+    if (!isValidElement(part)) return [part]
+    const key = `${prefix}${part.key ?? ''}`
+    if (part.type === Fragment) return labelParts((part.props as { children?: ReactNode }).children, `${key}/`)
+    return [prefix ? cloneElement(part, { key }) : part]
+  })
 }
+
+// Text holds no state, so a label of plain text needn't keep a wrapper at rest (M3).
+const plainText = (node: ReactNode) => Children.toArray(node).every((part) => typeof part === 'string' || typeof part === 'number')
 
 /** A native button in DIYA's styles, or a link that looks like one with `href` or `asChild`; other button attributes pass through, and `type` defaults to 'button'. */
 export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(function Button(buttonProps, ref) {
@@ -59,7 +65,8 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
   const Link = useDiyaLinkComponent()
   const inactive = !!disabled || loading
   // The label (or icon) fades back when loading ends only if the beat came and hid it: the
-  // spinner's arrival (an animation) marks the beat. A load that ends sooner changes nothing (L2).
+  // Button's own spinner arriving (an animation) marks the beat, and the fade back ending clears
+  // the mark (L2, M6, M8). A load that ends sooner changes nothing.
   const beat = useRef(false)
   const [returning, setReturning] = useState(false)
   const [was, setWas] = useState(loading)
@@ -71,25 +78,41 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
   const shared = {
     className: cx('diya-button', className), 'data-variant': variant, 'data-size': size, 'data-shape': shape, 'data-icon-only': iconOnly || undefined, 'aria-busy': loading || undefined,
     'data-returning': returning || undefined,
-    onAnimationEnd: (event: AnimationEvent<HTMLElement>) => { if (loading && event.animationName === 'diya-spinner-arrive') beat.current = true; props.onAnimationEnd?.(event as never) },
+    onAnimationEnd: (event: AnimationEvent<HTMLElement>) => {
+      // Only the Button's own spinner marks the beat (a Spinner inside the label doesn't), and only
+      // its own fade back ends it (M6, M8).
+      const target = event.target as Element
+      const button = event.currentTarget
+      const ownSpinner = target.classList?.contains('diya-spinner') && (target.parentElement === button || (target.parentElement?.classList.contains('diya-button-lead') && target.parentElement.parentElement === button))
+      if (loading && ownSpinner && event.animationName === 'diya-spinner-arrive') beat.current = true
+      if (!loading && returning && event.animationName.startsWith('diya-button-return') && target.closest?.('.diya-button') === button) setReturning(false)
+      props.onAnimationEnd?.(event as never)
+    },
     onPointerDownCapture: (event: PointerEvent<HTMLElement>) => { pressFloor(event); props.onPointerDownCapture?.(event as never) },
     onKeyDownCapture: (event: KeyboardEvent<HTMLElement>) => { pressFloor(event); props.onKeyDownCapture?.(event as never) },
   }
   // Loading (F12): on the Spinner's 400ms beat the spinner takes the place of the first thing in
-  // the button, in one frame: a leading icon (an svg, the label stays), or else the label, which
-  // keeps its box so nothing moves. When loading ends the spinner goes and they fade back. The
-  // label (or leading icon) has a wrapper from the first render whenever `loading` is given, even
-  // as false, so its children never remount (L1); a Button without it renders as 1.1.1 did, until
-  // it first loads.
+  // the button, in one frame: a leading icon (the label stays), or else the label, which keeps its
+  // place, so nothing moves. When loading ends the spinner goes and they fade back.
+  // - The wrappers have no box of their own (display: contents), so the Button lays out as
+  //   without them (M2). A leading part gets a box only when CSS sees it render a single svg,
+  //   as every icon library's icon does (M1): the spinner then sits on it.
+  // - A label holding elements is wrapped from the first render whenever `loading` is given, even
+  //   as false, so nothing in it remounts (L1); a Button without `loading` keeps 1.1.1's markup
+  //   until it first loads. A label of plain text is wrapped only while loading and its fade back
+  //   (M3). The spinner is there whenever the wrappers are, hidden at rest, so loading that stops
+  //   and restarts within a frame never blanks the Button (M5).
+  const given = buttonProps.loading !== undefined
   const [loaded, setLoaded] = useState(loading)
   if (loading && !loaded) setLoaded(true)
-  const wrapped = buttonProps.loading !== undefined || loaded
-  const spinner = loading && <span className="diya-spinner" data-size={size === 'large' ? 'medium' : 'small'} aria-hidden="true">{renderSpinnerRing(size === 'large' ? 'medium' : 'small')}</span>
+  const own = asChild && isValidElement(onlyChild(children)) ? (onlyChild(children) as ReactElement<{ children?: ReactNode }>).props.children : children
+  const wrapped = loading || returning || (!plainText(own) && (given || loaded))
+  const spinner = wrapped && <span className="diya-spinner" data-size={size === 'large' ? 'medium' : 'small'} aria-hidden="true">{renderSpinnerRing(size === 'large' ? 'medium' : 'small')}</span>
   const content = (inner: ReactNode) => {
     if (iconOnly) return <>{spinner}{inner}</>
     if (!wrapped) return inner
-    const parts = Children.toArray(inner)
-    if (parts.length > 1 && isLeadingIcon(parts[0])) return <><span className="diya-button-lead">{parts[0]}{spinner}</span>{parts.slice(1)}</>
+    const parts = labelParts(inner)
+    if (parts.length > 1 && isValidElement(parts[0])) return <><span className="diya-button-lead"><span className="diya-button-lead-item">{parts[0]}</span>{spinner}</span><span className="diya-button-label">{parts.slice(1)}</span></>
     return <>{spinner}<span className="diya-button-label">{inner}</span></>
   }
   if (asChild) {
@@ -97,14 +120,20 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     if (!isValidElement(child)) return null
     const own = child as ReactElement<{ children?: ReactNode }>
     const filled = wrapped ? cloneElement(own, undefined, content(own.props.children)) : own
-    return renderSlot(filled, { ...props, ...shared, 'aria-disabled': inactive || undefined, onClickCapture: inactive ? stopClick : undefined }, ref)
+    return renderSlot(filled, { ...props, ...shared, 'aria-disabled': inactive || undefined, onClickCapture: inactive ? stopClick : undefined, onAuxClickCapture: inactive ? stopClick : undefined }, ref)
   }
   if (href !== undefined) {
     const anchor = props as AnchorHTMLAttributes<HTMLAnchorElement>
     const anchorRef = ref as Ref<HTMLAnchorElement>
-    // Without its href the anchor leaves the tab order and can't be followed, like a disabled button.
-    if (inactive) return <a {...anchor} {...shared} ref={anchorRef} role="link" aria-disabled="true" onClickCapture={stopClick}>{content(children)}</a>
-    return <Link {...anchor} {...shared} ref={anchorRef} href={href} target={target} rel={rel} download={download}>{content(children)}</Link>
+    // Disabled: without its href the anchor leaves the tab order and can't be followed, as a
+    // disabled button. Loading: the same Link stays, so nothing in it remounts and focus stays on it,
+    // but every click (modified and middle ones too) and Enter do nothing (M7).
+    if (disabled) return <a {...anchor} {...shared} ref={anchorRef} role="link" aria-disabled="true" onClickCapture={stopClick}>{content(children)}</a>
+    return <Link {...anchor} {...shared} ref={anchorRef} href={href} target={target} rel={rel} download={download}
+      aria-disabled={loading ? true : anchor['aria-disabled']}
+      onClickCapture={loading ? stopClick : anchor.onClickCapture}
+      onAuxClickCapture={loading ? stopClick : anchor.onAuxClickCapture}
+      onKeyDown={loading ? stopActivation : anchor.onKeyDown}>{content(children)}</Link>
   }
   // Loading keeps the button in the tab order with focus on it, unlike disabled; aria-disabled and the
   // blocked click (which Enter, Space and a form's implicit submission all go through) make it inert.

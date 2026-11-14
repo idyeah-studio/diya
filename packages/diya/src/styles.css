@@ -317,33 +317,37 @@
 }
 
 /* Loading's spinner (F12): on the Spinner's 400ms beat it takes the place of the first thing in
-   the button, centered on it: the leading icon, or else the label, which keeps its box. Nothing
-   moves and the width holds, at any padding, and the spinner never leaves the button. */
+   the button: the leading icon, or else the label. Nothing moves and the width holds, at any
+   padding, and the spinner never leaves the button.
+   The label's wrappers have no box (M2): its words and elements lay out as the Button's own
+   children, as in 1.1.1, so justify-content and auto margins still reach them. A leading part gets
+   a box only when it renders a single svg, as an icon from any icon library does (M1); then the
+   spinner sits on it. Without :has() it stays part of the label, and the spinner takes the
+   label's place. */
 .diya-root .diya-button {
   --diya-internal-beat: 400ms;
 }
-.diya-root .diya-button-lead {
+.diya-root :is(.diya-button-label, .diya-button-lead, .diya-button-lead-item) {
+  display: contents;
+}
+.diya-root .diya-button-lead:has(> .diya-button-lead-item > svg:only-child) {
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
 }
-/* A label of more than one part ("Next" and an arrow, a kbd) keeps the Button's own gap, so the
-   wrapper never changes its width (L7). */
-.diya-root .diya-button-label {
-  display: inline-flex;
-  align-items: center;
-  gap: inherit;
+/* The spinner is there whenever the wrappers are, and shows only while busy (M5). */
+.diya-root .diya-button:not([aria-busy='true']) > .diya-spinner,
+.diya-root .diya-button:not([aria-busy='true']) > .diya-button-lead > .diya-spinner {
+  display: none;
 }
-.diya-root .diya-button > .diya-spinner {
+.diya-root :is(.diya-button, .diya-button-lead) > .diya-spinner {
   position: absolute;
   inset: 0;
   margin: auto;
 }
 /* Centered on the icon whatever their sizes: a large Button's 20px spinner over an 18px icon. */
-.diya-root .diya-button-lead > .diya-spinner {
-  position: absolute;
-  top: 50%;
-  left: 50%;
+.diya-root .diya-button-lead:has(> .diya-button-lead-item > svg:only-child) > .diya-spinner {
+  inset: 50% auto auto 50%;
   margin: 0;
   translate: -50% -50%;
 }
@@ -2016,7 +2020,7 @@
   .diya-root .diya-spinner-arc { stroke-dashoffset: 0; }
 }
 /* A Button's spinner keeps the button's own forced color. */
-@media (forced-colors: active) { .diya-root .diya-spinner svg { stroke: CanvasText; } .diya-root .diya-button > .diya-spinner svg { stroke: currentColor; } }
+@media (forced-colors: active) { .diya-root .diya-spinner svg { stroke: CanvasText; } .diya-root :is(.diya-button, .diya-button-lead) > .diya-spinner svg { stroke: currentColor; } }
 
 
 /* card/Card.css: portable component rules. */
@@ -3769,27 +3773,52 @@
 /* Loading (F12): the swap is instant on the beat, under every setting: the label (or the icon) goes
    and the spinner is there in the same frame, with no crossfade. When loading ends the spinner goes
    at once and they fade back over fast, on the enter curve. All by animation, which needs no
-   @starting-style. */
+   @starting-style (L2). The wrappers have no box, so their words go by their color and their
+   elements by their opacity. */
 .diya-root :is(.diya-button, .diya-button-lead) > .diya-spinner {
   animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both;
 }
 .diya-root .diya-button[aria-busy='true'] > .diya-button-label,
-.diya-root .diya-button[aria-busy='true'] > .diya-button-lead > :not(.diya-spinner),
+.diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item {
+  animation: diya-button-hide 0s linear var(--diya-internal-beat) both;
+}
+.diya-root .diya-button[aria-busy='true'] > .diya-button-label > *,
+.diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > *,
 .diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > :not(.diya-spinner) {
-  /* Hidden by an animation, not a transition, so it holds visible until the beat even where it
-     first appears with loading and an engine has no @starting-style (L2): the arrive fade played
-     backwards, in no time. */
+  /* The arrive fade played backwards, in no time. */
   animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) reverse both;
 }
-/* Back after the beat: Button marks it (data-returning) once the spinner has arrived, and the label
-   (or icon) fades in over fast. A load that ends before the beat changes nothing. */
+/* Back after the beat: Button marks it (data-returning) once its spinner has arrived, and clears
+   the mark when the fade back ends (M8). A load that ends before the beat changes nothing. */
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label,
-.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > :not(.diya-spinner),
+.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > .diya-button-lead-item {
+  animation: diya-button-return-text var(--diya-internal-duration-fast) var(--diya-ease-enter);
+}
+.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label > *,
+.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > .diya-button-lead-item > *,
 .diya-root .diya-button[data-icon-only='true'][data-returning='true']:not([aria-busy='true']) > :not(.diya-spinner) {
   animation: diya-button-return var(--diya-internal-duration-fast) var(--diya-ease-enter);
 }
-/* Its own name: the hide is diya-spinner-arrive, and an animation that keeps its name doesn't replay. */
+/* After a leading icon the label stays: only the icon goes, and only it comes back. */
+.diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child) > .diya-button-label,
+.diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child) > .diya-button-label > * {
+  animation: none;
+}
+/* Forced colors would force the words' color back to a system color, so while busy and fading back
+   the label takes ButtonText itself, and its color is free to go transparent on the beat. */
+@media (forced-colors: active) {
+  .diya-root .diya-button[aria-busy='true'] > .diya-button-label,
+  .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item,
+  .diya-root .diya-button[data-returning='true'] > .diya-button-label,
+  .diya-root .diya-button[data-returning='true'] > .diya-button-lead > .diya-button-lead-item {
+    forced-color-adjust: none;
+    color: ButtonText;
+  }
+}
+@keyframes diya-button-hide { to { color: transparent; } }
+/* Their own names: the hide uses diya-spinner-arrive, and an animation that keeps its name doesn't replay. */
 @keyframes diya-button-return { from { opacity: 0; } }
+@keyframes diya-button-return-text { from { color: transparent; } }
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active,
 .diya-root .diya-button:not(:disabled, [aria-disabled='true'], [aria-busy='true']):active::after {
   transition-duration: 0s;
