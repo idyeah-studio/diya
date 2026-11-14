@@ -353,6 +353,28 @@
   margin: 0;
   translate: -50% -50%;
 }
+/* Forced colors repaint the words whatever their fill, so while busy the Button stops being forced
+   and paints the same system colors itself; its fill can then go on the beat. The label's elements
+   stay forced. A leading icon's Button keeps its words, and an icon-only one hides its icon by
+   opacity, so neither needs it. Nothing changes at rest (O1). */
+@media (forced-colors: active) {
+  .diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) {
+    forced-color-adjust: none;
+    color: ButtonText;
+    background-color: ButtonFace;
+    background-image: none;
+    border-color: ButtonText;
+    box-shadow: none;
+  }
+  .diya-root .diya-button[aria-busy='true']:disabled:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) {
+    color: GrayText;
+    border-color: GrayText;
+  }
+  .diya-root .diya-button[aria-busy='true'] > .diya-button-label > *,
+  .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > * {
+    forced-color-adjust: auto;
+  }
+}
 
 .diya-root .diya-button svg {
   flex-shrink: 0;

@@ -657,6 +657,45 @@ test('forced colors: the label\'s elements stay forced, and a disabled loading B
   expect(before.disabled).toBe(before.plain)
 })
 
+// O1 (VIS-N-01): Chromium paints forced colors whatever the fill says, so computed style can't see
+// the words; pixels can. In forced colors, Light and Dark, a busy Button after the beat looks the
+// same as with its label removed outright; its frame (border, background) is the frame at rest; a
+// disabled one keeps GrayText; and after the fade back it is the Button at rest again.
+for (const theme of ['light', 'dark']) {
+  test(`forced colors (${theme}): after the beat only the spinner shows, in the frame it had at rest (O1)`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
+    await page.emulateMedia({ forcedColors: 'active' })
+    await openCase(page, testInfo, `case=loading&theme=${theme}&lean=1`)
+    const words = ['bl-medium-solid', 'bl-medium-outline', 'bl-medium-quiet', 'bl-link', 'bl-child', 'bl-n1-text', 'bl-fc-disabled']
+    const elements = ['bl-strong', 'bl-multi', 'bl-n1-strong', 'bl-fc-red', 'bl-kbd']
+    const shot = (id: string) => page.locator(`#${id}`).screenshot({ animations: 'disabled' })
+    const style = async (css: string) => { const tag = await page.addStyleTag({ content: css }); return () => tag.evaluate((node) => node.remove()) }
+    // The label and leading part go; the spinner (which may sit in the leading part) goes too, or stays.
+    const bare = (ids: string[], spinner: boolean) => ids.map((id) => `#${id} .diya-button-label, #${id} .diya-button-lead { visibility: hidden !important; } #${id} .diya-button-spinner { visibility: ${spinner ? 'hidden' : 'visible'} !important; }`).join(' ')
+    const rest: Record<string, Buffer> = {}
+    for (const id of [...words, ...elements]) rest[id] = await shot(id)
+    let undo = await style(bare(elements, true))
+    const restFrame: Record<string, Buffer> = {}
+    for (const id of elements) restFrame[id] = await shot(id)
+    await undo()
+    const disabledRest = await page.evaluate(() => { const s = getComputedStyle(document.getElementById('bl-fc-disabled-plain')!); return [s.color, s.borderTopColor] })
+    await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.getElementById('bl-medium-solid')!).getPropertyValue('-webkit-text-fill-color')), { timeout: 3000 }).toBe('rgba(0, 0, 0, 0)')
+    const busy: Record<string, Buffer> = {}
+    for (const id of [...words, ...elements]) busy[id] = await shot(id)
+    expect(await page.evaluate(() => { const s = getComputedStyle(document.getElementById('bl-fc-disabled')!); return [s.color, s.borderTopColor] }), 'a disabled loading Button keeps GrayText').toEqual(disabledRest)
+    undo = await style(bare([...words, ...elements], false))
+    for (const id of [...words, ...elements]) expect(await shot(id), `${id}: busy, against its label removed`).toEqual(busy[id])
+    await undo()
+    undo = await style(bare(elements, true))
+    for (const id of elements) expect(await shot(id), `${id}: busy frame, against rest`).toEqual(restFrame[id])
+    await undo()
+    await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(false))
+    await expect.poll(() => page.evaluate(() => document.querySelectorAll('[data-returning]').length), { timeout: 3000 }).toBe(0)
+    for (const id of [...words, ...elements]) expect(await shot(id), `${id}: after, against rest`).toEqual(rest[id])
+  })
+}
+
 // N5 (QA-M-01): SiteHeader's utilities size a wrapped leading icon at 20px, as an unwrapped one.
 test('SiteHeader utilities size the icon of a Button given loading at 20px (N5)', async ({ page }, testInfo) => {
   await openCase(page, testInfo, 'case=loading&theme=light')
