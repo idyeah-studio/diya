@@ -196,8 +196,8 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   - A loading Button looks busy, not disabled: full color and a `progress`
     cursor. Clicks, Enter and Space still do nothing; `aria-busy` and
     `aria-disabled` are unchanged.
-  - A Button that is both `disabled` and `loading` looks disabled (dimmed),
-    with its spinner showing.
+  - A Button that is both `disabled` and `loading` looks disabled (dimmed,
+    with the `not-allowed` cursor), with its spinner showing.
   - A loading Button with `href` stays a link, with its `href`, and keeps
     focus. Clicks (modified and middle clicks too) and Enter do nothing;
     "Open in new tab" from the context menu still works. See Fixed.
@@ -231,8 +231,14 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
     and a loop (such as `animate-pulse`) jumps back to its start once. Put
     entrance animations on an element around the Button. Pulsing only while
     saving is fine: DIYA's spinner takes its place.
-  - Neither an animation on the Button nor a reduced-motion reset that sets
-    every animation delay can change how a Button loads.
+  - An animation on the Button can't change how a Button loads, and neither
+    can a Reduce Motion reset that is unlayered or in a layer after `diya`.
+    One in `@layer base` (before `diya` in the Tailwind layer order) wins: the
+    spinner shows at once on every load and the words come back without a
+    fade, though nothing overlaps or goes blank. Keep the reset unlayered, or
+    in a layer after `diya`, to keep the 400ms wait. If you use such a reset,
+    include `animation-iteration-count: 1`; without it, every looping
+    animation flickers, DIYA's spinner included.
   - A part of the label with its own CSS animation stops while the Button is
     busy and starts over after each load. A Spinner you put in the label keeps
     its own wait and turn.
