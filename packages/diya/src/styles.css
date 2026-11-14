@@ -380,7 +380,8 @@
     border-color: ButtonText !important;
     box-shadow: none !important;
   }
-  .diya-root .diya-button[aria-busy='true']:disabled:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) {
+  /* Disabled too, a button, a link or asChild alike (Q3's mark; a link can't be :disabled, Q4). */
+  .diya-root .diya-button[aria-busy='true'][data-busy-disabled]:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) {
     color: GrayText !important;
     border-color: GrayText !important;
   }

@@ -256,8 +256,8 @@ describe('motion house rules', () => {
     expect(important).toEqual([
       // P2: a busy Button's system colors in forced colors
       ".diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) { forced-color-adjust: none; color: ButtonText !important; background-color: ButtonFace !important; background-image: none !important; border-color: ButtonText !important; box-shadow: none !important; }",
-      // P2: and GrayText when disabled
-      ".diya-root .diya-button[aria-busy='true']:disabled:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) { color: GrayText !important; border-color: GrayText !important; }",
+      // P2: and GrayText when disabled (Q4: a button, link or asChild, by Q3's mark)
+      ".diya-root .diya-button[aria-busy='true'][data-busy-disabled]:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) { color: GrayText !important; border-color: GrayText !important; }",
       // P5: and no transition into them as loading starts
       ".diya-root .diya-button[aria-busy='true'] { transition: none !important; }",
       // P5: nor from them as it ends: in forced colors a Button transitions only what moves

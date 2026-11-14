@@ -1159,6 +1159,30 @@ for (const [theme, glass] of [['light', 0], ['dark', 0], ['light', 1], ['dark', 
   })
 }
 
+// Q4 (VIS-Q-01): in forced colors a disabled link or asChild Button that is loading reads GrayText,
+// as its disabled twin does (a link can't be :disabled; Q3's mark covers it). Computed against the
+// twin; by pixels, busy without words or spinner, against itself at rest (only disabled).
+for (const theme of ['light', 'dark'] as const) {
+  test(`forced colors (${theme}): a disabled link or asChild Button that is loading reads GrayText (Q4)`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
+    await page.emulateMedia({ forcedColors: 'active', colorScheme: theme })
+    await openCase(page, testInfo, `case=loading&theme=${theme}&lean=1&dis=1`)
+    const ids = ['bl-dis-link', 'bl-dis-child', 'bl-dis-solid', 'bl-dis-outline']
+    const shot = (id: string) => page.locator(`#${id}`).screenshot({ animations: 'disabled' })
+    let undo = await removeWords(page, ids, { spinner: 'hidden' })
+    const rest: Record<string, Buffer> = {}
+    for (const id of ids) rest[id] = await shot(id)
+    await undo()
+    await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+    await page.waitForTimeout(700)
+    const look = (id: string) => page.evaluate((id) => { const s = getComputedStyle(document.getElementById(id)!); return [s.color, s.borderTopColor] }, id)
+    for (const id of ids) expect(await look(id), id).toEqual(await look(`${id}-plain`))
+    undo = await removeWords(page, ids, { spinner: 'hidden' })
+    for (const id of ids) expect((await pixelDiff(page, await shot(id), rest[id])).max, `${id} busy, without words or spinner, against itself at rest`).toBeLessThanOrEqual(8)
+    await undo()
+  })
+}
+
 // N8 (QA-R3): a loading link keeps focus, and a middle click opens nothing.
 test('a loading link keeps focus, and a middle click or Enter opens nothing (N8, M7)', async ({ page, context }, testInfo) => {
   await openCase(page, testInfo, 'case=loading&theme=light')
