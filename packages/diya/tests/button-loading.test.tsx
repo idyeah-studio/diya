@@ -191,7 +191,7 @@ describe('Button loading shows a spinner', () => {
 
 // F12, M1 and M3. The DOM: a label holding elements is wrapped from the first render whenever
 // `loading` is given (L1); a label of plain text only while loading (M3). The first element of
-// a label of more than one part is held apart (span.diya-button-lead), and CSS decides whether it's
+// a label of more than one part is held apart (span.diya-button-leading), and CSS decides whether it's
 // a leading icon (M1). The Button's spinner is there whenever the wrappers are, hidden at rest (M5).
 // (These replace the F12 and L1/L3/L4 DOM tests: M1 and M3 changed the markup they asserted. N6
 // gives the Button's own spinner its own class, diya-button-spinner.)
@@ -244,17 +244,17 @@ describe('Button loading markup (F12, L1, M1, M3)', () => {
   it('the first element of a label of more than one part is held apart, with the spinner beside it (M1)', () => {
     render(<DiyaProvider><Button loading><svg data-icon="plus" aria-hidden="true" />Add member</Button></DiyaProvider>)
     const button = screen.getByRole('button', { name: 'Add member' })
-    expect(kids(button)).toEqual(['diya-button-lead', 'diya-button-label'])
-    const lead = button.querySelector(':scope > .diya-button-lead')!
-    expect(kids(lead)).toEqual(['diya-button-lead-item', 'diya-spinner diya-button-spinner'])
-    expect(lead.querySelector('.diya-button-lead-item > svg')!.getAttribute('data-icon')).toBe('plus')
+    expect(kids(button)).toEqual(['diya-button-leading', 'diya-button-label'])
+    const lead = button.querySelector(':scope > .diya-button-leading')!
+    expect(kids(lead)).toEqual(['diya-button-leading-content', 'diya-spinner diya-button-spinner'])
+    expect(lead.querySelector('.diya-button-leading-content > svg')!.getAttribute('data-icon')).toBe('plus')
     expect(button.querySelector(':scope > .diya-button-label')!.textContent).toBe('Add member')
   })
 
   it('an icon and words in one fragment are two parts (M1)', () => {
     render(<DiyaProvider><Button loading={false}><><svg data-icon="send" aria-hidden="true" /> Send</></Button></DiyaProvider>)
     const button = screen.getByRole('button', { name: 'Send' })
-    expect(button.querySelector('.diya-button-lead-item > svg')!.getAttribute('data-icon')).toBe('send')
+    expect(button.querySelector('.diya-button-leading-content > svg')!.getAttribute('data-icon')).toBe('send')
     // P6 (named edit): the space after the leading part is the Button's own text node, between the spans.
     expect(button.querySelector('.diya-button-label')!.textContent).toBe('Send')
     expect(button.querySelector('.diya-button-label')!.previousSibling!.textContent).toBe(' ')

@@ -142,7 +142,7 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
       const rest = parts.slice(1)
       const space = typeof rest[0] === 'string' ? /^\s+/.exec(rest[0])?.[0] : undefined
       if (space) rest[0] = (rest[0] as string).slice(space.length)
-      return <><span className="diya-button-lead"><span className="diya-button-lead-item">{parts[0]}</span>{spinner}</span>{space}<span className="diya-button-label">{rest[0] === '' ? rest.slice(1) : rest}</span></>
+      return <><span className="diya-button-leading"><span className="diya-button-leading-content">{parts[0]}</span>{spinner}</span>{space}<span className="diya-button-label">{rest[0] === '' ? rest.slice(1) : rest}</span></>
     }
     return <>{spinner}<span className="diya-button-label">{raw}</span></>
   }

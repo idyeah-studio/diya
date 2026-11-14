@@ -116,7 +116,7 @@ it.runIf(version.startsWith('19'))('real lucide icons, alone and in a fragment, 
   render(<DiyaProvider><Button loading={false}><Plus size={18} /> Add member</Button><Button loading><><Send size={18} /> Send</></Button></DiyaProvider>)
   for (const name of ['Add member', 'Send']) {
     const button = screen.getByRole('button', { name })
-    expect(button.querySelector(':scope > .diya-button-lead > .diya-button-lead-item > svg.lucide'), name).not.toBeNull()
+    expect(button.querySelector(':scope > .diya-button-leading > .diya-button-leading-content > svg.lucide'), name).not.toBeNull()
     expect(button.querySelector(':scope > .diya-button-label')!.textContent!.trim()).toBe(name)
   }
 })

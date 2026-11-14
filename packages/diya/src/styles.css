@@ -327,10 +327,10 @@
 .diya-root .diya-button {
   --diya-internal-beat: 400ms;
 }
-.diya-root :is(.diya-button-label, .diya-button-lead, .diya-button-lead-item) {
+.diya-root :is(.diya-button-label, .diya-button-leading, .diya-button-leading-content) {
   display: contents;
 }
-.diya-root .diya-button-lead:has(> .diya-button-lead-item > svg:only-child) {
+.diya-root .diya-button-leading:has(> .diya-button-leading-content > svg:only-child) {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -348,7 +348,7 @@
   margin: auto;
 }
 /* Centered on the icon whatever their sizes: a large Button's 20px spinner over an 18px icon. */
-.diya-root .diya-button-lead:has(> .diya-button-lead-item > svg:only-child) > .diya-button-spinner {
+.diya-root .diya-button-leading:has(> .diya-button-leading-content > svg:only-child) > .diya-button-spinner {
   inset: 50% auto auto 50%;
   margin: 0;
   translate: -50% -50%;
@@ -365,7 +365,7 @@
    stay forced. A leading icon's Button keeps its words, and an icon-only one hides its icon by
    opacity, so neither needs it. Nothing changes at rest (O1). */
 @media (forced-colors: active) {
-  .diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) {
+  .diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) {
     forced-color-adjust: none;
     /* !important, as forced colors would be: unforced, an app's own colors on the Button (a class,
        an inline style, a gradient) would otherwise win, and a light theme could show a white
@@ -376,12 +376,12 @@
     border-color: ButtonText !important;
     box-shadow: none !important;
   }
-  .diya-root .diya-button[aria-busy='true']:disabled:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) {
+  .diya-root .diya-button[aria-busy='true']:disabled:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) {
     color: GrayText !important;
     border-color: GrayText !important;
   }
   .diya-root .diya-button[aria-busy='true'] > .diya-button-label > *,
-  .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > * {
+  .diya-root .diya-button[aria-busy='true'] > .diya-button-leading > .diya-button-leading-content > * {
     forced-color-adjust: auto;
   }
   /* Unforced, a busy Button's colors would transition from its own (a Destructive red, an app's
@@ -2053,7 +2053,7 @@
 /* Beside words, a quarter em of air on each side (about 8px with the word space, as with
    showLabel). Not as a part of a Button: its gap places a Spinner there as it places an icon, the
    Button's own spinner and one you put in it alike (O6). */
-.diya-root .diya-spinner:not([data-show-label], .diya-button-spinner, .diya-button > *, .diya-button-label > *, .diya-button-lead-item > *) { margin-inline: 0.25em; }
+.diya-root .diya-spinner:not([data-show-label], .diya-button-spinner, .diya-button > *, .diya-button-label > *, .diya-button-leading-content > *) { margin-inline: 0.25em; }
 /* With showLabel, the words sit 8px after the ring and arrive with it. */
 .diya-root .diya-spinner[data-show-label='true'] { display: inline; width: auto; height: auto; vertical-align: baseline; }
 .diya-root .diya-spinner[data-show-label='true'] svg { display: inline-block; vertical-align: calc(0.365em - var(--diya-internal-spinner) / 2); margin-inline-end: 8px; }
@@ -2307,7 +2307,7 @@
 .diya-root .diya-site-avatar { display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .diya-root .diya-site-account { display:flex; align-items:center; gap:8px; }
 .diya-root .diya-site-header .diya-button[data-icon-only='true'] { width:var(--diya-height-control-medium, 40px); height:var(--diya-height-control-medium, 40px); min-height:var(--diya-height-control-medium, 40px); flex-shrink:0; padding:0; }
-.diya-root .diya-site-tools :is(.diya-button, .diya-button-lead-item) > svg { width:20px; height:20px; }
+.diya-root .diya-site-tools :is(.diya-button, .diya-button-leading-content) > svg { width:20px; height:20px; }
 .diya-root .diya-site-tools .diya-button[data-icon-only='true'][data-variant='quiet'] { color:var(--diya-color-muted); }
 .diya-root .diya-site-tools .diya-button[data-icon-only='true'][data-variant='quiet']:not(:disabled):hover { color:var(--diya-color-text); }
 .diya-root .diya-site-avatar .diya-button[data-icon-only='true'] { border-radius:50%; }
@@ -3855,7 +3855,7 @@
   }
 }
 .diya-root .diya-button[aria-busy='true'] > .diya-button-label > *,
-.diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > *,
+.diya-root .diya-button[aria-busy='true'] > .diya-button-leading > .diya-button-leading-content > *,
 .diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > :not(.diya-button-spinner) {
   /* The arrive fade played backwards, in no time. */
   animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) reverse both !important;
@@ -3876,21 +3876,21 @@
 }
 @keyframes diya-button-return-forced { from { -webkit-text-stroke-color: transparent; } }
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label > *,
-.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > .diya-button-lead-item > *,
+.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-leading > .diya-button-leading-content > *,
 .diya-root .diya-button[data-icon-only='true'][data-returning='true']:not([aria-busy='true']) > :not(.diya-button-spinner) {
   animation: diya-button-return var(--diya-internal-duration-fast) var(--diya-ease-enter) !important;
 }
 /* After a leading icon the words stay: only the icon goes, by its opacity, and only it comes back,
    once (N3). The Button's own none must beat its important hide; the label's parts aren't the
    Button, so an app's animation on them keeps winning there. */
-.diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child):is([aria-busy='true'], [data-returning='true']) {
+.diya-root .diya-button:has(> .diya-button-leading > .diya-button-leading-content > svg:only-child):is([aria-busy='true'], [data-returning='true']) {
   animation: none !important;
 }
-.diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child) > .diya-button-label > * {
+.diya-root .diya-button:has(> .diya-button-leading > .diya-button-leading-content > svg:only-child) > .diya-button-label > * {
   animation: none;
 }
 /* While busy and fading back, the label's parts must beat their own important hide (P3). */
-.diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child):is([aria-busy='true'], [data-returning='true']) > .diya-button-label > * {
+.diya-root .diya-button:has(> .diya-button-leading > .diya-button-leading-content > svg:only-child):is([aria-busy='true'], [data-returning='true']) > .diya-button-label > * {
   animation: none !important;
 }
 /* While the words fade back the hover tint, a mix of currentColor, follows the Button's color
@@ -3901,20 +3901,20 @@
    fade back, and after a leading icon it still waits its beat; the hide or the fade back comes
    second (O9). */
 .diya-root .diya-button[aria-busy='true'] > .diya-button-label > .diya-spinner,
-.diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > .diya-spinner,
+.diya-root .diya-button[aria-busy='true'] > .diya-button-leading > .diya-button-leading-content > .diya-spinner,
 .diya-root .diya-button[data-icon-only='true'][aria-busy='true'] > .diya-spinner:not(.diya-button-spinner) {
   animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both, diya-button-hide-part 0s linear var(--diya-internal-beat) both !important;
 }
 .diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-label > .diya-spinner,
-.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-lead > .diya-button-lead-item > .diya-spinner,
+.diya-root .diya-button[data-returning='true']:not([aria-busy='true']) > .diya-button-leading > .diya-button-leading-content > .diya-spinner,
 .diya-root .diya-button[data-icon-only='true'][data-returning='true']:not([aria-busy='true']) > .diya-spinner:not(.diya-button-spinner) {
   animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both, diya-button-return var(--diya-internal-duration-fast) var(--diya-ease-enter) !important;
 }
-.diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child) > .diya-button-label > .diya-spinner {
+.diya-root .diya-button:has(> .diya-button-leading > .diya-button-leading-content > svg:only-child) > .diya-button-label > .diya-spinner {
   animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both;
 }
 /* The same while busy and fading back, where it must beat the parts' important none (P3). */
-.diya-root .diya-button:has(> .diya-button-lead > .diya-button-lead-item > svg:only-child):is([aria-busy='true'], [data-returning='true']) > .diya-button-label > .diya-spinner {
+.diya-root .diya-button:has(> .diya-button-leading > .diya-button-leading-content > svg:only-child):is([aria-busy='true'], [data-returning='true']) > .diya-button-label > .diya-spinner {
   animation: diya-spinner-arrive var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat) both !important;
 }
 @keyframes diya-button-hide-part { to { opacity: 0; } }

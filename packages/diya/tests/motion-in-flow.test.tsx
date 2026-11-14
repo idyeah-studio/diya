@@ -40,9 +40,9 @@ describe('Button press and hover', () => {
     expect(css).not.toMatch(/filter:\s*brightness/)
     // Every rule that sets a Button's transition list includes scale, so whichever wins the
     // cascade, the release eases (a shared list without it once snapped the release back).
-    // F12: only the Button itself, not its loading label or icon (diya-button-label, -lead).
+    // F12: only the Button itself, not its loading label or icon (diya-button-label, -leading).
     const lists = [...css.matchAll(/([^{}]*\.diya-button[^{}]*)\{([^{}]*transition-property:[^;]*;)/g)]
-      .filter(([, selector]) => !selector.includes('::after') && /\.diya-button(?![\w-])/.test(selector.replace(/\.diya-button(?:-label|-lead)\b|\.diya-button\[data-icon-only='true'\] > :not\(\.diya-spinner\)/g, '')))
+      .filter(([, selector]) => !selector.includes('::after') && /\.diya-button(?![\w-])/.test(selector.replace(/\.diya-button(?:-label|-leading)\b|\.diya-button\[data-icon-only='true'\] > :not\(\.diya-spinner\)/g, '')))
       .map(([, selector, body]) => ({ selector: selector.trim(), list: /transition-property:([^;]*);/.exec(body)![1] }))
     expect(lists.length).toBeGreaterThan(0)
     for (const { selector, list } of lists) expect(list, selector).toContain('scale')

@@ -26,7 +26,7 @@ const padded = ['bl-pad-10', 'bl-pad-12', 'bl-pad', 'bl-pad-16', 'bl-pad-wide']
  * text nodes back (React renders nothing between).
  */
 async function removeWords(page: Page, ids: string[], { spinner }: { spinner: 'hidden' | 'visible' }) {
-  const tag = await page.addStyleTag({ content: ids.map((id) => `#${id} .diya-button-label, #${id} .diya-button-lead { visibility: hidden !important; } #${id} .diya-button-spinner { visibility: ${spinner} !important; }`).join(' ') })
+  const tag = await page.addStyleTag({ content: ids.map((id) => `#${id} .diya-button-label, #${id} .diya-button-leading { visibility: hidden !important; } #${id} .diya-button-spinner { visibility: ${spinner} !important; }`).join(' ') })
   await page.evaluate((ids) => {
     for (const id of ids) {
       let run: HTMLSpanElement | null = null
@@ -122,7 +122,7 @@ function frames(page: Page, ids: string[], ms: number, { endAfter, busy = true }
         if (range && text) range.selectNodeContents(text)
         const alpha = (color: string) => { const parts = color.match(/[\d.]+/g)!.map(Number); return parts.length > 3 ? parts[3] : 1 }
         const icon = [...button.querySelectorAll<SVGElement>('svg')].find((svg) => !svg.closest('.diya-spinner')) ?? null
-        const iconLead = icon && button.querySelector('.diya-button-lead')?.contains(icon)
+        const iconLead = icon && button.querySelector('.diya-button-leading')?.contains(icon)
         const shown = (node: Element) => { let value = 1; for (let at: Element | null = node; at && at !== button.parentElement; at = at.parentElement) value *= Number(getComputedStyle(at).opacity); return value }
         const spinnerNode = button.querySelector<HTMLElement>('.diya-spinner')
         const spinner = spinnerNode && getComputedStyle(spinnerNode).display !== 'none' ? spinnerNode : null
@@ -495,9 +495,9 @@ for (const at of [600, 200]) for (const lean of [true, false]) {
         return button.getAttribute('aria-busy') === 'true' && ring > 0.01 && words > 0.02
       }
       const visible = (button: HTMLElement) => {
-        const spinner = button.querySelector<HTMLElement>(':scope > .diya-spinner, :scope > .diya-button-lead > .diya-spinner')
+        const spinner = button.querySelector<HTMLElement>(':scope > .diya-spinner, :scope > .diya-button-leading > .diya-spinner')
         const ring = spinner && getComputedStyle(spinner).display !== 'none' ? Number(getComputedStyle(spinner).opacity) : 0
-        const first = button.querySelector('.diya-button-lead svg, :scope > svg') as SVGElement | null
+        const first = button.querySelector('.diya-button-leading svg, :scope > svg') as SVGElement | null
         const icon = first ? Number(getComputedStyle(first).opacity) * alpha(getComputedStyle(first).color) : 0
         const words = button.dataset.iconOnly ? 0 : alpha(getComputedStyle(button.querySelector('.diya-button-label') ?? button).getPropertyValue('-webkit-text-fill-color'))
         return Math.max(ring, icon, words)
@@ -671,7 +671,7 @@ test('the label\'s box-less wrappers never animate or change their own style, in
   await openCase(page, testInfo, 'case=loading&theme=light')
   const touched = await page.evaluate(() => new Promise<string[]>((done) => {
     const out = new Set<string>()
-    const wrappers = () => [...document.querySelectorAll<HTMLElement>('.diya-button-label, .diya-button-lead-item')]
+    const wrappers = () => [...document.querySelectorAll<HTMLElement>('.diya-button-label, .diya-button-leading-content')]
     const own = (el: HTMLElement) => { const parent = getComputedStyle(el.parentElement!); const mine = getComputedStyle(el); return ['color', '-webkit-text-fill-color', 'text-shadow', 'opacity'].filter((name) => mine.getPropertyValue(name) !== (name === 'opacity' ? '1' : parent.getPropertyValue(name))) }
     const check = (t: number) => { for (const el of wrappers()) { const id = el.closest('.diya-button')!.id; if (el.getAnimations().length) out.add(`${id} animates at ${t.toFixed(0)}`); const changed = own(el); if (changed.length) out.add(`${id} ${changed} at ${t.toFixed(0)}`) } }
     const win = window as unknown as { __setBusy(value: boolean): void }
@@ -1078,7 +1078,7 @@ test('a reduced-motion reset never puts the spinner over the words (P3)', async 
         const ring = spinner && getComputedStyle(spinner).display !== 'none' ? Number(getComputedStyle(spinner).opacity) : 0
         const style = getComputedStyle(button)
         const words = alpha(style.getPropertyValue('-webkit-text-fill-color')) * alpha(style.color)
-        const parts = Math.max(0, ...[...button.querySelectorAll<HTMLElement>(':scope > .diya-button-label > *, :scope > .diya-button-lead > .diya-button-lead-item > *')].map((part) => Number(getComputedStyle(part).opacity)))
+        const parts = Math.max(0, ...[...button.querySelectorAll<HTMLElement>(':scope > .diya-button-label > *, :scope > .diya-button-leading > .diya-button-leading-content > *')].map((part) => Number(getComputedStyle(part).opacity)))
         if (ring > 0.01) landed[id] ??= t
         if (button.getAttribute('aria-busy') === 'true' && ring > 0.01 && (words > 0.02 || parts > 0.02)) bad.push(`${id} at ${t.toFixed(0)}ms`)
       }
