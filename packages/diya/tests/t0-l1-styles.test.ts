@@ -247,7 +247,7 @@ describe('motion house rules', () => {
     expect(uses.filter(name => name !== 'transition-behavior')).toEqual([])
   })
 
-  // O4, P2, P3, P4 (named edits): the only !important declarations are the loading Button's own
+  // O4, P2, P3, P4, P5 (named edits): the only !important declarations are the loading Button's own
   // choreography, which neither an app's animation on the Button nor a reduced-motion reset that
   // forces every delay may replace, and a busy Button's system colors in forced colors, which an
   // app's own colors may not replace. Each is named here; nothing else.
@@ -258,6 +258,10 @@ describe('motion house rules', () => {
       ".diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) { forced-color-adjust: none; color: ButtonText !important; background-color: ButtonFace !important; background-image: none !important; border-color: ButtonText !important; box-shadow: none !important; }",
       // P2: and GrayText when disabled
       ".diya-root .diya-button[aria-busy='true']:disabled:not([data-icon-only='true'], :has(> .diya-button-lead > .diya-button-lead-item > svg:only-child)) { color: GrayText !important; border-color: GrayText !important; }",
+      // P5: and no transition into them as loading starts
+      ".diya-root .diya-button[aria-busy='true'] { transition: none !important; }",
+      // P5: nor from them as it ends: in forced colors a Button transitions only what moves
+      ".diya-root .diya-button { transition-property: opacity, scale, translate, rotate, transform !important; }",
       // P3: the Button's spinner arrives on the beat
       ".diya-root .diya-button-spinner { animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both !important; }",
       // O4 (P1: not an empty Button): the Button's hide

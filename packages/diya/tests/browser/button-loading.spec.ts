@@ -862,6 +862,65 @@ for (const theme of ['light', 'dark']) {
   })
 }
 
+// P5 (MOT-O-01): in forced colors a busy Button paints its system colors from the first frame, with
+// no transition from its own (a Destructive red, an app's bg-* with transition-colors): 30ms after
+// loading starts each looks as it did at rest (to a few levels: Chromium's pill edge, QA-M-04).
+for (const theme of ['light', 'dark']) {
+  test(`forced colors (${theme}): no color flash as loading starts (P5)`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
+    await page.emulateMedia({ forcedColors: 'active', colorScheme: theme as 'light' | 'dark' })
+    await openCase(page, testInfo, `case=loading&theme=${theme}&lean=1&dz=1&fcapp=1`)
+    const ids = ['bl-dz', 'bl-medium-solid', 'bl-app-transition', 'bl-app-violet']
+    const shot = (id: string) => page.locator(`#${id}`).screenshot()
+    const rest: Record<string, Buffer> = {}
+    for (const id of ids) rest[id] = await shot(id)
+    // Loading starts, and anything moving on the Buttons is slowed 50 times from 30ms in.
+    const moving = await page.evaluate((ids) => {
+      ;(window as unknown as { __setBusy(value: boolean): void }).__setBusy(true)
+      const out: string[] = []
+      for (const id of ids) for (const animation of document.getElementById(id)!.getAnimations()) {
+        if (animation instanceof CSSTransition) out.push(`${id} ${animation.transitionProperty}`)
+        animation.currentTime = 30
+        animation.playbackRate = 0.02
+      }
+      return out
+    }, ids)
+    for (const id of ids) expect((await pixelDiff(page, await shot(id), rest[id])).max, `${id} 30ms into loading, against rest`).toBeLessThanOrEqual(8)
+    expect(moving, 'no color transition on a busy Button').toEqual([])
+  })
+
+  // And as it ends, after a short load (before the beat) and a long one: 20ms after, each looks as
+  // it does once everything has settled.
+  for (const wait of [200, 700]) {
+    test(`forced colors (${theme}): no color flash as a ${wait}ms load ends (P5)`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
+      await page.emulateMedia({ forcedColors: 'active', colorScheme: theme as 'light' | 'dark' })
+      await openCase(page, testInfo, `case=loading&theme=${theme}&lean=1&dz=1&fcapp=1`)
+      const ids = ['bl-dz', 'bl-medium-solid', 'bl-app-transition', 'bl-app-violet', 'bl-app-link']
+      const shot = (id: string) => page.locator(`#${id}`).screenshot()
+      await page.evaluate(() => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(true))
+      await page.waitForTimeout(wait)
+      const moving = await page.evaluate((ids) => {
+        ;(window as unknown as { __setBusy(value: boolean): void }).__setBusy(false)
+        const out: string[] = []
+        for (const id of ids) for (const animation of document.getElementById(id)!.getAnimations({ subtree: true })) {
+          if (animation instanceof CSSTransition && !['opacity', 'scale', 'translate', 'rotate', 'transform'].includes(animation.transitionProperty)) out.push(`${id} ${animation.transitionProperty}`)
+          animation.currentTime = 20
+          animation.playbackRate = 0.02
+        }
+        return out
+      }, ids)
+      const mid: Record<string, Buffer> = {}
+      for (const id of ids) mid[id] = await shot(id)
+      await page.evaluate((ids) => { for (const id of ids) for (const animation of document.getElementById(id)!.getAnimations({ subtree: true })) animation.playbackRate = 1 }, ids)
+      await expect.poll(() => page.evaluate((ids) => ids.filter((id) => document.getElementById(id)!.hasAttribute('data-returning')), ids), { timeout: 3000 }).toEqual([])
+      await page.waitForTimeout(300)
+      for (const id of ids) expect((await pixelDiff(page, mid[id], await shot(id))).max, `${id} 20ms after loading, against after`).toBeLessThanOrEqual(8)
+      expect(moving, 'no color transition as loading ends').toEqual([])
+    })
+  }
+}
+
 // N5 (QA-M-01): SiteHeader's utilities size a wrapped leading icon at 20px, as an unwrapped one.
 test('SiteHeader utilities size the icon of a Button given loading at 20px (N5)', async ({ page }, testInfo) => {
   await openCase(page, testInfo, 'case=loading&theme=light')

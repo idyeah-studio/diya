@@ -384,6 +384,18 @@
   .diya-root .diya-button[aria-busy='true'] > .diya-button-lead > .diya-button-lead-item > * {
     forced-color-adjust: auto;
   }
+  /* Unforced, a busy Button's colors would transition from its own (a Destructive red, an app's
+     bg-* with its transition-colors) to the system ones: a red flash as loading starts. It paints
+     them at once instead; hover is off while busy, so nothing else is lost (P5). */
+  .diya-root .diya-button[aria-busy='true'] {
+    transition: none !important;
+  }
+  /* And back: Chromium paints a color mid-transition unforced, so when loading ends the system
+     colors would fade to the Button's own (red, an app's violet) for the transition's length. Forced
+     colors repaint every color anyway, so a Button transitions only what moves (P5). */
+  .diya-root .diya-button {
+    transition-property: opacity, scale, translate, rotate, transform !important;
+  }
 }
 
 .diya-root .diya-button svg {
