@@ -196,6 +196,8 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   - A loading Button looks busy, not disabled: full color and a `progress`
     cursor. Clicks, Enter and Space still do nothing; `aria-busy` and
     `aria-disabled` are unchanged.
+  - A Button that is both `disabled` and `loading` looks disabled (dimmed),
+    with its spinner showing.
   - A loading Button with `href` stays a link, with its `href`, and keeps
     focus. Clicks (modified and middle clicks too) and Enter do nothing;
     "Open in new tab" from the context menu still works. See Fixed.
@@ -211,7 +213,8 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
     words too and draws the system's button colors and border, with no
     background image or shadow, over any colors you set on the Button. When
     loading ends, the words come back at once, without a fade. In forced
-    colors a Button doesn't animate its colors.
+    colors a Button transitions only opacity, scale, translate, rotate and
+    transform.
   - The button's text no longer includes "···".
   - On the beat, the words' fill turns transparent, with any text shadow,
     stroke or underline you gave them, and elements in the label fade out.
