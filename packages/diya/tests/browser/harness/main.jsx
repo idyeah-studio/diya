@@ -542,8 +542,9 @@ function LoadingCase() {
         <Button id="bl-icontext" variant="outline" loading={busy}><><IconText /><kbd>⌘S</kbd></></Button>
         <Button id="bl-icontext-plain" variant="outline"><><IconText /><kbd>⌘S</kbd></></Button>
       </div>
-      {/* SiteHeader's utilities size their icons at 20px (N5). */}
-      <diya.SiteHeader brand="Oriel" utilities={<><Button id="bl-tools" variant="quiet" loading={busy}><Bell />Alerts</Button><Button id="bl-tools-plain" variant="quiet"><Bell />Alerts</Button></>} />
+      {/* SiteHeader's utilities size their icons at 20px (N5). Its layout effect reads styles on every
+          render, which a loading flip within one frame must not depend on: lean=1 leaves it out (O3). */}
+      {query.get('lean') !== '1' && <diya.SiteHeader brand="Oriel" utilities={<><Button id="bl-tools" variant="quiet" loading={busy}><Bell />Alerts</Button><Button id="bl-tools-plain" variant="quiet"><Bell />Alerts</Button></>} />}
       {/* loading given only once it's true, and a Button that mounts already loading (M4, L2). */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', minHeight: 48 }}>
         <Button id="bl-late" loading={busy || undefined}>Sync now</Button>

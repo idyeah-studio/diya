@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode, forwardRef, useState, version, type ReactNode } from 'react'
+import { flushSync } from 'react-dom'
 import { Button, DiyaProvider, Spinner } from '../dist/index.js'
 
 let mounts = 0
@@ -145,5 +146,30 @@ describe('round N', () => {
     fireEvent.keyDown(link, { key: 'ArrowRight' })
     fireEvent.keyDown(link, { key: 'Enter' })
     expect(keys).toEqual(['ArrowRight', 'Enter stopped'])
+  })
+})
+
+describe('round O', () => {
+  const end = (node: Element, animationName: string) => fireEvent(node, Object.assign(new Event('animationend', { bubbles: true }), { animationName }))
+
+  it.each([
+    ['plain', (busy: boolean) => <Button loading={busy}>Save</Button>],
+    ['href', (busy: boolean) => <Button href="#saved" loading={busy}>Open report</Button>],
+    ['asChild', (busy: boolean) => <Button asChild loading={busy}><a href="#child">Child link</a></Button>],
+  ])('loading that stops and restarts within one frame after the beat keeps the turn and the spinner (%s, O3)', (_, make) => {
+    let flip = () => {}
+    function Case() {
+      const [busy, setBusy] = useState(true)
+      flip = () => { flushSync(() => setBusy(false)); flushSync(() => setBusy(true)) }
+      return <DiyaProvider>{make(busy)}</DiyaProvider>
+    }
+    const { container } = render(<Case />)
+    const button = container.querySelector('.diya-button')!
+    const spinner = button.querySelector('.diya-button-spinner')!
+    act(() => { end(spinner, 'diya-spinner-arrive') })
+    const turn = button.getAttribute('data-busy-turn')
+    act(() => { flip() })
+    expect(button.getAttribute('data-busy-turn')).toBe(turn)
+    expect(button.querySelector('.diya-button-spinner')).toBe(spinner)
   })
 })

@@ -395,12 +395,21 @@ test('no blank frame when the wrapper appears with loading, or the Button mounts
 
 // M5 (MOT-L-01): loading off and on again within one frame, after the beat and before it, never
 // blanks the Button: the spinner stays mounted while the wrappers are, so the two keep one beat.
-for (const at of [600, 200]) {
-  test(`loading off and on within one frame at ${at}ms never blanks the Button (M5)`, async ({ page }, testInfo) => {
-    await openCase(page, testInfo, 'case=loading&theme=light')
+// O3 (FE-N-01): nor ever shows the spinner over visible words (plain, href and asChild labels), on a
+// page where nothing reads styles between the two commits (lean) and on one where something does.
+for (const at of [600, 200]) for (const lean of [true, false]) {
+  test(`loading off and on within one frame at ${at}ms never blanks the Button, nor draws the spinner over its words${lean ? ' (lean page)' : ''} (M5, O3)`, async ({ page }, testInfo) => {
+    await openCase(page, testInfo, `case=loading&theme=light${lean ? '&lean=1' : ''}`)
     const blank = await page.evaluate((at) => new Promise<string[]>((done) => {
       const alpha = (color: string) => { const parts = color.match(/[\d.]+/g)!.map(Number); return parts.length > 3 ? parts[3] : 1 }
-      const ids = ['bl-medium-solid', 'bl-lucide', 'bl-icon', 'bl-multi']
+      const ids = ['bl-medium-solid', 'bl-lucide', 'bl-icon', 'bl-multi', 'bl-link', 'bl-child', 'bl-n1-text']
+      const labels = ['bl-medium-solid', 'bl-multi', 'bl-link', 'bl-child', 'bl-n1-text']
+      const overlap = (button: HTMLElement) => {
+        const spinner = button.querySelector<HTMLElement>('.diya-button-spinner')
+        const ring = spinner && getComputedStyle(spinner).display !== 'none' ? Number(getComputedStyle(spinner).opacity) : 0
+        const words = alpha(getComputedStyle(button.querySelector('.diya-button-label') ?? button).getPropertyValue('-webkit-text-fill-color'))
+        return button.getAttribute('aria-busy') === 'true' && ring > 0.01 && words > 0.02
+      }
       const visible = (button: HTMLElement) => {
         const spinner = button.querySelector<HTMLElement>(':scope > .diya-spinner, :scope > .diya-button-lead > .diya-spinner')
         const ring = spinner && getComputedStyle(spinner).display !== 'none' ? Number(getComputedStyle(spinner).opacity) : 0
@@ -417,6 +426,7 @@ for (const at of [600, 200]) {
       const tick = () => {
         const t = performance.now() - start
         for (const id of ids) { const v = visible(document.getElementById(id)!); if (v < 1) out.push(`${id} at ${t.toFixed(0)}ms: ${v.toFixed(2)}`) }
+        for (const id of labels) if (overlap(document.getElementById(id)!)) out.push(`${id} at ${t.toFixed(0)}ms: spinner over the words`)
         if (t < at + 700) requestAnimationFrame(tick); else done(out)
       }
       tick()

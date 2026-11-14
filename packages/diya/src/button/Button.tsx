@@ -70,9 +70,14 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
   const beat = useRef(false)
   const [returning, setReturning] = useState(false)
   const [was, setWas] = useState(loading)
+  // The value this pass decides, used at once below: reading the state would see the old value
+  // until the re-render, and a loading that stops and restarts within one frame would then flip
+  // the turn while the spinner stays, restarting the hide over visible words (O3).
+  let nowReturning = returning
   if (loading !== was) {
+    nowReturning = !loading && beat.current
     setWas(loading)
-    setReturning(!loading && beat.current)
+    setReturning(nowReturning)
     if (loading) beat.current = false
   }
   // Loading (F12): on the Spinner's 400ms beat the spinner takes the place of the first thing in
@@ -90,7 +95,7 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
   const [loaded, setLoaded] = useState(loading)
   if (loading && !loaded) setLoaded(true)
   const own = asChild && isValidElement(onlyChild(children)) ? (onlyChild(children) as ReactElement<{ children?: ReactNode }>).props.children : children
-  const wrapped = loading || returning || (!plainText(own) && (given || loaded))
+  const wrapped = loading || nowReturning || (!plainText(own) && (given || loaded))
   // The words are hidden from the Button, which stays put when loading stops and restarts within
   // one frame; a new spinner (a plain label's comes and goes with its wrapper) waits a full beat. So
   // each new spinner flips the turn, and the Button's hide restarts with it (N1, M5).
