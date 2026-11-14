@@ -726,7 +726,36 @@ function RhfCase() {
   )
 }
 
-const cases = { rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+// A Sign-in-style form (R1): Email and Password, checked on submit (Enter or the button). move=1:
+// the app then moves focus to the first invalid field, as many forms do.
+function SignInCase() {
+  const [errors, setErrors] = useState({})
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    if (!tick || query.get('move') !== '1') return
+    const first = ['si-email', 'si-password'].find((id) => errors[id])
+    if (first) document.getElementById(first).focus()
+  }, [tick])
+  const submit = (event) => {
+    event.preventDefault()
+    const email = document.getElementById('si-email').value
+    const password = document.getElementById('si-password').value
+    setErrors({
+      'si-email': !email ? 'Enter your email address.' : email.includes('@') ? undefined : 'Enter an email address like name@example.com.',
+      'si-password': password ? undefined : 'Enter your password.',
+    })
+    setTick((count) => count + 1)
+  }
+  return (
+    <form id="si" noValidate onSubmit={submit} style={{ display: 'grid', gap: 16, padding: 24, width: 360 }}>
+      <diya.TextInput id="si-email" label="Email" error={errors['si-email']} />
+      <diya.TextInput id="si-password" label="Password" type="password" error={errors['si-password']} />
+      <Button type="submit" id="si-submit">Sign in</Button>
+    </form>
+  )
+}
+
+const cases = { signin: SignInCase, rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; } @keyframes app-pulse { 50% { opacity: 0.5; } } .app-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @layer utilities { .animate-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } .bg-violet-600 { background-color: #7c3aed; } .text-white { color: #fff; } .transition-colors { transition-property: color, background-color, border-color; transition-duration: 150ms; } }'

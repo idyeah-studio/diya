@@ -69,11 +69,13 @@ export function useShownError(error: string | undefined, wrapper: RefObject<HTML
   return shown
 }
 
-// Errors that appear in one task are counted per document: one is spoken; several (a submit)
-// say nothing, and the field that receives focus reads its own.
-type Said = { text: string; node: Element; key: string }
+// Errors that appear in one task are counted per document. After the task (and the app's own
+// focus move), one on a field focus isn't in is spoken (you've just left it); if focus is in exactly
+// one of them and was there all along (`held`: you pressed Enter in it, so focus can't move to it),
+// that one is spoken; otherwise nothing, and the field focus lands on reads its own (R1).
+type Said = { text: string; node: HTMLElement; key: string; held: boolean }
 const batches = new WeakMap<Document, Said[]>()
-function speak(node: Element, text: string, key: string) {
+function speak(node: HTMLElement, text: string, key: string, held = false) {
   const document = node.ownerDocument
   let batch = batches.get(document)
   if (!batch) {
@@ -82,10 +84,24 @@ function speak(node: Element, text: string, key: string) {
     batch = created
     setTimeout(() => {
       batches.delete(document)
-      if (created.length === 1) announcePolite(created[0].text, created[0].node, created[0].key)
+      const focused = created.filter((entry) => focusWithin(entry.node))
+      const say = created.length === 1 && !focused.length ? created[0] : focused.length === 1 && focused[0].held ? focused[0] : undefined
+      if (say) announcePolite(say.text, say.node, say.key)
     }, 0)
   }
-  batch.push({ text, node, key })
+  batch.push({ text, node, key, held })
+}
+// A form submit in this task: an error that appears then on the field you're in is counted, since
+// focus can't move to it. Errors while you type stay silent.
+const submitting = new WeakSet<Document>()
+const watched = new WeakSet<Document>()
+function watchSubmit(document: Document) {
+  if (watched.has(document)) return
+  watched.add(document)
+  document.addEventListener('submit', () => {
+    submitting.add(document)
+    setTimeout(() => submitting.delete(document), 0)
+  }, true)
 }
 let spoken = 0
 
@@ -120,13 +136,20 @@ export function useErrorAnnouncement(label: string | (() => string), shown: stri
     said.current = shown
     // Cleared or changed: the old words leave the region at once, as a toast's do when it goes.
     if (before && shown !== before) forgetPolite(key)
-    if (!node || !shown || shown === before || focusWithin(node)) return
-    speak(node, t.errorAnnouncement(name(), shown), key)
+    if (!node || !shown || shown === before) return
+    const inside = focusWithin(node)
+    if (inside && !submitting.has(node.ownerDocument)) return
+    speak(node, t.errorAnnouncement(name(), shown), key, inside)
   }, [shown])
+  // Arriving in a framed iframe with its error set: focus is there and was put there, so it's said.
   useEffect(() => {
     const node = wrapper.current
     if (!arrived || !node || !said.current) return
-    speak(node, t.errorAnnouncement(name(), said.current), key)
+    speak(node, t.errorAnnouncement(name(), said.current), key, true)
   }, [arrived])
+  useEffect(() => {
+    const document = wrapper.current?.ownerDocument
+    if (document) watchSubmit(document)
+  }, [])
   useEffect(() => () => forgetPolite(key), [])
 }

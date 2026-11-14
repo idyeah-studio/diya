@@ -245,3 +245,40 @@ test('a framed textarea matches TextArea at each size (H6)', async ({ page }, te
     expect(m.corner, size).toEqual([1, 1])
   }
 })
+
+// R1 (UX-F-01): pressing Enter to submit says the error of the field you're in, once, and only when
+// focus stays there; a field the app moves focus to reads its own, so the region says nothing.
+test.describe('submit announcements (R1)', () => {
+  const region = (page: Page) => page.locator('.diya-toast-host > [aria-live=polite]')
+  const quiet = async (page: Page) => { await page.waitForTimeout(400); expect(await region(page).textContent()).toBe('') }
+  test('Enter in the empty Email of a sign-in form says Email\'s error, not Password\'s', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=signin&theme=light')
+    await page.locator('#si-email').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#si-email')).toHaveAttribute('aria-invalid', 'true')
+    await expect(region(page)).toHaveText('Email: Enter your email address.')
+  })
+  test('one wrong field, Enter in it: its error is said', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=signin&theme=light')
+    await page.locator('#si-email').fill('ada@example.com')
+    await page.locator('#si-password').focus()
+    await page.keyboard.press('Enter')
+    await expect(region(page)).toHaveText('Password: Enter your password.')
+  })
+  test('two wrong fields, Enter in the second: its error is said, not the other\'s', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=signin&theme=light')
+    await page.locator('#si-email').fill('ada')
+    await page.locator('#si-password').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#si-email')).toHaveAttribute('aria-invalid', 'true')
+    await expect(region(page)).toHaveText('Password: Enter your password.')
+  })
+  test('the app moves focus to the first error: the region says nothing, focus reads it', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=signin&theme=light&move=1')
+    await page.locator('#si-email').fill('ada')
+    await page.locator('#si-password').fill('secret')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#si-email')).toBeFocused()
+    await quiet(page)
+  })
+})
