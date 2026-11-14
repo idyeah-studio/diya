@@ -64,7 +64,8 @@ jobs:
   # on React 19 and 18 (packages/diya/tests/browser).
   browser:
     name: Browser checks
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, where Playwright 1.57 can't install its browsers.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
