@@ -176,7 +176,8 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   TextInput, Search, TextArea, Select, Combobox, DatePicker, Switch, Choice and
   Checkbox say it once, politely: "Email: Enter a valid email." Errors that
   appear together, as on submit, aren't announced; the field that gets focus
-  reads its own.
+  reads its own. If focus is already in the invalid field when you submit, as
+  with Enter, its error is read once.
 - **An error that appears when you leave a field by pressing elsewhere shows
   once the press ends,** so the button you pressed doesn't move under the
   pointer or your finger.
@@ -198,64 +199,6 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
     `aria-disabled` are unchanged.
   - A Button that is both `disabled` and `loading` looks disabled (dimmed,
     with the `not-allowed` cursor), with its spinner showing.
-  - A loading Button with `href` stays a link, with its `href`, and keeps
-    focus. Clicks (modified and middle clicks too) and Enter do nothing;
-    "Open in new tab" from the context menu still works. See Fixed.
-  - With `asChild` on an `<input>`, an `<img>` or another element that can't
-    hold children, there's no spinner: a loading submit input keeps its words,
-    turns its cursor to `progress` and ignores clicks. A component that
-    ignores its children, such as one that renders a `label` prop, keeps its
-    words while loading, as in 1.1.1, but shows no spinner. With `asChild`,
-    your element must render its children for the spinner to show.
-  - Dialog's confirm button, Form's Submit and Wizard's forward button show it
-    too.
-  - Under Reduce Motion the spinner breathes in place.
-  - In forced colors (such as Windows high contrast), a busy Button hides its
-    words too and draws the system's button colors and border (the system's
-    disabled color if it's also disabled), with no background image or
-    shadow, over any colors you set on the Button. When
-    loading ends, the words come back at once, without a fade. In forced
-    colors a Button transitions only opacity, scale, translate, rotate and
-    transform.
-  - The button's text no longer includes "···".
-  - On the beat, the words' fill turns transparent, with any text shadow,
-    stroke or underline you gave them, and elements in the label fade out.
-    One thing stays drawn: put a gradient made with `background-clip: text`
-    on an element inside the label, not on the Button itself; on the Button it
-    stays drawn under the spinner while it loads.
-  - The fade back animates the Button's `color`, so a border or ring you draw
-    in `currentColor` on the Button (Tailwind's `border-current` or
-    `ring-current`) goes out with the words and fades back with them.
-  - While it loads, a Button runs its own animation. One you set on the Button
-    itself stops when loading starts and starts over when the label is back, so
-    an entrance animation (such as `animate-in`) plays again after each load,
-    and a loop (such as `animate-pulse`) jumps back to its start once. Put
-    entrance animations on an element around the Button. Pulsing only while
-    saving is fine: DIYA's spinner takes its place.
-  - An animation on the Button can't change how a Button loads, and neither
-    can a Reduce Motion reset that is unlayered or in a layer after `diya`.
-    One in `@layer base` (before `diya` in the Tailwind layer order) wins: the
-    spinner shows at once on every load and the words come back without a
-    fade, though nothing overlaps or goes blank. Keep the reset unlayered, or
-    in a layer after `diya`, to keep the 400ms wait. If you use such a reset,
-    include `animation-iteration-count: 1`; without it, every looping
-    animation flickers, DIYA's spinner included.
-  - A part of the label with its own CSS animation stops while the Button is
-    busy and starts over after each load. A Spinner you put in the label keeps
-    its own wait and turn.
-  - Don't put a Spinner in a Button you give `loading`: the Button shows its
-    own, and after an icon you'd see two rings.
-  - Style your own elements in a label, not the Button's inner spans: CSS that
-    restyles those spans on hover garbles the Button's accessible name in
-    Safari while it's hovered.
-  - If a Button's label holds an element, such as an icon or `<strong>`, pass
-    `loading` from the start: `loading={false}` until it's busy. Then nothing
-    in the label starts over when loading begins, and a page the browser has
-    translated keeps working. (`loading={undefined}` counts as not passed.) A
-    label of plain text is safe either way. Two things on a translated page
-    work as in 1.1.1: without a `loading` prop, a label that swaps from plain
-    text to elements crashes, and a plain label that changes its words
-    (`'Save'` to `'Saved'`) keeps its old translation.
 - **The Drawer's open edge is rounded like Dialog:** 22px × the corner scale,
   where it was 16px. A Drawer that fills a phone screen (440px or narrower) is
   square, so no dim shows in wedges at the screen's edge.
@@ -301,6 +244,67 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   still reaches every provider.
 - `.diya-sr-only`, Table's and Chatbot's hidden-text rules are now one rule.
   Class names aren't covered by semver; nothing looks different.
+
+#### Button `loading`: edge cases
+
+- A loading Button with `href` stays a link, with its `href`, and keeps
+  focus. Clicks (modified and middle clicks too) and Enter do nothing;
+  "Open in new tab" from the context menu still works. See Fixed.
+- With `asChild` on an `<input>`, an `<img>` or another element that can't
+  hold children, there's no spinner: a loading submit input keeps its words,
+  turns its cursor to `progress` and ignores clicks. A component that
+  ignores its children, such as one that renders a `label` prop, keeps its
+  words while loading, as in 1.1.1, but shows no spinner. With `asChild`,
+  your element must render its children for the spinner to show.
+- Dialog's confirm button, Form's Submit and Wizard's forward button show it
+  too.
+- Under Reduce Motion the spinner breathes in place.
+- In forced colors (such as Windows high contrast), a busy Button hides its
+  words too and draws the system's button colors and border (the system's
+  disabled color if it's also disabled), with no background image or
+  shadow, over any colors you set on the Button. When
+  loading ends, the words come back at once, without a fade. In forced
+  colors a Button transitions only opacity, scale, translate, rotate and
+  transform.
+- The button's text no longer includes "···".
+- On the beat, the words' fill turns transparent, with any text shadow,
+  stroke or underline you gave them, and elements in the label fade out.
+  One thing stays drawn: put a gradient made with `background-clip: text`
+  on an element inside the label, not on the Button itself; on the Button it
+  stays drawn under the spinner while it loads.
+- The fade back animates the Button's `color`, so a border or ring you draw
+  in `currentColor` on the Button (Tailwind's `border-current` or
+  `ring-current`) goes out with the words and fades back with them.
+- While it loads, a Button runs its own animation. One you set on the Button
+  itself stops when loading starts and starts over when the label is back, so
+  an entrance animation (such as `animate-in`) plays again after each load,
+  and a loop (such as `animate-pulse`) jumps back to its start once. Put
+  entrance animations on an element around the Button. Pulsing only while
+  saving is fine: DIYA's spinner takes its place.
+- An animation on the Button can't change how a Button loads, and neither
+  can a Reduce Motion reset that is unlayered or in a layer after `diya`.
+  One in `@layer base` (before `diya` in the Tailwind layer order) wins: the
+  spinner shows at once on every load and the words come back without a
+  fade, though nothing overlaps or goes blank. Keep the reset unlayered, or
+  in a layer after `diya`, to keep the 400ms wait. If you use such a reset,
+  include `animation-iteration-count: 1`; without it, every looping
+  animation flickers, DIYA's spinner included.
+- A part of the label with its own CSS animation stops while the Button is
+  busy and starts over after each load. A Spinner you put in the label keeps
+  its own wait and turn.
+- Don't put a Spinner in a Button you give `loading`: the Button shows its
+  own, and after an icon you'd see two rings.
+- Style your own elements in a label, not the Button's inner spans: CSS that
+  restyles those spans on hover garbles the Button's accessible name in
+  Safari while it's hovered.
+- If a Button's label holds an element, such as an icon or `<strong>`, pass
+  `loading` from the start: `loading={false}` until it's busy. Then nothing
+  in the label starts over when loading begins, and a page the browser has
+  translated keeps working. (`loading={undefined}` counts as not passed.) A
+  label of plain text is safe either way. Two things on a translated page
+  work as in 1.1.1: without a `loading` prop, a label that swaps from plain
+  text to elements crashes, and a plain label that changes its words
+  (`'Save'` to `'Saved'`) keeps its old translation.
 
 ### For your tests
 
@@ -398,8 +402,11 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
     `aria-hidden`, and not displayed until it's needed. The
     `.diya-button-progress` element is gone. A `<Spinner>` you put in a Button
     is yours: it shows as it would beside words.
-  - **While loading,** a Button carries `data-busy-turn`, and while its label
-    fades back, `data-returning`. Snapshots taken then change.
+  - **While loading,** a Button carries `data-busy-turn` (and
+    `data-busy-disabled` if it's also disabled); while its label fades back,
+    `data-returning`. Snapshots taken then change. These attributes and the
+    classes above are DIYA's own, not covered by semver: don't style or select
+    by them.
   - **An `href` Button keeps its `href` while it loads,** with
     `aria-disabled="true"` and no `role` attribute. A test that expected no
     `href` now fails; expect the `href`. It also keeps `target`, `rel` and

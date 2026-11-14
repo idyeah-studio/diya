@@ -904,6 +904,11 @@ From 1.2, the toast keyboard contract (F8, the Tab order through the toasts,
 and Escape stopping at a toast) and how the stack reads each toast aloud are
 documented behavior, so they're covered too.
 
+One exception: a minor release may fix documented behavior that is an
+accessibility defect, such as an announcement read twice or a key that reaches
+the wrong layer, and the CHANGELOG lists each such change under Changed, with
+what to update in your tests.
+
 Development warnings start with "DIYA:" and print only in development, never
 in production builds. A test setup that fails on `console.warn` may see one;
 each says what to do instead. Their words aren't covered by semver.
