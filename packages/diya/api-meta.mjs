@@ -179,7 +179,7 @@ export const items = {
     children: none,
     state: uncontrolledFieldState,
     tokens: ['--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-muted', '--diya-color-text',
-      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-enter', '--diya-ease-move'],
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-enter', '--diya-ease-move', '--diya-color-focus'],
     messages: 'choice',
   },
   switch: {
@@ -409,7 +409,7 @@ export const items = {
       '--diya-color-success-fill', '--diya-color-success-on-fill', '--diya-color-surface',
       '--diya-color-text', '--diya-color-warning', '--diya-color-warning-fill',
       '--diya-color-warning-on-fill', '--diya-corner-scale', '--diya-shadow-raised', '--diya-text-body',
-      '--diya-text-caption', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus'],
     messages: 'alert',
   },
   toast: {
@@ -426,7 +426,7 @@ export const items = {
       '--diya-color-success', '--diya-color-success-fill', '--diya-color-success-on-fill',
       '--diya-color-surface', '--diya-color-text', '--diya-color-warning', '--diya-color-warning-fill',
       '--diya-color-warning-on-fill', '--diya-corner-scale', '--diya-shadow-raised', '--diya-text-body',
-      '--diya-text-caption', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus'],
     messages: 'toast',
   },
   progress: {
@@ -519,7 +519,7 @@ export const items = {
     state: fieldState,
     tokens: ['--diya-radius-surface', '--diya-color-accent', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised',
       '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale',
-      '--diya-leading-tight', '--diya-text-body', '--diya-text-caption', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-leading-tight', '--diya-text-body', '--diya-text-caption', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus'],
     messages: 'sideNavigation',
   },
   card: {

@@ -1938,7 +1938,8 @@
 .diya-root .diya-alert-action { display: block; border: 0; border-radius: calc(4px * var(--diya-corner-scale, 1)); background: transparent; color: var(--diya-internal-alert-ink, var(--diya-internal-alert-accent)); font: inherit; font-size: var(--diya-text-body); font-weight: 500; padding: 4px 0; margin-top: 12px; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
 .diya-root .diya-alert-dismiss { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 28px; padding: 0; margin: -3px -3px 0 0; border: 0; border-radius: 50%; background: transparent; color: var(--diya-color-muted); cursor: pointer; }
 .diya-root .diya-alert-dismiss:hover { background: var(--diya-color-hover); color: var(--diya-color-text); }
-.diya-root .diya-alert button:focus-visible { outline: 2px solid var(--diya-internal-alert-ink, var(--diya-internal-alert-accent)); outline-offset: 3px; }
+/* --diya-color-focus reaches these too, as every focus ring; unset, the tone's ink (R2). */
+.diya-root .diya-alert button:focus-visible { outline: 2px solid var(--diya-color-focus, var(--diya-internal-alert-ink, var(--diya-internal-alert-accent))); outline-offset: 3px; }
 .diya-root .diya-alert-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .diya-root .diya-alert[data-layout='banner'] { max-width:none; min-height:64px; align-items:center; padding:14px 20px; }
 .diya-root .diya-alert[data-layout='banner'] .diya-alert-icon { margin:0; }

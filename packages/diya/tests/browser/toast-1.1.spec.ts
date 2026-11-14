@@ -93,3 +93,23 @@ test('Escape on a focused toast dismisses it and returns focus', async ({ page }
   expect(await liveToasts(page)).toEqual([])
   await expect(save).toBeFocused()
 })
+
+// R2 (DS-F-01): --diya-color-focus reaches the buttons in a Toast (and an Alert): its close button and
+// its action. Unset, they keep the tone's ring.
+test('a Toast\'s buttons take --diya-color-focus, and keep the tone\'s ring without it (R2)', async ({ page }, testInfo) => {
+  await openCase(page, testInfo, 'case=toast&duration=0')
+  await page.getByRole('button', { name: 'Archive' }).click()
+  await expect.poll(() => liveToasts(page)).toEqual(['3 emails archived'])
+  const rings = () => page.evaluate(() => [...document.querySelectorAll<HTMLElement>('.diya-alert:not([aria-hidden="true"] *) button')].map((button) => {
+    button.focus({ focusVisible: true } as FocusOptions)
+    const style = getComputedStyle(button)
+    return `${button.textContent || button.getAttribute('aria-label')}: ${style.outlineStyle} ${style.outlineColor}`
+  }))
+  await page.keyboard.press('Shift')
+  const unset = await rings()
+  expect(unset.length).toBeGreaterThan(1)
+  for (const ring of unset) expect(ring).not.toContain('rgb(255, 0, 0)')
+  await page.evaluate(() => document.querySelectorAll<HTMLElement>('.diya-root').forEach((root) => root.style.setProperty('--diya-color-focus', 'rgb(255, 0, 0)')))
+  const set = await rings()
+  for (const ring of set) expect(ring).toMatch(/: solid rgb\(255, 0, 0\)$/)
+})
