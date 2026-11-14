@@ -57,6 +57,9 @@ function labelParts(node: ReactNode, prefix = ''): ReactNode[] {
 }
 
 // Text holds no state, so a label of plain text needn't keep a wrapper at rest (M3).
+// HTML elements that can't have children (an asChild <input type="submit"> or <img>).
+const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'])
+
 const plainText = (node: ReactNode) => Children.toArray(node).every((part) => typeof part === 'string' || typeof part === 'number')
 
 /** A native button in DIYA's styles, or a link that looks like one with `href` or `asChild`; other button attributes pass through, and `type` defaults to 'button'. */
@@ -139,8 +142,12 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     const child = onlyChild(children)
     if (!isValidElement(child)) return null
     const own = child as ReactElement<{ children?: ReactNode }>
-    // Always cloned, so the child's own children keep one shape whether or not it loads (O5).
-    const filled = cloneElement(own, undefined, content(own.props.children))
+    // Cloned whenever it has children, so they keep one shape whether or not it loads (O5), or when
+    // it needs the spinner. A child with no children of its own (a void <input> or <img>, or a
+    // component that labels itself from a prop) is left as it is until then, as in 1.1.1; a void
+    // element never takes children, so it never gets the spinner, and keeps its words (P1).
+    const bare = own.props.children == null && (!wrapped || (typeof own.type === 'string' && voidTags.has(own.type)))
+    const filled = bare ? own : cloneElement(own, undefined, content(own.props.children))
     return renderSlot(filled, { ...props, ...shared, 'aria-disabled': inactive || undefined, onClickCapture: inactive ? stopClick : undefined, onAuxClickCapture: inactive ? stopClick : undefined }, ref)
   }
   if (href !== undefined) {

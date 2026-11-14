@@ -1,6 +1,6 @@
 // One page per case (?case=…), each a small app built on the package's dist. The specs drive
 // them in Chromium, WebKit and Firefox. Query: theme, glass, motion, scale (duration scale).
-import { useEffect, useRef, useState, version } from 'react'
+import { forwardRef, useEffect, useRef, useState, version } from 'react'
 import { createPortal, flushSync } from 'react-dom'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
@@ -478,6 +478,9 @@ const arrow = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke
 
 function IconText() { return <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 12h14" /></svg>Save</> }
 
+// A link component that takes its label from a prop when it has no children (P1).
+const NavLink = forwardRef(function NavLink({ label, children, ...rest }, ref) { return <a ref={ref} {...rest}>{children ?? label}</a> })
+
 function ReaderSpinners({ busy }) {
   const [shown, setShown] = useState(false)
   window.__showRs = () => flushSync(() => setShown(true))
@@ -591,6 +594,18 @@ function LoadingCase() {
           <Button id="bl-anim-layer" className={busy ? 'animate-pulse' : undefined} loading={busy}>Saving</Button>
           <Button id="bl-anim-inline" style={{ animation: 'app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} loading={busy}>Delete {3} files</Button>
           <Button id="bl-anim-lead" className="app-pulse" loading={busy}><Plus size={18} strokeWidth={1.6} />Add member</Button>
+        </div>
+      )}
+      {/* asChild with a child that has no children of its own (P1): a submit input, an img, and a
+          link component that labels itself from a prop; each given loading and not. void=1 only. */}
+      {query.get('void') === '1' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button id="bl-void-input" asChild loading={busy}><input type="submit" value="Send" /></Button>
+          <Button id="bl-void-input-plain" asChild><input type="submit" value="Send" /></Button>
+          <Button id="bl-void-img" asChild iconOnly aria-label="Home" loading={busy}><img alt="" width={16} height={16} src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" /></Button>
+          <Button id="bl-void-img-plain" asChild iconOnly aria-label="Home"><img alt="" width={16} height={16} src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" /></Button>
+          <Button id="bl-void-nav" asChild loading={busy}><NavLink href="#/home" label="Go home" /></Button>
+          <Button id="bl-void-nav-plain" asChild><NavLink href="#/home" label="Go home" /></Button>
         </div>
       )}
       {/* Destructive Buttons for forced colors (O2): words, an icon-only one, a disabled one, and a

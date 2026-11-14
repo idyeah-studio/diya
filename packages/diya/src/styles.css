@@ -3815,7 +3815,8 @@
 .diya-root .diya-button-spinner {
   animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both;
 }
-.diya-root .diya-button[aria-busy='true']:not([data-icon-only='true']) {
+/* Not an empty one: an asChild <input> or <img> can't hold the spinner, so its words stay (P1). */
+.diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :empty) {
   /* !important, as on the turn, the fade back and the leading icon's rule below: an animation an app
      puts on the Button (its own class, a utility such as animate-pulse, an inline style) would
      otherwise replace these, and the words would stay under the spinner. Theirs pauses until the
@@ -3824,7 +3825,7 @@
 }
 /* A new spinner (loading that stopped and restarted within one frame) gets the other name, so the
    Button's hide restarts with it: the same keyframes, a new beat (data-busy-turn, set by Button). */
-.diya-root .diya-button[aria-busy='true'][data-busy-turn='b']:not([data-icon-only='true']) {
+.diya-root .diya-button[aria-busy='true'][data-busy-turn='b']:not([data-icon-only='true'], :empty) {
   animation-name: diya-button-hide-again !important;
 }
 .diya-root .diya-button[aria-busy='true'] > .diya-button-label > *,

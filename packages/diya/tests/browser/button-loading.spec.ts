@@ -881,6 +881,31 @@ test('translated labels holding elements, given loading from the start, survive 
   for (const id of ids) await expect(page.locator(`#${id}`), id).toHaveCount(1)
 })
 
+// P1 (FE-O-01): asChild with a child that has no children of its own renders as in 1.1.1, whether
+// or not loading is given, and loading doesn't crash it: a submit input keeps its words (it can't
+// hold the spinner), an img stays, and a link component that labels itself from a prop keeps its
+// label at rest.
+test('asChild with a void element or a self-labeled component renders and loads without a crash (P1)', async ({ page }, testInfo) => {
+  const { errors } = await openCase(page, testInfo, 'case=loading&theme=light&void=1')
+  const read = () => page.evaluate(() => ['bl-void-input', 'bl-void-img', 'bl-void-nav'].map((id) => {
+    const button = document.getElementById(id)!
+    const twin = document.getElementById(`${id}-plain`)!
+    return { id, tag: button.tagName, same: button.outerHTML.replace(/ id="[^"]*"/, '') === twin.outerHTML.replace(/ id="[^"]*"/, ''), text: button.textContent || (button as HTMLInputElement).value || '', fill: getComputedStyle(button).getPropertyValue('-webkit-text-fill-color') }
+  }))
+  const rest = await read()
+  expect(rest.map(({ id, tag, same, text }) => [id, tag, same, text])).toEqual([['bl-void-input', 'INPUT', true, 'Send'], ['bl-void-img', 'IMG', true, ''], ['bl-void-nav', 'A', true, 'Go home']])
+  const win = (value: boolean) => page.evaluate((value) => (window as unknown as { __setBusy(value: boolean): void }).__setBusy(value), value)
+  await win(true)
+  await page.waitForTimeout(700)
+  const busy = await read()
+  expect(busy[0].fill, 'a loading submit input keeps its words').not.toBe('rgba(0, 0, 0, 0)')
+  expect(busy.map(({ tag }) => tag)).toEqual(['INPUT', 'IMG', 'A'])
+  await win(false)
+  await page.waitForTimeout(400)
+  expect((await read()).map(({ id, same, text }) => [id, same, text])).toEqual([['bl-void-input', true, 'Send'], ['bl-void-img', true, ''], ['bl-void-nav', true, 'Go home']])
+  expect(errors).toEqual([])
+})
+
 // N8 (QA-R3): a loading link keeps focus, and a middle click opens nothing.
 test('a loading link keeps focus, and a middle click or Enter opens nothing (N8, M7)', async ({ page, context }, testInfo) => {
   await openCase(page, testInfo, 'case=loading&theme=light')

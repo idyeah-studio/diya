@@ -188,3 +188,34 @@ describe('round O', () => {
     expect(button.querySelector('.diya-button-spinner')).toBe(spinner)
   })
 })
+
+describe('round P', () => {
+  // P1 (FE-O-01): asChild leaves a child with no children of its own as it is when not loading, as
+  // 1.1.1 did: a void <input> or <img> doesn't crash, and a component that labels itself from a prop
+  // keeps its label. While loading nothing crashes either: a void element can't hold the spinner, so
+  // it keeps its words.
+  const NavLink = ({ label, children, ...rest }: { label: string; children?: ReactNode; href: string }) => <a {...rest}>{children ?? label}</a>
+  const shapes = {
+    input: (loading?: boolean) => <Button asChild loading={loading}><input type="submit" value="Send" /></Button>,
+    img: (loading?: boolean) => <Button asChild iconOnly aria-label="Home" loading={loading}><img alt="" width={16} height={16} src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" /></Button>,
+    navlink: (loading?: boolean) => <Button asChild loading={loading}><NavLink href="#/home" label="Go home" /></Button>,
+  }
+  it.each(Object.keys(shapes))('asChild with a child that has no children: %s renders as in 1.1.1, and loads without a crash (P1)', (name) => {
+    const make = shapes[name as keyof typeof shapes]
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      const html = (loading?: boolean) => { const { container, unmount } = render(<DiyaProvider>{make(loading)}</DiyaProvider>); const out = container.querySelector('.diya-button')!.outerHTML; unmount(); return out }
+      const none = html()
+      expect(html(false)).toBe(none)
+      if (name === 'navlink') expect(none).toContain('>Go home</a>')
+      if (name === 'input') expect(none).toMatch(/^<input [^>]*value="Send"[^>]*>$/)
+      if (name === 'img') expect(none).toMatch(/^<img [^>]*>$/)
+      const busy = html(true)
+      expect(busy).toContain('aria-busy="true"')
+      if (name !== 'navlink') expect(busy).not.toContain('diya-spinner')
+      expect(errors).not.toHaveBeenCalled()
+    } finally {
+      errors.mockRestore()
+    }
+  })
+})
