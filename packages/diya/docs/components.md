@@ -401,9 +401,15 @@ not communicate status. Icon-only buttons need their own `aria-label`.
   A loading Button keeps focus and is inert (`aria-disabled="true"` and
   `aria-busy`; clicks, Enter and Space do nothing, so it can't submit twice),
   so a focused Save or Send doesn't drop focus while it works. After 400ms a
-  small spinner takes the label's place, and the button keeps its exact size.
-  It looks busy, not disabled. `disabled` sets the native attribute and takes
-  the button out of the tab order.
+  small spinner takes the place of the icon before the label, or else of the
+  label, and the button keeps its exact size. It looks busy, not disabled. An
+  icon is a first child that renders a single `<svg>`, from any icon library
+  or your own; an `<img>`, an icon font or a wrapped icon counts as label.
+  Space the icon with the Button's `gap`, not a margin. With `href`, a loading
+  Button stays a focusable link whose clicks do nothing. If the label holds an
+  element, pass `loading` from the start (`loading={false}`). In tests, find
+  it by role: `getByRole('button', { name: 'Save', busy: true })`. `disabled`
+  sets the native attribute and takes the button out of the tab order.
 - **Icons:** any React icon can go in an icon slot. Give icon-only buttons an
   `aria-label`, and hide decorative SVGs from assistive technology.
 - **Slots:** omitted Page Header and Card slots collapse. Put real controls in

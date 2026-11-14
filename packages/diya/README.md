@@ -359,6 +359,10 @@ client file, as in [Next.js](#nextjs-app-router):
 </DiyaProvider>
 ```
 
+If your `linkComponent` is a wrapper, pass every prop through to the anchor,
+as `DiyaLinkProps` asks: a loading or disabled Button blocks its clicks that
+way.
+
 `asChild` styles your own element instead of rendering one. Button and
 TextLink take it:
 
@@ -706,9 +710,37 @@ or `count()`, or render `motion="off"` in your test build. Playwright's
 **Loading:** a Spinner, and the spinner in a Button with `loading`, wait
 400ms before they show, so a quick load shows nothing. The wait is the same
 at every `--diya-duration-scale`. In tests, use `findBy…` (or advance fake
-timers) to see a Spinner or hear its label. A loading Button's cursor turns to
-`progress` at once; after 400ms a small spinner takes its label's place, and
-the button keeps its exact size. It looks busy, not disabled.
+timers) to see a Spinner or hear its label.
+
+A loading Button's cursor turns to `progress` at once. After 400ms a small
+spinner appears, and the button keeps its exact size. It looks busy, not
+disabled. If the Button starts with an icon, the spinner takes the icon's
+place and the words stay readable. An icon is the first thing in the Button
+when it renders a single `<svg>`: an icon from lucide-react or any other
+library, your own icon or logo component, or an `<svg>`, written inline or in
+a Fragment. Anything else is treated as the label, and the spinner takes the
+whole label's place. That includes an `<img>`, an icon font, and an icon
+inside your own wrapper element (`<span><Plus /></span>`). Keep an icon
+component to just its icon: if it renders words too, they hide with it.
+Browsers without CSS `:has()` treat every icon as label. Space the icon with
+the Button's `gap`, not a margin on the icon: a margin shifts the spinner by
+half its width.
+
+While it loads, the Button's words turn transparent, and they fade back
+through its `color`. So put a gradient made with `background-clip: text` on
+an element inside the label, not on the Button itself, where it stays drawn
+under the spinner. A border or ring you draw in `currentColor` on the Button
+fades back with the words, and an animation you set on the Button pauses
+until the label is back. Style your own elements in a label, not the Button's
+inner spans.
+
+If the label holds an element, such as an icon or `<strong>`, pass `loading`
+from the start (`loading={false}` until it's busy). Then nothing in the label
+starts over when loading begins, and a page the browser has translated keeps
+working. A label of plain text is safe either way. In tests, find a Button by
+its role, `getByRole('button', { name: 'Save', busy: true })`: a label that
+holds an element sits in a wrapper, so `getByText('Save')` finds the
+wrapper.
 
 **Rather keep 1.0 exactly?** Pin the 1.0 line:
 
