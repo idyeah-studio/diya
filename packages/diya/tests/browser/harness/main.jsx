@@ -1,0 +1,799 @@
+// One page per case (?case=…), each a small app built on the package's dist. The specs drive
+// them in Chromium, WebKit and Firefox. Query: theme, glass, motion, scale (duration scale).
+import { forwardRef, useEffect, useRef, useState, version } from 'react'
+import { createPortal, flushSync } from 'react-dom'
+import { createRoot, hydrateRoot } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
+import { useForm } from 'react-hook-form'
+import { Plus, Send, Download, Bell } from 'lucide-react'
+import '@idyeah/diya/styles.css'
+import * as diya from '@idyeah/diya'
+import {
+  Accordion, Button, Card, Combobox, Pagination, DatePicker, Dialog, DiyaProvider, Drawer, Menu, PageHeader, Popover, Progress, Select, Switch, Tabs,
+  TextArea, TextInput, Toast, Tooltip,
+} from '@idyeah/diya'
+
+const query = new URLSearchParams(location.search)
+const motion = query.get('motion') || undefined
+const theme = query.get('theme') || 'light'
+const glass = query.get('glass') === '1'
+const which = query.get('case') || 'buttons'
+const scale = query.get('scale')
+const log = (window.__log = [])
+const note = (event, detail) => log.push({ event, detail, at: performance.now() })
+
+function Buttons() {
+  return (
+    <div style={{ display: 'flex', gap: 16, padding: 24, flexWrap: 'wrap' }}>
+      <Button>Sign in</Button>
+      <Button variant="destructive">Delete</Button>
+      <Button variant="outline">Cancel</Button>
+      <Button className="classbg">Brand</Button>
+    </div>
+  )
+}
+
+function Tips() {
+  return (
+    <div style={{ display: 'flex', gap: 8, padding: 48 }}>
+      <Tooltip content="Bold text"><Button variant="outline" size="small">Bold</Button></Tooltip>
+      <Tooltip content="Italic text"><Button variant="outline" size="small">Italic</Button></Tooltip>
+      <Tooltip content="Underlined text"><Button variant="outline" size="small">Under</Button></Tooltip>
+      <Tooltip content="Saves the file"><Button>Save</Button></Tooltip>
+    </div>
+  )
+}
+
+function TabsCase() {
+  const [range, setRange] = useState('week')
+  const items = [{ value: 'week', label: 'Week' }, { value: 'month', label: 'Month' }, { value: 'year', label: 'Year' }]
+  return <div style={{ padding: 24 }}><Tabs variant="pill" label="Range" items={items} value={range} onValueChange={setRange} /></div>
+}
+
+function AccordionCase() {
+  return (
+    <div style={{ width: 500, padding: 24 }}>
+      <Accordion items={[
+        { id: 'wide', label: 'Wide content', content: <div style={{ width: 900, height: 40, background: '#ccc' }}>900px</div> },
+        { id: 'two', label: 'Second', content: <p>Short text.</p> },
+      ]} />
+    </div>
+  )
+}
+
+function Overlays() {
+  const [drawer, setDrawer] = useState(false)
+  return (
+    <div style={{ display: 'flex', gap: 16, padding: 24 }}>
+      <Dialog title="Project details" description="Edit the project." trigger={<Button>Open dialog</Button>}><p>Body</p></Dialog>
+      <Button onClick={() => setDrawer(true)}>Open drawer</Button>
+      <Drawer open={drawer} onOpenChange={setDrawer} title="Filters"><p>Drawer body</p></Drawer>
+    </div>
+  )
+}
+
+function ThemeCase() {
+  const [current, setCurrent] = useState('light')
+  const [tab, setTab] = useState('a')
+  return (
+    <div style={{ padding: 24 }}>
+      <button id="flip" onClick={() => setCurrent(current === 'light' ? 'dark' : 'light')}>Flip theme</button>
+      <DiyaProvider theme={current}>
+        <div style={{ display: 'grid', gap: 16, padding: 24 }}>
+          <Button>Solid</Button>
+          <Button variant="outline">Outline</Button>
+          <Switch label="Email" defaultChecked />
+          <Tabs variant="pill" label="T" items={[{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Beta' }]} value={tab} onValueChange={setTab} />
+          <TextInput label="Name" defaultValue="Ada" />
+        </div>
+      </DiyaProvider>
+    </div>
+  )
+}
+
+function ProgressCase() {
+  return <div style={{ display: 'grid', gap: 24, padding: 24, width: 400 }}><Progress label="Syncing" /><Progress variant="circular" label="Saving" /></div>
+}
+
+// Popups inside Dialog and Drawer, plus a pretend third-party popup that portals either to
+// document.body (its default) or to a container it is given.
+const options = [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }, { value: 'c', label: 'Charlie' }]
+const clicked = (what) => { window.__clicked = (window.__clicked || []).concat(what) }
+function ThirdParty({ id, container }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div>
+      <button id={`${id}-trigger`} onClick={() => setOpen(true)}>Third party {id}</button>
+      {open && createPortal(
+        <div id={`${id}-popup`} style={{ position: 'fixed', top: 40, left: 40, width: 200, height: 80, background: 'yellow', zIndex: 99999 }}>
+          <button id={`${id}-item`} onClick={() => clicked(id)}>Pick</button>
+        </div>,
+        container || document.body,
+      )}
+    </div>
+  )
+}
+function PopupsBody({ where, modal }) {
+  const [combo, setCombo] = useState('')
+  const [date, setDate] = useState('')
+  const [choice, setChoice] = useState('')
+  const [toast, setToast] = useState(false)
+  return (
+    <div style={{ display: 'grid', gap: 12 }}>
+      <Menu label={`Menu ${where}`} items={[{ id: 'm1', label: 'Rename', onSelect: () => clicked(`menu-${where}`) }]} />
+      <Popover label={`Popover ${where}`}><button onClick={() => clicked(`popover-${where}`)}>Inside popover {where}</button></Popover>
+      <Tooltip content={`Tip ${where}`}><Button aria-label={`Tip trigger ${where}`}>Hover {where}</Button></Tooltip>
+      <Combobox label={`Combo ${where}`} options={options} value={combo} onValueChange={setCombo} />
+      <DatePicker label={`Date ${where}`} value={date} onValueChange={setDate} />
+      <Select label={`Select ${where}`} options={options} value={choice} onValueChange={setChoice} />
+      <Button onClick={() => setToast(true)}>Toast {where}</Button>
+      {toast && <Toast title={`Saved ${where}`} tone="success" duration={0} onDismiss={() => setToast(false)} action={{ label: `Undo ${where}`, onClick: () => clicked(`toast-${where}`) }}>Draft saved.</Toast>}
+      <ThirdParty id={`tp-body-${where}`} />
+      <ThirdParty id={`tp-ref-${where}`} container={modal.current} />
+      {diya.useDiyaPortalContainer && <HookedThirdParty where={where} />}
+    </div>
+  )
+}
+function HookedThirdParty({ where }) {
+  const container = diya.useDiyaPortalContainer()
+  return <ThirdParty id={`tp-hook-${where}`} container={container} />
+}
+function Popups() {
+  const [dialog, setDialog] = useState(false)
+  const [drawer, setDrawer] = useState(false)
+  const dialogRef = useRef(null)
+  const drawerRef = useRef(null)
+  return (
+    <div style={{ display: 'flex', gap: 16, padding: 24 }}>
+      <Button id="open-dialog" onClick={() => setDialog(true)}>Open dialog</Button>
+      <Button id="open-drawer" onClick={() => setDrawer(true)}>Open drawer</Button>
+      {query.get('page') === '1' && diya.useDiyaPortalContainer && <HookedThirdParty where="page" />}
+      <Dialog ref={dialogRef} title="In a dialog" open={dialog} onOpenChange={setDialog} size="large"><PopupsBody where="dialog" modal={dialogRef} /></Dialog>
+      <Drawer ref={drawerRef} title="In a drawer" open={drawer} onOpenChange={setDrawer}><PopupsBody where="drawer" modal={drawerRef} /></Drawer>
+    </div>
+  )
+}
+
+// A host that keeps one toast in state, the way 1.1 apps (and the Screens) do.
+function ToastHost() {
+  const [notice, setNotice] = useState(null)
+  const duration = Number(query.get('duration') ?? 8000)
+  const count = useRef(0)
+  const raise = (title, extra = {}) => { count.current += 1; note('raise', title); setNotice({ key: count.current, title, ...extra }) }
+  return (
+    <div style={{ display: 'flex', gap: 16, padding: 24, flexWrap: 'wrap' }}>
+      <Button onClick={() => raise('Draft saved')}>Save</Button>
+      <Button onClick={() => raise('Link copied')}>Copy link</Button>
+      <Button onClick={() => raise('3 emails archived', { action: { label: 'Undo', onClick: () => note('undo') } })}>Archive</Button>
+      {notice && (
+        <Toast key={query.get('keyed') === '0' ? undefined : notice.key} tone="success" title={notice.title} duration={duration} action={notice.action}
+          onDismiss={() => { note('dismiss', notice.title); setNotice(null) }}>
+          Saved a moment ago.
+        </Toast>
+      )}
+    </div>
+  )
+}
+
+
+// The theming tokens' targets: each control the nine tokens reach, open where it opens.
+// brand=1 adds a brand file; outer=1 sets the tokens on an outer provider's style around a
+// nested Dark provider.
+const BRAND_FILE = `.diya-root { --diya-height-control-small: 36px; --diya-height-control-medium: 44px; --diya-height-control-large: 52px; }
+@media (forced-colors: none) {
+  .diya-root[data-theme='light'] { --diya-color-heading: #0b4a4e; --diya-color-focus: #0f6b70; --diya-color-field: #ffffff; --diya-color-field-line: #7d8c8e; }
+  .diya-root[data-theme='dark'] { --diya-color-heading: #9fe3dc; --diya-color-focus: #4cc4bb; --diya-color-field: #18181b; --diya-color-field-line: #6b7a7c; }
+}`
+function TokensBody() {
+  const [tab, setTab] = useState('a')
+  const [menu, setMenu] = useState(false)
+  return (
+    <div style={{ display: 'grid', gap: 16, padding: 24, maxWidth: 520 }}>
+      <PageHeader title="Workspace settings" />
+      <Card title="Billing" actions={<Button data-k="card-action" iconOnly size="small" aria-label="More">⋯</Button>}>Card body</Card>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <Button data-k="button-small" size="small">Small</Button>
+        <Button data-k="button-medium">Medium</Button>
+        <Button data-k="button-large" size="large">Large</Button>
+        <Button data-k="button-icon" iconOnly aria-label="More">⋯</Button>
+      </div>
+      <TextInput data-k="text" label="Name" defaultValue="Ada" />
+      <TextInput data-k="text-invalid" label="Email" defaultValue="ada@" error="Enter a full email address." />
+      <TextArea label="Notes" defaultValue="Draft" />
+      <Select label="Team" options={[{ value: 'a', label: 'Alpha' }]} defaultValue="a" />
+      <Combobox label="Owner" options={[{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }]} defaultValue="" />
+      <DatePicker label="Due" value="2026-11-12" onValueChange={() => {}} />
+      <Tabs label="Sections" items={[{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Beta' }]} value={tab} onValueChange={setTab} />
+      <Menu label="Actions" open={menu} onOpenChange={setMenu} items={[{ id: 'r', label: 'Rename', onSelect: () => {} }]} />
+      <Dialog title="Edit project" trigger={<Button>Open dialog</Button>}><p>Body</p></Dialog>
+      <div data-k="pagination"><Pagination page={2} total={60} pageSize={10} onPageChange={() => {}} /></div>
+    </div>
+  )
+}
+function Tokens() {
+  if (query.get('brand') === '1') {
+    const sheet = document.createElement('style')
+    sheet.textContent = BRAND_FILE
+    document.head.append(sheet)
+  }
+  if (query.get('outer') !== '1') return <TokensBody />
+  return (
+    <DiyaProvider theme="light" style={{ '--diya-height-control-medium': '60px', '--diya-color-field': 'rgb(255, 0, 0)', '--diya-color-focus': 'rgb(255, 0, 0)', '--diya-radius-popup': '2px' }}>
+      <div id="outer-probe"><Button data-k="outer-button">Outer</Button></div>
+      <DiyaProvider theme="dark"><div id="nested"><TokensBody /></div></DiyaProvider>
+    </DiyaProvider>
+  )
+}
+
+// toast() and its stack: buttons that raise toasts, and a Dialog and Drawer to open over them.
+// nopopover=1 takes the Popover API away first, the way Safari before 17 has it.
+if (query.get('nopopover') === '1') delete HTMLElement.prototype.showPopover
+function StackCase() {
+  const [dialog, setDialog] = useState(false)
+  const [drawer, setDrawer] = useState(false)
+  const undo = { label: 'Undo', onClick: () => note('undo') }
+  return (
+    <div style={{ display: 'flex', gap: 12, padding: 24, flexWrap: 'wrap', alignItems: 'start' }}>
+      <Button onClick={() => diya.toast({ title: 'Draft saved', tone: 'success', duration: 0 })}>Save</Button>
+      <Button onClick={() => diya.toast({ title: '3 emails archived', action: undo })}>Archive</Button>
+      <Button onClick={() => diya.toast({ title: 'Link copied', duration: 0 })}>Copy link</Button>
+      <Button onClick={() => diya.toast({ title: 'Export started', description: "We'll email you when it's ready.", duration: 0 })}>Export</Button>
+      <Button onClick={() => diya.toast({ title: "Couldn't sync", tone: 'error', urgent: true, duration: 0, action: { label: 'Try again', onClick: () => note('retry') } })}>Sync</Button>
+      <Button id="open-dialog" onClick={() => setDialog(true)}>Open dialog</Button>
+      <Button id="open-drawer" onClick={() => setDrawer(true)}>Open drawer</Button>
+      <Dialog title="Edit task" open={dialog} onOpenChange={setDialog}>
+        <TextInput label="Task name" defaultValue="Write the brief" />
+        <Button onClick={() => diya.toast({ title: 'Saved in the dialog', duration: 0 })}>Toast inside</Button>
+      </Dialog>
+      <Drawer title="Filters" open={drawer} onOpenChange={setDrawer}>
+        <Button onClick={() => diya.toast({ title: 'Saved in the drawer', duration: 0 })}>Toast inside</Button>
+      </Drawer>
+    </div>
+  )
+}
+
+// Two <Toast>s and a toast() in one provider, and a <Toast> in a nested Dark provider.
+function ToastsCase() {
+  const [first, setFirst] = useState(true)
+  const [second, setSecond] = useState(true)
+  return (
+    <div style={{ padding: 24, display: 'flex', gap: 12 }}>
+      <Button onClick={() => diya.toast({ title: 'Export started', duration: 0 })}>Export</Button>
+      {first && <Toast title="Draft saved" tone="success" duration={0} onDismiss={() => setFirst(false)}>Saved a moment ago.</Toast>}
+      {second && <Toast title="Link copied" duration={0} onDismiss={() => setSecond(false)}>Paste it anywhere.</Toast>}
+      {query.get('nested') === '1' && <DiyaProvider theme="dark"><Toast title="Synced" duration={0} onDismiss={() => {}}>Up to date.</Toast></DiyaProvider>}
+    </div>
+  )
+}
+
+// The toast probe: everything driven from the page's window, so specs can start from an empty
+// stack and move a real pointer onto a toast. window.diya is the package; window.comps adds and
+// removes <Toast>s; window.nested does it in a nested Dark provider; window.openDialog opens a
+// DIYA Dialog; window.openNative opens an app's own showModal() dialog with a <Toast> button.
+// bg=1 puts a busy backdrop behind the corner, so Glass shows what's under it. nestedmotion and
+// nestedscale set the nested provider's motion and duration scale.
+function Comps({ store, prefix }) {
+  const [list, setList] = useState([])
+  useEffect(() => {
+    let n = 0
+    window[store] = {
+      add: (props) => { const key = `${prefix}${++n}`; flushSync(() => setList((items) => [...items, { key, ...props }])); return key },
+      update: (key, props) => flushSync(() => setList((items) => items.map((item) => (item.key === key ? { ...item, ...props } : item)))),
+      remove: (key) => flushSync(() => setList((items) => items.filter((item) => item.key !== key))),
+    }
+  }, [])
+  return list.map(({ key, title, description, action, duration = 0, tone = 'info', urgent }) => (
+    <Toast key={key} title={title} tone={tone} duration={duration} urgent={urgent} action={action}
+      onDismiss={() => { note('dismiss', title); setList((items) => items.filter((item) => item.key !== key)) }}>
+      {description}
+    </Toast>
+  ))
+}
+function ProbeCase() {
+  const [dialog, setDialog] = useState(false)
+  const native = useRef(null)
+  const [nativeToast, setNativeToast] = useState(false)
+  const [couponError, setCouponError] = useState()
+  useEffect(() => {
+    window.diya = diya
+    window.openDialog = () => flushSync(() => setDialog(true))
+    window.closeDialog = () => flushSync(() => setDialog(false))
+    window.openNative = () => native.current.showModal()
+  }, [])
+  return (
+    <div style={{ padding: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'start' }}>
+      {query.get('bg') === '1' && <div aria-hidden="true" style={{ position: 'fixed', right: 0, bottom: 0, width: 520, height: 560, background: 'repeating-linear-gradient(135deg, #e4572e 0 24px, #29335c 24px 48px, #f3a712 48px 72px)', zIndex: 0 }} />}
+      <p id="probe-blank" style={{ margin: 0 }}>Blank page</p>
+      <h2 id="page-title" tabIndex={-1} style={{ margin: 0, fontSize: 15 }}>Comments</h2>
+      <input id="extra" aria-label="Extra" />
+      <Button id="post-undo" onClick={() => window.comps.add({ title: 'Comment hidden', action: { label: 'Undo', onClick: () => note('undo-comment') } })}>Hide comment</Button>
+      <Button id="post-comment" onClick={() => window.comps.add({ title: 'Comment posted' })}>Post comment</Button>
+      <Button id="post-toast" onClick={() => diya.toast({ title: 'Comment saved', duration: 0 })}>Save comment</Button>
+      <TextInput label="Project name" defaultValue="Atlas" />
+      <Button id="open-dialog" onClick={() => setDialog(true)}>Open dialog</Button>
+      <Dialog title="Edit task" open={dialog} onOpenChange={setDialog}>
+        <TextInput label="Task name" defaultValue="Write the brief" />
+        <Button onClick={() => diya.toast({ title: 'Saved in the dialog', duration: 0 })}>Toast inside</Button>
+        <Button id="dialog-save" onClick={() => window.comps.add({ title: 'Brief saved' })}>Save brief</Button>
+        <Button id="dialog-archive" onClick={() => window.comps.add({ title: 'Brief archived', action: { label: 'Undo archive', onClick: () => note('undo-archive') } })}>Archive brief</Button>
+      </Dialog>
+      <dialog ref={native} id="native" style={{ padding: 24 }}>
+        <TextInput id="coupon" label="Coupon code" error={couponError} onBlur={(event) => setCouponError(event.target.value.length < 6 ? 'Enter all 6 characters of the code.' : undefined)} />
+        <button id="native-save" onClick={() => setNativeToast(true)}>Save</button>
+        <button id="native-close" onClick={() => native.current.close()}>Close</button>
+        {nativeToast && <Toast title="Saved in native" duration={0} action={{ label: 'Undo native', onClick: () => note('undo-native') }} onDismiss={() => setNativeToast(false)}>Saved in the app's own dialog.</Toast>}
+      </dialog>
+      <Comps store="comps" prefix="k" />
+      {query.get('nested') === '1' && <DiyaProvider theme="dark" glass={query.get('nestedglass') === '1'} motion={query.get('nestedmotion') ?? undefined} style={query.get('nestedscale') ? { '--diya-duration-scale': query.get('nestedscale') } : undefined}><div id="nested-region"><Comps store="nested" prefix="n" /></div></DiyaProvider>}
+    </div>
+  )
+}
+
+// Field (1.2): TextInput beside Field framed around a raw input, with the same words, for the
+// pixel match; a hosted card iframe (cross-origin) and a same-origin one, each framed; and a form
+// whose field shows its error when you leave it, above a Pay button, for the held error.
+function FieldCase() {
+  const [error, setError] = useState()
+  const [paid, setPaid] = useState(0)
+  const [errorTi, setErrorTi] = useState()
+  const [paidTi, setPaidTi] = useState(0)
+  const cross = `${location.protocol}//127.0.0.1:${location.port}/card.html`
+  return (
+    <div style={{ display: 'grid', gap: 24, padding: 24, width: query.get('narrow') ? 'auto' : 360 }}>
+      <div id="pair" style={{ display: 'grid', gap: 24 }}>
+        <TextInput id="ti" label="Name on card" helperText="As it appears on the card." />
+        <diya.Field label="Name on card" helperText="As it appears on the card." framed><input id="fi" /></diya.Field>
+      </div>
+      <diya.Field label="Card number" framed error={query.get('error') ? 'Enter your card number.' : undefined}><div className="mount"><iframe title="Card number input" src={cross} /></div></diya.Field>
+      <diya.Field label="Expiry" framed><iframe title="Expiry input" srcDoc="<!doctype html><style>html,body{margin:0;background:transparent}</style><input aria-label=Expiry>" /></diya.Field>
+      <form id="pay" onSubmit={(event) => { event.preventDefault(); setPaid((count) => count + 1) }} style={{ display: 'grid', gap: 16 }}>
+        <diya.Field label="Security code" error={error}><input id="cvc" onBlur={(event) => setError(event.target.value.length < 3 ? 'Enter the 3 digits on the back.' : undefined)} /></diya.Field>
+        <Button type="submit" id="submit">Pay</Button>
+        <output id="paid">{paid}</output>
+      </form>
+      <form id="pay-ti" onSubmit={(event) => { event.preventDefault(); setPaidTi((count) => count + 1) }} style={{ display: 'grid', gap: 16 }}>
+        <TextInput id="cvc-ti" label="Security code" error={errorTi} onBlur={(event) => setErrorTi(event.target.value.length < 3 ? 'Enter the 3 digits on the back.' : undefined)} />
+        <Button type="submit" id="submit-ti">Pay</Button>
+        <output id="paid-ti">{paidTi}</output>
+      </form>
+    </div>
+  )
+}
+
+// React Stripe Elements' pattern: a component renders its own mount div and mounts the hosted
+// iframe into it once mounted (<CardElement />).
+function CardElement({ name }) {
+  const mount = useRef(null)
+  useEffect(() => {
+    const frame = document.createElement('iframe')
+    frame.title = name
+    frame.src = `${location.protocol}//127.0.0.1:${location.port}/card.html?component`
+    frame.setAttribute('style', 'border: none !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; height: 19.2px;')
+    mount.current.append(frame)
+    return () => frame.remove()
+  }, [])
+  return <div ref={mount} className="StripeElement" />
+}
+
+// Real hosted-field patterns inside Field framed (the front-end review, steps 5–6): Stripe's
+// mount div holding an iframe with !important inline sizing, a bare iframe, split card fields
+// (number, expiry), a native select and a textarea; plus a Dialog that mounts on its opener's
+// click, with no other overlay on the page.
+function ProvidersCase() {
+  const [later, setLater] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const stripe = useRef(null)
+  const cross = (name) => `${location.protocol}//127.0.0.1:${location.port}/card.html?${name}`
+  useEffect(() => {
+    // As Stripe Elements mounts: a private div, then an iframe with !important inline sizing.
+    const holder = document.createElement('div')
+    holder.className = '__PrivateStripeElement'
+    holder.setAttribute('style', 'margin: 0px !important; padding: 0px !important; border: none !important; display: block !important; background: transparent !important; position: relative !important; opacity: 1 !important;')
+    const frame = document.createElement('iframe')
+    frame.title = 'Stripe-like card'
+    frame.src = cross('stripe')
+    frame.setAttribute('style', 'border: none !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; user-select: none !important; height: 19.2px;')
+    holder.append(frame)
+    stripe.current.append(holder)
+    return () => holder.remove()
+  }, [])
+  return (
+    <div style={{ display: 'grid', gap: 24, padding: 24, width: 360 }}>
+      <Button id="later-open" onClick={() => { setMounted(true); setLater(true) }}>Open later</Button>
+      {mounted && <Dialog title="Later" open={later} onOpenChange={setLater}><p>Body</p></Dialog>}
+      <diya.Field label="Card (mount div)" framed><div id="stripe-mount" ref={stripe} /></diya.Field>
+      <diya.Field label="Card (component)" framed><CardElement name="Component card" /></diya.Field>
+      <diya.Field label="Card (bare iframe)" framed><iframe title="Bare card" src={cross('bare')} /></diya.Field>
+      <diya.Field label="Card number" framed><iframe title="Split number" src={cross('a')} /></diya.Field>
+      <diya.Field label="Expiry" framed error={query.get('error') ? 'Enter the expiry date.' : undefined}><iframe title="Split expiry" src={cross('b')} /></diya.Field>
+      <diya.Field label="Region" framed><select id="framed-select"><option>North</option><option>South</option></select></diya.Field>
+      <diya.Field label="Regions" framed><select id="framed-list" multiple><option>North</option><option>South</option><option>East</option></select></diya.Field>
+      <diya.Field label="Notes" framed><textarea id="framed-notes" defaultValue={'one\ntwo\nthree'} /></diya.Field>
+      <div id="textareas" style={{ display: 'grid', gap: 16 }}>
+        {['small', 'medium', 'large'].map((size) => (
+          <div key={size} style={{ display: 'grid', gap: 16 }}>
+            <TextArea id={`ta-${size}`} label={`TextArea ${size}`} size={size} />
+            <diya.Field label={`Framed ${size}`} size={size} framed><textarea id={`fta-${size}`} /></diya.Field>
+          </div>
+        ))}
+      </div>
+      <p id="blank" style={{ padding: 24 }}>Blank page</p>
+    </div>
+  )
+}
+
+// Checkbox (1.2) beside Choice, whose box it shares: unchecked and checked boxes of each, a mixed
+// Checkbox and a mixed Select all (present from the first paint), a label with a link, and a
+// form whose submissions are counted.
+function CheckboxCase() {
+  const [sent, setSent] = useState(0)
+  const options = [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }, { value: 'c', label: 'Charlie' }]
+  return (
+    <form id="cb-form" onSubmit={(event) => { event.preventDefault(); setSent((count) => count + 1) }} style={{ display: 'grid', gap: 24, padding: 24, width: 420 }}>
+      <diya.Choice label="Teams" multiple selectAll options={options} defaultValue={['b']} />
+      <diya.Choice label="One" multiple options={[{ value: 'x', label: 'Unchecked option' }, { value: 'y', label: 'Checked option' }]} defaultValue={['y']} />
+      <diya.Checkbox id="cb-off" label="Unchecked box" />
+      <diya.Checkbox id="cb-on" label="Checked box" defaultChecked />
+      <diya.Checkbox id="cb-mixed" label="All 3 projects" indeterminate />
+      <diya.Checkbox id="cb-terms" name="terms" label={<>I agree to the <diya.TextLink href="#terms" inline>Terms</diya.TextLink></>} />
+      <Button type="submit">Create account</Button>
+      <output id="cb-sent">{sent}</output>
+    </form>
+  )
+}
+
+// Spinner (1.2): one mounted on demand (for the 400ms beat), one beside text at each size's
+// type (14, 15, 17 and 20px, with a zero-size marker on the baseline), a labeled one, one with
+// its words, and a main-thread block on demand.
+function SpinnerCase() {
+  const [shown, setShown] = useState(false)
+  // Blocks the main thread for ms, with a flag that is red for the whole block (painted first).
+  window.__block = (ms) => {
+    const flag = document.getElementById('sp-flag')
+    flag.style.background = 'rgb(255, 0, 0)'
+    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => {
+      const start = performance.now()
+      while (performance.now() - start < ms);
+      flag.style.background = 'rgb(0, 0, 0)'
+    }, 20)))
+  }
+  return (
+    <div style={{ display: 'grid', gap: 24, padding: 24, width: 600 }}>
+      <button id="sp-mount" onClick={() => { note('mount', performance.now()); setShown((value) => !value) }}>Toggle</button>
+      <p style={{ margin: 0, minHeight: 24 }}>{shown && <diya.Spinner id="sp-new" label="Loading older invoices" />}</p>
+      {[[14, 'small'], [15, 'small'], [17, 'medium'], [20, 'large']].map(([px, size]) => (
+        <p key={px} data-px={px} style={{ fontSize: px, margin: 0 }}>Hamburg <diya.Spinner size={size} /><span className="sp-base" style={{ display: 'inline-block', width: 0, height: 0 }} /></p>
+      ))}
+      <p style={{ margin: 0 }}><diya.Spinner id="sp-labeled" label="Loading messages" /></p>
+      <p style={{ margin: 0 }}><diya.Spinner id="sp-words" size="small" label="Loading older invoices" showLabel /></p>
+      <p style={{ margin: 0, display: 'flex', gap: 24, alignItems: 'center' }}><span id="sp-flag" style={{ width: 24, height: 24, background: 'rgb(0, 0, 0)' }} /><diya.Spinner id="sp-block" size="large" /></p>
+    </div>
+  )
+}
+
+// Button loading (1.2): every size and variant with a neighbor, icon-only, a link, asChild, a
+// Button whose own class sets its padding, and a Dialog whose long confirm wraps. dir=rtl flips it.
+function Logo() { return <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#4285f4" /></svg> }
+const arrow = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+
+function IconText() { return <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 12h14" /></svg>Save</> }
+
+// A link component that takes its label from a prop when it has no children (P1).
+const NavLink = forwardRef(function NavLink({ label, children, ...rest }, ref) { return <a ref={ref} {...rest}>{children ?? label}</a> })
+
+// A link component that ignores its children and renders its label prop (Q1).
+const SelfLink = forwardRef(function SelfLink({ label, children, ...rest }, ref) { return <a ref={ref} {...rest}>{label}</a> })
+
+function ReaderSpinners({ busy }) {
+  const [shown, setShown] = useState(false)
+  window.__showRs = () => flushSync(() => setShown(true))
+  return shown && (
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <Button id="bl-rs-first" variant="outline" loading={busy}><diya.Spinner size="small" /> Syncing</Button>
+      <Button id="bl-rs-last" variant="outline" loading={busy}>Refresh <diya.Spinner size="small" /></Button>
+      <Button id="bl-rs-lead" variant="outline" loading={busy}><Plus size={18} strokeWidth={1.6} />Refresh <diya.Spinner size="small" /></Button>
+      <Button id="bl-rs-icon" variant="outline" iconOnly aria-label="Sync" loading={busy}><diya.Spinner size="small" /></Button>
+    </div>
+  )
+}
+
+function LoadingCase() {
+  const [busy, setBusy] = useState(query.get('busy') === '1')
+  // Whether loading ever started: a Button whose loading state starts undefined (useState()) gets it
+  // only then (O5).
+  const [started, setStarted] = useState(query.get('busy') === '1')
+  window.__setBusy = (value) => { note('busy', performance.now()); flushSync(() => { setBusy(value); if (value) setStarted(true) }) }
+  // Loading off and on again within one frame: two commits, no frame between (M5).
+  window.__flip = () => { flushSync(() => setBusy(false)); flushSync(() => setBusy(true)) }
+  const icon = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+  return (
+    <div dir={query.get('dir') || 'ltr'} style={{ display: 'grid', gap: 16, padding: 24 }}>
+      {['small', 'medium', 'large'].flatMap((size) => ['solid', 'outline', 'quiet'].map((variant) => (
+        <div key={`${size}-${variant}`} style={{ display: 'flex', gap: 8 }}>
+          <Button id={`bl-${size}-${variant}`} size={size} variant={variant} loading={busy}>Save changes</Button>
+          <Button id={`bl-${size}-${variant}-next`} size={size} variant="outline">Cancel</Button>
+        </div>
+      )))}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Button id="bl-icon" iconOnly aria-label="Add" loading={busy}>{icon}</Button>
+        <Button id="bl-link" href="#saved" loading={busy}>Open report</Button>
+        <Button id="bl-child" asChild loading={busy}><a href="#child">Child link</a></Button>
+        <Button id="bl-pad" className="app-pad" loading={busy}>Save</Button>
+        <Button id="bl-pad-wide" className="app-pad-wide" loading={busy}>Save</Button>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {[10, 12, 16].map((px) => <Button key={px} id={`bl-pad-${px}`} className={`app-pad-${px}`} loading={busy}>Pay $42</Button>)}
+        <Button id="bl-lead" loading={busy}>{icon}Add member</Button>
+        <Button id="bl-lead-large" size="large" loading={busy}>{icon}Add member</Button>
+        <Button id="bl-lead-pad" className="app-pad-12" size="small" loading={busy}>{icon}Add</Button>
+        <Button id="bl-short" size="small" loading={busy}>OK</Button>
+      </div>
+      {/* Leading icons from an icon library, a logo component and a fragment, and rich text (M1). */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Button id="bl-lucide" loading={busy}><Plus size={18} strokeWidth={1.6} />Add member</Button>
+        <Button id="bl-lucide-large" size="large" variant="outline" loading={busy}><Download size={18} strokeWidth={1.6} />Export CSV</Button>
+        <Button id="bl-frag" loading={busy}><><Send size={18} strokeWidth={1.6} /> Send</></Button>
+        <Button id="bl-logo" variant="outline" loading={busy}><Logo /> Continue with Google</Button>
+        <Button id="bl-strong" loading={busy}><strong>Save</strong> draft</Button>
+      </div>
+      {/* A trailing icon spread to the edge (M2), each beside a twin with no loading prop. */}
+      <div style={{ display: 'grid', gap: 8, width: 320 }}>
+        <Button id="bl-spread" loading={busy} style={{ width: 320, justifyContent: 'space-between' }}>Continue {arrow}</Button>
+        <Button id="bl-spread-plain" style={{ width: 320, justifyContent: 'space-between' }}>Continue {arrow}</Button>
+        <Button id="bl-auto" loading={busy} style={{ width: 320 }}>Pay now <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" style={{ marginInlineStart: 'auto' }}><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
+        <Button id="bl-auto-plain" style={{ width: 320 }}>Pay now <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" style={{ marginInlineStart: 'auto' }}><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
+      </div>
+      {/* Labels of several parts whose WebKit name once repeated, an app's text-shadow and text fill on
+          the Button (N1), and a Spinner of the reader's own inside a Button (N6). */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Button id="bl-n1-text" loading={busy}>Delete {3} files</Button>
+        <Button id="bl-n1-strong" variant="outline" loading={busy}><>Delete <strong>{3}</strong> files</></Button>
+        <Button id="bl-n1-next" loading={busy}><>Next {3} <Plus size={16} strokeWidth={1.6} /></></Button>
+        <Button id="bl-n1-emoji" variant="outline" loading={busy}><>{'🚀'} Launch {2}</></Button>
+        <Button id="bl-shadow" loading={busy} style={{ textShadow: '0 1px 0 rgb(220 38 38)' }}>Publish</Button>
+        <Button id="bl-fill" variant="outline" loading={busy} style={{ WebkitTextFillColor: 'rgb(220 38 38)' }}>Archive</Button>
+        <Button id="bl-own-spinner" variant="outline">Syncing <diya.Spinner size="small" /></Button>
+        <Button id="bl-own-spinner-icon" variant="outline" iconOnly aria-label="Syncing"><diya.Spinner size="small" /></Button>
+        <Button id="bl-own-icon" variant="outline">Syncing <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9" /></svg></Button>
+      </div>
+      {/* Forced colors (N4): an own-colored element in the label, and a disabled Button that's loading.
+          A component of an icon and words before a kbd (N9), beside its twin. */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Button id="bl-fc-red" variant="outline" loading={busy}>Save <span style={{ color: '#e11d48' }}>now</span></Button>
+        <Button id="bl-fc-disabled" disabled loading={busy}>Send</Button>
+        <Button id="bl-fc-disabled-plain" disabled>Send</Button>
+        <Button id="bl-icontext" variant="outline" loading={busy}><><IconText /><kbd>⌘S</kbd></></Button>
+        <Button id="bl-icontext-plain" variant="outline"><><IconText /><kbd>⌘S</kbd></></Button>
+      </div>
+      {/* SiteHeader's utilities size their icons at 20px (N5). Its layout effect reads styles on every
+          render, which a loading flip within one frame must not depend on: lean=1 leaves it out (O3). */}
+      {query.get('lean') !== '1' && <diya.SiteHeader brand="Oriel" utilities={<><Button id="bl-tools" variant="quiet" loading={busy}><Bell />Alerts</Button><Button id="bl-tools-plain" variant="quiet"><Bell />Alerts</Button></>} />}
+      {/* loading given only once it's true, and a Button that mounts already loading (M4, L2). */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', minHeight: 48 }}>
+        <Button id="bl-late" loading={busy || undefined}>Sync now</Button>
+        <Button id="bl-late-icon" loading={busy || undefined}><Plus size={18} strokeWidth={1.6} />Add</Button>
+        {/* Plain labels of several parts whose loading comes late, or starts undefined (O5). */}
+        <Button id="bl-tr-late" variant="outline" loading={busy || undefined}>Delete {3} files</Button>
+        <Button id="bl-tr-undef" variant="outline" loading={started ? busy : undefined}>Move {3} files</Button>
+        {busy && <Button id="bl-mounted" loading>Mounted busy</Button>}
+      </div>
+      {/* Labels of more than one part (L7), each beside a twin that has no loading prop. */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Button id="bl-multi" loading={busy}>Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
+        <Button id="bl-multi-next" variant="outline">Back</Button>
+        <Button id="bl-multi-plain">Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Button id="bl-kbd" variant="outline" loading={busy}>Search <kbd>⌘K</kbd></Button>
+        <Button id="bl-kbd-next" variant="outline">Cancel</Button>
+        <Button id="bl-kbd-plain" variant="outline">Search <kbd>⌘K</kbd></Button>
+      </div>
+      {/* An app's own animation on a loading Button (O4): its class, a utility in a later layer only
+          while saving (Tailwind's animate-pulse habit), an inline style, and one after a leading icon.
+          anim=1 only, so the other tests' pages stay still. */}
+      {query.get('anim') === '1' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button id="bl-anim-class" className="app-pulse" loading={busy}>Save changes</Button>
+          <Button id="bl-anim-layer" className={busy ? 'animate-pulse' : undefined} loading={busy}>Saving</Button>
+          <Button id="bl-anim-inline" style={{ animation: 'app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} loading={busy}>Delete {3} files</Button>
+          <Button id="bl-anim-lead" className="app-pulse" loading={busy}><Plus size={18} strokeWidth={1.6} />Add member</Button>
+        </div>
+      )}
+      {/* Disabled and loading, beside a twin that is only disabled, in every look (F16, Q3). dis=1 only. */}
+      {query.get('dis') === '1' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {['solid', 'outline', 'quiet', 'destructive'].flatMap((variant) => [
+            <Button key={variant} id={`bl-dis-${variant}`} variant={variant} disabled loading={busy}>Send</Button>,
+            <Button key={`${variant}-plain`} id={`bl-dis-${variant}-plain`} variant={variant} disabled>Send</Button>,
+          ])}
+          <Button id="bl-dis-link" href="#sent" disabled loading={busy}>Open report</Button>
+          <Button id="bl-dis-link-plain" href="#sent" disabled>Open report</Button>
+          <Button id="bl-dis-child" asChild disabled loading={busy}><a href="#child">Child link</a></Button>
+          <Button id="bl-dis-child-plain" asChild disabled><a href="#child">Child link</a></Button>
+        </div>
+      )}
+      {/* An app's own colors on loading Buttons, for forced colors (P2, P4): white text on an outline,
+          Tailwind-style bg-violet-600 text-white (a later layer), disabled with white text, a box
+          shadow, a gradient, and a link. fcapp=1 only. */}
+      {query.get('fcapp') === '1' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button id="bl-app-white" variant="outline" loading={busy} style={{ color: '#fff' }}>Save changes</Button>
+          <Button id="bl-app-violet" className="bg-violet-600 text-white" loading={busy}>Save changes</Button>
+          <Button id="bl-app-disabled" disabled className="text-white" loading={busy}>Send</Button>
+          <Button id="bl-app-shadow" loading={busy} style={{ boxShadow: 'rgba(0, 0, 0, 0.35) 0 2px 6px' }}>Publish</Button>
+          <Button id="bl-app-gradient" loading={busy} style={{ backgroundImage: 'linear-gradient(90deg, #e11d48, #7c3aed)', color: '#fff' }}>Upgrade</Button>
+          <Button id="bl-app-link" href="#app" className="bg-violet-600 text-white" loading={busy}>Open report</Button>
+          <Button id="bl-app-transition" className="bg-violet-600 text-white transition-colors" loading={busy}>Save changes</Button>
+        </div>
+      )}
+      {/* asChild with a child that has no children of its own (P1): a submit input, an img, and a
+          link component that labels itself from a prop; each given loading and not. void=1 only. */}
+      {query.get('void') === '1' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button id="bl-void-input" asChild loading={busy}><input type="submit" value="Send" /></Button>
+          <Button id="bl-void-input-plain" asChild><input type="submit" value="Send" /></Button>
+          <Button id="bl-void-img" asChild iconOnly aria-label="Home" loading={busy}><img alt="" width={16} height={16} src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" /></Button>
+          <Button id="bl-void-img-plain" asChild iconOnly aria-label="Home"><img alt="" width={16} height={16} src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" /></Button>
+          <Button id="bl-void-nav" asChild loading={busy}><NavLink href="#/home" label="Go home" /></Button>
+          <Button id="bl-void-nav-plain" asChild><NavLink href="#/home" label="Go home" /></Button>
+          <Button id="bl-void-self" asChild loading={busy}><SelfLink href="#/home" label="Go home" /></Button>
+        </div>
+      )}
+      {/* Destructive Buttons for forced colors (O2): words, an icon-only one, a disabled one, and a
+          leading icon. dz=1 only. */}
+      {query.get('dz') === '1' && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button id="bl-dz" variant="destructive" loading={busy}>Delete files</Button>
+          <Button id="bl-dz-icon" variant="destructive" iconOnly aria-label="Remove" loading={busy}>{icon}</Button>
+          <Button id="bl-dz-disabled" variant="destructive" disabled>Delete files</Button>
+          <Button id="bl-dz-lead" variant="destructive" loading={busy}><Download size={18} strokeWidth={1.6} />Delete export</Button>
+        </div>
+      )}
+      {/* A Spinner of the reader's own in a loading Button's label, first, last, after a leading icon,
+          and as an icon-only Button's icon, mounted on demand (O9). rs=1 only. */}
+      {query.get('rs') === '1' && <ReaderSpinners busy={busy} />}
+      <Dialog title="Delete the archive?" confirmLabel="Delete every archived conversation" confirmVariant="destructive" onConfirm={() => new Promise(() => {})}
+        trigger={<Button id="bl-dialog-open" variant="outline">Delete archive</Button>}>Archived conversations go for good.</Dialog>
+    </div>
+  )
+}
+
+// Control heights (VIS-SITE2-01): a Combobox (one with chips that wrap) beside a Text Input at
+// each size, under the height tokens given as h=medium,small,large (none: the defaults).
+function HeightsCase() {
+  const [medium, small, large] = (query.get('h') || '').split(',')
+  const style = medium ? { '--diya-height-control-medium': `${medium}px`, '--diya-height-control-small': `${small}px`, '--diya-height-control-large': `${large}px` } : undefined
+  const options = [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }, { value: 'c', label: 'Charlie' }, { value: 'd', label: 'Delta' }]
+  return (
+    <DiyaProvider theme={theme} style={style}>
+      <div style={{ display: 'grid', gap: 24, padding: 24, width: 360 }}>
+        {['small', 'medium', 'large'].map((size) => (
+          <div key={size} style={{ display: 'grid', gap: 12 }}>
+            <Combobox id={`hc-${size}`} size={size} label={`Owner ${size}`} options={options} value={null} onValueChange={() => {}} />
+            <TextInput id={`ht-${size}`} size={size} label={`Name ${size}`} value="" onValueChange={() => {}} />
+          </div>
+        ))}
+        <div style={{ width: 220 }}><Combobox id="hc-chips" multiple label="Teams" options={options} value={['a', 'b', 'c', 'd']} onValueChange={() => {}} /></div>
+      </div>
+    </DiyaProvider>
+  )
+}
+
+// Drawer corners (1.2 step 9): a Drawer open on the side given (side=left|right) at the corner
+// scale given (cs=0.5, 1 or 1.5).
+function DrawerCase() {
+  const [open, setOpen] = useState(true)
+  const side = query.get('side') || 'right'
+  return (
+    <div style={{ padding: 24, '--diya-corner-scale': query.get('cs') || undefined }}>
+      <Button onClick={() => setOpen(true)}>Open drawer</Button>
+      <Drawer open={open} onOpenChange={setOpen} side={side} title="Filters" style={{ '--diya-corner-scale': query.get('cs') || undefined }}><p>Drawer body</p></Drawer>
+    </div>
+  )
+}
+
+// Choice and Checkbox at every size (1.2 step 9): checked boxes, a mixed Checkbox and a mixed
+// Select all in each size's row.
+function MarksCase() {
+  const options = [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }]
+  return (
+    <div style={{ display: 'grid', gap: 24, padding: 24, width: 420 }}>
+      {['small', 'medium', 'large'].map((size) => (
+        <div key={size} data-size-row={size} style={{ display: 'grid', gap: 12 }}>
+          <diya.Choice label={`Choice ${size}`} size={size} multiple selectAll options={options} defaultValue={['a']} />
+          <diya.Checkbox id={`cb-${size}`} size={size} label={`Checkbox ${size}`} defaultChecked />
+          <diya.Checkbox id={`cb-${size}-mixed`} size={size} label={`Mixed ${size}`} indeterminate />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// react-hook-form's register() on a native checkbox, a Switch and a Checkbox (K7): the submitted
+// values are written out as JSON.
+function RhfCase() {
+  const { register, handleSubmit } = useForm({ defaultValues: { native: false, sw: false, cb: false, news: false } })
+  const [sent, setSent] = useState('')
+  return (
+    <form onSubmit={handleSubmit((values) => setSent(JSON.stringify(values)))} style={{ display: 'grid', gap: 16, padding: 24, width: 360 }}>
+      <label><input type="checkbox" {...register('native')} /> Native</label>
+      <Switch label="Switch" {...register('sw')} />
+      <diya.Checkbox label="Checkbox" {...register('cb')} />
+      <diya.Checkbox label="News" value="yes" {...register('news')} />
+      <Button type="submit">Send</Button>
+      <output id="rhf-sent">{sent}</output>
+    </form>
+  )
+}
+
+// A Sign-in-style form (R1): Email and Password, checked on submit (Enter or the button). move=1:
+// the app then moves focus to the first invalid field, as many forms do.
+function SignInCase() {
+  const [errors, setErrors] = useState({})
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    if (!tick || query.get('move') !== '1') return
+    const first = ['si-email', 'si-password'].find((id) => errors[id])
+    if (first) document.getElementById(first).focus()
+  }, [tick])
+  const submit = (event) => {
+    event.preventDefault()
+    const email = document.getElementById('si-email').value
+    const password = document.getElementById('si-password').value
+    setErrors({
+      'si-email': !email ? 'Enter your email address.' : email.includes('@') ? undefined : 'Enter an email address like name@example.com.',
+      'si-password': password ? undefined : 'Enter your password.',
+    })
+    setTick((count) => count + 1)
+  }
+  return (
+    <form id="si" noValidate onSubmit={submit} style={{ display: 'grid', gap: 16, padding: 24, width: 360 }}>
+      <diya.TextInput id="si-email" label="Email" error={errors['si-email']} />
+      <diya.TextInput id="si-password" label="Password" type="password" error={errors['si-password']} />
+      <Button type="submit" id="si-submit">Sign in</Button>
+    </form>
+  )
+}
+
+// The same sign-in form with react-hook-form (S1): it validates asynchronously and, by default,
+// moves focus to the first invalid field before React commits the errors.
+function SignInRhfCase() {
+  const { register, handleSubmit, formState: { errors } } = useForm({ defaultValues: { email: '', password: '' } })
+  const [sent, setSent] = useState(0)
+  return (
+    <form id="si" noValidate onSubmit={handleSubmit(() => setSent((count) => count + 1))} style={{ display: 'grid', gap: 16, padding: 24, width: 360 }}>
+      <diya.TextInput id="si-email" label="Email" error={errors.email?.message}
+        {...register('email', { required: 'Enter your email address.', pattern: { value: /@/, message: 'Enter an email address like name@example.com.' } })} />
+      <diya.TextInput id="si-password" label="Password" type="password" error={errors.password?.message}
+        {...register('password', { required: 'Enter your password.' })} />
+      <Button type="submit" id="si-submit">Sign in</Button>
+      <output id="si-sent">{sent}</output>
+    </form>
+  )
+}
+
+const cases = { signin: SignInCase, 'signin-rhf': SignInRhfCase, rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+const Case = cases[which]
+const style = document.createElement('style')
+style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; } @keyframes app-pulse { 50% { opacity: 0.5; } } .app-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @layer utilities { .animate-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } .bg-violet-600 { background-color: #7c3aed; } .text-white { color: #fff; } .transition-colors { transition-property: color, background-color, border-color; transition-duration: 150ms; } }'
+document.head.append(style)
+document.documentElement.dataset.react = version
+const app = which === 'theme' || (which === 'tokens' && query.get('outer') === '1')
+  ? <Case />
+  : <DiyaProvider theme={theme} glass={glass} motion={motion} style={scale === null ? undefined : { '--diya-duration-scale': scale }}><Case /></DiyaProvider>
+if (query.get('ssr') === '1') {
+  // As a server-rendered app arrives: the server's HTML paints first, then React hydrates it two
+  // frames later (data-hydrated marks when).
+  const root = document.getElementById('root')
+  root.innerHTML = renderToString(app)
+  requestAnimationFrame(() => {
+    document.documentElement.setAttribute('data-ready', '')
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      hydrateRoot(root, app)
+      requestAnimationFrame(() => document.documentElement.setAttribute('data-hydrated', ''))
+    }))
+  })
+} else {
+  createRoot(document.getElementById('root')).render(app)
+  requestAnimationFrame(() => document.documentElement.setAttribute('data-ready', ''))
+}

@@ -79,12 +79,20 @@ export function ReferencePanel({ path }: { path: string }) {
         <div className="item-reference-guide">
           <section aria-labelledby={`${titleId}-when`}>
             <h3 id={`${titleId}-when`}>When to use</h3>
-            <p>{use}</p>
-            {instead && <p className="item-reference-quiet">{instead}</p>}
+            <p>
+              <Prose text={use} />
+            </p>
+            {instead && (
+              <p className="item-reference-quiet">
+                <Prose text={instead} />
+              </p>
+            )}
           </section>
           <section aria-labelledby={`${titleId}-access`}>
             <h3 id={`${titleId}-access`}>Accessibility</h3>
-            <p>{access}</p>
+            <p>
+              <Prose text={access} />
+            </p>
           </section>
         </div>
 

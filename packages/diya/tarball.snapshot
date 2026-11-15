@@ -1,6 +1,6 @@
 # Files in the @idyeah/diya npm tarball. Regenerate with: pnpm snapshot:tarball
-# budget packed <= 516994 bytes
-# budget unpacked <= 1300000 bytes
+# budget packed <= 581500 bytes
+# budget unpacked <= 1572000 bytes
 CHANGELOG.md
 LICENSE
 NOTICE
@@ -49,6 +49,8 @@ dist/calendar/month.d.ts
 dist/calendar/month.js
 dist/card/Card.d.ts
 dist/card/Card.js
+dist/checkbox/Checkbox.d.ts
+dist/checkbox/Checkbox.js
 dist/choice/Choice.d.ts
 dist/choice/Choice.js
 dist/choice/messages.d.ts
@@ -77,23 +79,43 @@ dist/dialog/Dialog.d.ts
 dist/dialog/Dialog.js
 dist/dialog/messages.d.ts
 dist/dialog/messages.js
+dist/field/Field.d.ts
+dist/field/Field.js
+dist/field/messages.d.ts
+dist/field/messages.js
 dist/fonts/DIYASans-Italic.woff2
 dist/fonts/DIYASans.woff2
 dist/fonts/OFL.txt
 dist/index.d.ts
 dist/index.js
+dist/internal/announce.d.ts
+dist/internal/announce.js
 dist/internal/brand.d.ts
 dist/internal/brand.js
 dist/internal/cx.d.ts
 dist/internal/cx.js
+dist/internal/field-parts.d.ts
+dist/internal/field-parts.js
+dist/internal/frame-focus.d.ts
+dist/internal/frame-focus.js
 dist/internal/layout-effect.d.ts
 dist/internal/layout-effect.js
 dist/internal/link.d.ts
 dist/internal/link.js
+dist/internal/modal-stack.d.ts
+dist/internal/modal-stack.js
+dist/internal/opener.d.ts
+dist/internal/opener.js
+dist/internal/pointer.d.ts
+dist/internal/pointer.js
 dist/internal/presence.d.ts
 dist/internal/presence.js
 dist/internal/slot.d.ts
 dist/internal/slot.js
+dist/internal/stray-popups.d.ts
+dist/internal/stray-popups.js
+dist/internal/warn.d.ts
+dist/internal/warn.js
 dist/layout/Inline.d.ts
 dist/layout/Inline.js
 dist/layout/Stack.d.ts
@@ -150,6 +172,8 @@ dist/slider/Slider.d.ts
 dist/slider/Slider.js
 dist/slider/messages.d.ts
 dist/slider/messages.js
+dist/spinner/Spinner.d.ts
+dist/spinner/Spinner.js
 dist/styles.css
 dist/switch/Switch.d.ts
 dist/switch/Switch.js
@@ -173,10 +197,20 @@ dist/text-input/native-field.d.ts
 dist/text-input/native-field.js
 dist/toast/Toast.d.ts
 dist/toast/Toast.js
+dist/toast/ToastStack.d.ts
+dist/toast/ToastStack.js
+dist/toast/host.d.ts
+dist/toast/host.js
 dist/toast/messages.d.ts
 dist/toast/messages.js
+dist/toast/motion.d.ts
+dist/toast/motion.js
+dist/toast/queue.d.ts
+dist/toast/queue.js
 dist/tooltip/Tooltip.d.ts
 dist/tooltip/Tooltip.js
+dist/visually-hidden/VisuallyHidden.d.ts
+dist/visually-hidden/VisuallyHidden.js
 dist/workflow/ContentState.d.ts
 dist/workflow/ContentState.js
 dist/workflow/Drawer.d.ts

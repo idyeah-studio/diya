@@ -1,5 +1,6 @@
 'use client'
-import { forwardRef, useEffect, useId, useMemo, useRef, useState, type InputHTMLAttributes } from 'react'
+import { forwardRef, useEffect, useMemo, useRef, useState, type InputHTMLAttributes } from 'react'
+import { markField, renderDescription, useErrorAnnouncement, useFieldIds, useShownError } from '../internal/field-parts.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { usePresence } from '../internal/presence.js'
 import { createPortal } from 'react-dom'
@@ -86,14 +87,15 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
     if (props.multiple) props.onValueChange?.(next)
     else props.onValueChange?.(next[0] ?? '')
   }
-  const generatedId = useId()
-  const id = idProp ?? generatedId
+  const { id, descriptionId } = useFieldIds(idProp, 'help')
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
   const [revealRequest, setRevealRequest] = useState(0)
   const keyboardNavigation = useRef(true)
   const field = useRef<HTMLDivElement | null>(null)
+  const shownError = useShownError(error, field)
+  useErrorAnnouncement(label, shownError, field)
   const control = useRef<HTMLDivElement | null>(null)
   const input = useRef<HTMLInputElement | null>(null)
   const inputRef = useMergedRef(ref, input)
@@ -158,7 +160,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
     if (!multiple) setOpen(false)
   }
 
-  return <div ref={field} className={cx('diya-combobox', className)} style={style} data-size={size} data-invalid={!!error} onBlur={(event) => {
+  return <div ref={field} className={cx('diya-combobox', className)} style={style} data-size={size} data-invalid={!!shownError} onBlur={(event) => {
     const next = event.relatedTarget as Node | null
     if (!field.current?.contains(next) && !panel.current?.contains(next)) close()
   }}>
@@ -171,7 +173,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
       </span>)}
       <input {...rest} ref={inputRef} id={id} role="combobox" aria-expanded={isOpen} aria-controls={isOpen ? `${id}-options` : undefined} aria-autocomplete="list"
         aria-activedescendant={isOpen && activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined}
-        aria-invalid={!!error} aria-describedby={[describedBy, error || helperText ? `${id}-help` : undefined].filter(Boolean).join(' ') || undefined} disabled={disabled}
+        aria-invalid={!!shownError} aria-describedby={[describedBy, shownError || helperText ? descriptionId : undefined].filter(Boolean).join(' ') || undefined} disabled={disabled}
         placeholder={placeholder ?? (multiple && value.length ? t.addAnother : t.placeholder)}
         value={!multiple && !isOpen && value.length ? options.find((option) => option.value === value[0])?.label || '' : query}
         onClick={(event) => { onInputClick?.(event); if (!disabled && !event.defaultPrevented) { revealActive(); setOpen(true); setActive(enabled[0] ?? -1) } }}
@@ -209,7 +211,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
           setOpen(!isOpen)
         }}><Icon name="chevron-down" size={14} /></button>
     </div>
-    {(error || helperText) && <p id={`${id}-help`} className="diya-field-help">{error && <span aria-hidden="true">!</span>}{error || helperText}</p>}
+    {renderDescription({ id: descriptionId, className: 'diya-field-help', error: shownError, helperText })}
     {present && portal && createPortal(<ul ref={panel} id={`${id}-options`} className="diya-combobox-options diya-floating"
       role="listbox" aria-label={label} aria-multiselectable={multiple || undefined} style={{ position: 'fixed', inset: 'auto', margin: 0 }}
       data-side="bottom" data-exiting={closing ? 'true' : undefined}>
@@ -221,3 +223,5 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
     </ul>, portal)}
   </div>
 })
+// Field warns when it wraps one of DIYA's own fields, which have their own label.
+markField(Combobox, 'Combobox')

@@ -6,8 +6,11 @@ import { Appearance, AppearanceProvider } from '../app/Appearance'
 import { ButtonLibrary } from '../components/ButtonLibrary'
 import { CatalogProvider } from '../components/CatalogProvider'
 import { PACKAGE_MANAGER_KEY } from '../components/site/package-manager'
+import { settingName } from '../components/customize/CustomizePanel'
+import { contrast } from '../lib/customize/color'
 import { contrastIssues } from '../lib/customize/contrast'
-import { effectiveAppearance } from '../lib/customize/appearance'
+import { effectiveAppearance, parseOverrides } from '../lib/customize/appearance'
+import { contrastFix, themeFile } from '../lib/customize/theme'
 import { getSnapshot, resetStoreForTests, setBrandValue, setItemOption } from '../lib/customize/store'
 
 vi.mock('next/link', () => ({
@@ -177,5 +180,79 @@ describe('Get theme, when a color pair is too faint', () => {
     })
     expect(screen.queryByRole('dialog', { name: 'Get theme' })).toBeNull()
     await waitFor(() => expect(document.activeElement).toBe(trigger))
+  })
+})
+
+/*
+ * 1.2's nine theming tokens in the theme file: the four colors per theme, the
+ * three control heights and the popup and modal corners, each only when set to
+ * something DIYA wouldn't draw anyway, with the same Light, Dark and
+ * theme="system" blocks as every other token. The values are the visual
+ * designer's invented "Brackwater" brand (visual.md §6).
+ */
+describe('Get theme, the 1.2 theming tokens', () => {
+  const BRACKWATER = {
+    'tokens.light.focus': '#0F6B70',
+    'tokens.dark.focus': '#4CC4BB',
+    'tokens.light.heading': '#0B4A4E',
+    'tokens.dark.heading': '#9FE3DC',
+    // White is what Light fields are filled with anyway, so it's left out of the file.
+    'tokens.light.field': '#FFFFFF',
+    'tokens.dark.field': '#18181B',
+    'tokens.light.fieldLine': '#768587',
+    'tokens.dark.fieldLine': '#6B7A7C',
+    'tokens.heightSmall': 36,
+    'tokens.heightMedium': 44,
+    'tokens.heightLarge': 52,
+    'tokens.radiusPopup': 10,
+    'tokens.radiusModal': 14,
+  } as const
+
+  it('writes the system blocks for the new tokens', async () => {
+    for (const [path, value] of Object.entries(BRACKWATER)) setBrandValue(path as keyof typeof BRACKWATER, value)
+    const user = userEvent.setup()
+    render(<Preview />)
+    const { drawer } = await openGetTheme(user)
+    const file = within(drawer).getByRole('textbox', { name: 'Theme file' }).textContent!
+    expect(file).toContain(
+      '.diya-root {\n  --diya-height-control-small: 36px;\n  --diya-height-control-medium: 44px;\n  --diya-height-control-large: 52px;\n  --diya-radius-popup: 10px;\n  --diya-radius-modal: 14px;\n}'
+    )
+    const light = '--diya-color-focus: #0F6B70;\n    --diya-color-heading: #0B4A4E;\n    --diya-color-field-line: #768587;\n  }'
+    const dark = '--diya-color-focus: #4CC4BB;\n    --diya-color-heading: #9FE3DC;\n    --diya-color-field: #18181B;\n    --diya-color-field-line: #6B7A7C;\n  }'
+    expect(file).toContain(`  .diya-root[data-theme='light'] {\n    ${light}`)
+    expect(file).toContain(`  .diya-root[data-theme='dark'] {\n    ${dark}`)
+    expect(file).toContain(`@media (forced-colors: none) and (prefers-color-scheme: light) {\n  .diya-root[data-theme='system'] {\n    ${light}\n}`)
+    expect(file).toContain(`@media (forced-colors: none) and (prefers-color-scheme: dark) {\n  .diya-root[data-theme='system'] {\n    ${dark}\n}`)
+    expect(file).not.toContain('--diya-color-field: #FFFFFF')
+    expect(contrastIssues(effectiveAppearance(getSnapshot().brand))).toEqual([])
+  })
+
+  it('leaves out a token set to what DIYA draws anyway, and keeps stored values in range', () => {
+    const same = effectiveAppearance({ 'tokens.light.focus': '#202627', 'tokens.dark.heading': '#F1F3F2', 'tokens.heightMedium': 40, 'tokens.radiusModal': 22 })
+    expect(themeFile(same)).not.toMatch(/--diya-(color-focus|color-heading|height-control|radius-modal)/)
+    // A corner follows the corner setting until it's set: 16px popups at Round corners are a change.
+    expect(themeFile(effectiveAppearance({ corners: 16, 'tokens.radiusPopup': 16 }))).toContain('--diya-radius-popup: 16px;')
+    expect(() => parseOverrides({ 'tokens.heightSmall': 20 })).toThrow()
+    expect(() => parseOverrides({ 'tokens.radiusPopup': 12.5 })).toThrow()
+    expect(() => parseOverrides({ 'tokens.light.focus': 'teal' })).toThrow()
+    expect(parseOverrides({ 'tokens.heightSmall': 36, 'tokens.dark.fieldLine': '#6b7a7c' })).toEqual({ 'tokens.heightSmall': 36, 'tokens.dark.fieldLine': '#6B7A7C' })
+    expect(settingName('tokens.light.focus')).toBe('Focus ring (Light)')
+    expect(settingName('tokens.heightLarge')).toBe('Large control height')
+  })
+
+  it('flags a Light focus ring that reads on white but not over Glass, and fixes it in a click', () => {
+    // The visual designer's first try: 4.71:1 on white, 2.79:1 over Glass Light's real backdrop.
+    const brand = { 'tokens.light.focus': '#138086' } as const
+    const issues = contrastIssues(effectiveAppearance(brand))
+    expect(issues.map(({ label, minimum, path }) => ({ label, minimum, path }))).toEqual([
+      { label: 'Focus rings on white, so they hold over Glass', minimum: 5.1, path: 'tokens.light.focus' },
+    ])
+    const fix = contrastFix(brand, issues[0])!
+    expect(fix.path).toBe('tokens.light.focus')
+    expect(contrast(fix.value, '#FFFFFF')).toBeGreaterThanOrEqual(5.1)
+    // Without a focus color, the ring is the text color, and a pale enough text fails it too.
+    const pale = contrastIssues(effectiveAppearance({ 'colors.light.text': '#6F6F6F' }))
+    expect(pale.find((issue) => issue.label === 'Focus rings on white, so they hold over Glass')?.path).toBe('colors.light.text')
+    expect(pale.find((issue) => issue.label === 'Text on the background')).toBeUndefined()
   })
 })

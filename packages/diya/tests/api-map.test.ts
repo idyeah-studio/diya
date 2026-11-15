@@ -53,8 +53,9 @@ beforeAll(() => {
 afterAll(() => rmSync(work, { recursive: true, force: true }))
 
 const entryFiles = { '.': 'dist/index.js', './charts': 'dist/data-viz/index.js' }
+// A component is named in PascalCase, as build-api.mjs reads it: toast() (1.2) is a function, not one.
 const isComponent = (value: unknown, name = '') =>
-  !/^use[A-Z]/.test(name) && (typeof value === 'function' || (typeof value === 'object' && value !== null && '$$typeof' in value))
+  /^[A-Z]/.test(name) && (typeof value === 'function' || (typeof value === 'object' && value !== null && '$$typeof' in value))
 const allProps = (name: string) => {
   const component = api.components[name]
   return Object.assign({}, component.props, ...(component.modes ?? []).map(mode => mode.props)) as Record<string, Prop>
@@ -170,7 +171,9 @@ describe('API map', () => {
     for (const [id, item] of Object.entries(api.items)) {
       for (const { name, entry } of item.exports) {
         owners.set(name, [...(owners.get(name) ?? []), id])
-        expect(api.components[name]?.entry, `${id}: ${name}`).toBe(entry)
+        // DOC-05: an item may also list a plain function that is its other way in (toast beside Toast).
+        if (/^[a-z]/.test(name)) expect(api.entries[entry].values, `${id}: ${name}`).toContain(name)
+        else expect(api.components[name]?.entry, `${id}: ${name}`).toBe(entry)
       }
     }
     for (const [entry, file] of Object.entries(entryFiles)) {
@@ -184,7 +187,8 @@ describe('API map', () => {
         expect(owners.get(name), `${name} needs exactly one item`).toHaveLength(1)
       }
     }
-    expect(Object.keys(api.items)).toHaveLength(46)
+    // 47 with Field (1.2, api.md §2), 48 with Checkbox (api.md §3), 50 with Spinner and VisuallyHidden (api.md §4).
+    expect(Object.keys(api.items)).toHaveLength(50)
     expect(api.items['data-viz'].exports.map(({ name }) => name)).toEqual(['DataViz', 'Chart'])
     expect(api.items['data-viz'].requires.peers).toEqual(['echarts'])
     // Ids are the first export's name in kebab-case.
@@ -196,7 +200,8 @@ describe('API map', () => {
 
   it('names a ReactNode prop in every slot, and lists every ReactNode prop as a slot', () => {
     for (const [id, item] of Object.entries(api.items)) {
-      const [primary, ...variants] = item.exports.map(({ name }) => name)
+      // Components only: a function export (toast, DOC-05) has no props.
+      const [primary, ...variants] = item.exports.map(({ name }) => name).filter((name) => !/^[a-z]/.test(name))
       for (const [path, slot] of Object.entries(item.slots)) {
         const type = pathType(primary, path)
         expect(type, `${id}.slots.${path}`).toBeDefined()
@@ -216,7 +221,8 @@ describe('API map', () => {
         if (Array.isArray(accepts)) for (const target of accepts) expect(ids.has(target), `${id}.${where} accepts ${target}`).toBe(true)
       }
       for (const slot of [...Object.values(item.slots), item.children]) {
-        for (const kind of slot.content ?? []) expect(['text', 'icon', 'image']).toContain(kind)
+        // 'control' (1.2, api.md §2): a native or third-party form control, Field's child.
+        for (const kind of slot.content ?? []) expect(['text', 'icon', 'image', 'control']).toContain(kind)
       }
     }
   })
@@ -290,6 +296,21 @@ describe('API map', () => {
     }
   })
 
+  // DOC-05: toast() is listed beside <Toast>. VIS-04 (DOC-03, refined as L6): the field edge's rule,
+  // the same in api.json and the README.
+  it('lists toast() on the toast item, and gives the field edge VIS-04\'s rule in api.json and the README', () => {
+    expect(api.items.toast.exports.map(({ name }) => name)).toEqual(['Toast', 'toast'])
+    const rule = "The edge needs 3:1 against the field fill and against the page behind it. A color you set is used as is in every appearance, so in Light use at least 3.8:1 against white; it then still holds 3:1 over Glass. DIYA's default edge follows the muted text color, which Glass makes stronger, so it holds on its own."
+    expect(api.tokens['--diya-color-field-line'].description).toBe(rule)
+    expect(readFileSync(resolve(root, 'README.md'), 'utf8')).toContain(rule)
+  })
+
+  // L1 read whether `loading` was given, which dropped its default from api.json (and the site's
+  // props table). It's documented again.
+  it('documents Button loading\'s default, false', () => {
+    expect(api.components.Button.props.loading).toMatchObject({ default: false, type: 'boolean' })
+  })
+
   it('reads token defaults from the stylesheet and the provider', () => {
     expect(api.tokens['--diya-color-accent']).toMatchObject({ group: 'actions', kind: 'color', pairsWith: ['--diya-color-accent-text'], setBy: 'DiyaProvider.brandColor', defaults: { light: '#262626', dark: '#e8e8e8' } })
     expect(api.tokens['--diya-color-accent-text'].defaults).toEqual({ light: '#fafafa', dark: '#1c1c1c' })
@@ -298,6 +319,33 @@ describe('API map', () => {
     expect(api.tokens['--diya-font'].setBy).toBe('DiyaProvider.fontFamily')
     expect(api.tokens['--diya-corner-scale'].defaults).toEqual({ light: '1', dark: '1' })
     expect(api.tokens['--diya-color-scrim'].defaults).toEqual({ light: '#0000009e', dark: '#0000009e' })
+  })
+
+  it('the 1.2 tokens have non-null Light and Dark defaults', () => {
+    const theming = Object.entries(api.tokens).filter(([, token]) => token.since === '1.2.0')
+    expect(theming.map(([name]) => name).sort()).toEqual(['--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-modal', '--diya-radius-popup'])
+    for (const [name, token] of theming) {
+      expect(token.defaults.light, name).toEqual(expect.any(String))
+      expect(token.defaults.dark, name).toEqual(expect.any(String))
+    }
+    expect(api.tokens['--diya-color-field'].defaults).toEqual({ light: 'var(--diya-color-raised)', dark: 'var(--diya-color-hover)' })
+    expect(api.tokens['--diya-height-control-medium'].defaults).toEqual({ light: '40px', dark: '40px' })
+    expect(api.tokens['--diya-radius-modal'].defaults).toEqual({ light: 'calc(22px * var(--diya-corner-scale, 1))', dark: 'calc(22px * var(--diya-corner-scale, 1))' })
+  })
+
+  it('no default names a --diya-internal- variable', () => {
+    for (const [name, token] of Object.entries(api.tokens)) {
+      expect(`${token.defaults.light} ${token.defaults.dark}`, name).not.toContain('--diya-internal-')
+    }
+  })
+
+  it('token descriptions are strings the schema allows', () => {
+    const schema = JSON.parse(readFileSync(resolve(root, 'api.schema.json'), 'utf8'))
+    expect(schema.$defs.token.properties.description).toEqual({ type: 'string', description: expect.any(String) })
+    const described = Object.entries(api.tokens).filter(([, token]) => 'description' in token)
+    // R3 (named edit): the heights and the popup and modal radii are described too.
+    expect(described.map(([name]) => name).sort()).toEqual(['--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-modal', '--diya-radius-popup'])
+    expect((api.tokens['--diya-color-focus'] as { description?: string }).description).toContain('5.1:1 against white')
   })
 
   it('describes the motion tokens, new in 1.1, with no setBy', () => {
@@ -312,8 +360,9 @@ describe('API map', () => {
       '--diya-ease-exit': { group: 'motion', kind: 'easing', pairsWith: [], since: '1.1.0', defaults: both('cubic-bezier(0.4, 0, 1, 1)') },
       '--diya-ease-move': { group: 'motion', kind: 'easing', pairsWith: [], since: '1.1.0', defaults: both('cubic-bezier(0.4, 0, 0.2, 1)') },
     })
-    // Only tokens added after 1.0.0 carry since.
-    expect(Object.keys(api.tokens).filter(name => api.tokens[name].since)).toEqual(Object.keys(motion))
+    // Only tokens added after 1.0.0 carry since: motion (1.1) and the nine theming tokens (1.2).
+    const theming = ['--diya-color-focus', '--diya-color-heading', '--diya-color-field', '--diya-color-field-line', '--diya-height-control-small', '--diya-height-control-medium', '--diya-height-control-large', '--diya-radius-popup', '--diya-radius-modal']
+    expect(Object.keys(api.tokens).filter(name => api.tokens[name].since).sort()).toEqual([...Object.keys(motion), ...theming].sort())
   })
 
   it('describes every messages namespace and key', async () => {
@@ -412,5 +461,15 @@ describe('API map', () => {
     expect(text).not.toContain(root)
     expect(text).not.toMatch(/"\/(Users|private|tmp|home)\//)
     expect(text).not.toMatch(/[A-Za-z]:\\\\/)
+  })
+})
+
+// R3 (DS-F-02): the CHANGELOG says the nine 1.2 tokens each have a description; they do.
+describe('the 1.2 theming tokens (R3)', () => {
+  it('each has a description', () => {
+    const tokens = (api as unknown as { tokens: Record<string, { since?: string; description?: string }> }).tokens
+    const new12 = Object.entries(tokens).filter(([, token]) => token.since === '1.2.0')
+    expect(new12.map(([name]) => name).sort()).toEqual(['--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-modal', '--diya-radius-popup'])
+    for (const [name, token] of new12) expect(token.description, name).toMatch(/\S/)
   })
 })

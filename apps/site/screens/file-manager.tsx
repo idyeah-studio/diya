@@ -3,7 +3,7 @@
 // Next.js: save as app/files/page.tsx. Vite: save as src/FileManager.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import {
-  Avatar, Breadcrumbs, Button, Card, Choice, Dialog, FileUpload, Inline, Menu, Progress, Search, Table, TextInput, TextLink, Toast,
+  Avatar, Breadcrumbs, Button, Card, Choice, Dialog, FileUpload, Inline, Menu, Progress, Search, Table, TextInput, TextLink, toast,
   type MenuItem, type TableColumn,
 } from '@idyeah/diya'
 import {
@@ -39,7 +39,7 @@ const FILES: [string, string, number, string][] = [
 
 type Kind = 'folder' | 'pdf' | 'image' | 'design' | 'sheet' | 'doc' | 'video' | 'zip' | 'other'
 type Item = { id: string; name: string; kind: Kind; parent: string; size: number; modified: string }
-type Transfer = { id: string; name: string; size: number; loaded: number; folder: string; folderName: string; error?: string }
+type Transfer = { id: string; name: string; size: number; loaded: number; folder: string; error?: string }
 type Sort = 'name' | 'modified' | 'size'
 type Naming = { mode: 'rename'; item: Item } | { mode: 'folder' }
 
@@ -111,7 +111,6 @@ export default function FileManagerScreen() {
   const [naming, setNaming] = useState<Naming>()
   const [toDelete, setToDelete] = useState<string[]>([])
   const [toMove, setToMove] = useState<string[]>([])
-  const [notice, setNotice] = useState<{ text: string; tone?: 'info' }>()
   const titleRef = useRef<HTMLHeadingElement>(null)
   const shown = useRef(folderId)
 
@@ -144,11 +143,11 @@ export default function FileManagerScreen() {
 
   function startUploads(chosen: File[]) {
     setPicking(false)
-    const added = chosen.map((file) => ({ id: `${file.name}-${file.lastModified}-${Math.random()}`, name: file.name, size: file.size, loaded: 0, folder: folderId, folderName: folder.name }))
+    const added = chosen.map((file) => ({ id: `${file.name}-${file.lastModified}-${Math.random()}`, name: file.name, size: file.size, loaded: 0, folder: folderId }))
     setUploads((list) => [...list.filter((item) => item.error || item.loaded < item.size), ...added])
-    chosen.forEach((file, index) => {
+    const jobs = chosen.map((file, index) => {
       const job = added[index]
-      sendFile(file, (loaded) => setUploads((list) => list.map((item) => (item.id === job.id ? { ...item, loaded } : item)))).then(
+      return sendFile(file, (loaded) => setUploads((list) => list.map((item) => (item.id === job.id ? { ...item, loaded } : item)))).then(
         () => {
           setItems((list) => {
             const siblings = list.filter((item) => item.parent === job.folder)
@@ -157,17 +156,23 @@ export default function FileManagerScreen() {
             for (let copy = 2; siblings.some((item) => item.name === name); copy++) name = `${base} ${copy}${ext}`
             return [...list, { id: job.id, name, kind: kindOf(name), parent: job.folder, size: job.size, modified: TODAY }]
           })
+          return true
         },
-        (error: Error) => setUploads((list) => list.map((item) => (item.id === job.id ? { ...item, error: error.message } : item))),
+        (error: Error) => {
+          setUploads((list) => list.map((item) => (item.id === job.id ? { ...item, error: error.message } : item)))
+          return false
+        },
       )
+    })
+    Promise.all(jobs).then((results) => {
+      const done = results.filter(Boolean).length
+      if (done) toast({ tone: 'success', title: `${plural(done, 'file')} uploaded to ${folder.name}` })
     })
   }
 
   useEffect(() => {
     if (!uploads.length || uploads.some((item) => item.loaded < item.size && !item.error)) return
-    const done = uploads.filter((item) => !item.error)
-    if (!done.length) return
-    setNotice({ text: `${plural(done.length, 'file')} uploaded to ${done[0].folderName}` })
+    if (uploads.every((item) => item.error)) return
     const timer = setTimeout(() => setUploads((list) => list.filter((item) => item.error)), 1200)
     return () => clearTimeout(timer)
   }, [uploads])
@@ -175,14 +180,14 @@ export default function FileManagerScreen() {
   async function move(ids: string[], target: Item) {
     await api('/files/move', { ids, to: target.id })
     setItems((list) => list.map((item) => (ids.includes(item.id) ? { ...item, parent: target.id } : item)))
-    setNotice({ text: `Moved ${ids.length === 1 ? byId(ids[0]).name : plural(ids.length, 'item')} to ${target.name}` })
+    toast({ tone: 'success', title: `Moved ${ids.length === 1 ? byId(ids[0]).name : plural(ids.length, 'item')} to ${target.name}` })
   }
 
   // Download is a stub: point it at your file's URL, such as a signed link.
   const actionsFor = (item: Item): MenuItem[] => [
     item.kind === 'folder'
       ? { id: 'open', label: 'Open', onSelect: () => open(item.id) }
-      : { id: 'download', label: 'Download', onSelect: () => setNotice({ text: `Downloading ${item.name}`, tone: 'info' }) },
+      : { id: 'download', label: 'Download', onSelect: () => toast({ id: `file-manager-download-${item.id}`, title: `Downloading ${item.name}` }) },
     { id: 'rename', label: 'Rename…', onSelect: () => setNaming({ mode: 'rename', item }) },
     ...places([item.id]).map((place, index) => ({
       id: `move-${place.id}`, label: `Move to ${place.name}`, separatorBefore: index === 0, onSelect: () => void move([item.id], place),
@@ -333,7 +338,7 @@ export default function FileManagerScreen() {
               rowLabel={(item) => item.name}
               rowActions={actionsFor}
               bulkActions={[
-                { label: 'Download', onAction: (ids) => setNotice({ text: `Zipping ${plural(ids.length, 'item')}. Your download starts in a moment.`, tone: 'info' }) },
+                { label: 'Download', onAction: (ids) => toast({ id: 'file-manager-zip', title: `Zipping ${plural(ids.length, 'item')}`, description: 'Your download starts in a moment.' }) },
                 { label: 'Move to…', onAction: setToMove },
                 { label: 'Delete…', onAction: setToDelete, destructive: true },
               ]}
@@ -353,10 +358,10 @@ export default function FileManagerScreen() {
             onDone={(name) => {
               if (naming?.mode === 'rename') {
                 setItems(items.map((item) => (item.id === naming.item.id ? { ...item, name, kind: item.kind === 'folder' ? 'folder' : kindOf(name) } : item)))
-                setNotice({ text: `Renamed to ${name}` })
+                toast({ tone: 'success', title: `Renamed to ${name}` })
               } else {
                 setItems([...items, { id: `folder-${Date.now()}`, name, kind: 'folder', parent: folderId, size: 0, modified: TODAY }])
-                setNotice({ text: `Created ${name}` })
+                toast({ tone: 'success', title: `Created ${name}` })
               }
             }} />
           <Dialog
@@ -376,12 +381,11 @@ export default function FileManagerScreen() {
                 for (const item of items) if (!gone.has(item.id) && gone.has(item.parent)) { gone.add(item.id); grew = true }
               }
               setItems(items.filter((item) => !gone.has(item.id)))
-              setNotice({ text: `Moved ${toDelete.length === 1 ? byId(toDelete[0]).name : plural(toDelete.length, 'item')} to Recently deleted` })
+              toast({ tone: 'success', title: `Moved ${toDelete.length === 1 ? byId(toDelete[0]).name : plural(toDelete.length, 'item')} to Recently deleted` })
               setToDelete([])
             }}
           />
           <MoveDialog ids={toMove} places={places(toMove)} onClose={() => setToMove([])} onMove={move} />
-          {notice && <Toast key={notice.text} tone={notice.tone ?? 'success'} onDismiss={() => setNotice(undefined)}>{notice.text}</Toast>}
         </main>
       </div>
     </LucideProvider>

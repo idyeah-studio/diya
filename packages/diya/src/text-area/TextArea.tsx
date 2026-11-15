@@ -1,5 +1,6 @@
 'use client'
-import { forwardRef, useId, useRef, type TextareaHTMLAttributes } from 'react'
+import { forwardRef, useRef, type TextareaHTMLAttributes } from 'react'
+import { markField, renderDescription, useErrorAnnouncement, useFieldIds, useShownError } from '../internal/field-parts.js'
 import { cx } from '../internal/cx.js'
 import { useFormReset, useMergedRef, useNativeMirror } from '../text-input/native-field.js'
 /** Native textarea attributes, including `name`, `onChange`, `onBlur` and the ref, go on the textarea; `className` and `style` go on the outer field wrapper. */
@@ -27,18 +28,22 @@ export type TextAreaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'v
 }
 /** A multi-line labeled text field with optional helper text, error and character count. */
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea({ label, hideLabel = false, helperText, error, size = 'medium', value, defaultValue, onValueChange, onChange, showCount, resizable = true, id, maxLength, className, style, 'aria-invalid': ariaInvalid, 'aria-describedby': describedBy, ...props }, ref) {
-  const generatedId = useId()
-  const inputId = id ?? generatedId
-  const description = error || helperText
+  const { id: inputId, descriptionId } = useFieldIds(id, 'description')
+  const wrapper = useRef<HTMLDivElement | null>(null)
+  const shown = useShownError(error, wrapper)
+  useErrorAnnouncement(label, shown, wrapper)
+  const description = shown || helperText
   const textarea = useRef<HTMLTextAreaElement | null>(null)
   const textareaRef = useMergedRef(ref, textarea)
   const controlled = value !== undefined
   const [current, sync] = useNativeMirror(() => textarea.current?.value, value ?? defaultValue ?? '')
   useFormReset(textarea, sync)
   const text = controlled ? value : current
-  return <div className={cx('diya-text-field diya-textarea', className)} style={style} data-size={size} data-invalid={!!error} data-disabled={props.disabled}>
+  return <div ref={wrapper} className={cx('diya-text-field diya-textarea', className)} style={style} data-size={size} data-invalid={!!shown} data-disabled={props.disabled}>
     <label htmlFor={inputId} className={hideLabel ? 'diya-sr-only' : undefined}>{label}</label>
-    <textarea {...props} ref={textareaRef} id={inputId} {...(controlled ? { value } : { defaultValue })} maxLength={maxLength} onChange={(event) => { onChange?.(event); if (!controlled) sync(); onValueChange?.(event.target.value) }} aria-invalid={error ? true : ariaInvalid} aria-describedby={[describedBy, description ? `${inputId}-description` : undefined, showCount ? `${inputId}-count` : undefined].filter(Boolean).join(' ') || undefined} style={{ resize: resizable ? 'vertical' : 'none' }} />
-    <div className="diya-textarea-footer">{description && <p className="diya-text-field-description" id={`${inputId}-description`}>{error && <span aria-hidden="true">!</span>}{description}</p>}{showCount && <span className="diya-textarea-count" id={`${inputId}-count`}>{text.length}{maxLength ? ` / ${maxLength}` : ''}</span>}</div>
+    <textarea {...props} ref={textareaRef} id={inputId} {...(controlled ? { value } : { defaultValue })} maxLength={maxLength} onChange={(event) => { onChange?.(event); if (!controlled) sync(); onValueChange?.(event.target.value) }} aria-invalid={shown ? true : ariaInvalid} aria-describedby={[describedBy, description ? descriptionId : undefined, showCount ? `${inputId}-count` : undefined].filter(Boolean).join(' ') || undefined} style={{ resize: resizable ? 'vertical' : 'none' }} />
+    <div className="diya-textarea-footer">{description && <p className="diya-text-field-description" id={descriptionId}>{shown && <span aria-hidden="true">!</span>}{description}</p>}{showCount && <span className="diya-textarea-count" id={`${inputId}-count`}>{text.length}{maxLength ? ` / ${maxLength}` : ''}</span>}</div>
   </div>
 })
+// Field warns when it wraps one of DIYA's own fields, which have their own label.
+markField(TextArea, 'TextArea')

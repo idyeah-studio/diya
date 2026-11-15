@@ -145,6 +145,21 @@ describe('Screen request form', () => {
     })
   })
 
+  // frontend.md step 11: a lone yes or no is a Checkbox, not a one-option group (UX §2).
+  it('notify is a Checkbox posting a boolean', async () => {
+    await mount()
+    const notify = screen.getByRole('checkbox', { name: COPY.notify }) as HTMLInputElement
+    expect(notify.className).toBe('diya-checkbox')
+    expect(notify.closest('fieldset')).toBeNull()
+    expect(screen.queryByRole('group', { name: 'Updates' })).toBeNull()
+    expect(screen.getAllByRole('checkbox')).toHaveLength(1)
+    fill()
+    fireEvent.click(notify)
+    expect(notify.checked).toBe(true)
+    await send()
+    expect(posts[0].getAll('notify')).toEqual(['1'])
+  })
+
   it('leaves the choice out when it isn’t ticked', async () => {
     await mount()
     fill()

@@ -3,7 +3,7 @@
 // Next.js: save as app/invoices/[id]/page.tsx. Vite: save as src/Invoice.tsx and render it inside your DiyaProvider.
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import {
-  Alert, Button, DatePicker, Dialog, Menu, Select, Stack, Tabs, Tag, TextArea, TextInput, TextLink, Toast, useDiyaAppearance,
+  Alert, Button, DatePicker, Dialog, Menu, Select, Stack, Tabs, Tag, TextArea, TextInput, TextLink, toast, useDiyaAppearance,
   type Tone,
 } from '@idyeah/diya'
 import { ArrowLeft, Check, ChevronDown, Download, LucideProvider, Send, X } from 'lucide-react'
@@ -92,14 +92,11 @@ function useToday() {
 }
 const sum = (items: Item[]) => items.reduce((total, item) => total + item.qty * item.rate, 0)
 const STATUS: Record<Status, [Tone, string]> = { draft: ['neutral', 'Draft'], sent: ['info', 'Sent'], overdue: ['warning', 'Overdue'], paid: ['success', 'Paid'] }
-type Notice = { id: number; title: string; text: string; tone?: 'success' | 'info' }
 
 export default function InvoiceScreen() {
   const { glass } = useDiyaAppearance()
   const today = useToday()
   const [mode, setMode] = useState('invoice')
-  const [notice, setNotice] = useState<Notice>()
-  const notify = (title: string, text: string, tone?: 'info') => setNotice({ id: Date.now(), title, text, tone })
 
   return (
     <LucideProvider size={18} strokeWidth={1.6}>
@@ -108,19 +105,16 @@ export default function InvoiceScreen() {
         <div className="invoice-page">
           <TextLink className="invoice-back" href="/invoices" leadingIcon={<ArrowLeft />}>Invoices</TextLink>
           <Tabs className="invoice-tabs" variant="pill" size="small" label="Document" value={mode} onValueChange={setMode} items={[
-            { value: 'invoice', label: 'Invoice', content: mode === 'invoice' && <InvoiceView key={today} today={today} notify={notify} /> },
-            { value: 'quote', label: 'Quote', content: mode === 'quote' && <QuoteView key={today} today={today} notify={notify} /> },
+            { value: 'invoice', label: 'Invoice', content: mode === 'invoice' && <InvoiceView key={today} today={today} /> },
+            { value: 'quote', label: 'Quote', content: mode === 'quote' && <QuoteView key={today} today={today} /> },
           ]} />
         </div>
-        {notice && (
-          <Toast key={notice.id} tone={notice.tone ?? 'success'} title={notice.title} onDismiss={() => setNotice(undefined)} duration={6000}>{notice.text}</Toast>
-        )}
       </main>
     </LucideProvider>
   )
 }
 
-function InvoiceView({ today, notify }: { today: string; notify: (title: string, text: string, tone?: 'info') => void }) {
+function InvoiceView({ today }: { today: string }) {
   const [docs, setDocs] = useState(() => datedFor(today).invoices)
   const [id, setId] = useState('inv-2047')
   const [dialog, setDialog] = useState<'send' | 'paid'>()
@@ -147,7 +141,7 @@ function InvoiceView({ today, notify }: { today: string; notify: (title: string,
     await api(`/invoices/${doc.id}/remind`)
     setReminding(false)
     update({ reminded: true })
-    notify('Reminder sent', `${CLIENT.contact} has a friendly nudge about ${doc.number}.`)
+    toast({ tone: 'success', title: 'Reminder sent', description: `${CLIENT.contact} has a friendly nudge about ${doc.number}.`, duration: 6000 })
   }
 
   return (
@@ -184,12 +178,12 @@ function InvoiceView({ today, notify }: { today: string; notify: (title: string,
 
       <SendDialog open={dialog === 'send'} doc={doc} onClose={() => setDialog(undefined)} onSent={(to) => {
           update({ status: doc.status === 'draft' ? 'sent' : doc.status, issued: doc.status === 'draft' ? today : doc.issued })
-          notify(`${doc.number} sent`, `It’s on its way to ${to}.`)
+          toast({ tone: 'success', title: `${doc.number} sent`, description: `It’s on its way to ${to}.`, duration: 6000 })
           moveFocus(Date.now())
         }} />
       <PaidDialog open={dialog === 'paid'} today={today} doc={doc} total={total} onClose={() => setDialog(undefined)} onPaid={(paidOn) => {
           update({ status: 'paid', paidOn })
-          notify(`${doc.number} is paid`, `${CLIENT.contact} gets a receipt by email.`)
+          toast({ tone: 'success', title: `${doc.number} is paid`, description: `${CLIENT.contact} gets a receipt by email.`, duration: 6000 })
           moveFocus(Date.now())
         }} />
     </div>
@@ -268,7 +262,7 @@ function PaidDialog({ open, today, doc, total, onClose, onPaid }: DialogProps & 
 
 type Answer = { kind: 'accepted'; name: string; on: string } | { kind: 'declined'; reason: string; on: string }
 
-function QuoteView({ today, notify }: { today: string; notify: (title: string, text: string, tone?: 'info') => void }) {
+function QuoteView({ today }: { today: string }) {
   const [quote] = useState(() => datedFor(today).quote)
   const [answer, setAnswer] = useState<Answer>()
   const [dialog, setDialog] = useState<'accept' | 'decline'>()
@@ -293,7 +287,7 @@ function QuoteView({ today, notify }: { today: string; notify: (title: string, t
     await api(`/quotes/${quote.number}/accept`, { name: name.trim() })
     setBusy(false)
     setAnswer({ kind: 'accepted', name: name.trim(), on: today })
-    notify('Quote accepted', `${STUDIO.name} will be in touch about shoot dates. A signed copy is on its way to your inbox.`)
+    toast({ tone: 'success', title: 'Quote accepted', description: `${STUDIO.name} will be in touch about shoot dates. A signed copy is on its way to your inbox.`, duration: 6000 })
     moveFocus(Date.now())
   }
 
@@ -302,7 +296,7 @@ function QuoteView({ today, notify }: { today: string; notify: (title: string, t
     await api(`/quotes/${quote.number}/decline`, { reason })
     setBusy(false)
     setAnswer({ kind: 'declined', reason: reason.trim(), on: today })
-    notify('Quote declined', `We let ${STUDIO.name} know. No hard feelings.`, 'info')
+    toast({ tone: 'info', title: 'Quote declined', description: `We let ${STUDIO.name} know. No hard feelings.`, duration: 6000 })
     moveFocus(Date.now())
   }
 

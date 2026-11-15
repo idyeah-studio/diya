@@ -1,10 +1,13 @@
 'use client'
-import { forwardRef, useEffect, useRef, useState } from 'react'
+import { forwardRef, useContext, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
-import { Alert, type AlertProps } from '../alert/Alert.js'
-import { useDiyaMessages, useDiyaPortal } from '../DiyaProvider.js'
+import { Alert, AlertInStackContext, type AlertProps } from '../alert/Alert.js'
+import { ToastScopeContext, useDiyaMessages } from '../DiyaProvider.js'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
+import { currentPlace, isControl } from '../internal/opener.js'
 import { playOnCopy } from '../internal/presence.js'
 import { toastMessages } from './messages.js'
+import { addToastSlot, leaveToastSlot, nextToastOrder, nextToastSlotKey, removeToastSlot, returnToastFocus, subscribeToasts, toastCopies, toastSlotElement, toastsPaused, touchToasts, updateToastSlot } from './queue.js'
 
 declare module '../messages.js' {
   interface DiyaMessages {
@@ -13,11 +16,16 @@ declare module '../messages.js' {
 }
 
 // The toast leaves on a copy, so onDismiss can run at once and the host can unmount it or raise
-// the next one straight away: it sinks 12px and fades over two-thirds of the slow time.
-const playExit = (node: HTMLElement | null) => playOnCopy(node, node?.parentElement, 'exit-slow', (style, opacity) => [
+// the next one straight away: it sinks 12px and fades over two-thirds of the slow time. The copy
+// plays in the stack's own layer, under the live toasts.
+const playExit = (node: HTMLElement | null, layer: HTMLElement | null) => playOnCopy(node, layer ?? node?.parentElement, 'exit-slow', (style, opacity) => [
   { opacity, translate: '0 0' },
   { opacity: 0, translate: `0 ${style.getPropertyValue('--diya-internal-motion-distance-edge').trim() || '0px'}` },
-])
+], { zIndex: 0 })
+
+const none = () => () => {}
+const noSlot = () => null
+const notPaused = () => false
 
 export type ToastProps = Omit<AlertProps, 'onDismiss'> & {
   /** Called once, straight away, when the toast goes (by timer, close button or Escape); unmount the toast here. Its exit then plays on its own. */
@@ -27,15 +35,15 @@ export type ToastProps = Omit<AlertProps, 'onDismiss'> & {
   /** Shows a close button; a toast with an `action` always has one. Defaults to true. */
   showClose?: boolean
 }
-/** A temporary Alert floated above the page that dismisses itself after a while; the host unmounts the toast in `onDismiss`. `className`, `style` and the ref reach the Alert. */
+/** A temporary Alert floated above the page that dismisses itself after a while; the host unmounts the toast in `onDismiss`. It joins the page's one stack, with any toast() toasts, in its own provider's look. `className`, `style` and the ref reach the Alert. */
 export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onDismiss, duration = 8000, ...props }, ref) {
-  const portal = useDiyaPortal()
+  const scope = useContext(ToastScopeContext)
   const t = useDiyaMessages('toast', toastMessages)
-  const [hovered, setHovered] = useState(false)
-  const [focused, setFocused] = useState(false)
+  const [key] = useState(nextToastSlotKey)
+  const subscribe = scope ? subscribeToasts : none
+  const slot = useSyncExternalStore(subscribe, () => toastSlotElement(key), noSlot)
+  const paused = useSyncExternalStore(subscribe, toastsPaused, notPaused)
   const [hidden, setHidden] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const region = useRef<HTMLDivElement | null>(null)
   const returnFocus = useRef<HTMLElement | null>(null)
   const remaining = useRef(duration)
   const callback = useRef(onDismiss)
@@ -43,18 +51,51 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
   // A toast is dismissed once, whether by the timer, the button or Escape,
   // even if the host keeps it mounted afterwards.
   const dismissed = useRef(false)
+  const slotRef = useRef<HTMLElement | null>(null)
+  // The slot is the stack's element; the exit copies the toast's whole place in the column.
+  slotRef.current = slot?.closest<HTMLElement>('.diya-toast') ?? slot
   const settle = () => {
     if (dismissed.current) return
     dismissed.current = true
-    playExit(region.current)
+    playExit(slotRef.current, toastCopies())
+    leaveToastSlot(key)
     callback.current()
   }
+  // Focus follows the stack's chain, as for toast() (T12): Escape goes back to where F8 was
+  // pressed, a close button to the toast beside it; where the toast was raised is a fallback.
+  function dismiss(adjacent = false) {
+    // Focus on <body> too: a click on × in Safari doesn't focus it, and focus would stay lost
+    // (UX-R3-01). The chain then returns it where the person was, as Undo does.
+    // Or on a container: in Safari a click on × inside a Dialog focuses the dialog itself (H3).
+    const active = document.activeElement
+    if (slotRef.current?.contains(active) || !isControl(active)) returnToastFocus(key, returnFocus.current, adjacent)
+    settle()
+  }
+  const dismissRef = useRef(dismiss)
+  dismissRef.current = dismiss
+  // A place in the page's stack, in arrival order, for as long as it's mounted, in its own
+  // provider's look.
+  useClientLayoutEffect(() => {
+    if (!scope) return
+    // Where it was raised: in Safari a click on a button inside a Dialog focuses the dialog, so
+    // the control pressed stands in (UX-78 note 1).
+    returnFocus.current = currentPlace(document)
+    addToastSlot({ key, order: nextToastOrder(), hasAction: !!props.action, urgent: !!props.urgent, owner: scope.owner, look: scope.look, motion: scope.motion, dismiss: () => dismissRef.current() })
+    return () => removeToastSlot(key)
+  }, [!!scope, key])
+  const first = useRef(true)
+  useClientLayoutEffect(() => {
+    if (first.current) { first.current = false; return }
+    if (scope) updateToastSlot(key, { hasAction: !!props.action, urgent: !!props.urgent, look: scope.look })
+  }, [!!props.action, !!props.urgent, scope?.look])
+  // Tell the stack the words changed, so it announces them.
+  useClientLayoutEffect(() => {
+    if (slot) touchToasts()
+  }, [slot, props.title, props.tone, props.children, props.urgent])
   useEffect(() => {
     remaining.current = duration
   }, [duration])
   useEffect(() => {
-    setMounted(true)
-    returnFocus.current = document.activeElement as HTMLElement
     const visibility = () => setHidden(document.hidden)
     visibility()
     document.addEventListener('visibilitychange', visibility)
@@ -62,40 +103,18 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
   }, [])
   useEffect(() => {
     // Actionable messages remain until dismissed so actions are not time-limited.
-    if (!mounted || hovered || focused || hidden || props.action || duration <= 0 || dismissed.current) return
+    if (!slot || paused || hidden || props.action || duration <= 0 || dismissed.current) return
     const started = Date.now()
     const timer = setTimeout(settle, remaining.current)
     return () => {
       clearTimeout(timer)
       remaining.current = Math.max(0, remaining.current - (Date.now() - started))
     }
-  }, [mounted, hovered, focused, hidden, props.action, duration])
-  function dismiss() {
-    if (region.current?.contains(document.activeElement)) returnFocus.current?.focus()
-    settle()
-  }
-  if (!mounted || !portal) return null
+  }, [!!slot, paused, hidden, props.action, duration])
+  if (!slot) return null
   const { showClose = true, ...alertProps } = props
-  const modal = returnFocus.current?.closest<HTMLDialogElement>('dialog[open]')
-  const target = modal && !modal.contains(portal) ? modal : portal
   return createPortal(
-    <div
-      ref={region}
-      className="diya-toast-region"
-      aria-label={t.label}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node)) setFocused(false)
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') {
-          event.preventDefault()
-          dismiss()
-        }
-      }}
-    >
+    <AlertInStackContext.Provider value={{ announce: false, dismissLabel: alertProps.title ? t.dismiss(alertProps.title) : undefined }}>
       <Alert
         {...alertProps}
         ref={ref}
@@ -104,15 +123,16 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast({ onD
             ? {
                 ...alertProps.action,
                 onClick: () => {
-                  returnFocus.current?.focus()
+                  // As in 1.1.1, an action returns focus whether or not a click focused it (Safari's doesn't).
+                  returnToastFocus(key, returnFocus.current)
                   alertProps.action?.onClick()
                 },
               }
             : undefined
         }
-        onDismiss={showClose || props.action ? dismiss : undefined}
+        onDismiss={showClose || props.action ? () => dismiss(true) : undefined}
       />
-    </div>,
-    target
+    </AlertInStackContext.Provider>,
+    slot
   )
 })

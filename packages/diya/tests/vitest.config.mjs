@@ -15,7 +15,12 @@ const react19 = {
 }
 // Behavior that differs between React versions: presence and the popups built on it, server
 // rendering and the provider.
-const onBoth = ['tests/presence.test.tsx', 'tests/ssr.test.ts', 'tests/t0-l1-provider.test.tsx', 'tests/popups.test.tsx', 'tests/popups-motion.test.tsx', 'tests/placement.test.tsx', 'tests/motion-in-flow.test.tsx', 'tests/tabs-indicator.test.tsx']
+const onBoth = ['tests/toast-stack.test.tsx', 'tests/field.test.tsx', 'tests/field-announce.test.tsx', 'tests/field-adoption.test.tsx', 'tests/checkbox.test.tsx', 'tests/spinner.test.tsx', 'tests/visually-hidden.test.tsx', 'tests/button-loading.test.tsx', 'tests/button-loading-paths.test.tsx', 'tests/button-names.test.tsx', 'tests/portal-container.test.tsx', 'tests/field-markup.test.tsx', 'tests/field-markup-ssr.test.tsx', 'tests/presence.test.tsx', 'tests/ssr.test.ts', 'tests/t0-l1-provider.test.tsx', 'tests/popups.test.tsx', 'tests/popups-motion.test.tsx', 'tests/placement.test.tsx', 'tests/motion-in-flow.test.tsx', 'tests/tabs-indicator.test.tsx']
+
+// lucide-react, the icon library DIYA's docs recommend, for the leading-icon tests (M1): the
+// site's copy, which renders with the site's React, so those tests run on the React 19 project
+// (the browser harness covers React 18).
+const lucide = from19('lucide-react')
 
 export default defineConfig({
   plugins: [react()],
@@ -24,8 +29,8 @@ export default defineConfig({
     setupFiles: ['tests/setup.ts'],
     maxWorkers: 2,
     projects: [
-      { extends: true, test: { name: 'react-18', include: ['tests/**/*.test.{ts,tsx}'] } },
-      { extends: true, resolve: { alias: react19 }, test: { name: 'react-19', include: onBoth } },
+      { extends: true, resolve: { alias: { 'lucide-react': lucide } }, test: { name: 'react-18', include: ['tests/**/*.test.{ts,tsx}'] } },
+      { extends: true, resolve: { alias: { ...react19, 'lucide-react': lucide } }, test: { name: 'react-19', include: onBoth } },
     ],
   },
 })

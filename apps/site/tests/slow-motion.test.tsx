@@ -81,6 +81,22 @@ describe('Slow motion', () => {
     expect(screen.queryByText(/Slow motion is on/)).toBeNull()
   })
 
+  it("slows the preview's toasts in the page's toast stack and their exit copies, not other toasts", async () => {
+    const user = userEvent.setup()
+    render(<Catalog />)
+    // The page's one stack, as the package draws it: a toast from the preview's scope, its exit
+    // copy, and a toast of the site's own.
+    const stack = document.createElement('div')
+    stack.innerHTML = '<div class="diya-toast-list"><div class="diya-toast" id="preview-toast"><div class="diya-root diya-toast-scope customize-scope"></div></div><div class="diya-toast" id="site-toast"><div class="diya-toast-scope"></div></div></div><div class="diya-toast-copies"><div class="diya-toast" id="preview-copy"><div class="diya-root diya-toast-scope customize-scope"></div></div></div>'
+    document.body.append(stack)
+    await user.click(screen.getByRole('switch', { name: 'Slow motion (¼ speed)' }))
+    await frame()
+    expect(made.get(document.getElementById('preview-toast')!)?.playbackRate).toBe(0.25)
+    expect(made.get(document.getElementById('preview-copy')!)?.playbackRate).toBe(0.25)
+    expect(made.get(document.getElementById('site-toast')!)?.playbackRate ?? 1).toBe(1)
+    stack.remove()
+  })
+
   it('lasts for the session only, not across visits', () => {
     window.sessionStorage.setItem('diya:slow-motion', 'on')
     render(<Catalog />)

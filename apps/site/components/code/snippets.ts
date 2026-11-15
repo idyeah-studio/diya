@@ -3,6 +3,7 @@ import { acquisitionTotal, allocationData, channels, chartData } from '../catalo
 import type { Playground } from './playground'
 import { CONTENT_TEXT, ICON_PATHS, isIcon } from './stand-ins'
 import { FORMAT_FILE, FORMAT_SOURCE, INSTALL_COMMAND } from './content-examples'
+import { OWN_INPUT_CLASS, OWN_INPUT_CSS } from './field-example'
 
 export type Snippet = {
   /** Full step-3 code: import line(s), a blank line, then optional consts, then JSX. No DiyaProvider (that is step 2), no component function wrapper, no 'use client'. */
@@ -25,6 +26,8 @@ export type Snippet = {
   charts?: boolean
   /** Declarations a type check needs for free identifiers the code uses (e.g. "declare const save: () => void"). Not shown to users. */
   context?: string
+  /** What the code shows when it isn't the page's own item, such as toast() on the Alert page: the step says "Use toast()" and the code is "Toast, as previewed". */
+  subject?: { use: string; title: string }
 }
 
 type Options = Record<string, string | boolean>
@@ -277,10 +280,10 @@ function walk(value: unknown, found: Found, key?: string): void {
 }
 
 const MAIN_EXPORTS = new Set([
-  'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Calendar', 'Card', 'Chatbot', 'Choice',
-  'CodeBlock', 'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'FileUpload', 'Form', 'Inline', 'List', 'Menu',
+  'Accordion', 'Alert', 'Avatar', 'Badge', 'Breadcrumbs', 'Button', 'Calendar', 'Card', 'Chatbot', 'Checkbox', 'Choice',
+  'CodeBlock', 'Combobox', 'ContentState', 'DatePicker', 'Dialog', 'Drawer', 'Field', 'FileUpload', 'Form', 'Inline', 'List', 'Menu',
   'Metric', 'PageHeader', 'Pagination', 'Popover', 'Progress', 'Prose', 'Rating', 'Search', 'Select',
-  'SideNavigation', 'SiteHeader', 'Slider', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput',
+  'SideNavigation', 'SiteHeader', 'Slider', 'Spinner', 'Switch', 'Table', 'Tabs', 'Tag', 'TextArea', 'TextInput',
   'TextLink', 'Toast', 'Tooltip', 'Wizard',
 ])
 const CHART_EXPORTS = new Set(['Chart', 'DataViz'])
@@ -288,11 +291,11 @@ const CHART_EXPORTS = new Set(['Chart', 'DataViz'])
 /** Catalog component ids and the export each one documents. */
 const COMPONENT_NAMES: Partial<Record<ItemId, string>> = {
   button: 'Button', 'text-input': 'TextInput', 'text-area': 'TextArea', select: 'Select',
-  'date-picker': 'DatePicker', calendar: 'Calendar', combobox: 'Combobox', choice: 'Choice', switch: 'Switch', slider: 'Slider',
-  search: 'Search', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
+  'date-picker': 'DatePicker', calendar: 'Calendar', combobox: 'Combobox', choice: 'Choice', checkbox: 'Checkbox', switch: 'Switch', slider: 'Slider',
+  search: 'Search', field: 'Field', link: 'TextLink', pagination: 'Pagination', tabs: 'Tabs', breadcrumbs: 'Breadcrumbs',
   menu: 'Menu', tag: 'Tag', metric: 'Metric', rating: 'Rating', avatar: 'Avatar', list: 'List',
   accordion: 'Accordion', prose: 'Prose', 'code-block': 'CodeBlock',
-  badge: 'Badge', alert: 'Alert', progress: 'Progress', tooltip: 'Tooltip', popover: 'Popover',
+  badge: 'Badge', alert: 'Alert', progress: 'Progress', spinner: 'Spinner', tooltip: 'Tooltip', popover: 'Popover',
 }
 
 /**
@@ -334,6 +337,10 @@ type Spec = {
   context?: string[]
   /** Function-valued props that live inside hand-written code the tree cannot see. */
   functionProps?: string[]
+  /** Functions the code calls (not elements it renders), imported beside the components, such as `toast`. */
+  calls?: string[]
+  /** When the code shows something other than the page's item: its words in Get code, and the complete file's name (`ToastExample`). */
+  subject?: { use: string; title: string; stem: string }
 }
 
 function importLine(names: string[], entry: string): string {
@@ -350,7 +357,7 @@ function build(id: ItemId, spec: Spec): Snippet {
   const charts = [...found.names].some((name) => CHART_EXPORTS.has(name))
   const entry = charts ? '@idyeah/diya/charts' : '@idyeah/diya'
   const exported = charts ? CHART_EXPORTS : MAIN_EXPORTS
-  const names = [...found.names].filter((name) => exported.has(name)).sort()
+  const names = [...[...found.names].filter((name) => exported.has(name)), ...(spec.calls ?? [])].sort()
   const types = [...(spec.types ?? [])].sort().map((name) => `type ${name}`)
   const consts = (spec.consts ?? []).map(({ name, type, value }) => {
     const head = `const ${name}${type ? `: ${type}` : ''} = `
@@ -359,7 +366,7 @@ function build(id: ItemId, spec: Spec): Snippet {
   const jsx = spec.code ?? (spec.jsx instanceof El ? element(spec.jsx, '', 0) : child(spec.jsx, '', 0))
   const code = [importLine([...names, ...types], entry), ...consts, jsx].join('\n\n')
   const context = [...(spec.context ?? []), ...found.decls]
-  const fileName = `${fileStem(id)}.tsx`
+  const fileName = `${spec.subject?.stem ?? fileStem(id)}.tsx`
   const icons = [...found.components].filter(isIcon).sort()
   const links = /\bhref(=|: )/.test(code)
   const snippet: Snippet = { code, entry, functionProps: [...found.functionProps], file: '', fileName, icons, links }
@@ -371,6 +378,7 @@ function build(id: ItemId, spec: Spec): Snippet {
     )
   }
   if (charts) snippet.charts = true
+  if (spec.subject) snippet.subject = { use: spec.subject.use, title: spec.subject.title }
   if (context.length) snippet.context = context.join('\n')
   return snippet
 }
@@ -541,7 +549,7 @@ function completeFile(id: ItemId, spec: Spec, found: Found, names: string[], ent
       ? '    ' + element(spec.jsx, '    ', 4)
       : `    <>\n      ${child(spec.jsx, '      ', 6)}\n    </>`
   const sections = [...(body.length ? [body.join('\n')] : []), ...statements, `  return (\n${jsx}\n  )`]
-  const component = `export default function ${fileStem(id)}() {\n${sections.join('\n\n')}\n}`
+  const component = `export default function ${spec.subject?.stem ?? fileStem(id)}() {\n${sections.join('\n\n')}\n}`
 
   const imports: string[] = []
   const react = [...(state.length ? ['useState'] : []), ...[...(typeImports.get('react') ?? [])].sort().map((t) => `type ${t}`)]
@@ -654,6 +662,37 @@ function textArea(p: Playground): Snippet {
       disabled: state === 'Disabled',
       readOnly: state === 'Read-only',
     }),
+  })
+}
+
+function field(p: Playground): Snippet {
+  const state = one(p, 'State', 'Default')
+  const framed = on(p, 'Options', 'Framed', true)
+  const time = v('startTime', 'string', "'09:30'")
+  /* Unframed, the input is the reader's own: a style of its own, whose edge follows Field's aria-invalid. */
+  const control = h(
+      'Field',
+      {
+        label: 'Start time',
+        hideLabel: !on(p, 'Options', 'Label', true),
+        /* A disabled field says why in its help. */
+        helperText: on(p, 'Options', 'Helper text', true) && (state === 'Disabled' ? 'Locked while the event is live.' : 'In your time zone.'),
+        error: state === 'Error' && 'Pick a time between 9:00 AM and 6:00 PM.',
+        disabled: state === 'Disabled',
+        framed,
+        /* Size sets the frame's height, so it only matters with framed. */
+        size: framed && sized(sizeOf(p)),
+      },
+      h('input', {
+        className: !framed && OWN_INPUT_CLASS,
+        type: 'time',
+        value: time,
+        onChange: fn('event', raw('setStartTime(event.target.value)', v('setStartTime', STRING_SETTER))),
+      })
+    )
+  return build('field', {
+    consts: framed ? [] : [{ name: 'css', value: raw(`\`${OWN_INPUT_CSS}\``) }],
+    jsx: framed ? control : (group(hi('style', {}, raw('css')), control) as El),
   })
 }
 
@@ -824,6 +863,57 @@ function switchSnippet(p: Playground): Snippet {
       helperText: on(p, 'Options', 'Helper text', false) && 'Keep up with important updates.',
       error: state === 'Error' && 'Notifications could not be updated. Try again.',
       disabled: state === 'Disabled',
+    }),
+  })
+}
+
+function checkbox(p: Playground): Snippet {
+  const state = one(p, 'State', 'Default')
+  const helper = on(p, 'Options', 'Helper text', true)
+  const shared = {
+    hideLabel: !on(p, 'Options', 'Label', true),
+    size: sized(sizeOf(p)),
+    disabled: state === 'Disabled',
+  }
+  /* Mixed is for a box that chooses all of a list, so the example becomes a select-all. */
+  if (on(p, 'Options', 'Mixed', false)) {
+    const files = v('files', 'string[]', "['Brief.pdf', 'Budget.xlsx', 'Logo.svg', 'Plan.docx']")
+    const chosen = v('chosen', 'string[]', "['Brief.pdf', 'Budget.xlsx']")
+    const setChosen = v('setChosen', '(chosen: string[]) => void')
+    return build('checkbox', {
+      jsx: h('Checkbox', {
+        label: 'Select all 4 files',
+        hideLabel: shared.hideLabel,
+        checked: raw('chosen.length === files.length', chosen, files),
+        indeterminate: raw('chosen.length > 0 && chosen.length < files.length', chosen, files),
+        onCheckedChange: fn('checked', raw('setChosen(checked ? files : [])', setChosen, files)),
+        size: shared.size,
+        helperText: helper && (state === 'Disabled' ? 'Sharing is off for this folder.' : raw('`${chosen.length} of ${files.length} chosen.`', chosen, files)),
+        error: state === 'Error' && 'Choose at least one file to share.',
+        disabled: shared.disabled,
+      }),
+    })
+  }
+  return build('checkbox', {
+    jsx: h('Checkbox', {
+      label: 'I agree to the Terms of Service',
+      hideLabel: shared.hideLabel,
+      checked: v('agreed', 'boolean'),
+      onCheckedChange: v('setAgreed', '(checked: boolean) => void'),
+      size: shared.size,
+      helperText: helper && (state === 'Disabled' ? 'Already agreed when your team signed up.' : 'You can read them any time from your account.'),
+      error: state === 'Error' && 'Agree to the terms to create your account.',
+      disabled: shared.disabled,
+    }),
+  })
+}
+
+function spinner(p: Playground): Snippet {
+  return build('spinner', {
+    jsx: h('Spinner', {
+      label: 'Loading invoices',
+      size: sized(sizeOf(p)),
+      showLabel: on(p, 'Options', 'Show label', false),
     }),
   })
 }
@@ -1293,16 +1383,19 @@ function alert(p: Playground): Snippet {
       jsx: h('Alert', { ...shared, onDismiss: dismiss && v('dismissAlert', VOID) }, example.text),
     })
   }
-  const close = v('setShowToast', '(show: boolean) => void')
+  /* A toast is shown with toast() from the code that did the work; <Toast> is for one tied to a component's state. */
+  const handler = shared.action ? v(example.handler, VOID) : undefined
+  const options = {
+    tone: shared.tone,
+    title: example.title,
+    description: example.text,
+    action: handler && { label: example.action, onClick: handler },
+  }
+  const call = raw(`toast(${js(options, '', 6)})`, ...(handler ? [handler] : []))
   return build('alert', {
-    jsx: new When(
-      v('showToast', 'boolean', 'true'),
-      h(
-        'Toast',
-        { ...shared, showClose: !dismiss && raw('false'), onDismiss: fn('', raw('setShowToast(false)', close)) },
-        example.text
-      )
-    ),
+    calls: ['toast'],
+    subject: { use: 'toast()', title: 'Toast', stem: 'ToastExample' },
+    jsx: h('Button', { variant: 'outline', onClick: fn('', call) }, 'Show toast'),
   })
 }
 
@@ -2078,9 +2171,11 @@ const SNIPPETS: Record<ItemId, (p: Playground, o: Options) => Snippet> = {
   calendar,
   combobox,
   choice,
+  checkbox,
   switch: switchSnippet,
   slider,
   search,
+  field,
   link,
   pagination,
   tabs,
@@ -2097,6 +2192,7 @@ const SNIPPETS: Record<ItemId, (p: Playground, o: Options) => Snippet> = {
   badge,
   alert,
   progress,
+  spinner,
   tooltip,
   popover,
   'page-header': pageHeader,

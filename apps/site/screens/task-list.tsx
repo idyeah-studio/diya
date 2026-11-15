@@ -3,7 +3,7 @@
 // Next.js: save as app/tasks/page.tsx. Vite: save as src/TaskList.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState } from 'react'
 import {
-  Avatar, Button, Choice, ContentState, DatePicker, Dialog, Drawer, Menu, Select, Stack, Tabs, Tag, TextInput, Toast, useDiyaAppearance,
+  Avatar, Button, Choice, ContentState, DatePicker, Dialog, Drawer, Menu, Select, Stack, Tabs, Tag, TextInput, toast, useDiyaAppearance,
 } from '@idyeah/diya'
 import { CalendarClock, ChevronDown, CircleAlert, Info, ListPlus, LucideProvider, Plus, Trash2 } from 'lucide-react'
 
@@ -52,7 +52,6 @@ async function api(route: string, task?: Task, all: Task[] = []) {
 const day = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format
 const overdue = (task: Task) => task.status !== 'done' && !!task.due && task.due < TODAY
 const label = (status: Status) => STATUSES.find((s) => s.value === status)!.label
-type Notice = { id: number; text: string; undo?: () => void }
 type Focus = { id: string; on: 'check' | 'move' | 'heading' }
 
 export default function TaskListScreen() {
@@ -63,7 +62,6 @@ export default function TaskListScreen() {
   const [editing, setEditing] = useState<Task>()
   const [creating, setCreating] = useState<Task>()
   const [deleting, setDeleting] = useState<Task>()
-  const [notice, setNotice] = useState<Notice>()
   const [said, say] = useState('')
   const [focus, setFocus] = useState<Focus>()
   const nodes = useRef<Record<string, HTMLElement | null>>({})
@@ -71,6 +69,9 @@ export default function TaskListScreen() {
   const current = PROJECTS.find((p) => p.id === project)!
   const shown = tasks.filter((t) => t.project === project)
   const late = shown.filter(overdue).length
+
+  // Undo only works here, so its toast leaves with the page.
+  useEffect(() => () => toast.dismiss('task-list-done'), [])
 
   // After a task moves, keep the keyboard where the reader expects it.
   useEffect(() => {
@@ -87,10 +88,10 @@ export default function TaskListScreen() {
     void api('/tasks/move')
     setFocus(from === 'move' ? { id: task.id, on: 'move' } : next ? { id: next.id, on: 'check' } : { id: '', on: 'heading' })
     if (status === 'done') {
-      setNotice({ id: Date.now(), text: `“${task.title}” is done.`, undo: () => {
+      toast({ id: 'task-list-done', tone: 'success', title: `“${task.title}” is done`, action: { label: 'Undo', onClick: () => {
         setTasks((all) => all.map((t) => (t.id === task.id ? { ...t, status: task.status } : t)))
         say(`“${task.title}” is back in ${label(task.status)}.`)
-      } })
+      } } })
     } else say(`Moved “${task.title}” to ${label(status)}.`)
   }
 
@@ -98,14 +99,14 @@ export default function TaskListScreen() {
     await api(`/tasks/${task.id}`, task, tasks)
     const clean = { ...task, title: task.title.trim() }
     setTasks((all) => (all.some((t) => t.id === task.id) ? all.map((t) => (t.id === task.id ? clean : t)) : [...all, clean]))
-    setNotice({ id: Date.now(), text: creating ? `Added “${clean.title}” to To do.` : 'Changes saved.' })
+    toast({ tone: 'success', title: creating ? `Added “${clean.title}” to To do` : 'Changes saved', duration: 6000 })
   }
 
   async function remove() {
     if (!deleting) return
     await api(`/tasks/${deleting.id}/delete`)
     setTasks((all) => all.filter((t) => t.id !== deleting.id))
-    setNotice({ id: Date.now(), text: `Deleted “${deleting.title}”.` })
+    toast({ tone: 'success', title: `Deleted “${deleting.title}”`, duration: 6000 })
     setFocus({ id: '', on: 'heading' })
   }
 
@@ -158,12 +159,6 @@ export default function TaskListScreen() {
           description={deleting ? `“${deleting.title}” leaves the project for good, along with its due date and assignee.` : undefined}
           confirmLabel="Delete task" confirmVariant="destructive" dismissLabel="Keep it" onConfirm={remove}
           onDismiss={() => deleting && setEditing(deleting)} />
-        {notice && (
-          <Toast key={notice.id} tone="success" onDismiss={() => setNotice(undefined)} duration={6000}
-            action={notice.undo ? { label: 'Undo', onClick: () => { notice.undo?.(); setNotice(undefined) } } : undefined}>
-            {notice.text}
-          </Toast>
-        )}
       </div>
     </LucideProvider>
   )

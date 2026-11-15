@@ -1,0 +1,164 @@
+'use client'
+// Field's parts, shared by Field and DIYA's own fields: ids, the help or error line, the error
+// that waits for a press to end, and the one announcement when an error appears on a field
+// you've just left. Hooks and render functions only, with no component of their own, so a
+// field's tree and its useId values don't move.
+import { useEffect, useId, useRef, useState, type HTMLAttributes, type RefObject } from 'react'
+import { useDiyaMessages } from '../DiyaProvider.js'
+import { fieldMessages } from '../field/messages.js'
+import { announcePolite, forgetPolite } from './announce.js'
+import { useClientLayoutEffect } from './layout-effect.js'
+import { afterRelease, pressedIn, watchPointer } from './pointer.js'
+
+declare module '../messages.js' {
+  interface DiyaMessages {
+    field: typeof fieldMessages
+  }
+}
+
+/** Marks DIYA's own fields, so Field can warn when it wraps one. The value is the field's name. */
+export const DIYA_FIELD = Symbol.for('@idyeah/diya/field')
+export function markField<T extends object>(component: T, name: string): T {
+  ;(component as Record<symbol, string>)[DIYA_FIELD] = name
+  return component
+}
+
+/** The control's id (yours, else generated) and its help line's id, with the field's own suffix. */
+export function useFieldIds(id: string | undefined, suffix: 'description' | 'help') {
+  const generated = useId()
+  const controlId = id ?? generated
+  return { id: controlId, descriptionId: `${controlId}-${suffix}` }
+}
+
+/** The help or error line, with the "!" glyph before an error, or nothing when there's neither. */
+export function renderDescription({ id, className, error, helperText, ...rest }: { id: string; className: string; error?: string; helperText?: string } & HTMLAttributes<HTMLParagraphElement> & Record<`data-${string}`, unknown>) {
+  const text = error || helperText
+  if (!text) return null
+  return (
+    <p id={id} className={className} {...rest}>
+      {error && <span aria-hidden="true">!</span>}
+      {text}
+    </p>
+  )
+}
+
+/**
+ * The error to show. An error that appears or changes while a pointer is pressed outside the
+ * field waits until that press ends, so leaving a field by clicking a button never moves the
+ * button out from under the pointer (MOT-1.2-04); it shows in the task after the click. A clear
+ * is never held, and a blur by keyboard shows at once. Show `aria-invalid` from this value too.
+ */
+export function useShownError(error: string | undefined, wrapper: RefObject<HTMLElement | null>) {
+  const shownRef = useRef(error)
+  const [, release] = useState(0)
+  const node = wrapper.current
+  const pressed = node && error && error !== shownRef.current ? pressedIn(node.ownerDocument) : null
+  const holding = !!pressed && !node!.contains(pressed)
+  const shown = holding ? shownRef.current : error
+  useClientLayoutEffect(() => { shownRef.current = shown })
+  useEffect(() => {
+    const document = wrapper.current?.ownerDocument
+    if (!document) return
+    return watchPointer(document)
+  }, [])
+  useEffect(() => {
+    const document = wrapper.current?.ownerDocument
+    if (!holding || !document) return
+    return afterRelease(document, () => release((count) => count + 1))
+  }, [holding, error])
+  return shown
+}
+
+// Errors that appear in one task are counted per document. After the task (and the app's own
+// focus move), one on a field focus isn't in is spoken (you've just left it); if focus is in exactly
+// one of them and was there all along (`held`: you pressed Enter in it, so focus can't move to it),
+// that one is spoken; otherwise nothing, and the field focus lands on reads its own (R1).
+type Said = { text: string; node: HTMLElement; key: string; held: boolean }
+const batches = new WeakMap<Document, Said[]>()
+function speak(node: HTMLElement, text: string, key: string, held = false) {
+  const document = node.ownerDocument
+  let batch = batches.get(document)
+  if (!batch) {
+    const created: Said[] = []
+    batches.set(document, created)
+    batch = created
+    setTimeout(() => {
+      batches.delete(document)
+      const focused = created.filter((entry) => focusWithin(entry.node))
+      const say = created.length === 1 && !focused.length ? created[0] : focused.length === 1 && focused[0].held ? focused[0] : undefined
+      if (say) announcePolite(say.text, say.node, say.key)
+    }, 0)
+  }
+  batch.push({ text, node, key, held })
+}
+// What had focus when a form was last submitted: an error that appears then on the field you're in
+// is counted, since focus can't move to it, and it's `held` if you submitted from that field (Enter).
+// An async validator (react-hook-form) commits its errors after a timer of 0 may have run, and may
+// move focus first, so it's kept for up to a second, until your next key or press (S1). Errors
+// while you type stay silent.
+const submittedFrom = new WeakMap<Document, Element>()
+const watched = new WeakSet<Document>()
+function watchSubmit(document: Document) {
+  if (watched.has(document)) return
+  watched.add(document)
+  const forget = () => submittedFrom.delete(document)
+  document.addEventListener('submit', () => {
+    const from = document.activeElement
+    if (!from) return
+    submittedFrom.set(document, from)
+    setTimeout(() => { if (submittedFrom.get(document) === from) forget() }, 1000)
+  }, true)
+  document.addEventListener('keydown', forget, true)
+  document.addEventListener('pointerdown', forget, true)
+}
+let spoken = 0
+
+/** Whether focus is in the field, or in the popup it controls (DatePicker's calendar). */
+function focusWithin(node: HTMLElement) {
+  const active = node.ownerDocument.activeElement
+  if (!active) return false
+  if (node.contains(active)) return true
+  for (const owner of Array.from(node.querySelectorAll('[aria-controls]'))) {
+    const popup = node.ownerDocument.getElementById(owner.getAttribute('aria-controls') ?? '')
+    if (popup?.contains(active)) return true
+  }
+  return false
+}
+
+/**
+ * Says "Label: error" once, politely, through the page's live region, when an error appears on a
+ * field that doesn't have focus (one you've just left). For a control focus can't be pointed at
+ * (an iframe), it says it again each time focus arrives there with the error set: `arrived`
+ * counts arrivals. With no provider's stack, it says nothing.
+ */
+export function useErrorAnnouncement(label: string | (() => string), shown: string | undefined, wrapper: RefObject<HTMLElement | null>, arrived = 0) {
+  const t = useDiyaMessages('field', fieldMessages)
+  // A label that isn't a string (Checkbox's, which may hold links) is read as text when said.
+  const name = () => (typeof label === 'function' ? label() : label)
+  const said = useRef(shown)
+  // The name of this field's words in the region, so they go when the error does (G10).
+  const [key] = useState(() => `field:${++spoken}`)
+  useEffect(() => {
+    const node = wrapper.current
+    const before = said.current
+    said.current = shown
+    // Cleared or changed: the old words leave the region at once, as a toast's do when it goes.
+    if (before && shown !== before) forgetPolite(key)
+    if (!node || !shown || shown === before) return
+    const inside = focusWithin(node)
+    const from = submittedFrom.get(node.ownerDocument)
+    if (inside && !from) return
+    speak(node, t.errorAnnouncement(name(), shown), key, inside && !!from && node.contains(from))
+  }, [shown])
+  // Arriving in a framed iframe with its error set: focus is there and was put there, so it's said.
+  useEffect(() => {
+    const node = wrapper.current
+    if (!arrived || !node || !said.current) return
+    speak(node, t.errorAnnouncement(name(), said.current), key, true)
+  }, [arrived])
+  useEffect(() => {
+    const document = wrapper.current?.ownerDocument
+    if (document) watchSubmit(document)
+  }, [])
+  useEffect(() => () => forgetPolite(key), [])
+}

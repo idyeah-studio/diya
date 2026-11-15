@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, render, screen, within } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ComponentProps, ReactNode } from 'react'
+import { useEffect, useState, type ComponentProps, type ComponentType, type ReactNode } from 'react'
+import { DiyaProvider, toast } from '@idyeah/diya'
 import { AppearanceProvider, useAppearance } from '../app/Appearance'
 import { CatalogProvider } from '../components/CatalogProvider'
 import { CatalogSearchProvider } from '../components/CatalogSearchProvider'
@@ -14,6 +15,27 @@ import { builtWith, namedImports, readScreenSource } from '../components/screens
 import { CATEGORIES, screenById, screens, type ScreenEntry } from '../components/screens/screens-data'
 import { resetStoreForTests } from '../lib/customize/store'
 import { smallFontSizes } from './screens-rules'
+import ActivityScreen from '../screens/activity'
+import AgendaScreen from '../screens/agenda'
+import AiScreen from '../screens/ai'
+import ApiKeysScreen from '../screens/api-keys'
+import BillingScreen from '../screens/billing'
+import BookScreen from '../screens/book'
+import ChangelogScreen from '../screens/changelog'
+import DashboardScreen from '../screens/dashboard'
+import FileManagerScreen from '../screens/file-manager'
+import GettingStartedScreen from '../screens/getting-started'
+import InboxScreen from '../screens/inbox'
+import InvoiceScreen from '../screens/invoice'
+import PricingScreen from '../screens/pricing'
+import ProductScreen from '../screens/product'
+import ProfileScreen from '../screens/profile'
+import RecordDetailScreen from '../screens/record-detail'
+import ResourceTableScreen from '../screens/resource-table'
+import SettingsScreen from '../screens/settings'
+import TaskListScreen from '../screens/task-list'
+import TeamScreen from '../screens/team'
+import WaitlistScreen from '../screens/waitlist'
 
 vi.mock('next/link', () => ({
   default: ({ children, ...props }: ComponentProps<'a'>) => <a {...props}>{children}</a>,
@@ -268,4 +290,292 @@ describe('Screens CSS', () => {
     expect(phone).toMatch(/\.screens-grid \{\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/)
     expect(phone).toMatch(/\.screens-card-text p \{ display: none; \}/)
   })
+})
+
+/*
+ * E6: the 21 Screens that kept their own toast state call toast() instead. Each
+ * one is rendered the way the preview frame renders it (StrictMode, one
+ * DiyaProvider), driven to its toast, and the toast is looked for in the page's
+ * one stack: exactly once, so a toast fired from an effect (twice under
+ * StrictMode) would fail here.
+ */
+type User = ReturnType<typeof userEvent.setup>
+type Raise = { id: string; Screen: ComponentType; title: string | RegExp; raise: (user: User) => Promise<void>; action?: string }
+
+const LONG = { timeout: 4000 }
+const openDialog = () => document.querySelector<HTMLDialogElement>('dialog[open]')!
+/** Waits for a button that's ready to press: there, enabled and not busy. */
+async function ready(name: string | RegExp, within: HTMLElement = document.body) {
+  let found: HTMLElement | undefined
+  await waitFor(() => {
+    found = screen.getAllByRole('button', { name }).find((button) => within.contains(button) && !(button as HTMLButtonElement).disabled && button.getAttribute('aria-disabled') !== 'true' && button.getAttribute('aria-busy') !== 'true')
+    expect(found).toBeTruthy()
+  }, LONG)
+  return found!
+}
+const confirmIn = async (user: User, name: string | RegExp) => user.click(await ready(name, openDialog()))
+
+const RAISES: Raise[] = [
+  { id: 'activity', Screen: ActivityScreen, title: 'Audit log exported', raise: async (user) => {
+    await user.click(screen.getByRole('tab', { name: 'Audit log' }))
+    await user.click(await ready(/Export CSV/))
+  } },
+  { id: 'agenda', Screen: AgendaScreen, title: 'Booking canceled', raise: async (user) => {
+    await waitFor(() => expect(document.querySelector('.agenda-row[data-status="confirmed"]')).toBeTruthy())
+    await user.click(document.querySelector<HTMLElement>('.agenda-row[data-status="confirmed"]')!)
+    await user.click(await ready('Cancel booking'))
+    await user.click(await ready('Cancel booking'))
+  } },
+  { id: 'ai', Screen: AiScreen, title: 'Chat deleted', raise: async (user) => {
+    await user.click(screen.getAllByText('A toast for Ana’s wedding')[0])
+    await user.click(screen.getByRole('button', { name: 'Chat options' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Delete' }))
+    await confirmIn(user, 'Delete chat')
+  } },
+  { id: 'api-keys', Screen: ApiKeysScreen, title: /^Test event (delivered|failed)$/, raise: async (user) => {
+    await user.click(screen.getByRole('tab', { name: /Webhooks/ }))
+    await user.click(await ready(/Send test event/))
+  } },
+  { id: 'billing', Screen: BillingScreen, title: 'Your plan is canceled', raise: async (user) => {
+    await user.click(await ready('Cancel plan'))
+    await confirmIn(user, 'Cancel plan')
+  } },
+  { id: 'book', Screen: BookScreen, title: 'Downloaded', raise: async (user) => {
+    await waitFor(() => expect(document.querySelectorAll('.book-slot').length).toBeGreaterThan(1), LONG)
+    await user.click([...document.querySelectorAll<HTMLElement>('.book-slot')].at(-1)!)
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Ana Lima')
+    await user.type(screen.getByRole('textbox', { name: 'Email' }), 'ana@example.com')
+    await user.click(await ready('Book it'))
+    await user.click(await ready(/Add to calendar/))
+  } },
+  { id: 'changelog', Screen: ChangelogScreen, title: 'Idea sent', raise: async (user) => {
+    await user.click(screen.getByRole('tab', { name: 'Roadmap' }))
+    await user.click(await ready('Suggest an idea'))
+    await user.type(within(openDialog()).getByRole('textbox', { name: 'Your idea' }), 'Dark mode for the mobile app')
+    await confirmIn(user, 'Send idea')
+  } },
+  { id: 'dashboard', Screen: DashboardScreen, title: 'Export on its way', raise: async (user) => {
+    await user.click(await ready(/^Export$/))
+  } },
+  { id: 'file-manager', Screen: FileManagerScreen, title: 'Created Receipts', raise: async (user) => {
+    await user.click(await ready(/New folder/))
+    const name = within(openDialog()).getByRole('textbox', { name: 'Name' })
+    await user.clear(name)
+    await user.type(name, 'Receipts')
+    await confirmIn(user, 'Create folder')
+  } },
+  { id: 'getting-started', Screen: GettingStartedScreen, title: 'First doc, written', raise: async (user) => {
+    await user.click(await ready(/^Write your first doc/))
+    await user.click(await ready('Open the brief', openDialog()))
+  } },
+  { id: 'inbox', Screen: InboxScreen, title: /^Marked \S+’s conversation as unread$/, raise: async (user) => {
+    await user.click(await ready('Mark unread'))
+  } },
+  { id: 'invoice', Screen: InvoiceScreen, title: 'INV-2047 is paid', raise: async (user) => {
+    await user.click(await ready(/Mark as paid/))
+    await confirmIn(user, 'Mark as paid')
+  } },
+  { id: 'pricing', Screen: PricingScreen, title: 'Message sent', raise: async (user) => {
+    await user.click(screen.getAllByRole('button', { name: 'Talk to sales' })[0])
+    const dialog = openDialog()
+    await user.type(within(dialog).getByRole('textbox', { name: 'Name' }), 'Ana Lima')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Work email' }), 'ana@example.com')
+    await user.selectOptions(within(dialog).getByRole('combobox', { name: 'Company size' }), '50-100')
+    await confirmIn(user, 'Send')
+  } },
+  { id: 'product', Screen: ProductScreen, title: 'Added to your bag', action: 'View bag', raise: async (user) => {
+    await user.click(await ready('Add to bag'))
+  } },
+  { id: 'profile', Screen: ProfileScreen, title: 'Profile saved', raise: async (user) => {
+    await user.click(await ready(/Edit profile/))
+    const name = within(openDialog()).getByRole('textbox', { name: 'Name' })
+    await user.type(name, ' Jr.')
+    await user.click(await ready('Save changes', openDialog()))
+  } },
+  { id: 'record-detail', Screen: RecordDetailScreen, title: 'Customer ID copied', raise: async (user) => {
+    await user.click(screen.getByRole('button', { name: /^More actions for / }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Copy customer ID' }))
+  } },
+  { id: 'resource-table', Screen: ResourceTableScreen, title: /^Exported 1 order$/, raise: async (user) => {
+    await waitFor(() => expect(screen.getAllByRole('checkbox', { name: /^Select Order / }).length).toBeGreaterThan(0), LONG)
+    await user.click(screen.getAllByRole('checkbox', { name: /^Select Order / })[0])
+    await user.click(await ready('Export'))
+  } },
+  { id: 'settings', Screen: SettingsScreen, title: 'Profile saved', raise: async (user) => {
+    await user.type(screen.getByRole('textbox', { name: 'Full name' }), ' Jr.')
+    await user.click(await ready('Save changes'))
+  } },
+  { id: 'task-list', Screen: TaskListScreen, title: /” is done$/, action: 'Undo', raise: async (user) => {
+    await user.click(screen.getAllByRole('checkbox').find((box) => !(box as HTMLInputElement).checked)!)
+  } },
+  { id: 'team', Screen: TeamScreen, title: 'Invite sent again', raise: async (user) => {
+    await user.click(screen.getAllByRole('button', { name: /^Resend invite to / })[0])
+  } },
+  { id: 'waitlist', Screen: WaitlistScreen, title: 'Link copied', raise: async (user) => {
+    await user.type(screen.getByRole('textbox', { name: 'Email address' }), 'ana@example.com')
+    await user.click(await ready('Join the waitlist'))
+    await user.click(await ready(/Copy link/))
+  } },
+]
+
+describe('each toast Screen raises its toast', () => {
+  beforeEach(() => {
+    // A fixed weekday, so every screen's sample dates and openings are the same on each run.
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-11-12T17:00:00Z') })
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:sample')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: vi.fn().mockResolvedValue(undefined) } })
+    // As in browsers, a dialog's close event comes a task after close(), so StrictMode's
+    // rehearsal unmount (close, then showModal again) doesn't read as the person closing it.
+    vi.spyOn(Object.getPrototypeOf(document.createElement('dialog')), 'close').mockImplementation(function (this: HTMLDialogElement) {
+      if (!this.open) return
+      this.open = false
+      setTimeout(() => this.dispatchEvent(new Event('close')))
+    })
+  })
+  afterEach(async () => {
+    act(() => toast.dismiss())
+    await act(async () => {})
+    vi.useRealTimers()
+  })
+
+  it('renders like the preview frame: StrictMode around one DiyaProvider', () => {
+    // A toast fired from an effect would show twice in development under StrictMode, so the
+    // frame keeps StrictMode and every case below renders under it.
+    const frame = readFileSync(join(process.cwd(), 'screens-frame/src/main.tsx'), 'utf8')
+    expect(frame).toMatch(/render\(\s*<StrictMode>\s*<Frame \/>\s*<\/StrictMode>/)
+    expect(frame).toContain('<DiyaProvider theme={theme} glass={glass} className="screens-frame">')
+  })
+
+  it('would catch a Screen that toasts from an effect: under StrictMode it shows twice', async () => {
+    function Saved() {
+      useEffect(() => {
+        toast({ title: 'Synced' })
+      }, [])
+      return null
+    }
+    render(<DiyaProvider theme="light"><Saved /></DiyaProvider>, { reactStrictMode: true })
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' })
+    await waitFor(() => expect(within(region).getAllByText('Synced')).toHaveLength(2))
+  })
+
+  it('covers every Screen that imports toast', () => {
+    const using = screens.filter((entry) => entry.status !== 'poster' && /\btoast\b/.test(namedImports(readScreenSource(entry.id) ?? '', '@idyeah/diya').join(' ')))
+    expect(RAISES.map((entry) => entry.id)).toEqual(using.map((entry) => entry.id).sort())
+    expect(RAISES).toHaveLength(21)
+  })
+
+  it.each(RAISES.map((entry) => [entry.id, entry] as const))('%s', async (_, { Screen, title, raise, action }) => {
+    const user = userEvent.setup()
+    render(<DiyaProvider theme="light"><Screen /></DiyaProvider>, { reactStrictMode: true })
+    await act(async () => {})
+    expect(screen.queryByRole('region', { name: 'Notifications (F8)' }), 'nothing toasts on load').toBeNull()
+    await raise(user)
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' }, LONG)
+    await waitFor(() => expect(within(region).getAllByText(title)).toHaveLength(1), LONG)
+    // Raised with toast(), not a <Toast> element the screen renders.
+    const shown = within(region).getByText(title)
+    expect(shown.closest('.diya-toast')!.getAttribute('data-kind')).toBe('toast')
+    // Every toast() toast has a close button named for it, and an action where the screen has one.
+    expect(within(region).getByRole('button', { name: `Dismiss: ${shown.textContent}` })).toBeTruthy()
+    if (action) expect(within(region).getByRole('button', { name: action })).toBeTruthy()
+  }, 20_000)
+
+  // UX-SITE-01: doing the same thing again updates its toast in place; it never stacks a twin.
+  const exportHistory: Raise = { id: 'record-detail', Screen: RecordDetailScreen, title: 'Export on its way', raise: async (user) => {
+    await user.click(screen.getByRole('button', { name: /^More actions for / }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Export history' }))
+  } }
+  it.each(['inbox', 'team', 'record-detail', 'activity', 'dashboard'])('%s: pressing again shows one toast, not two', async (id) => {
+    const { Screen, title, raise } = id === 'record-detail' ? exportHistory : RAISES.find((entry) => entry.id === id)!
+    const user = userEvent.setup()
+    render(<DiyaProvider theme="light"><Screen /></DiyaProvider>, { reactStrictMode: true })
+    await act(async () => {})
+    await raise(user)
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' }, LONG)
+    await waitFor(() => expect(within(region).getAllByText(title)).toHaveLength(1), LONG)
+    await raise(user)
+    // Let the second press finish its stubbed request and raise its toast.
+    await act(() => new Promise((done) => setTimeout(done, 1500)))
+    expect(within(screen.getByRole('region', { name: 'Notifications (F8)' })).getAllByText(title)).toHaveLength(1)
+  }, 20_000)
+
+  // VIS-SITE-01: agenda's Drawer stays open after its actions in 1.1, and its toast covered Rebook.
+  it('agenda closes the booking Drawer before its toast, so the toast lands on the page', async () => {
+    const user = userEvent.setup()
+    const { raise, title } = RAISES.find((entry) => entry.id === 'agenda')!
+    render(<DiyaProvider theme="light"><AgendaScreen /></DiyaProvider>, { reactStrictMode: true })
+    await raise(user)
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' }, LONG)
+    await waitFor(() => expect(within(region).getAllByText(title)).toHaveLength(1), LONG)
+    expect(document.querySelector('dialog[open]')).toBeNull()
+    expect(region.closest('dialog')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Rebook' })).toBeNull()
+  }, 20_000)
+
+  // SITE-FE-01: an action toast never times out, so task-list's Undo would follow the reader to every page.
+  it('task-list’s Undo toast leaves with the Screen', async () => {
+    const user = userEvent.setup()
+    function App() {
+      const [page, setPage] = useState<'tasks' | 'settings'>('tasks')
+      return (
+        <DiyaProvider theme="light">
+          <button type="button" onClick={() => setPage('settings')}>Go to settings</button>
+          {page === 'tasks' ? <TaskListScreen /> : <h1>Settings</h1>}
+        </DiyaProvider>
+      )
+    }
+    render(<App />, { reactStrictMode: true })
+    await user.click(screen.getAllByRole('checkbox').find((box) => !(box as HTMLInputElement).checked)!)
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' })
+    expect(within(region).getByRole('button', { name: 'Undo' })).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'Go to settings' }))
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Notifications (F8)' })).toBeNull(), LONG)
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeTruthy()
+  }, 20_000)
+
+  it('task-list: Undo is the toast’s action, and puts the task back', async () => {
+    const user = userEvent.setup()
+    render(<DiyaProvider theme="light"><TaskListScreen /></DiyaProvider>, { reactStrictMode: true })
+    const box = screen.getAllByRole('checkbox').find((item) => !(item as HTMLInputElement).checked) as HTMLInputElement
+    const name = box.closest('label')!.textContent!.trim()
+    await user.click(box)
+    const region = await screen.findByRole('region', { name: 'Notifications (F8)' })
+    within(region).getByText(`“${name}” is done`)
+    await user.click(within(region).getByRole('button', { name: 'Undo' }))
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Notifications (F8)' })).toBeNull(), LONG)
+    expect((screen.getByRole('checkbox', { name }) as HTMLInputElement).checked).toBe(false)
+    expect(screen.getByRole('status').textContent).toBe(`“${name}” is back in To do.`)
+  }, 20_000)
+})
+
+// frontend.md step 11: the lone yes-or-no boxes on Sign in and Application are Checkboxes, not one-option groups.
+describe('lone yes-or-no boxes are Checkboxes', () => {
+  it.each([
+    ['sign-in', 'Keep me signed in'],
+    ['application', 'Keep my application on file for 12 months for other roles'],
+  ])('%s: "%s"', async (id, label) => {
+    const { default: Screen } = await import(`../screens/${id}.tsx`)
+    render(<DiyaProvider theme="light"><Screen /></DiyaProvider>)
+    await act(async () => {})
+    const box = screen.getByRole('checkbox', { name: label }) as HTMLInputElement
+    expect(box.className).toBe('diya-checkbox')
+    expect(box.closest('fieldset')).toBeNull()
+    expect(box.checked).toBe(false)
+    fireEvent.click(box)
+    expect(box.checked).toBe(true)
+  })
+})
+
+// VIS-SITE4-01: Sign in is the approved bar, so its "Keep me signed in" row keeps 1.1.1's 38px
+// (Choice's 9px above and below), set in the Screen's own styles; Checkbox itself is unchanged.
+it('Sign in’s "Keep me signed in" row keeps its 1.1.1 spacing', async () => {
+  const { default: SignIn } = await import('../screens/sign-in')
+  render(<DiyaProvider theme="light"><SignIn /></DiyaProvider>)
+  await act(async () => {})
+  const row = screen.getByRole('checkbox', { name: 'Keep me signed in' }).closest('.diya-checkbox-field')!
+  expect(row.classList.contains('sign-in-keep')).toBe(true)
+  const css = [...document.querySelectorAll('style')].map((style) => style.textContent).join('\n')
+  expect(css).toMatch(/\.sign-in-keep \{ padding-block: 9px; \}/)
 })

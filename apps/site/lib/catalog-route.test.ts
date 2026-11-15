@@ -196,7 +196,7 @@ describe('Screens routes', () => {
         expect('redirect' in route ? route.redirect : catalogPath(route)).toBe(path)
       }
     })
-    expect(catalogItemPaths()).toHaveLength(42)
+    expect(catalogItemPaths()).toHaveLength(45)
   })
 })
 
@@ -232,7 +232,7 @@ describe('Catalog page addresses and titles', () => {
   it('lists every component and pattern once for the sitemap, each resolving to itself', () => {
     const paths = catalogItemPaths()
     expect(paths).toHaveLength(componentIds.length + patternIds.length)
-    expect(paths).toHaveLength(42)
+    expect(paths).toHaveLength(45)
     expect(new Set(paths).size).toBe(paths.length)
     for (const path of paths) {
       const route = resolveCatalogRoute(Object.fromEntries(new URL(path, 'https://diya13.ai').searchParams))

@@ -3,7 +3,7 @@
 // Next.js: save as app/profile/page.tsx. Vite: save as src/Profile.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
-  Avatar, Button, Combobox, Drawer, List, Progress, Select, Tabs, Tag, TextArea, TextInput, Toast,
+  Avatar, Button, Combobox, Drawer, List, Progress, Select, Tabs, Tag, TextArea, TextInput, toast,
   type ListItem,
 } from '@idyeah/diya'
 import {
@@ -89,7 +89,6 @@ export default function ProfileScreen() {
   const [activity, setActivity] = useState<Activity[]>()
   const [team, setTeam] = useState<Teammate[]>()
   const [editing, setEditing] = useState(false)
-  const [saved, setSaved] = useState(0)
   const now = useNow()
   const first = person.name.split(' ')[0]
 
@@ -219,12 +218,11 @@ export default function ProfileScreen() {
 
         {isOwnProfile && (
           <EditDrawer open={editing} person={person} onOpenChange={setEditing}
-            onSaved={(next) => { setPerson(next); setEditing(false); setSaved(Date.now()) }} />
-        )}
-        {saved > 0 && (
-          <Toast key={saved} tone="success" title="Profile saved" onDismiss={() => setSaved(0)} duration={5000}>
-            Your teammates see the changes right away.
-          </Toast>
+            onSaved={(next) => {
+              setPerson(next)
+              setEditing(false)
+              toast({ id: 'profile-saved', tone: 'success', title: 'Profile saved', description: 'Your teammates see the changes right away.', duration: 5000 })
+            }} />
         )}
       </div>
     </LucideProvider>

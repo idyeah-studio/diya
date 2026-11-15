@@ -363,7 +363,8 @@ describe('Toast exit', () => {
     const real = window.getComputedStyle.bind(window)
     vi.spyOn(window, 'getComputedStyle').mockImplementation((element: Element, pseudo?: string | null) => {
       const style = real(element, pseudo)
-      if (!(element as HTMLElement).classList?.contains('diya-toast-region')) return style
+      // 1.2: the exit plays on a copy of the toast's slot in its provider's stack.
+      if (!(element as HTMLElement).classList?.contains('diya-toast')) return style
       return new Proxy(style, {
         get(target, property) {
           if (property === 'animationDuration') return duration
@@ -384,7 +385,9 @@ describe('Toast exit', () => {
       {toast && <Toast duration={0} onDismiss={() => setToast(undefined)}>{toast}</Toast>}
     </>
   }
-  const copies = () => Array.from(document.querySelectorAll<HTMLElement>('.diya-toast-region[aria-hidden="true"]'))
+  const copies = () => Array.from(document.querySelectorAll<HTMLElement>('.diya-toast-copies > [aria-hidden="true"]'))
+  // B4: inside the stack a toast has no status role of its own; the region holds it.
+  const region = () => screen.queryByRole('region', { name: 'Notifications (F8)' })
 
   it('calls onDismiss at once, and plays the exit on a copy', async () => {
     const animations = webAnimations()
@@ -403,14 +406,14 @@ describe('Toast exit', () => {
     vi.useFakeTimers()
     render(<DiyaProvider><Host /></DiyaProvider>)
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
-    expect(screen.getByRole('status').textContent).toContain('Saved')
+    expect(region()?.textContent).toContain('Saved')
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss alert' }))
-    expect(screen.queryByRole('status')).toBeNull()
+    expect(region()).toBeNull()
     // Saved again while the first one is still leaving.
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
-    expect(screen.getByRole('status').textContent).toContain('Saved')
+    expect(region()?.textContent).toContain('Saved')
     await act(async () => { animations.forEach((animation) => animation.finish()); vi.advanceTimersByTime(2000) })
-    expect(screen.getByRole('status').textContent).toContain('Saved')
+    expect(region()?.textContent).toContain('Saved')
     expect(copies()).toHaveLength(0)
   })
 
@@ -426,7 +429,7 @@ describe('Toast exit', () => {
       expect(names.filter((name) => name === 'id' || name === 'role' || (name.startsWith('aria-') && !(element === copy && name === 'aria-hidden')))).toEqual([])
     }
     // Only the real toast is announced; the host keeps it mounted here.
-    expect(screen.getAllByRole('status')).toHaveLength(1)
+    expect(screen.getAllByRole('region', { name: 'Notifications (F8)' })).toHaveLength(1)
     expect(screen.getAllByRole('button', { name: 'Undo' })).toHaveLength(1)
   })
 

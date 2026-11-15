@@ -3,7 +3,7 @@
 // Next.js: save as app/activity/page.tsx. Vite: save as src/Activity.tsx and render it inside your DiyaProvider.
 import { useEffect, useLayoutEffect, useState } from 'react'
 import {
-  Alert, Avatar, Button, ContentState, DatePicker, List, Select, Table, Tabs, Toast,
+  Alert, Avatar, Button, ContentState, DatePicker, List, Select, Table, Tabs, toast,
   type DateRange, type ListItem, type TableColumn,
 } from '@idyeah/diya'
 import { BellOff, CheckCheck, CircleCheck, Download, LucideProvider, SearchX, Settings2 } from 'lucide-react'
@@ -237,7 +237,6 @@ function AuditLog({ today }: { today: string }) {
   const [range, setRange] = useState<DateRange>({ start, end: today })
   const [exporting, setExporting] = useState(false)
   const [problem, setProblem] = useState('')
-  const [notice, setNotice] = useState<{ id: number; text: string }>()
 
   useEffect(() => {
     let live = true
@@ -261,7 +260,7 @@ function AuditLog({ today }: { today: string }) {
       const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }))
       Object.assign(document.createElement('a'), { href: url, download: `${PRODUCT.toLowerCase()}-audit-log-${range.start}-to-${range.end}.csv` }).click()
       URL.revokeObjectURL(url)
-      setNotice({ id: Date.now(), text: `${rows.length} ${rows.length === 1 ? 'event' : 'events'} from ${day(at(range.start))} to ${day(at(range.end))} are in your downloads.` })
+      toast({ id: 'activity-export', tone: 'success', title: 'Audit log exported', description: `${rows.length} ${rows.length === 1 ? 'event' : 'events'} from ${day(at(range.start))} to ${day(at(range.end))} are in your downloads.`, duration: 6000 })
     } catch (error) {
       setProblem((error as Error).message)
     }
@@ -297,10 +296,6 @@ function AuditLog({ today }: { today: string }) {
         <ContentState className="activity-state" headingLevel={2} icon={<SearchX />} title="Nothing matches these filters"
           description={person === 'Jonah Reyes' ? 'Jonah joined a few days ago and hasn’t done anything yet. Give him time.' : 'Try someone else, or widen the dates.'}
           action={filtered ? { label: 'Clear filters', onClick: clear } : undefined} />
-      )}
-
-      {notice && (
-        <Toast key={notice.id} tone="success" title="Audit log exported" onDismiss={() => setNotice(undefined)} duration={6000}>{notice.text}</Toast>
       )}
     </div>
   )

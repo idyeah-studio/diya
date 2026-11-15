@@ -60,3 +60,44 @@ it('renders the motion setting on every provider; a nested provider inherits it'
   ))
   expect(motion(nested)).toEqual(['off', 'off', 'reduced'])
 })
+
+// 1.2 adds a toast host, live regions and a modal registry to the provider, all created in
+// effects: the server markup must stay exactly what 1.1.1 rendered.
+it('provider server markup matches 1.1.1', async () => {
+  const { readFileSync, writeFileSync } = await import('node:fs')
+  const { resolve } = await import('node:path')
+  const { version } = await import('react')
+  const children = () => [
+    createElement(core.Button, { key: 'b', loading: true }, 'Save'),
+    createElement(core.TextInput, { key: 't', label: 'Name', value: 'Ada', onValueChange: () => {} }),
+    createElement(core.Dialog, { key: 'd', title: 'Edit project', trigger: createElement(core.Button, null, 'Edit') }, 'Body'),
+    createElement(core.Drawer, { key: 'r', title: 'Filters', open: false, onOpenChange: () => {} }, 'Body'),
+    createElement(core.Toast, { key: 'o', title: 'Saved', onDismiss: () => {} }, 'Draft saved.'),
+    createElement(core.Menu, { key: 'm', label: 'More', items: [{ id: 'a', label: 'Rename', onSelect: () => {} }] }),
+    createElement(core.Tooltip, { key: 'p', content: 'Saves the file' }, createElement(core.Button, null, 'Save')),
+  ]
+  const cases: Record<string, ReturnType<typeof createElement>> = {
+    default: createElement(core.DiyaProvider, null, children()),
+    light: createElement(core.DiyaProvider, { theme: 'light' }, children()),
+    dark: createElement(core.DiyaProvider, { theme: 'dark', glass: true, motion: 'off' }, children()),
+    branded: createElement(core.DiyaProvider, { theme: 'system', brandColor: { light: '#0e5f63', dark: '#5fd0c8' }, style: { '--diya-color-focus': '#0f6b70' } as never, className: 'app' }, children()),
+    nested: createElement(core.DiyaProvider, { theme: 'light' }, createElement(core.DiyaProvider, { theme: 'dark', motion: 'reduced' }, createElement(core.DiyaProvider, { theme: 'system', glass: true }, children()))),
+  }
+  const html = Object.fromEntries(Object.entries(cases).map(([name, element]) => [name, renderToString(element)]))
+  const writeTo = process.env.DIYA_WRITE_FIXTURES
+  if (writeTo) writeFileSync(resolve(writeTo, `${version}-provider.json`), `${JSON.stringify(html, null, 2)}\n`)
+  else {
+    // The one markup change 1.2 makes here, named by the build plan (frontend.md step 8, E3): a loading
+    // Button shows the small spinner ring where 1.1.1 had "···". Everything else must equal 1.1.1.
+    // N6: the Button's own spinner has its own class too; N1: a loading Button carries its turn.
+    const ring = '<span class="diya-spinner diya-button-spinner" data-size="small" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false"><circle class="diya-spinner-track" cx="8" cy="8" r="7.125"></circle><circle class="diya-spinner-arc" cx="8" cy="8" r="7.125" pathLength="100" stroke-dasharray="100" stroke-dashoffset="72" stroke-linecap="round" transform="rotate(-90 8 8)"></circle></svg></span>'
+    // F12: the label is wrapped while loading (it fades back when loading ends), so the wrapper maps
+    // back to the bare label too.
+    // O5 (named edit): a plain-text label is never wrapped, and its spinner comes after the words
+    // (it's centered, so its place doesn't show), so the ring maps back to the dots before them.
+    const dots = '<span class="diya-button-progress" aria-hidden="true">···</span>'
+    const changed1_2 = (markup: string) => markup.split(`${ring}`).join('\u0000').replace(/>([^<\u0000]*)\u0000/g, `>${dots}$1`).split('\u0000').join(dots).replace(/<span class="diya-button-label">([^<]*)<\/span>/g, '$1').replace(/ data-busy-turn="a"/g, '')
+    expect(Object.fromEntries(Object.entries(html).map(([name, markup]) => [name, changed1_2(markup)])))
+      .toEqual(JSON.parse(readFileSync(resolve(process.cwd(), 'tests/fixtures/provider-ssr-1.1.1.json'), 'utf8'))[version])
+  }
+})

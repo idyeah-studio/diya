@@ -1,9 +1,13 @@
 'use client'
 import { forwardRef, useEffect, useId, useMemo, useRef, useState, type DialogHTMLAttributes, type ReactElement, type ReactNode, type Ref } from 'react'
 import { Button } from '../button/Button.js'
-import { useDiyaMessages } from '../DiyaProvider.js'
+import { PortalContainerContext, useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
+import { useClientLayoutEffect } from '../internal/layout-effect.js'
+import { pushModal, removeModal } from '../internal/modal-stack.js'
 import { inertWhileExiting } from '../internal/presence.js'
+import { opener, watchPresses } from '../internal/opener.js'
+import { watchForStrayPopups } from '../internal/stray-popups.js'
 import { composeRefs, renderSlot } from '../internal/slot.js'
 import { dialogMessages } from './messages.js'
 
@@ -85,7 +89,9 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
   const open = controlledOpen ?? localOpen
   const busy = loading || pending
   const dialog = useRef<HTMLDialogElement | null>(null)
-  const setDialog = useMemo(() => composeRefs<HTMLDialogElement>(dialog, ref as Ref<HTMLDialogElement>), [ref])
+  // The element in state too, so popups inside learn where to render once it exists.
+  const [element, setElement] = useState<HTMLDialogElement | null>(null)
+  const setDialog = useMemo(() => composeRefs<HTMLDialogElement>(dialog, setElement, ref as Ref<HTMLDialogElement>), [ref])
   const trigger = useRef<HTMLElement | null>(null)
   const Heading = `h${headingLevel}` as const
   const previousFocus = useRef<HTMLElement | null>(null)
@@ -111,12 +117,20 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
     },
     []
   )
+  // Remember presses, so a dialog opened by a click in Safari can give focus back to its opener.
+  useEffect(() => { if (dialog.current) watchPresses(dialog.current.ownerDocument) }, [])
+  // A layout cleanup runs before React removes the dialog's node, so whatever follows the modal
+  // stack (the toast stack) leaves it while it's still in the page.
+  useClientLayoutEffect(() => {
+    const node = dialog.current
+    return () => removeModal(node)
+  }, [])
   useEffect(() => {
     const node = dialog.current
     if (!node) return
     if (open && !node.open) {
-      previousFocus.current =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null
+      // The opener, even when a click in Safari left focus on <body> (F2).
+      previousFocus.current = opener(document)
       setError('')
       node.inert = false
       // Safari applies inert through style: read layout so it's lifted before showModal()
@@ -124,9 +138,12 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
       void node.offsetWidth
       if (typeof node.showModal === 'function') node.showModal()
       else node.setAttribute('open', '')
+      pushModal(node)
+      if (process.env.NODE_ENV !== 'production') watchForStrayPopups(node.ownerDocument)
     } else if (!open && node.open) {
       operation.current += 1
       setPending(false)
+      removeModal(node)
       if (typeof node.close === 'function') node.close()
       else node.removeAttribute('open')
       inertWhileExiting(node)
@@ -223,6 +240,7 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
         onClose={(event) => {
           onClose?.(event)
           if (event.currentTarget.open) return
+          removeModal(event.currentTarget)
           operation.current += 1
           setPending(false)
           if (open) change(false)
@@ -241,7 +259,7 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
             dismiss()
         }}
       >
-        {content}
+        <PortalContainerContext.Provider value={element}>{content}</PortalContainerContext.Provider>
       </dialog>
     </>
   )

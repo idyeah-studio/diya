@@ -5,7 +5,7 @@
   </picture>
 </h1>
 
-**A library for your next app.** 30 components and 13 patterns for React. Free, MIT, yours to own.
+**A library for your next app.** 33 components and 13 patterns for React. Free, MIT, yours to own.
 
 [Catalog](https://diya13.ai/explore) ·
 [Components](https://diya13.ai/explore?area=components) ·
@@ -87,6 +87,11 @@ space between them. See [Layout](#layout).
 New in 1.1: popups, dialogs and toggles move a little, and follow the
 device's Reduce Motion setting. To slow that down or turn it off, see
 [Motion](#motion).
+
+New in 1.2: `toast()` shows a toast from anywhere, with no state of your own
+(see [Toasts](#toasts)). `Field` puts a label and an error around a control
+DIYA doesn't make, `Checkbox` is a yes or no for a form, and `Spinner` shows
+that one part of a page is busy.
 
 Props, behavior and examples for every piece are in the
 [component guide](https://github.com/idyeah-studio/diya/blob/main/packages/diya/docs/components.md)
@@ -354,6 +359,10 @@ client file, as in [Next.js](#nextjs-app-router):
 </DiyaProvider>
 ```
 
+If your `linkComponent` is a wrapper, pass every prop through to the anchor,
+as `DiyaLinkProps` asks: a loading or disabled Button blocks its clicks that
+way.
+
 `asChild` styles your own element instead of rendering one. Button and
 TextLink take it:
 
@@ -377,25 +386,162 @@ Fields work controlled (`value` with `onValueChange`, `checked` with
 reset puts them back.
 
 react-hook-form's `register()` works on TextInput, TextArea, Select, Switch,
-Choice and Slider with no `Controller`: values come back on submit, and an
-error moves focus to its field.
+Checkbox, Choice and Slider with no `Controller`: values come back on submit,
+and an error moves focus to its field.
 
 ```tsx
-const { register, handleSubmit } = useForm<{ name: string; volume: number; alerts: boolean }>()
+const { register, handleSubmit, formState: { errors } } = useForm<{ name: string; volume: number; alerts: boolean; terms: boolean }>()
 
 <form onSubmit={handleSubmit(save)}>
   <Stack gap={4}>
-    <TextInput label="Name" {...register('name', { required: 'Add a name' })} />
+    <TextInput label="Name" error={errors.name?.message} {...register('name', { required: 'Add a name' })} />
     <Slider label="Volume" {...register('volume', { valueAsNumber: true })} />
     <Switch label="Email alerts" {...register('alerts')} />
+    <Checkbox
+      label="I agree to the terms"
+      error={errors.terms?.message}
+      {...register('terms', { required: 'Agree to the terms to continue.' })}
+    />
     <Button type="submit">Save</Button>
   </Stack>
 </form>
 ```
 
-Slider needs `valueAsNumber: true` to give you a number. Combobox and
-DatePicker need a `Controller`; in a plain form they post their value through
-`name`. Calendar takes no `name`, so it always goes through a `Controller`.
+Slider needs `valueAsNumber: true` to give you a number. Checkbox gives `true`
+or `false`, or with a `value`, that value or `false`; a plain form post sends
+`"on"` unless you pass a `value`. Combobox
+and DatePicker need a `Controller`; in a plain form they post their value
+through `name`. Calendar takes no `name`, so it always goes through a
+`Controller`.
+
+**Switch, Checkbox or Choice?** Switch acts now, like a light switch.
+Checkbox is a yes or no you send with a form, such as agreeing to terms.
+Choice picks from a list.
+
+**When to show errors:** on submit, or when someone leaves a field they typed
+in. Never while they're typing. An error that appears when someone leaves a
+field is read out once, politely ("Email: Enter a valid email"). An error
+that appears when they leave by pressing a button shows once the press ends,
+so the button doesn't move under their pointer.
+
+**Say once that everything is required,** and mark the rare optional field
+"(optional)" in its label. `required` tells screen readers and draws nothing.
+
+### A control DIYA doesn't make
+
+If DIYA makes the control, use its own `label`, `helperText` and `error`.
+Wrap anything else in `Field`: your own input, a native one DIYA doesn't wrap,
+or a third-party control. Field gives it a label, helper text and an error,
+wired up for screen readers.
+
+```tsx
+import { Field } from '@idyeah/diya'
+
+<Field label="Start time" helperText="Your local time" error={errors.start?.message}>
+  <input type="time" {...register('start')} />
+</Field>
+```
+
+For a control that takes the ids somewhere else, pass a function. It gets
+`id`, `aria-labelledby`, `aria-describedby`, `aria-invalid`,
+`aria-required` and `disabled`.
+
+```tsx
+<Field label="Color">
+  {(control) => <ColorPicker inputProps={control} />}
+</Field>
+```
+
+`framed` draws DIYA's field box around a control that has none, such as a
+payment provider's card iframe. In Dark it keeps the iframe readable, and a
+label click moves focus into it. If your provider needs its own `focus()` to
+reach its input, call it from the label:
+`onClick={(event) => { if ((event.target as Element).closest('label')) card.focus() }}`.
+
+```tsx
+<Field label="Card" framed error={cardError}>
+  <div ref={cardMount} />
+</Field>
+```
+
+Don't wrap DIYA's own fields in Field. They have their own label, and screen
+readers would hear two. In development, Field warns you.
+
+## Toasts
+
+New in 1.2. Call `toast()` from any client code, such as an event handler or
+your data code. It needs no state and no hook. There's one stack per page.
+
+```tsx
+import { toast } from '@idyeah/diya'
+
+async function save() {
+  await saveDraft()
+  toast({ tone: 'success', title: 'Draft saved' })
+}
+
+toast({ title: '3 emails archived', action: { label: 'Undo', onClick: restore } })
+```
+
+- **What it shows:** `title` says what happened, with the real name.
+  `description` says what happens next. `tone` is `'info'` by default.
+- **How long:** 8 seconds, or `duration` in milliseconds; `0` keeps it until
+  someone closes it. Time stops while someone points at or focuses a toast,
+  and while the tab is hidden.
+- **Undo and other actions:** a toast with an `action` never times out and is
+  never pushed out to make room.
+- **Update it:** pass an `id`, and a later call with the same `id` updates
+  that toast in place, such as "Saving…" then "Saved".
+- **Close it:** `toast.dismiss(id)` closes one toast; `toast.dismiss()`
+  closes every toast `toast()` showed. A `<Toast>` closes when you stop
+  rendering it.
+- **Urgent:** `urgent` makes a screen reader say it at once. Use it for errors
+  that need action.
+
+At most 3 toasts show, or 2 on screens under 600px wide. A new toast always
+shows: the oldest toast without an action leaves early to make room.
+
+**Where it shows:** in the first-mounted outermost `DiyaProvider`, in its
+corner and its theme. A widget with its own provider that mounts before your
+app's provider would show every toast, so mount your app's provider first.
+With no provider mounted yet, a toast waits and shows when one mounts. On the
+server, `toast()` does nothing; return a result and call `toast()` in the
+client.
+
+**Inside a Dialog or Drawer,** toasts show inside the open modal, above the
+dim, so they can be clicked. There's nothing to set up.
+
+**Keyboard:** F8 moves focus to the newest toast. Escape closes the focused
+toast and goes no further, so a Dialog around it stays open. Toasts never
+take focus on their own, and the stack is a landmark named
+"Notifications (F8)".
+
+**From an effect:** in development, StrictMode runs effects twice, so a toast
+from an effect shows twice. Give it an `id`, and the second call updates the
+first. Better still, call `toast()` from the handler that did the work.
+
+```tsx
+useEffect(() => {
+  if (saved) toast({ id: 'draft-saved', tone: 'success', title: 'Draft saved' })
+}, [saved])
+```
+
+Ids that `toast()` makes look like `diya-toast-1`. Ids that start with
+`diya-` are DIYA's, so don't use that prefix for your own.
+
+`<Toast>` still works, for a toast whose life is tied to a component's
+state. It joins the same stack and keeps its own provider's look.
+
+**In tests,** close the toasts between tests, and find a toast by its region
+or its text. In Playwright, pass `{ exact: true }` to `getByText`, since a
+toast's words are also in a live region for a few seconds:
+
+```tsx
+afterEach(() => toast.dismiss())
+
+const region = await screen.findByRole('region', { name: 'Notifications (F8)' })
+expect(within(region).getByText('Draft saved')).toBeInTheDocument()
+```
 
 ## Charts
 
@@ -461,6 +607,8 @@ Four props on `DiyaProvider` cover most apps: `theme`, `brandColor`,
 | Brand | Set `brandColor`. It sets `--diya-color-accent`, `--diya-color-accent-text`, `--diya-color-accent-soft` and `--diya-color-accent-ink` for you. |
 | Surfaces | Set `--diya-color-surface`, `--diya-color-raised` and `--diya-color-text` as a readable group. |
 | Corners | Set `--diya-corner-scale` (`0` is square, `2` is twice as round). Fields, selects and rounded Buttons share `--diya-radius-control`; Card, chart cards, Page Header, Form and Table share `--diya-radius-surface`. |
+| Control height | Set the three `--diya-height-control-*` tokens together, such as 36, 44 and 52px. |
+| Focus, titles and fields | Set `--diya-color-focus`, `--diya-color-heading`, `--diya-color-field` and `--diya-color-field-line`. See [Tokens](#tokens). |
 | Chart series | Pass `palette`, or a `color` on a series or data item. |
 | Size and behavior | Use each component's props. |
 
@@ -559,6 +707,45 @@ or `count()`, or render `motion="off"` in your test build. Playwright's
 </DiyaProvider>
 ```
 
+**Loading:** a Spinner, and the spinner in a Button with `loading`, wait
+400ms before they show, so a quick load shows nothing. The wait is the same
+at every `--diya-duration-scale`. In tests, use `findBy…` (or advance fake
+timers) to see a Spinner or hear its label.
+
+A loading Button's cursor turns to `progress` at once. After 400ms a small
+spinner appears, and the button keeps its exact size. It looks busy, not
+disabled. If the Button starts with an icon, the spinner takes the icon's
+place and the words stay readable. An icon is the first thing in the Button
+when it renders a single `<svg>`: an icon from lucide-react or any other
+library, your own icon or logo component, or an `<svg>`, written inline or in
+a Fragment. Anything else is treated as the label, and the spinner takes the
+whole label's place. That includes an `<img>`, an icon font, and an icon
+inside your own wrapper element (`<span><Plus /></span>`). Keep an icon
+component to just its icon: if it renders words too, they hide with it.
+Browsers without CSS `:has()` treat every icon as label. Space the icon with
+the Button's `gap`, not a margin on the icon: a margin shifts the spinner by
+half its width.
+
+While it loads, the Button's words turn transparent, and they fade back
+through its `color`. So put a gradient made with `background-clip: text` on
+an element inside the label, not on the Button itself, where it stays drawn
+under the spinner. A border or ring you draw in `currentColor` on the Button
+fades back with the words. An animation you set on the Button itself stops
+when loading starts and starts over when the label is back, so put entrance
+animations on an element around the Button. Style your own elements in a
+label, not the Button's inner spans, and don't put a Spinner in a Button you
+give `loading`: it shows its own. With `asChild`, your element must render its
+children for the spinner to show; an `<input>`, or a component that ignores
+its children, keeps its words while it loads.
+
+If the label holds an element, such as an icon or `<strong>`, pass `loading`
+from the start (`loading={false}` until it's busy). Then nothing in the label
+starts over when loading begins, and a page the browser has translated keeps
+working. A label of plain text is safe either way. In tests, find a Button by
+its role, `getByRole('button', { name: 'Save', busy: true })`: a label that
+holds an element sits in a wrapper, so `getByText('Save')` finds the
+wrapper.
+
 **Rather keep 1.0 exactly?** Pin the 1.0 line:
 
 ```sh
@@ -588,7 +775,13 @@ grouped by component. Anything you leave out stays in English.
 
 - `defaultMessages` lists every key with its English default; use it as the
   template for a full translation. `DiyaMessages` is its type, and
-  `DiyaMessagesInput` is the partial shape `messages` accepts.
+  `DiyaMessagesInput` is the partial shape `messages` accepts. Type your
+  translation as `DiyaMessagesInput`: a full `DiyaMessages` needs every key,
+  so it breaks when a release adds one (1.2 adds `toast.dismiss`,
+  `toast.actionHint` and `field.errorAnnouncement`).
+- The toast stack's name and spoken words come from the outermost provider's
+  `messages`. `toast.label` names the stack and the key that reaches it
+  ("Notifications (F8)"), so keep the key in your translation.
 - A value is a string, or a function when the string includes something, such
   as a label or a count. In Next.js, pass functions from a client file (see
   [Next.js](#nextjs-app-router)).
@@ -607,15 +800,19 @@ grouped by component. Anything you leave out stays in English.
 These CSS custom properties are public. They are safe to override on
 `DiyaProvider`'s `style`. To change one region, wrap it in a nested
 `DiyaProvider` with its own `style`: a few values, such as table shadows and
-header edges, are worked out once per provider from these tokens.
+header edges, are worked out once per provider from these tokens. A nested
+provider starts from DIYA's defaults, so a value set on an outer provider's
+`style` doesn't reach it. A brand file reaches every provider.
 
 | Group | Tokens |
 | --- | --- |
-| Text | `--diya-color-text`, `--diya-color-muted` |
+| Text | `--diya-color-text`, `--diya-color-muted`, and `--diya-color-heading`: component titles (Card, Dialog, Drawer, Page Header, Table, Form, Wizard, Content State, Data Viz, Prose headings). Defaults to the text color. |
 | Surfaces | `--diya-color-surface`, `--diya-color-recessed`, `--diya-color-raised` |
 | Lines | `--diya-color-line` |
 | Brand | `--diya-color-accent` (fills), `--diya-color-accent-text` (text on the fill), `--diya-color-accent-soft` (a quiet tint) and `--diya-color-accent-ink` (brand-colored text on the page). `brandColor` sets all four; set them together if you override them. |
-| States | `--diya-color-hover`, `--diya-color-selected` |
+| States | `--diya-color-hover`, `--diya-color-selected`, and `--diya-color-focus`: every focus ring. Defaults to the text color. It needs 3:1 against the surfaces; in Light, use at least 5.1:1 against white so it holds over Glass. |
+| Fields | `--diya-color-field` (the fill) and `--diya-color-field-line` (the edge) of every field: TextInput, TextArea, Select, Search, Combobox, Date Picker and `Field framed`. The edge needs 3:1 against the field fill and against the page behind it. A color you set is used as is in every appearance, so in Light use at least 3.8:1 against white; it then still holds 3:1 over Glass. DIYA's default edge follows the muted text color, which Glass makes stronger, so it holds on its own. An invalid field keeps the error border. Under Glass, fields stay see-through at your color. |
+| Control height | `--diya-height-control-small`, `--diya-height-control-medium` and `--diya-height-control-large`: 32, 40 and 48px. These are the heights of Buttons (and icon-only squares), every field, Tabs and calendar days. Type sizes don't change. Combobox can't go below 26px (32px at large). |
 | Destructive actions | `--diya-color-destructive` |
 | Statuses | For each of `success`, `warning`, `error` and `info`: `--diya-color-{status}` for text and icons on a surface, `--diya-color-{status}-surface` behind them, and `--diya-color-{status}-fill` with `--diya-color-{status}-on-fill` for solid badges. `--diya-color-error` also colors error messages, the border of every invalid field and a falling Metric. |
 | Neutral badge | `--diya-color-neutral-fill`, `--diya-color-neutral-on-fill` |
@@ -624,7 +821,7 @@ header edges, are worked out once per provider from these tokens.
 | Type scale | `--diya-text-caption`, `--diya-text-body`, `--diya-text-large`, `--diya-text-title`, `--diya-text-heading`, `--diya-text-display`, `--diya-text-hero` |
 | Line height | `--diya-leading-tight`, `--diya-leading-body` |
 | Space | `--diya-space-1` to `--diya-space-8`: 4, 8, 12, 16, 24, 32, 48 and 64px |
-| Shape and depth | `--diya-corner-scale`; `--diya-radius-control`, the one corner every control shares; `--diya-radius-surface`, the one corner every in-page surface shares; `--diya-shadow-raised` for cards, dialogs, drawers, toasts, menus and popups; `--diya-elevation` scales table, tooltip and floating chat shadows (`0` removes them). For a flat look, set `--diya-shadow-raised: none` as well |
+| Shape and depth | `--diya-corner-scale`; `--diya-radius-control`, the one corner every control shares; `--diya-radius-surface`, the one corner every in-page surface shares; `--diya-radius-popup`, the corner of Menu, Popover and the Combobox and Date Picker popups (16px × scale); `--diya-radius-modal`, the corner of Dialog and the Drawer's open edge (22px × scale; square when a Drawer fills a phone); `--diya-shadow-raised` for cards, dialogs, drawers, toasts, menus and popups; `--diya-elevation` scales table, tooltip and floating chat shadows (`0` removes them). For a flat look, set `--diya-shadow-raised: none` as well |
 | Motion | `--diya-duration-fast`, `--diya-duration-medium` and `--diya-duration-slow` (120, 160 and 240ms; exits take two-thirds), `--diya-duration-scale` (`0` turns motion off), and the curves `--diya-ease-enter`, `--diya-ease-exit` and `--diya-ease-move`. See [Motion](#motion) |
 
 ```tsx
@@ -638,13 +835,54 @@ header edges, are worked out once per provider from these tokens.
 ```
 
 Set `brandColor` and `fontFamily` as props rather than overriding the accent
-tokens and `--diya-font` directly. In your own CSS, `.diya-root` is the
-provider; with `theme="system"` its `data-theme` is `system`, so write Light
-and Dark overrides inside `@media (prefers-color-scheme: …)` as well as for
-`[data-theme='light']` and `[data-theme='dark']`. Set a status family's four tokens
-together, and check each pair in Light, Dark and Glass. Every public token,
-with its defaults and the tokens it pairs with, is also listed in
+tokens and `--diya-font` directly. Set a status family's four tokens together,
+and check each pair in Light, Dark and Glass. Every public token, with its
+defaults and the tokens it pairs with, is also listed in
 `@idyeah/diya/api.json`.
+
+A brand file sets the tokens for every provider at once. In your own CSS,
+`.diya-root` is the provider. `theme="system"` sets `data-theme="system"`, so
+repeat your Light and Dark values in the two `prefers-color-scheme` blocks.
+
+```css
+/* brand.css: import after '@idyeah/diya/styles.css'. brandColor stays on DiyaProvider. */
+.diya-root {
+  --diya-height-control-small: 36px;
+  --diya-height-control-medium: 44px;
+  --diya-height-control-large: 52px;
+}
+@media (forced-colors: none) {
+  .diya-root[data-theme='light'] {
+    --diya-color-heading: #0b4a4e;
+    --diya-color-focus: #0f6b70;
+    --diya-color-field: #ffffff;
+    --diya-color-field-line: #768587;
+  }
+  .diya-root[data-theme='dark'] {
+    --diya-color-heading: #9fe3dc;
+    --diya-color-focus: #4cc4bb;
+    --diya-color-field: #18181b;
+    --diya-color-field-line: #6b7a7c;
+  }
+}
+/* theme="system", the default: the same values, chosen by the OS. */
+@media (forced-colors: none) and (prefers-color-scheme: light) {
+  .diya-root[data-theme='system'] {
+    --diya-color-heading: #0b4a4e;
+    --diya-color-focus: #0f6b70;
+    --diya-color-field: #ffffff;
+    --diya-color-field-line: #768587;
+  }
+}
+@media (forced-colors: none) and (prefers-color-scheme: dark) {
+  .diya-root[data-theme='system'] {
+    --diya-color-heading: #9fe3dc;
+    --diya-color-focus: #4cc4bb;
+    --diya-color-field: #18181b;
+    --diya-color-field-line: #6b7a7c;
+  }
+}
+```
 
 ## Stability
 
@@ -661,6 +899,19 @@ major version:
 - message keys and their arguments;
 - `api.json` within `schemaVersion: 1`, where only additions are allowed;
 - peer dependency ranges.
+
+From 1.2, the toast keyboard contract (F8, the Tab order through the toasts,
+and Escape stopping at a toast) and how the stack reads each toast aloud are
+documented behavior, so they're covered too.
+
+One exception: a minor release may fix documented behavior that is an
+accessibility defect, such as an announcement read twice or a key that reaches
+the wrong layer, and the CHANGELOG lists each such change under Changed, with
+what to update in your tests.
+
+Development warnings start with "DIYA:" and print only in development, never
+in production builds. A test setup that fails on `console.warn` may see one;
+each says what to do instead. Their words aren't covered by semver.
 
 Not covered, so don't build on them: `.diya-*` class names, DOM structure,
 the `data-*` attributes components set on their own elements (the provider's

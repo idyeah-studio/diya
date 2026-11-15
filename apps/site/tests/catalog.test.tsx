@@ -101,7 +101,8 @@ describe('Button preview to Get code', () => {
     expect(
       specimens()
         .getAllByRole('button', { name: 'Continue' })
-        .every((button) => button.querySelectorAll('svg').length === 2)
+        // Its two icons; a Button given `loading` also holds its own hidden spinner (1.2, L1).
+        .every((button) => [...button.querySelectorAll('svg')].filter((svg) => !svg.closest('.diya-button-spinner')).length === 2)
     ).toBe(true)
   })
 

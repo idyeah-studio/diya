@@ -21,22 +21,22 @@ const STOP = new Set(
 
 /** Words people say for things DIYA calls something else. Values are api.json ids. */
 const SYNONYMS: Record<string, string[]> = {
-  toggle: ['switch'], onoff: ['switch'], checkbox: ['choice'], checkboxes: ['choice'], radio: ['choice'], radios: ['choice'],
+  toggle: ['switch'], onoff: ['switch'], checkbox: ['checkbox'], tick: ['checkbox'], agree: ['checkbox'], consent: ['checkbox'], remember: ['checkbox'], signed: ['checkbox'], optin: ['checkbox'], opt: ['checkbox'], subscribe: ['checkbox'], checkboxes: ['choice'], radio: ['choice'], radios: ['choice'],
   modal: ['dialog'], confirm: ['dialog'], popup: ['dialog', 'popover'], sheet: ['drawer'], panel: ['drawer'], sidepanel: ['drawer'],
   dropdown: ['select', 'menu'], picker: ['select', 'combobox', 'date-picker'], autocomplete: ['combobox'], typeahead: ['combobox'],
   multiselect: ['combobox'], pick: ['select', 'combobox', 'choice'], choose: ['select', 'combobox', 'choice'], option: ['select', 'choice'],
   country: ['combobox'], timezone: ['combobox'], currency: ['select'],
-  input: ['text-input'], field: ['text-input'], textfield: ['text-input'], email: ['text-input'], password: ['text-input'],
+  input: ['text-input'], field: ['field'], formfield: ['field'], wrapper: ['field'], iframe: ['field'], hosted: ['field'], payment: ['field'], stripe: ['field'], textfield: ['text-input'], email: ['text-input'], password: ['text-input'],
   textarea: ['text-area'], multiline: ['text-area'], calendar: ['calendar', 'date-picker'], date: ['date-picker'], daterange: ['date-picker'],
   day: ['calendar', 'date-picker'], booking: ['calendar'], appointment: ['calendar'], availability: ['calendar'], agenda: ['calendar'], schedule: ['calendar'],
   range: ['slider', 'date-picker'], sidebar: ['side-navigation'], nav: ['side-navigation', 'site-header'],
   navigation: ['side-navigation', 'site-header'], navbar: ['site-header'], topbar: ['site-header'], header: ['site-header', 'page-header'],
-  title: ['page-header'], snackbar: ['toast'], notification: ['toast', 'alert'], banner: ['alert'], callout: ['alert'],
+  title: ['page-header'], snackbar: ['toast'], notify: ['toast'], notification: ['toast', 'alert'], banner: ['alert'], callout: ['alert'],
   warning: ['alert'], chart: ['data-viz'], graph: ['data-viz'], plot: ['data-viz'], kpi: ['metric'], stat: ['metric'],
   stats: ['metric'], grid: ['table'], datagrid: ['table'], rows: ['table'], empty: ['content-state'], zero: ['content-state'],
-  nothing: ['content-state'], loading: ['content-state', 'progress'], stepper: ['wizard'], steps: ['wizard'], onboarding: ['wizard'],
+  nothing: ['content-state'], loading: ['content-state', 'progress', 'spinner'], busy: ['spinner'], stepper: ['wizard'], steps: ['wizard'], onboarding: ['wizard'],
   upload: ['file-upload'], dropzone: ['file-upload'], attach: ['file-upload'], chat: ['chatbot'], assistant: ['chatbot'],
-  spinner: ['progress'], loader: ['progress'], chip: ['tag'], label: ['badge', 'tag'], count: ['badge'], collapse: ['accordion'],
+  spinner: ['spinner'], loader: ['spinner', 'progress'], chip: ['tag'], label: ['badge', 'tag'], count: ['badge'], collapse: ['accordion'],
   disclosure: ['accordion'], faq: ['accordion'], hint: ['tooltip'], help: ['tooltip', 'popover'], link: ['text-link'],
   anchor: ['text-link'], crumbs: ['breadcrumbs'], pager: ['pagination'], filter: ['search'], layout: ['stack', 'inline'],
   column: ['stack'], row: ['inline'], flex: ['stack', 'inline'], gap: ['stack', 'inline'], spacing: ['stack', 'inline'],
@@ -49,6 +49,19 @@ const SYNONYMS: Record<string, string[]> = {
   docs: ['prose'], blog: ['prose'], changelog: ['prose'], terms: ['prose'], snippet: ['code-block'], pre: ['code-block'],
   clipboard: ['code-block'], monospace: ['code-block'],
 }
+
+/**
+ * "Field" is an everyday word for DIYA's own fields, and Field is for controls DIYA
+ * doesn't make (QA-SITE-02, DS-SITE-04). So in a query, "field" counts toward
+ * Field only when the query also names a hosted or third-party control; it nudges
+ * DIYA's own fields instead, so "date field" finds Date Picker and "dropdown field"
+ * Select; and Text Input leads only when every other word is a generic one
+ * ("field", "text field", "email field").
+ */
+const FIELD_WORDS = new Set(['field', 'fields'])
+const SOMEONE_ELSES = ['iframe', 'hosted', 'payment', 'stripe', 'card', 'wrapper', 'wrap', 'own', 'custom', 'third', 'thirdparty', 'native', 'time', 'color', 'framed']
+const OWN_FIELDS = ['text-input', 'text-area', 'select', 'combobox', 'date-picker', 'search', 'choice', 'checkbox', 'switch', 'slider']
+const GENERIC_FIELD = new Set(['text', 'email', 'password', 'form', 'input', 'name', 'phone', 'number', 'url'])
 
 /** Things people ask for that DIYA doesn't have, with the honest answer. */
 const GAPS: Record<string, string> = {
@@ -75,14 +88,23 @@ const startsWord = (text: string, term: string) => new RegExp(`\\b${term}`).test
 function rank(query: string): { terms: string[]; results: Ranked[] } {
   const wanted = terms(query)
   const phrase = norm(query)
+  const fieldWord = wanted.some((term) => FIELD_WORDS.has(term))
+  const hosted = wanted.some((term) => SOMEONE_ELSES.includes(term))
+  const textInputFirst = fieldWord && !hosted && wanted.every((term) => FIELD_WORDS.has(term) || GENERIC_FIELD.has(term))
   const scored = mcpEntries().map((entry) => {
     const use = (entry.catalog?.guidance.use ?? '').toLowerCase()
     const instead = (entry.catalog?.guidance.instead ?? '').toLowerCase()
     const description = (entry.component?.description ?? '').toLowerCase()
     const props = Object.keys(entry.component?.props ?? {}).map(norm)
     const titleWords = entry.title.toLowerCase().split(/\s+/)
-    let score = [entry.exportName, entry.title, entry.id].some((key) => norm(key) === phrase) ? 20 : 0
+    // Field's own name doesn't win on the everyday word.
+    const ownFieldWord = entry.id === 'field' && fieldWord && !hosted
+    let score = !ownFieldWord && [entry.exportName, entry.title, entry.id].some((key) => norm(key) === phrase) ? 20 : 0
     for (const term of wanted) {
+      if (FIELD_WORDS.has(term)) {
+        if (ownFieldWord) continue
+        if (!hosted && OWN_FIELDS.includes(entry.id)) score += 3
+      }
       if (norm(entry.exportName) === term || norm(entry.title) === term) score += 12
       else if (titleWords.includes(term)) score += 6
       const synonyms = SYNONYMS[term]
@@ -92,12 +114,17 @@ function rank(query: string): { terms: string[]; results: Ranked[] } {
       if (startsWord(description, term)) score += 1
       if (props.includes(term)) score += 1
     }
+    if (textInputFirst && entry.id === 'text-input') score += 40
     return { entry, score }
   })
   const sorted = scored.filter((s) => s.score >= 2).sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title))
   // Keep the clear answers: anything under a third of the best match is noise.
   const best = sorted[0]?.score ?? 0
-  return { terms: wanted, results: sorted.filter((s) => s.score >= best / 3) }
+  const results = sorted.filter((s) => s.score >= best / 3)
+  // Searching Field's exact name lists it, second: "field" means Text Input first (DS-SITE-04, W13).
+  const field = scored.find((s) => s.entry.id === 'field')
+  if (field && FIELD_WORDS.has(phrase) && !results.includes(field) && results.length) results.splice(1, 0, { entry: field.entry, score: results[0].score })
+  return { terms: wanted, results }
 }
 
 /** search_components. `found` is false when nothing in DIYA fits, the signal /ask is for. */
@@ -110,7 +137,7 @@ export function searchComponents({ query, limit = 5 }: { query: string; limit?: 
   if (top.length) {
     top.forEach(({ entry }, index) => {
       const use = entry.catalog?.guidance.use ?? entry.component?.description ?? ''
-      out.push(`${index + 1}. ${entry.title} · \`import { ${entry.exportName} } from '${entry.importFrom}'\`${entry.kind === 'pattern' ? ' · pattern' : ''}`)
+      out.push(`${index + 1}. ${entry.title} · \`import { ${entry.exportName} } from '${entry.importFrom}'\`${entry.kind === 'pattern' || entry.kind === 'utility' ? ` · ${entry.kind}` : ''}`)
       out.push(`   ${use}`)
       if (entry.catalog?.guidance.instead) out.push(`   Not quite? ${entry.catalog.guidance.instead}`)
     })
@@ -176,7 +203,21 @@ const EXTRA_EXAMPLES: Record<string, string> = {
   Inline:
     '```tsx\n<Inline gap={2} justify="end">\n  <Button variant="outline">Cancel</Button>\n  <Button>Save</Button>\n</Inline>\n```\nCenters its children and wraps them onto the next line when the row runs out of room.',
   DiyaProvider: 'get_setup has the app root; get_theme has brandColor, glass, fonts and motion.',
-  Toast: 'Render it where the message belongs; it floats above the page and dismisses itself.',
+  Toast: [
+    'Call `toast()` from the code that did the work: no state, and it works from any client code.',
+    '```tsx',
+    `import { toast } from '${API.package}'`,
+    '',
+    "toast({ tone: 'success', title: 'Draft saved', description: 'Everyone on the project can see it.' })",
+    '```',
+    'An Undo is its `action`. Calling again with the same `id` updates that toast in place, such as "Saving…" then "Saved". Use `<Toast>` only for a toast whose life is tied to a component\'s state: render it while the state holds and unmount it in `onDismiss`.',
+    ...(API.types.ToastOptions ? ['```ts', `type ToastOptions = ${API.types.ToastOptions}`, '```'] : []),
+  ].join('\n'),
+}
+
+/** A line under the description, for exports most code reaches another way. */
+const LEADS: Record<string, string> = {
+  Toast: 'Most toasts need no component: call `toast({ title, description, tone })` from the handler (Example, below). The props are for `<Toast>`.',
 }
 
 export const COMPONENT_SECTIONS = ['props', 'accessibility', 'example', 'tokens', 'messages'] as const
@@ -199,6 +240,7 @@ export function getComponent({ name, include }: { name: string; include?: Compon
     `# ${entry.title} (\`${entry.exportName}\`) · ${entry.kind} · ${item.stability} since ${item.since}`,
     `\`import { ${entry.exportName} } from '${entry.importFrom}'\`${needs.length ? ` · ${needs.join(' · ')}` : ''}`,
     component?.description ?? '',
+    ...(LEADS[entry.exportName] ? [LEADS[entry.exportName]] : []),
   ]
   if (item.stability !== 'stable') out.push('Experimental: its API may change in a minor release.')
   if (entry.variants.length) out.push(`Also exported: ${entry.variants.map((variant) => `\`${variant}\``).join(', ')}.`)
@@ -238,7 +280,7 @@ export function getComponent({ name, include }: { name: string; include?: Compon
     if (catalog) out.push('', `## Complete file (\`${catalog.fileName}\`)`, '```tsx', catalog.file.trimEnd(), '```')
     else if (EXTRA_EXAMPLES[entry.exportName]) out.push('', '## Example', EXTRA_EXAMPLES[entry.exportName])
   }
-  out.push('', `Catalog: ${catalog?.url ?? `${SITE}/explore`}`)
+  out.push('', entry.kind === 'utility' ? 'A utility: not counted among the components, and no catalog page.' : `Catalog: ${catalog?.url ?? `${SITE}/explore`}`)
   return out.filter((line, index, all) => !(line === '' && all[index - 1] === '')).join('\n')
 }
 

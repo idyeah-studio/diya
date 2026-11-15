@@ -44,13 +44,18 @@ export function resetSlowMotionForTests() {
 
 /** The preview's parts inside a catalog page: its stages and the scopes that hold its popups. */
 export const STAGE = '.component-preview-stage, .customize-scope'
+/** A toast's place in the page's stack, and its exit copy. */
+const TOASTS = '.diya-toast-list > .diya-toast, .diya-toast-copies > *'
 
 /** Slows everything animating in the stages of the page around `anchor` while on; puts them back to full speed when off. */
 export function useSlowStage(anchor: RefObject<HTMLElement | null>, slow: boolean) {
   useEffect(() => {
     const root = anchor.current?.closest<HTMLElement>('.component-document, main')
     if (!root) return
-    const animations = () => Array.from(root.querySelectorAll<HTMLElement>(STAGE)).flatMap((stage) =>
+    // The preview's toasts too: they show in the page's one toast stack, outside the stage, each
+    // in its place there (and in its exit copy) wrapped in the preview's scope.
+    const toasts = () => Array.from(root.ownerDocument.querySelectorAll<HTMLElement>(TOASTS)).filter((toast) => toast.querySelector('.customize-scope'))
+    const animations = () => [...Array.from(root.querySelectorAll<HTMLElement>(STAGE)), ...toasts()].flatMap((stage) =>
       typeof stage.getAnimations === 'function' ? stage.getAnimations({ subtree: true }) : [],
     )
     if (!slow) return

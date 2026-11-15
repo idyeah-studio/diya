@@ -194,10 +194,6 @@
   }
 }
 
-.screens-request-notify.diya-choice .diya-choice-option {
-  padding: 2px 0;
-}
-
 /* Off-screen, out of the tab order and hidden from assistive tech: only bots fill it. */
 .screens-request-honeypot {
   position: absolute;

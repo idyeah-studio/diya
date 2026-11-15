@@ -6,6 +6,7 @@
     "build": "pnpm --filter @idyeah/diya build",
     "typecheck": "pnpm --filter @idyeah/diya typecheck",
     "test": "pnpm --filter @idyeah/diya test",
+    "test:browser": "pnpm --filter @idyeah/diya build && playwright test -c packages/diya/tests/browser/playwright.config.mjs",
     "test:create": "node --test packages/create-diya/test/*.test.mjs",
     "check:templates": "node packages/create-diya/scripts/check-templates.mjs && node packages/create-diya/scripts/sync-oriel.mjs --check",
     "sync:oriel": "node packages/create-diya/scripts/sync-oriel.mjs",
@@ -24,6 +25,8 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
+    "@playwright/test": "1.57.0",
+    "axe-core": "4.14.0",
     "publint": "0.3.25"
   },
   "engines": {

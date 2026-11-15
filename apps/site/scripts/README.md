@@ -31,6 +31,17 @@ PLAYWRIGHT=<path to the playwright package> pnpm --filter diya-site screens:thum
 
 `--only sign-in,team` renders just those; `--all` adds screens still being built, and `--out <dir>` writes elsewhere, to check the pipeline without touching `public/`.
 
+## Screens toasts
+
+`screens-toasts.mjs` drives every Screen that shows feedback with `toast()` to its toast in the built preview frame, in Chromium, WebKit and Firefox. Each run must show the toast once in the page's "Notifications (F8)" region, on top at its own point when it arrives and once the flow settles, inside the Dialog or Drawer that was open when it arrived, and no console errors. Like the thumbnails, it serves `public/` itself (port 3107; `--port` to change it) and needs a copy of Playwright:
+
+```sh
+pnpm --filter diya-site build:frame
+PLAYWRIGHT=<path to the playwright package> node scripts/screens-toasts.mjs
+```
+
+`--only agenda,billing` checks just those, `--browsers webkit` one engine, and `--width 390 --height 844` a phone.
+
 ## Fonts
 
 `fonts/build-diya-sans.py` rebuilds the DIYA Sans files in `packages/diya/src/fonts` from their sources.

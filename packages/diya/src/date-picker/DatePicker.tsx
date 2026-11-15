@@ -1,5 +1,6 @@
 'use client'
-import { forwardRef, useEffect, useId, useMemo, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent } from 'react'
+import { forwardRef, useEffect, useMemo, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent } from 'react'
+import { markField, renderDescription, useErrorAnnouncement, useFieldIds, useShownError } from '../internal/field-parts.js'
 import { createPortal } from 'react-dom'
 import { display, iso, monthOf, outsideLimits, useMonthGrid, type DateRange } from '../calendar/month.js'
 import { adjacentTabStop, useAnchoredPopover } from '../combobox/useAnchoredPopover.js'
@@ -85,11 +86,13 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(functio
   }
   const outside = (day: string) => outsideLimits(day, min, max) || !!isDateUnavailable?.(day)
   const monthFor = (day: string) => monthOf(day, min, max)
-  const id = useId()
+  const { id, descriptionId } = useFieldIds(undefined, 'help')
   const [open, setOpen] = useState(false)
   const [month, setMonth] = useState(() => monthFor(value.start))
   const [choosingEnd, setChoosingEnd] = useState(false)
   const field = useRef<HTMLDivElement | null>(null)
+  const shown = useShownError(error, field)
+  useErrorAnnouncement(label, shown, field)
   const trigger = useRef<HTMLButtonElement | null>(null)
   const triggerRef = useMergedRef(ref, trigger)
   const calendar = useRef<HTMLDivElement | null>(null)
@@ -144,14 +147,14 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(functio
   // Tab moves through the calendar's controls: the month buttons, one day, then Today and Clear.
   const tabStops = () => Array.from(calendar.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []).filter((button) => button.tabIndex >= 0)
 
-  return <div ref={field} className={cx('diya-date-field', className)} style={style} data-size={size} data-invalid={!!error} onBlur={(event) => {
+  return <div ref={field} className={cx('diya-date-field', className)} style={style} data-size={size} data-invalid={!!shown} onBlur={(event) => {
     const next = event.relatedTarget as Node | null
     if (!field.current?.contains(next) && !calendar.current?.contains(next)) close()
   }}>
     <label id={`${id}-label`} className={hideLabel ? 'diya-sr-only' : ''}>{label}</label>
     {name && (range ? [value.start, value.end] : [value.start]).map((entry, index) => <input key={index} type="hidden" name={name} value={entry} disabled={disabled} />)}
     <button {...rest} ref={triggerRef} type="button" className="diya-date-trigger" disabled={disabled} aria-labelledby={`${id}-label ${id}-value`}
-      aria-expanded={isOpen} aria-controls={isOpen ? `${id}-calendar` : undefined} aria-describedby={[describedBy, error || helperText ? `${id}-help` : undefined].filter(Boolean).join(' ') || undefined} aria-invalid={!!error}
+      aria-expanded={isOpen} aria-controls={isOpen ? `${id}-calendar` : undefined} aria-describedby={[describedBy, shown || helperText ? descriptionId : undefined].filter(Boolean).join(' ') || undefined} aria-invalid={!!shown}
       onClick={(event) => {
         onTriggerClick?.(event)
         if (event.defaultPrevented) return
@@ -169,7 +172,7 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(functio
       <span id={`${id}-value`}>{value.start ? `${display(value.start, locale)}${range ? ` – ${value.end ? display(value.end, locale) : t.endDate}` : ''}` : range ? t.chooseRange : t.chooseDate} </span>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M7 3v4m10-4v4M3 10h18" /></svg>
     </button>
-    {(error || helperText) && <p id={`${id}-help`} className="diya-field-help">{error && <span aria-hidden="true">!</span>}{error || helperText}</p>}
+    {renderDescription({ id: descriptionId, className: 'diya-field-help', error: shown, helperText })}
     {present && portal && createPortal(<div ref={calendar} id={`${id}-calendar`} className="diya-calendar diya-floating" data-side="bottom" data-exiting={closing ? 'true' : undefined}
       role="group" aria-label={t.chooseDate} onKeyDown={(event) => {
         escape(event)
@@ -195,3 +198,5 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(functio
     </div>, portal)}
   </div>
 })
+// Field warns when it wraps one of DIYA's own fields, which have their own label.
+markField(DatePicker, 'DatePicker')

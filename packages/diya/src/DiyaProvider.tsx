@@ -1,10 +1,15 @@
 'use client'
-import { createContext, forwardRef, useContext, useMemo, useState, useSyncExternalStore, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react'
+import { createContext, forwardRef, useContext, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react'
 import type { DiyaMessages, DiyaMessagesInput } from './messages.js'
 import { LinkComponentContext, type DiyaLinkComponent } from './internal/link.js'
 import { cx } from './internal/cx.js'
 import { resolveBrand, type DiyaBrandTokens } from './internal/brand.js'
 import { useClientLayoutEffect } from './internal/layout-effect.js'
+import { watchPresses } from './internal/opener.js'
+import { composeRefs } from './internal/slot.js'
+import { motionTokens } from './toast/host.js'
+import { ToastStack } from './toast/ToastStack.js'
+import { addProviderRoot, removeProviderRoot, type ToastLook } from './toast/queue.js'
 
 /** DIYA Sans ships with the stylesheet; a metric-matched Arial covers the moment before it loads. */
 export const DEFAULT_FONT_FAMILY = '"DIYA Sans", "DIYA Sans Fallback", Arial, sans-serif'
@@ -28,7 +33,22 @@ const AppearanceContext = createContext<DiyaAppearance>({ theme: 'light', glass:
 type MotionSetting = 'system' | 'reduced' | 'off'
 // The motion setting in effect, which a nested provider inherits.
 const MotionContext = createContext<MotionSetting>('system')
+// Whether a DIYA provider is above: toast() shows in the outermost one.
+const NestedContext = createContext(false)
+/** Internal: the nearest provider, how it looks and how it moves, for its <Toast>s in the page's one stack. */
+export const ToastScopeContext = createContext<{ owner: object; look: ToastLook; motion: () => Record<string, string> | undefined } | null>(null)
 export function useDiyaPortal() { return useContext(PortalContext) }
+// Where other libraries' popups should render: the provider's portal, or an open Dialog or
+// Drawer's own element, which they set for their children. The nearest one wins.
+export const PortalContainerContext = createContext<HTMLElement | null>(null)
+/**
+ * Where a popup from another library should render so it works here: inside an open Dialog or
+ * Drawer, that modal's element; anywhere else, the nearest DiyaProvider's portal, so popups
+ * follow its theme. Null outside a provider and until the provider has mounted, which popup
+ * libraries treat as document.body.
+ * @since 1.2.0
+ */
+export function useDiyaPortalContainer(): HTMLElement | null { return useContext(PortalContainerContext) }
 /** The nearest provider's resolved theme, Glass, font, brand accent and motion. */
 export function useDiyaAppearance() { return useContext(AppearanceContext) }
 /** How much DIYA moves inside the nearest provider: 'full', 'reduced' or 'off'. */
@@ -104,12 +124,32 @@ export type DiyaProviderProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'>
 /** Scoped appearance; no document mutation, cookies, network calls or global CSS. */
 export const DiyaProvider = forwardRef<HTMLDivElement, DiyaProviderProps>(function DiyaProvider({ children, theme = 'system', surface = true, glass = false, brandColor, fontFamily = DEFAULT_FONT_FAMILY, messages, locale, motion, linkComponent, className, style, ...rest }, ref) {
   const [portal, setPortal] = useState<HTMLDivElement | null>(null)
+  const [owner] = useState(() => ({}))
+  const self = useRef<HTMLDivElement | null>(null)
+  const setRoot = useMemo(() => composeRefs<HTMLDivElement>(self, ref), [ref])
+  // This provider marks its element for its React's toast stack, so a provider of the same React
+  // inside it makes no stack of its own, while another React's app inside it still does (S5).
+  // Every provider in a commit has marked its element before any stack checks: a stack makes its
+  // host only once its portal (set from a ref, so a commit later) exists.
+  useClientLayoutEffect(() => {
+    const element = self.current
+    if (!element) return
+    addProviderRoot(element)
+    // Remember presses from the start, so a Dialog or Drawer mounted by its opener's own click
+    // can give focus back to that opener in Safari, whose clicks don't focus buttons (G7).
+    watchPresses(element.ownerDocument)
+    return () => removeProviderRoot(element)
+  }, [])
+  // How this provider moves, as resolved here (its motion setting, its duration scale and any set
+  // above it), for its <Toast>s, which animate in the page's one stack (R2).
+  const [motionOf] = useState(() => () => motionTokens(self.current))
   const parent = useContext(MessagesContext)
   const parentLink = useContext(LinkComponentContext)
   const text = useMemo(() => ({ overrides: mergeMessages(parent.overrides, messages), locale: locale ?? parent.locale }), [parent, messages, locale])
   const dark = useSyncExternalStore(theme === 'system' ? darkScheme.subscribe : ignoreMedia, darkScheme.matches, onServer)
   const resolved = theme === 'system' ? (dark ? 'dark' : 'light') : theme
   const parentMotion = useContext(MotionContext)
+  const nested = useContext(NestedContext)
   const motionSetting = motion ?? parentMotion
   const reduce = useSyncExternalStore(motionSetting === 'system' ? reducedMotion.subscribe : ignoreMedia, reducedMotion.matches, onServer)
   const resolvedMotion: DiyaAppearance['motion'] = motionSetting === 'system' ? (reduce ? 'reduced' : 'full') : motionSetting
@@ -131,8 +171,10 @@ export const DiyaProvider = forwardRef<HTMLDivElement, DiyaProviderProps>(functi
     ...accentVariables(brand),
     ...style,
   } as CSSProperties
-  return <div {...rest} ref={ref} className={cx('diya-root', className)} data-theme={theme} data-theme-change={changing ? '' : undefined} data-glass={String(glass)} data-surface={String(surface)} data-motion={motionSetting} style={tokens}>
-    <AppearanceContext.Provider value={appearance}><MotionContext.Provider value={motionSetting}><MessagesContext.Provider value={text}><PortalContext.Provider value={portal}><LinkComponentContext.Provider value={linkComponent ?? parentLink}>{children}</LinkComponentContext.Provider><div className="diya-portal-root" ref={setPortal} /></PortalContext.Provider></MessagesContext.Provider></MotionContext.Provider></AppearanceContext.Provider>
+  const styleKey = JSON.stringify(tokens)
+  const scope = useMemo(() => ({ owner, look: { theme, glass: String(glass), motion: motionSetting, className, style: tokens as Record<string, unknown> }, motion: motionOf }), [owner, theme, glass, motionSetting, className, styleKey])
+  return <div {...rest} ref={setRoot} className={cx('diya-root', className)} data-theme={theme} data-theme-change={changing ? '' : undefined} data-glass={String(glass)} data-surface={String(surface)} data-motion={motionSetting} style={tokens}>
+    <AppearanceContext.Provider value={appearance}><MotionContext.Provider value={motionSetting}><MessagesContext.Provider value={text}><PortalContext.Provider value={portal}><PortalContainerContext.Provider value={portal}><LinkComponentContext.Provider value={linkComponent ?? parentLink}><NestedContext.Provider value={true}><ToastScopeContext.Provider value={scope}>{children}</ToastScopeContext.Provider></NestedContext.Provider></LinkComponentContext.Provider></PortalContainerContext.Provider><div className="diya-portal-root" ref={setPortal}><ToastStack portal={portal} outermost={!nested} owner={owner} /></div></PortalContext.Provider></MessagesContext.Provider></MotionContext.Provider></AppearanceContext.Provider>
   </div>
 })
 

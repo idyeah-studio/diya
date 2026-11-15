@@ -1,9 +1,11 @@
 import {
+  CONTROL_HEIGHTS,
   getPath,
   parseOverrides,
   withOverrides,
   DEFAULT_APPEARANCE,
   type AppearancePath,
+  type ControlHeight,
   type Overrides,
 } from './appearance'
 import { legacyOptionValues, optionSchemas } from './options'
@@ -180,6 +182,20 @@ export function clearBrandColor() {
   setState((s) => {
     const { 'colors.light.accent': _light, 'colors.dark.accent': _dark, ...rest } = s.brand ?? {}
     return { ...s, brand: Object.keys(rest).length ? rest : null }
+  })
+}
+
+/** One Control height for the three heights at once, so the ladder never breaks; Default clears them. */
+export function setControlHeight(preset: ControlHeight) {
+  setState((s) => {
+    const { 'tokens.heightSmall': _s, 'tokens.heightMedium': _m, 'tokens.heightLarge': _l, ...rest } = s.brand ?? {}
+    const heights = CONTROL_HEIGHTS[preset]
+    const next: Overrides =
+      preset === 'default'
+        ? rest
+        : { ...rest, 'tokens.heightSmall': heights.heightSmall, 'tokens.heightMedium': heights.heightMedium, 'tokens.heightLarge': heights.heightLarge }
+    withOverrides(DEFAULT_APPEARANCE, next) // validates
+    return { ...s, brand: Object.keys(next).length ? next : null }
   })
 }
 

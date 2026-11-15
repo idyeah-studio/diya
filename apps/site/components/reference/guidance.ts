@@ -10,13 +10,13 @@ export type Guidance = { use: string; instead?: string; access: string }
 export const guidance: Record<ItemId, Guidance> = {
   button: {
     use: 'For an action on this page: save, send, open a dialog. One solid button per area marks the main action; outline and quiet ones sit beside it.',
-    instead: 'Going to another page? Use Text Link, or a Button with href.',
-    access: 'A native button, so Enter and Space work. An icon-only button needs an aria-label. Loading sets aria-busy and aria-disabled, keeps the label for screen readers, and keeps focus on the button while it ignores presses.',
+    instead: 'Going to another page? Use Text Link, or a Button with `href`.',
+    access: 'A native button, so Enter and Space work. An icon-only button needs an `aria-label`. Loading sets `aria-busy` and `aria-disabled`, keeps the label for screen readers, and keeps focus on the button while it ignores presses.',
   },
   'text-input': {
     use: 'For one line of free text: a name, an email, a URL.',
     instead: 'Several lines? Text Area. A fixed set of answers? Select or Choice.',
-    access: 'The label is always tied to the field, even when hidden. Helper text and errors are announced with it, and an error sets aria-invalid.',
+    access: 'The label is always tied to the field, even when hidden. Helper text and errors are announced with it, and an error sets `aria-invalid`.',
   },
   'text-area': {
     use: 'For longer text: a description, a note, a message.',
@@ -45,23 +45,33 @@ export const guidance: Record<ItemId, Guidance> = {
   },
   choice: {
     use: 'For two to six options that should all be visible: radios for one, checkboxes for several.',
-    instead: 'An on/off setting that applies at once? Switch.',
+    instead: 'An on/off setting that applies at once? Switch. A lone yes or no sent with a form? Checkbox.',
     access: 'Native radios and checkboxes in a fieldset whose legend is the label, so the group is announced with each option.',
+  },
+  checkbox: {
+    use: 'For a lone yes or no sent with a form: agreeing to terms, keeping someone signed in. Switch acts now. Checkbox is a yes or no you send with a form. Choice picks from a list.',
+    instead: 'A setting that takes effect the moment it flips? Switch. Several options under one question? Choice.',
+    access: 'A native checkbox, so Space toggles it. The label names it, helper text and errors are linked to it, and an error sets `aria-invalid`. The mixed state is announced as mixed.',
   },
   switch: {
     use: 'For a setting that takes effect the moment it flips, like notifications.',
-    instead: 'Part of a form that is saved with a button? A checkbox (Choice with multiple) reads more honestly.',
-    access: 'role="switch" with its state announced as on or off. Space toggles it.',
+    instead: 'Part of a form that’s saved with a button? Checkbox.',
+    access: '`role="switch"` with its state announced as on or off. Space toggles it.',
   },
   slider: {
     use: 'For a value where the rough position matters more than the exact number: volume, a price range.',
-    instead: 'An exact number? Text Input with type="number".',
-    access: 'Native range inputs, each with its own accessible name; with formatValue, each handle also announces its formatted value, like "$40". Arrow keys and Page Up/Down move the handle.',
+    instead: 'An exact number? Text Input with `type="number"`.',
+    access: 'Native range inputs, each with its own accessible name; with `formatValue`, each handle also announces its formatted value, like "$40". Arrow keys and Page Up/Down move the handle.',
   },
   search: {
     use: 'For filtering or searching what is on the page or in the app.',
     instead: 'A form field that happens to hold a query? Text Input.',
-    access: 'type="search" with a label, so Escape clears it in most browsers and it is announced as a search field.',
+    access: '`type="search"` with a label, so Escape clears it in most browsers and it is announced as a search field.',
+  },
+  field: {
+    use: 'For a control DIYA doesn’t make: your own input, a native one DIYA doesn’t wrap (time, color), or a third-party or hosted control. Field gives it the label, help and error every DIYA field has.',
+    instead: 'DIYA makes the control? Use its own `label`, `helperText` and `error`. A payment provider’s card field? Field with `framed` draws the field box around it.',
+    access: 'The label points at the control, the help or error is linked with `aria-describedby`, and an error sets `aria-invalid`. A hosted iframe is named with `aria-labelledby`, a label click moves focus into it, and its error is spoken as focus arrives, since ids can’t reach inside a frame.',
   },
   link: {
     use: 'For going somewhere: another page, a section, a document.',
@@ -71,7 +81,7 @@ export const guidance: Record<ItemId, Guidance> = {
   pagination: {
     use: 'For long lists split into pages, with the count of results.',
     instead: 'A feed people read straight through? A "Show more" Button may suit better.',
-    access: 'A labeled navigation region. Each page number is named, and the current one carries aria-current.',
+    access: 'A labeled navigation region. Each page number is named, and the current one carries `aria-current`.',
   },
   tabs: {
     use: 'For switching between related views of the same thing without leaving the page.',
@@ -81,7 +91,7 @@ export const guidance: Record<ItemId, Guidance> = {
   breadcrumbs: {
     use: 'For showing where a page sits in a deep hierarchy, with a way back up.',
     instead: 'A flat app with a few sections? Leave them out.',
-    access: 'A labeled navigation with an ordered list; the current page is marked with aria-current="page".',
+    access: 'A labeled navigation with an ordered list; the current page is marked with `aria-current="page"`.',
   },
   menu: {
     use: 'For a short list of actions or options behind one button: row actions, sort order, visible columns.',
@@ -110,17 +120,17 @@ export const guidance: Record<ItemId, Guidance> = {
   list: {
     use: 'For a vertical list of items people scan or open: files, people, recent activity, an inbox with its open and unread items.',
     instead: 'Rows with several columns to sort and filter? Table.',
-    access: 'A real list. Selectable rows are native buttons, so they are reachable by Tab and work with Enter and Space. The open row carries aria-current, and an unread row says "unread" after its label.',
+    access: 'A real list. Selectable rows are native buttons, so they are reachable by Tab and work with Enter and Space. The open row carries `aria-current`, and an unread row says "unread" after its label.',
   },
   accordion: {
     use: 'For long content people only need parts of, such as FAQs or settings groups.',
     instead: 'Content everyone needs? Show it. Views of the same thing? Tabs.',
-    access: 'Each heading holds a button with aria-expanded that controls its section.',
+    access: 'Each heading holds a button with `aria-expanded` that controls its section.',
   },
   prose: {
     use: 'For writing people read from top to bottom: articles, docs pages, changelog entries, terms and privacy pages. Put your own headings, paragraphs, lists, tables and quotes inside, or HTML rendered from Markdown.',
     instead: 'A line of text with a link? Text Link. Code people copy? Code Block, which Prose spaces like the rest of the page.',
-    access: 'Prose styles your markup and leaves its structure to you: one h1, headings in order and alt text on images. Links are underlined, not marked by color alone, and keep DIYA’s focus ring. A wide table scrolls in a region you name with aria-label and give tabIndex={0}.',
+    access: 'Prose styles your markup and leaves its structure to you: one h1, headings in order and alt text on images. Links are underlined, not marked by color alone, and keep DIYA’s focus ring. A wide table scrolls in a region you name with `aria-label` and give `tabIndex={0}`.',
   },
   'code-block': {
     use: 'For code or a command people copy: an install line, a config file, an API call.',
@@ -133,24 +143,29 @@ export const guidance: Record<ItemId, Guidance> = {
     access: 'Every badge needs a label, which screen readers hear in place of the dot or number.',
   },
   alert: {
-    use: 'For a message about the page or a task: saved, needs attention, failed. Toast is the same message, floated and temporary.',
+    use: 'For a message about the page or a task: saved, needs attention, failed. For the same message floated and temporary, call `toast()` from the code that did the work.',
     instead: 'Something that needs a decision before going on? Dialog.',
-    access: 'An urgent alert is announced at once (role="alert"); others politely. The tone is said in words, not just shown in color.',
+    access: 'An urgent alert is announced at once (`role="alert"`); others politely. The tone is said in words, not just shown in color.',
   },
   progress: {
     use: 'For how far along a task is, or that something is still working.',
-    instead: 'A measured value, not a task? Metric.',
+    instead: 'A measured value, not a task? Metric. One busy part of a page with no measure? Spinner.',
     access: 'A native progressbar with a label and value. An indeterminate one says it is busy without a number.',
+  },
+  spinner: {
+    use: 'For one busy part of a page when nothing better fits. It waits 400ms before showing, so a quick load shows nothing.',
+    instead: 'A button that’s working? Button `loading`. Progress you can measure? Progress.',
+    access: 'Says its `label` politely once, when it appears; the ring itself is hidden from screen readers. Leave the label out only when words beside it, or `aria-busy` on the region, already say what’s loading. Under Reduce Motion it breathes instead of turning.',
   },
   tooltip: {
     use: 'For a short, optional hint about a control, like what an icon button does.',
     instead: 'Anything people must read, or anything interactive? Put it on the page, or use Popover.',
-    access: 'Shown on hover and on keyboard focus, dismissed with Escape, and tied to its trigger with aria-describedby.',
+    access: 'Shown on hover and on keyboard focus, dismissed with Escape, and tied to its trigger with `aria-describedby`.',
   },
   popover: {
     use: 'For a small panel of controls beside a button: display preferences, a quick filter.',
     instead: 'A decision that blocks the page? Dialog. A list of actions? Menu.',
-    access: 'Opens from a button with aria-expanded. Tab moves through the panel’s content, and closing returns focus to the button.',
+    access: 'Opens from a button with `aria-expanded`. Tab moves through the panel’s content, and closing returns focus to the button.',
   },
   'page-header': {
     use: 'For the top of a page: its title, where it sits, what it is about and its main actions.',
@@ -164,7 +179,7 @@ export const guidance: Record<ItemId, Guidance> = {
   'side-navigation': {
     use: 'For moving between the main sections of an app, grouped, with an optional collapsed rail.',
     instead: 'Five or fewer top-level sections? Site Header’s navigation may be enough.',
-    access: 'A labeled navigation; the current item carries aria-current="page". Collapsed, each icon keeps its name. A count is part of its item’s name, such as "Inbox, 12".',
+    access: 'A labeled navigation; the current item carries `aria-current="page"`. Collapsed, each icon keeps its name. A count is part of its item’s name, such as "Inbox, 12".',
   },
   card: {
     use: 'For one self-contained item in a grid or list: a project, a plan, an article.',
@@ -174,7 +189,7 @@ export const guidance: Record<ItemId, Guidance> = {
   table: {
     use: 'For rows people compare, sort, filter, select and act on.',
     instead: 'A simple list without columns? List.',
-    access: 'A real table with a caption, column headers and sort state in aria-sort. Row actions and selection are buttons and checkboxes with names.',
+    access: 'A real table with a caption, column headers and sort state in `aria-sort`. Row actions and selection are buttons and checkboxes with names.',
   },
   'data-viz': {
     use: 'For trends and proportions: a line over time, a share of the whole.',
@@ -196,7 +211,7 @@ export const guidance: Record<ItemId, Guidance> = {
     access: 'Works without dragging: Choose files opens the device’s file picker. Rejected files come back to you with the reason, so you can say why.',
   },
   chatbot: {
-    use: 'For a conversation surface you connect to your own assistant or support. Full-page fills the height you give it, such as a whole screen, and the conversation scrolls between the header and the composer. A screen with its own heading turns the header off with showHeader={false}.',
+    use: 'For a conversation surface you connect to your own assistant or support. Full-page fills the height you give it, such as a whole screen, and the conversation scrolls between the header and the composer. A screen with its own heading turns the header off with `showHeader={false}`.',
     access: 'Messages live in a log that announces new replies politely. The title names the chat and its log, even with the header hidden. The composer is labeled and sends with Enter.',
   },
   dialog: {

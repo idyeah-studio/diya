@@ -4,6 +4,423 @@ All notable changes to `@idyeah/diya` are documented here. The format is based
 on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - Unreleased
+
+Not released yet. This entry describes what 1.2.0 will ship.
+
+### Added
+
+- `toast()`: show a toast from any client code, with no state of your own.
+  Call it in an event handler or your data code, such as
+  `toast({ tone: 'success', title: 'Draft saved' })`. It returns the toast's
+  id.
+  - Options: `title` (required), `description`, `tone` (`'info'` by
+    default), `action`, `duration` (8000ms by default; `0` keeps it until
+    closed), `urgent` and `id`.
+  - Every toast has a close button named for it.
+  - A toast with an `action` never times out and is never pushed out to make
+    room.
+  - Call again with the same `id` to update a toast in place, such as
+    "Saving…" then "Saved". It restarts its time.
+  - `toast.dismiss(id)` closes one toast. `toast.dismiss()` closes every
+    toast `toast()` showed, shown and waiting. A `<Toast>` closes when you
+    stop rendering it.
+  - Ids that `toast()` makes look like `diya-toast-1`. Ids that start with
+    `diya-` are DIYA's, so don't use that prefix for your own.
+  - It shows in the first-mounted outermost `DiyaProvider`, in that provider's
+    theme. With no provider mounted yet, it waits and shows when one mounts.
+    On the server it does nothing.
+  - Types: `ToastOptions`.
+- One stack of toasts per page. Toasts sit in one column in the corner,
+  newest nearest the corner and 12px apart. At most 3 show, or 2 on screens
+  under 600px wide. A new toast always shows: the oldest toast without an
+  action leaves early to make room. If every shown toast has an action, the
+  new one waits and appears when one goes.
+- Toasts and the keyboard:
+  - F8 moves focus to the newest toast's first button. While a toast shows,
+    F8 is handled at the document level, unless your app already handled it
+    (`defaultPrevented`).
+  - Toasts sit after your app in the page's Tab order, oldest first.
+  - After F8, Tab goes from the newest toast to the oldest, then back to where
+    you pressed F8. Shift+Tab goes the other way. Once focus is back, or
+    leaves the toasts, Tab follows the page again.
+  - Escape on a toast, or running its action, closes it and returns focus:
+    to where you pressed F8; else, for a `<Toast>`, to where focus was when it
+    appeared; else to the last place you were outside the toasts. Never to
+    the page's body.
+  - A close button moves focus to the toast beside it.
+  - Toasts never take focus on their own.
+- `Field`: a label, helper text and error around a control DIYA doesn't make,
+  such as your own input, a native one DIYA doesn't wrap (`type="time"`), or a
+  third-party control. Pass one element, or a function that receives the ids
+  and states (`FieldControlProps`).
+  - `framed` draws DIYA's field box around a control that has none, such as a
+    payment provider's card iframe. It gives a child iframe
+    `color-scheme: light`, so hosted fields don't turn into white boxes in
+    Dark.
+  - For a hosted iframe, a label click moves focus into it, and its error is
+    spoken when focus arrives, since ids can't reach inside a frame.
+  - A child's own `id` wins over Field's `id`. In development Field warns
+    when the two differ.
+  - Types: `FieldProps` and `FieldControlProps`.
+- `Checkbox`: a lone yes or no that's sent with a form, such as agreeing to
+  terms. It has Switch's API: `checked` with `onCheckedChange`,
+  `defaultChecked`, `name`, `required`, `helperText`, `error`, `hideLabel`,
+  `disabled` and `size`. `indeterminate` shows a dash and is announced as
+  mixed. Its `label` can hold inline `TextLink`s. Enter submits the form,
+  where Switch toggles.
+  - Left without a `value`, it renders no `value` attribute: a plain form post
+    sends `"on"`, and react-hook-form's `register()` gives `true` or `false`.
+    Pass `value` to send something else.
+  - Switch acts now. Checkbox is a yes or no you send with a form. Choice
+    picks from a list.
+  - Types: `CheckboxProps`.
+- `Spinner`: a small ring in the text color for one busy part of a page.
+  `size` is `small`, `medium` (the default) or `large`: 16, 20 or 24px. `label` says what's loading, once, politely, when
+  it appears. `showLabel` shows those words beside the ring.
+  - It waits 400ms before it shows, so a quick load shows nothing. The wait
+    is the same at every `--diya-duration-scale`; the scale changes only how
+    it fades in and turns.
+  - Under Reduce Motion it breathes in place, like Progress.
+  - Types: `SpinnerProps`.
+- `VisuallyHidden`: words that screen readers read and the screen doesn't
+  show. It's a utility, not a component: it isn't counted, and it needs no
+  provider. To name a control that has no text, use `aria-label` instead.
+  Types: `VisuallyHiddenProps`.
+- `useDiyaPortalContainer()`: where a popup from another library should
+  render. Inside an open Dialog or Drawer it returns that modal's element;
+  anywhere else, the nearest provider's portal. Pass it as the library's
+  portal container (`container`, `portalContainer`, `menuPortalTarget` or
+  `getPopupContainer`). It's `null` outside a provider and before the
+  provider mounts.
+- Nine theming tokens. Each one defaults to today's look, so nothing changes
+  until you set it:
+  - `--diya-color-focus`: every focus ring. It needs 3:1 against the
+    surfaces; in Light, at least 5.1:1 against white, so it holds over Glass.
+  - `--diya-color-heading`: component titles (Card, Dialog, Drawer, Page
+    Header, Table, Form, Wizard, Content State, Data Viz and Prose headings).
+  - `--diya-color-field` and `--diya-color-field-line`: the fill and edge of
+    every field. An invalid field keeps the error border. Under Glass, a field
+    stays see-through at your color.
+  - `--diya-height-control-small`, `-medium` and `-large`: 32, 40 and 48px.
+    The heights of Buttons, every field, Tabs and calendar days. Set the three
+    together. Combobox can't go below 26px (32px at large).
+  - `--diya-radius-popup`: Menu, Popover and the Combobox and Date Picker
+    popups (16px × the corner scale).
+  - `--diya-radius-modal`: Dialog and the Drawer's open edge (22px × the
+    corner scale).
+- Message keys: `toast.dismiss` ("Dismiss: Draft saved"), `toast.actionHint`
+  ("Press F8 to reach Undo.") and a new `field` namespace with
+  `errorAnnouncement` ("Email: Enter a valid email").
+- Development warnings. In development only, DIYA writes "DIYA: …" messages
+  to the console when something won't work as you expect. Examples: a popup
+  from another library opened outside an open Dialog or Drawer, `toast()`
+  called on the server or with no provider mounted, a Field wrapped around
+  one of DIYA's own fields, and a Spinner with `showLabel` but no `label`.
+  Production builds don't include them.
+- `api.json`: the `field`, `checkbox` and `spinner` items, and
+  `visually-hidden` with the new kind `utility`. The nine tokens, each with a
+  `description`. The `field` messages. Token kinds and `since` as before.
+  All of it is additive: `schemaVersion` stays 1.
+- 33 components now (Field, Checkbox and Spinner are new). Still 13 patterns.
+
+### Changed
+
+Two entries change documented screen-reader and keyboard behavior, to fix a
+toast that was read twice and an Escape that closed the Dialog under a toast:
+"Screen readers" and "Escape on a focused toast" below.
+
+- **Toasts stack.** Several toasts no longer cover each other. Every
+  provider's `<Toast>`s and every `toast()` share the one column, in the
+  outermost provider's corner.
+  - Each toast keeps its own provider's look and motion: a `<Toast>` in a
+    nested Dark provider still looks Dark.
+  - A `<Toast>` always shows, and it counts toward the limit, so a `toast()`
+    toast makes room for it or waits.
+  - In 1.1, each provider drew its own toasts, and a nested provider's toasts
+    covered the page's.
+- **A nested provider's `<Toast>`s render in the page's one stack,** not inside
+  that provider's element. They sit in a stand-in element that carries the
+  provider's class, style, `data-theme` and `data-motion`, so your brand file
+  and its `className` still reach them. CSS that finds them through the
+  provider's `id`, its other attributes or its ancestors doesn't. A query for
+  the provider's class finds two elements.
+- **Screen readers.** Inside the stack, a `<Toast>`'s message no longer has
+  `role="status"` or `role="alert"`. The stack reads each toast once, from
+  its own live region, tone first: "Success: Draft saved." With an action, it
+  adds "Press F8 to reach Undo." `urgent` still interrupts.
+  - Toasts raised together are read together, in the order they arrived.
+  - The stack's name and the words read for each toast come from the
+    outermost provider's `messages`. A nested provider's `messages` still
+    name its own toasts' close buttons.
+- **The toast region** is a `region` landmark named "Notifications (F8)"
+  while it holds a toast. The `toast.label` default changed from
+  "Notification" to "Notifications (F8)". If you translated it, translate the
+  new meaning: the whole list, and the key that reaches it.
+- **Close buttons are named for their toast:** "Dismiss: Draft saved". A
+  `<Toast>` without a title keeps "Dismiss alert".
+- **Pausing.** Pointing at or focusing any toast pauses every toast on the
+  page. In 1.1 only that toast paused. A hidden tab still pauses them all.
+- **Escape on a focused toast closes only that toast.** It goes no further: a
+  Dialog or Drawer around it stays open, and it doesn't bubble up to your own
+  key handlers either, so an app-wide Escape handler doesn't receive it.
+- **Toasts inside modals.** While a Dialog or Drawer is open, the toasts show
+  inside the topmost one, above the dim and clickable, and move back when it
+  closes. The same goes for your own `<dialog>` opened with `showModal()`, if
+  it holds focus when a toast arrives. Inside a modal, toasts take its theme.
+- **When other toasts are showing, a new one arrives in about 350ms:** they
+  make room, then it arrives. A toast on its own arrives as before.
+- **Under Glass, the page behind a toast is now evenly frosted.** In 1.1.1,
+  text behind it showed faintly through on a phone.
+- **DIYA's own fields announce an error that appears after you leave them.**
+  TextInput, Search, TextArea, Select, Combobox, DatePicker, Switch, Choice and
+  Checkbox say it once, politely: "Email: Enter a valid email." Errors that
+  appear together, as on submit, aren't announced; the field that gets focus
+  reads its own. If focus is already in the invalid field when you submit, as
+  with Enter, its error is read once.
+- **An error that appears when you leave a field by pressing elsewhere shows
+  once the press ends,** so the button you pressed doesn't move under the
+  pointer or your finger.
+- **Button `loading` shows a small spinner instead of "···".** The cursor
+  turns to `progress` at once. After 400ms the spinner takes the place of the
+  icon before the label, and the words stay. Without such an icon it takes the
+  label's place: the words turn transparent but keep their width, so the
+  button keeps its exact size and nothing moves. An icon-only button swaps its
+  icon for the spinner. When loading ends, the label, or the icon, fades back.
+  - Any single `<svg>` rendered first counts as the icon: icons from
+    lucide-react or any other library, your own icon and logo components, an
+    `<svg>` in a Fragment. An `<img>`, an icon font, or an icon inside your own
+    wrapper counts as label, as does every icon in browsers without CSS
+    `:has()`. Space the icon with the Button's `gap` (or `column-gap` on the
+    Button), not a margin on the icon: a margin shifts the spinner by half its
+    width.
+  - A loading Button looks busy, not disabled: full color and a `progress`
+    cursor. Clicks, Enter and Space still do nothing; `aria-busy` and
+    `aria-disabled` are unchanged.
+  - A Button that is both `disabled` and `loading` looks disabled (dimmed,
+    with the `not-allowed` cursor), with its spinner showing.
+- **The Drawer's open edge is rounded like Dialog:** 22px × the corner scale,
+  where it was 16px. A Drawer that fills a phone screen (440px or narrower) is
+  square, so no dim shows in wedges at the screen's edge.
+- **Choice and Checkbox boxes.** The small box sits 1px lower, so it centers on
+  its line. The large box draws a 5×10 tick and a 10×2 bar, where they were
+  4×8 and 8×2. Small and medium marks don't change.
+- **Table's progress bars scale their corners** with `--diya-corner-scale`
+  (no change at the default scale).
+- **Combobox follows the control-height tokens** like the other fields
+  (`--diya-height-control-*`). Its lowest height is 26px (32px at large).
+- **Bundle size.** Every app with a `DiyaProvider` now carries the toast stack:
+  about 5 KB gzip.
+
+### Fixed
+
+- In Safari, closing a Dialog or Drawer that was opened with the mouse returns
+  focus to the control that opened it, not to the page (since 1.0.1). This
+  covers a Dialog or Drawer mounted by its opener's click too.
+- Closing a toast, or running its Undo, while you're typing elsewhere keeps
+  your place: the next keystroke goes where you were typing.
+- A Button with `href` keeps its link while it loads. It used to drop its
+  `href`, so focus fell off it; now focus stays, as `loading` always promised.
+  The link gets `aria-disabled="true"`, and clicks, middle clicks and Enter do
+  nothing until loading ends. Your own `onKeyDown` still runs, with Enter
+  stopped. A disabled `href` Button still drops its `href`. If your `linkComponent` is a
+  wrapper, pass every prop through to the anchor; that's how the clicks are
+  blocked.
+- A disabled or loading Button with `asChild` blocks middle clicks too, so it
+  can't open in a new tab.
+- A loading Button with `asChild` on an `<input>` or `<img>` no longer
+  crashes.
+- In forced colors (such as Windows high contrast), a Destructive Button's
+  words and icon show in the system's button text color, or its disabled
+  color when disabled. Before, they were invisible.
+
+### Not breaking, but worth a line
+
+- The focus rings, component titles, field fill and edge, control heights,
+  and popup and modal corners now read the new tokens. With the tokens unset,
+  not a pixel changes.
+- A nested provider resets the nine new tokens, so a value set in an outer
+  provider's `style` stays there, as the 1.0 tokens always have. A brand file
+  still reaches every provider.
+- `.diya-sr-only`, Table's and Chatbot's hidden-text rules are now one rule.
+  Class names aren't covered by semver; nothing looks different.
+
+#### Button `loading`: edge cases
+
+- A loading Button with `href` stays a link, with its `href`, and keeps
+  focus. Clicks (modified and middle clicks too) and Enter do nothing;
+  "Open in new tab" from the context menu still works. See Fixed.
+- With `asChild` on an `<input>`, an `<img>` or another element that can't
+  hold children, there's no spinner: a loading submit input keeps its words,
+  turns its cursor to `progress` and ignores clicks. A component that
+  ignores its children, such as one that renders a `label` prop, keeps its
+  words while loading, as in 1.1.1, but shows no spinner. With `asChild`,
+  your element must render its children for the spinner to show.
+- Dialog's confirm button, Form's Submit and Wizard's forward button show it
+  too.
+- Under Reduce Motion the spinner breathes in place.
+- In forced colors (such as Windows high contrast), a busy Button hides its
+  words too and, on the beat, draws the system's button colors and border
+  (the system's disabled color if it's also disabled), with no background
+  image or shadow, over any colors you set on the Button without
+  `!important`. Until the beat it looks as it did at rest. When
+  loading ends, the words come back at once, without a fade. In forced
+  colors a Button transitions only opacity, scale, translate, rotate and
+  transform.
+- The button's text no longer includes "···".
+- On the beat, the words' fill turns transparent, with any text shadow,
+  stroke or underline you gave them, and elements in the label fade out.
+  One thing stays drawn: put a gradient made with `background-clip: text`
+  on an element inside the label, not on the Button itself; on the Button it
+  stays drawn under the spinner while it loads.
+- The fade back animates the Button's `color`, so a border or ring you draw
+  in `currentColor` on the Button (Tailwind's `border-current` or
+  `ring-current`) goes out with the words and fades back with them.
+- While it loads, a Button runs its own animation. One you set on the Button
+  itself stops when loading starts and starts over when the label is back, so
+  an entrance animation (such as `animate-in`) plays again after each load,
+  and a loop (such as `animate-pulse`) jumps back to its start once. Put
+  entrance animations on an element around the Button. Pulsing only while
+  saving is fine: DIYA's spinner takes its place.
+- An animation on the Button can't change how a Button loads, and neither
+  can a Reduce Motion reset that is unlayered or in a layer after `diya`.
+  One in `@layer base` (before `diya` in the Tailwind layer order) wins: the
+  spinner shows at once on every load and the words come back without a
+  fade, though nothing overlaps or goes blank. Keep the reset unlayered, or
+  in a layer after `diya`, to keep the 400ms wait. If you use such a reset,
+  include `animation-iteration-count: 1`; without it, every looping
+  animation flickers, DIYA's spinner included.
+- A part of the label with its own CSS animation stops while the Button is
+  busy and starts over after each load. A Spinner you put in the label keeps
+  its own wait and turn.
+- Don't put a Spinner in a Button you give `loading`: the Button shows its
+  own, and after an icon you'd see two rings.
+- Style your own elements in a label, not the Button's inner spans: CSS that
+  restyles those spans on hover garbles the Button's accessible name in
+  Safari while it's hovered.
+- If a Button's label holds an element, such as an icon or `<strong>`, pass
+  `loading` from the start: `loading={false}` until it's busy. Then nothing
+  in the label starts over when loading begins, and a page the browser has
+  translated keeps working. (`loading={undefined}` counts as not passed.) A
+  label of plain text is safe either way. Two things on a translated page
+  work as in 1.1.1: without a `loading` prop, a label that swaps from plain
+  text to elements crashes, and a plain label that changes its words
+  (`'Save'` to `'Saved'`) keeps its old translation.
+
+### For your tests
+
+- **Find a toast by its region, not its role.** A `<Toast>` inside the stack
+  has no `role="status"` or `role="alert"`, so `getByRole('status')` no
+  longer finds it. Use
+  `getByRole('region', { name: 'Notifications (F8)' })`, or find the toast
+  by its text.
+- **The stack's name is now "Notifications (F8)".** A query for
+  "Notification" finds nothing. Use the new name, or a regular expression
+  such as `/Notifications/`.
+- **Close buttons:** a toast with a title is now "Dismiss: {title}". A
+  `<Toast>` without a title is still "Dismiss alert".
+- **Clear toasts between tests:** `afterEach(() => toast.dismiss())`, next to
+  `motion="off"` in your test setup. It closes every toast `toast()` showed; a
+  `<Toast>` goes when its test unmounts it.
+- **A regular expression can find a fresh toast or field error twice.** A
+  toast's words, and a field error that appears after you leave the field,
+  are also read from a live region. They stay there for up to 5 seconds, or
+  until the toast closes or the error clears. While they're there, a
+  regular-expression text query (`getByText(/valid email/)`,
+  `findByText(/changes are live/)`, Playwright's `getByText` with a pattern)
+  finds two matches. Exact-text queries are unaffected: Testing Library's
+  `getByText('Enter a valid email')`, or Playwright's
+  `getByText('Enter a valid email', { exact: true })`. Playwright's `getByText`
+  with a plain string matches substrings, so it finds two as well. Pick one:
+  - look inside the form or the stack:
+    `within(form).getByText(/valid email/)`, or
+    `within(screen.getByRole('region', { name: 'Notifications (F8)' })).getByText(/Draft/)`;
+  - query the field by its description:
+    `expect(screen.getByLabelText('Email')).toHaveAccessibleDescription(/valid email/)`;
+  - use exact text: `getByText('Enter a valid email')`, or in Playwright
+    `getByText('Enter a valid email', { exact: true })`.
+- **Live-region copies under fake timers:** the copy appears one frame after
+  the toast or error and leaves after 5 seconds. Advance timers by a frame to
+  hear it, or past 5 seconds before a regular-expression query.
+- **An effect that calls `toast()` shows it twice** in development under
+  StrictMode, since StrictMode runs effects twice. Pass an `id`, and the
+  second call updates the first. Better still, call `toast()` from the
+  handler that did the work.
+- **Pausing in tests:** `fireEvent.mouseEnter` and `mouseLeave`, and
+  `fireEvent.focus` and `blur`, on a toast pause and resume it, as in 1.1.
+  They now hold every toast's timer, not only that toast's.
+- **Errors after a press:** an error that appears when you leave a field by
+  clicking elsewhere shows once the press ends. With user-event, use
+  `findBy…` after the click. Under fake timers, advance timers after it.
+- **Spinner waits 400ms.** Use `findBy…` (or advance fake timers) to see it or
+  hear its label.
+- **Checkbox with react-hook-form:** `register('terms')` gives `true` or
+  `false`, as a native checkbox does. With a `value`, it gives that value, or
+  `false`.
+- **DOM snapshots of anything inside a provider change.** Every outermost
+  `DiyaProvider` adds a toast host to its portal when it mounts: two empty
+  live regions and a `popover` element. `.diya-toast-region` now wraps the
+  whole stack, and each toast is a `.diya-toast` in it. Class names and DOM
+  aren't covered by semver; a placement override on `.diya-toast-region`
+  still applies.
+- **Button `loading` changes markup, not names.** The accessible name, the
+  text and the layout are the same as in 1.1.1. A Button without a `loading`
+  prop renders as in 1.1.1 until it first loads. A plain-text label renders as
+  in 1.1.1 at rest, in the client and in server HTML (React's `<!-- -->`
+  separators included), and its text is never moved or replaced. What
+  changes:
+  - **A plain-text label while loading** keeps its words where they are. A
+    hidden spinner is added after them, where 1.1.1 put "···" before them, so
+    `lastChild`, `:last-child` and snapshots change. The text is the words
+    alone, so Playwright's exact `getByText('Save')` now finds the Button,
+    where 1.1.1 found nothing ("···Save"). `getByText` finds the Button, as at
+    rest.
+  - **A label holding an element is wrapped from the first render** if the
+    Button has a `loading` prop, even `loading={false}`. That counts an icon,
+    `<strong>`, or a component that renders text, such as a translation
+    component. The label sits in `span.diya-button-label`, the first element
+    of a label with several parts in
+    `span.diya-button-leading > span.diya-button-leading-content`, and a
+    hidden spinner is added. A space after the first element is a text node between the
+    two spans. Without a `loading` prop at first, the wrappers appear when it
+    first loads, what's inside mounts once more, and they stay.
+  - **Find that Button by its role:**
+    `getByRole('button', { name: 'Save', busy: true })`. `getByText('Save')`
+    finds the wrapper span, not the button, so
+    `expect(getByText('Save')).toHaveAttribute('aria-busy', 'true')` fails. A
+    click on the span reaches the button's `onClick`, but in happy-dom it
+    doesn't submit a form (browsers and jsdom do). In Playwright, `getByText`
+    finds a span with no box of its own: clicks, hovers and `toBeVisible()`
+    work, but in Chromium its `boundingBox()` is `null` and a screenshot of it
+    throws.
+  - **An icon-only Button given `loading`** has a hidden spinner before its
+    icon from the first render, so `:first-child` selectors and snapshots
+    change. While it loads, its icon stays in the page, hidden.
+  - **CSS on a Button's direct children,** such as `.diya-button > svg` or
+    `> *`, misses the wrapped parts. Use `.diya-button svg`. The wrappers have
+    no box, so gaps, `justify-content` and auto margins work as before.
+  - **The Button's own spinner** is `span.diya-spinner.diya-button-spinner`,
+    `aria-hidden`, and not displayed until it's needed. The
+    `.diya-button-progress` element is gone. A `<Spinner>` you put in a Button
+    is yours: it sits where an icon would. Don't also give that Button
+    `loading`.
+  - **While loading,** a Button carries `data-busy-turn` (and
+    `data-busy-disabled` if it's also disabled); while its label fades back,
+    `data-returning`. Snapshots taken then change. These attributes and the
+    classes above are DIYA's own, not covered by semver: don't style or select
+    by them.
+  - **An `href` Button keeps its `href` while it loads,** with
+    `aria-disabled="true"` and no `role` attribute. A test that expected no
+    `href` now fails; expect the `href`. It also keeps `target`, `rel` and
+    `download`, stays a Tab stop, and can be dragged; the status bar shows its
+    URL on hover. Your `onKeyDown` still runs, with Enter stopped.
+- **Development warnings:** test setups that fail on `console.warn` may see
+  DIYA's new "DIYA: …" warnings. Each says what to do instead.
+- **Translations typed as `DiyaMessages`** need the new keys
+  (`toast.dismiss`, `toast.actionHint` and `field.errorAnnouncement`). Type a
+  partial translation as `DiyaMessagesInput`, which accepts any subset. These
+  keys are the only change that can break a 1.1 app's types.
+
 ## [1.1.1] - 2026-11-11
 
 ### Fixed

@@ -3,7 +3,7 @@
 // Next.js: save as app/orders/page.tsx. Vite: save as src/ResourceTable.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import {
-  Avatar, Button, Choice, ContentState, Dialog, Drawer, Inline, List, Menu, Metric, PageHeader, Select, Stack, Table, Tag, TextArea, TextInput, TextLink, Toast,
+  Avatar, Button, Choice, ContentState, Dialog, Drawer, Inline, List, Menu, Metric, PageHeader, Select, Stack, Table, Tag, TextArea, TextInput, TextLink, toast,
   type TableColumn, type Tone,
 } from '@idyeah/diya'
 import { CloudAlert, LucideProvider, Pencil, Plus, ShoppingBag } from 'lucide-react'
@@ -112,8 +112,6 @@ const itemCount = (order: Order) => order.lines.reduce((sum, line) => sum + line
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
 const toneOf: Record<Payment | Fulfillment, Tone> = { Paid: 'neutral', Pending: 'warning', Refunded: 'neutral', Unfulfilled: 'warning', Shipped: 'info', Delivered: 'neutral' }
 
-type Notice = { title: string; text: string }
-
 export default function ResourceTableScreen() {
   const [period, setPeriod] = useState<Period>('30d')
   const [orders, setOrders] = useState<Order[]>([])
@@ -122,7 +120,6 @@ export default function ResourceTableScreen() {
   const [openId, setOpenId] = useState<string>()
   const [creating, setCreating] = useState(false)
   const [toArchive, setToArchive] = useState<string[]>([])
-  const [notice, setNotice] = useState<Notice>()
   const [selecting, setSelecting] = useState(false)
   const narrow = useNarrow()
 
@@ -152,7 +149,7 @@ export default function ResourceTableScreen() {
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
     Object.assign(document.createElement('a'), { href: url, download: CSV_NAME }).click()
     URL.revokeObjectURL(url)
-    setNotice({ title: `Exported ${plural(rows.length, 'order')}`, text: `${CSV_NAME} is in your downloads.` })
+    toast({ id: 'resource-table-export', tone: 'success', title: `Exported ${plural(rows.length, 'order')}`, description: `${CSV_NAME} is in your downloads.` })
   }
 
   const openButton = (o: Order) => (
@@ -277,7 +274,7 @@ export default function ResourceTableScreen() {
             onClose={() => setOpenId(undefined)}
             onSaved={(saved) => {
               setOrders(orders.map((order) => (order.id === saved.id ? saved : order)))
-              setNotice({ title: `Order #${saved.number} saved`, text: saved.fulfillment === 'Shipped' ? `${saved.name.split(' ')[0]} gets the tracking link by email.` : 'Your changes are in.' })
+              toast({ id: `resource-table-saved-${saved.id}`, tone: 'success', title: `Order #${saved.number} saved`, description: saved.fulfillment === 'Shipped' ? `${saved.name.split(' ')[0]} gets the tracking link by email.` : 'Your changes are in.' })
             }}
           />
           <NewOrderDialog
@@ -285,7 +282,7 @@ export default function ResourceTableScreen() {
             onClose={() => setCreating(false)}
             onCreated={(order) => {
               setOrders([order, ...orders])
-              setNotice({ title: `Order #${order.number} created`, text: `It’s at the top of the list, and ${order.name.split(' ')[0]} gets ${order.payment === 'Paid' ? 'a receipt' : 'a payment link'} by email.` })
+              toast({ tone: 'success', title: `Order #${order.number} created`, description: `It’s at the top of the list, and ${order.name.split(' ')[0]} gets ${order.payment === 'Paid' ? 'a receipt' : 'a payment link'} by email.` })
             }}
           />
           <Dialog
@@ -300,16 +297,13 @@ export default function ResourceTableScreen() {
             onConfirm={async () => {
               await api.archive(toArchive)
               setOrders(orders.filter((order) => !toArchive.includes(order.id)))
-              setNotice({ title: `Archived ${plural(toArchive.length, 'order')}`, text: 'They’re out of the way, and still in your reports.' })
+              toast({ tone: 'success', title: `Archived ${plural(toArchive.length, 'order')}`, description: 'They’re out of the way, and still in your reports.' })
               setToArchive([])
             }}
           >
             <List label="Orders to archive" size="small"
               items={archiving.map((o) => ({ id: o.id, label: `#${o.number} · ${o.name}`, trailing: money(total(o)) }))} />
           </Dialog>
-          {notice && (
-            <Toast key={notice.title} tone="success" title={notice.title} onDismiss={() => setNotice(undefined)}>{notice.text}</Toast>
-          )}
         </main>
       </div>
     </LucideProvider>

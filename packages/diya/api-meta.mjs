@@ -2,7 +2,7 @@
 //
 // items: keyed by permanent id, the first export's name in kebab-case (TextLink is text-link).
 // slots, children and state describe the item's first export; any other export is a variant
-// of it (Chart is DataViz without its card). kind: provider, layout, component or pattern.
+// of it (Chart is DataViz without its card). kind: provider, layout, utility, component or pattern.
 //   slots     every ReactNode prop except children. A key may be a path into an array prop,
 //             such as `items[].content`. accepts: DIYA item ids that fit, or 'any'.
 //             content: plain content that fits, from text, icon, image. as: 'render' when the
@@ -16,6 +16,8 @@
 const v1 = { stability: 'stable', since: '1.0.0' }
 // Outside semver until the API settles: props may change in a minor release.
 const experimental = { ...v1, stability: 'experimental' }
+// Items new in 1.2.
+const stable1_2 = { stability: 'stable', since: '1.2.0' }
 const fieldState = [{ value: 'value', onChange: 'onValueChange' }]
 // Fields that also work uncontrolled: `defaultValue` is the starting value and what a form reset restores.
 const uncontrolledFieldState = [{ value: 'value', onChange: 'onValueChange', default: 'defaultValue' }]
@@ -32,7 +34,7 @@ export const items = {
     children: { allowed: true, accepts: 'any', multiple: true },
     state: [],
     tokens: ['--diya-color-muted', '--diya-color-surface', '--diya-color-text', '--diya-font',
-      '--diya-text-caption'],
+      '--diya-text-caption', '--diya-color-focus'],
     messages: null,
   },
 
@@ -58,6 +60,18 @@ export const items = {
     messages: null,
   },
 
+  // Utilities: not counted as components, no catalog page.
+  'visually-hidden': {
+    kind: 'utility', title: 'Visually Hidden', ...stable1_2,
+    exports: ['VisuallyHidden'],
+    requires: { provider: false },
+    slots: {},
+    children: { allowed: true, accepts: [], content: ['text'] },
+    state: [],
+    tokens: [],
+    messages: null,
+  },
+
   // Components
   button: {
     kind: 'component', title: 'Button', ...v1,
@@ -67,7 +81,32 @@ export const items = {
     state: [],
     tokens: ['--diya-radius-control', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-destructive', '--diya-color-line', '--diya-color-muted',
       '--diya-color-raised', '--diya-color-selected', '--diya-color-text', '--diya-corner-scale',
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Its loading spinner (1.2) arrives over medium on enter.
+      '--diya-duration-medium', '--diya-ease-enter'],
+    messages: null,
+  },
+  field: {
+    kind: 'component', title: 'Field', ...stable1_2,
+    exports: ['Field'],
+    slots: {},
+    // control: a native or third-party form control (1.2).
+    children: { allowed: true, accepts: [], content: ['control'], as: 'render' },
+    state: [],
+    // The frame is TextInput's control box, so it reaches hover, line and raised too (its fill and edge without the 1.2 field tokens).
+    tokens: ['--diya-color-error', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-text',
+      '--diya-corner-scale', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-control',
       '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
+    messages: 'field',
+  },
+  checkbox: {
+    kind: 'component', title: 'Checkbox', ...stable1_2,
+    exports: ['Checkbox'],
+    slots: { label: { accepts: ['text-link'], content: ['text'] } },
+    children: none,
+    state: [{ value: 'checked', onChange: 'onCheckedChange', default: 'defaultChecked' }],
+    tokens: ['--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-focus', '--diya-color-muted', '--diya-color-text',
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-enter', '--diya-ease-move'],
     messages: null,
   },
   'text-input': {
@@ -78,7 +117,7 @@ export const items = {
     state: uncontrolledFieldState,
     tokens: ['--diya-radius-control', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised',
       '--diya-color-selected', '--diya-color-text', '--diya-corner-scale', '--diya-text-body',
-      '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
     messages: 'textInput',
   },
   'text-area': {
@@ -89,7 +128,7 @@ export const items = {
     state: uncontrolledFieldState,
     tokens: ['--diya-radius-control', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised',
       '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption',
-      '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
     messages: null,
   },
   select: {
@@ -100,7 +139,7 @@ export const items = {
     state: uncontrolledFieldState,
     tokens: ['--diya-radius-control', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised',
       '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-text-body',
-      '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
     messages: 'select',
   },
   'date-picker': {
@@ -109,7 +148,7 @@ export const items = {
     slots: {},
     children: none,
     state: uncontrolledFieldState,
-    tokens: ['--diya-radius-control', '--diya-color-accent-soft', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-shadow-raised', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move'],
+    tokens: ['--diya-radius-control', '--diya-color-accent-soft', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-shadow-raised', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-popup'],
     messages: 'datePicker',
   },
   calendar: {
@@ -120,7 +159,7 @@ export const items = {
     state: [...uncontrolledFieldState, { value: 'month', onChange: 'onMonthChange' }],
     tokens: ['--diya-color-accent-soft', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-hover',
       '--diya-color-muted', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption',
-      '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
     messages: 'calendar',
   },
   combobox: {
@@ -129,7 +168,7 @@ export const items = {
     slots: {},
     children: none,
     state: uncontrolledFieldState,
-    tokens: ['--diya-radius-control', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-shadow-raised', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move'],
+    tokens: ['--diya-radius-control', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-shadow-raised', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-popup'],
     messages: 'combobox',
   },
   choice: {
@@ -140,7 +179,7 @@ export const items = {
     children: none,
     state: uncontrolledFieldState,
     tokens: ['--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-muted', '--diya-color-text',
-      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-enter', '--diya-ease-move'],
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-enter', '--diya-ease-move', '--diya-color-focus'],
     messages: 'choice',
   },
   switch: {
@@ -151,7 +190,7 @@ export const items = {
     state: [{ value: 'checked', onChange: 'onCheckedChange', default: 'defaultChecked' }],
     tokens: ['--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line',
       '--diya-color-muted', '--diya-color-selected', '--diya-color-text', '--diya-text-body',
-      '--diya-text-caption', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus'],
     messages: null,
   },
   slider: {
@@ -161,7 +200,7 @@ export const items = {
     children: none,
     state: uncontrolledFieldState,
     tokens: ['--diya-color-accent', '--diya-color-line', '--diya-color-muted', '--diya-color-selected',
-      '--diya-color-surface', '--diya-color-text', '--diya-text-body', '--diya-text-caption'],
+      '--diya-color-surface', '--diya-color-text', '--diya-text-body', '--diya-text-caption', '--diya-color-focus'],
     messages: 'slider',
   },
   search: {
@@ -172,7 +211,7 @@ export const items = {
     state: uncontrolledFieldState,
     tokens: ['--diya-radius-control', '--diya-color-error', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised',
       '--diya-color-selected', '--diya-color-text', '--diya-corner-scale', '--diya-text-body',
-      '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
     messages: null,
   },
   'text-link': {
@@ -181,7 +220,7 @@ export const items = {
     slots: { leadingIcon: iconSlot, trailingIcon: iconSlot },
     children: { allowed: true, accepts: [], content: ['text'] },
     state: [],
-    tokens: ['--diya-color-text', '--diya-text-body', '--diya-duration-fast', '--diya-ease-move'],
+    tokens: ['--diya-color-text', '--diya-text-body', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus'],
     messages: null,
   },
   pagination: {
@@ -196,7 +235,9 @@ export const items = {
     tokens: ['--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover', '--diya-color-line',
       '--diya-color-muted', '--diya-color-raised', '--diya-color-selected', '--diya-color-surface',
       '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption',
-      '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'pagination',
   },
   tabs: {
@@ -214,7 +255,7 @@ export const items = {
       '--diya-color-neutral-fill', '--diya-color-neutral-on-fill', '--diya-color-raised',
       '--diya-color-success-fill', '--diya-color-success-on-fill', '--diya-color-text',
       '--diya-color-warning', '--diya-color-warning-fill', '--diya-color-warning-on-fill',
-      '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-slow'],
+      '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-slow', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
     messages: null,
   },
   breadcrumbs: {
@@ -226,7 +267,7 @@ export const items = {
     tokens: ['--diya-radius-control', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-destructive',
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-selected',
       '--diya-color-text', '--diya-corner-scale', '--diya-shadow-raised', '--diya-text-body',
-      '--diya-text-caption', '--diya-text-large', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-text-large', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-popup'],
     messages: 'breadcrumbs',
   },
   menu: {
@@ -242,7 +283,7 @@ export const items = {
     tokens: ['--diya-radius-control', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-destructive',
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-selected',
       '--diya-color-text', '--diya-corner-scale', '--diya-shadow-raised', '--diya-text-body',
-      '--diya-text-caption', '--diya-text-large', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-text-large', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-popup'],
     messages: null,
   },
   tag: {
@@ -260,7 +301,7 @@ export const items = {
       '--diya-color-success-fill', '--diya-color-success-on-fill', '--diya-color-success-surface',
       '--diya-color-text', '--diya-color-warning', '--diya-color-warning-fill',
       '--diya-color-warning-on-fill', '--diya-color-warning-surface', '--diya-corner-scale',
-      '--diya-text-body', '--diya-text-caption', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-body', '--diya-text-caption', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus'],
     messages: 'tag',
   },
   metric: {
@@ -305,7 +346,7 @@ export const items = {
     },
     children: none,
     state: [],
-    tokens: ['--diya-color-accent', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-selected', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-duration-fast', '--diya-ease-move'],
+    tokens: ['--diya-color-accent', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-selected', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus'],
     messages: 'list',
   },
   accordion: {
@@ -314,7 +355,7 @@ export const items = {
     slots: { 'items[].content': { accepts: 'any', content: ['text'], multiple: true } },
     children: none,
     state: [],
-    tokens: ['--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-slow'],
+    tokens: ['--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-text', '--diya-corner-scale', '--diya-text-body', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-slow', '--diya-color-focus'],
     messages: null,
   },
   prose: {
@@ -325,7 +366,7 @@ export const items = {
     state: [],
     tokens: ['--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-recessed', '--diya-color-text',
       '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-display', '--diya-text-heading',
-      '--diya-text-hero', '--diya-text-large', '--diya-text-title'],
+      '--diya-text-hero', '--diya-text-large', '--diya-text-title', '--diya-color-focus', '--diya-color-heading'],
     messages: null,
   },
   'code-block': {
@@ -336,7 +377,9 @@ export const items = {
     state: [],
     tokens: ['--diya-radius-control', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-destructive', '--diya-color-line',
       '--diya-color-muted', '--diya-color-raised', '--diya-color-recessed', '--diya-color-selected', '--diya-color-text',
-      '--diya-corner-scale', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-corner-scale', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'codeBlock',
   },
   badge: {
@@ -366,12 +409,13 @@ export const items = {
       '--diya-color-success-fill', '--diya-color-success-on-fill', '--diya-color-surface',
       '--diya-color-text', '--diya-color-warning', '--diya-color-warning-fill',
       '--diya-color-warning-on-fill', '--diya-corner-scale', '--diya-shadow-raised', '--diya-text-body',
-      '--diya-text-caption', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus'],
     messages: 'alert',
   },
   toast: {
     kind: 'component', title: 'Toast', ...v1,
-    exports: ['Toast'],
+    // toast() is the same item's other way in (DOC-05, api.md §5).
+    exports: ['Toast', 'toast'],
     slots: {},
     children: { allowed: true, accepts: [], content: ['text'] },
     state: [],
@@ -382,7 +426,7 @@ export const items = {
       '--diya-color-success', '--diya-color-success-fill', '--diya-color-success-on-fill',
       '--diya-color-surface', '--diya-color-text', '--diya-color-warning', '--diya-color-warning-fill',
       '--diya-color-warning-on-fill', '--diya-corner-scale', '--diya-shadow-raised', '--diya-text-body',
-      '--diya-text-caption', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus'],
     messages: 'toast',
   },
   progress: {
@@ -394,13 +438,23 @@ export const items = {
     tokens: ['--diya-color-accent', '--diya-color-selected', '--diya-color-text', '--diya-text-caption', '--diya-duration-slow', '--diya-ease-move'],
     messages: 'progress',
   },
+  spinner: {
+    kind: 'component', title: 'Spinner', ...stable1_2,
+    exports: ['Spinner'],
+    slots: {},
+    children: none,
+    state: [],
+    // Its arrive (medium, enter), and in a Button the slide it waits for (fast, move).
+    tokens: ['--diya-duration-fast', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-move'],
+    messages: null,
+  },
   tooltip: {
     kind: 'component', title: 'Tooltip', ...v1,
     exports: ['Tooltip'],
     slots: {},
     children: { allowed: true, accepts: ['button', 'text-link'], content: ['icon', 'text'] },
     state: [],
-    tokens: ['--diya-color-hover', '--diya-color-line', '--diya-color-text', '--diya-corner-scale', '--diya-elevation', '--diya-text-body', '--diya-text-caption', '--diya-color-surface', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move'],
+    tokens: ['--diya-color-hover', '--diya-color-line', '--diya-color-text', '--diya-corner-scale', '--diya-elevation', '--diya-text-body', '--diya-text-caption', '--diya-color-surface', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-medium'],
     messages: null,
   },
   popover: {
@@ -411,7 +465,7 @@ export const items = {
     state: [{ value: 'open', onChange: 'onOpenChange' }],
     tokens: ['--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-line', '--diya-color-muted',
       '--diya-color-raised', '--diya-color-selected', '--diya-color-text', '--diya-corner-scale',
-      '--diya-shadow-raised', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-shadow-raised', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-popup'],
     messages: null,
   },
 
@@ -430,7 +484,7 @@ export const items = {
     children: none,
     state: [],
     tokens: ['--diya-radius-surface', '--diya-color-muted', '--diya-color-raised', '--diya-color-text', '--diya-corner-scale',
-      '--diya-text-body', '--diya-text-display', '--diya-text-heading'],
+      '--diya-text-body', '--diya-text-display', '--diya-text-heading', '--diya-color-heading'],
     messages: null,
   },
   'site-header': {
@@ -448,7 +502,7 @@ export const items = {
     ],
     tokens: ['--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover', '--diya-color-line',
       '--diya-color-muted', '--diya-color-raised', '--diya-color-selected', '--diya-color-text',
-      '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit'],
+      '--diya-corner-scale', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
     messages: 'siteHeader',
   },
   'side-navigation': {
@@ -465,7 +519,7 @@ export const items = {
     state: fieldState,
     tokens: ['--diya-radius-surface', '--diya-color-accent', '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised',
       '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale',
-      '--diya-leading-tight', '--diya-text-body', '--diya-text-caption', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-leading-tight', '--diya-text-body', '--diya-text-caption', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus'],
     messages: 'sideNavigation',
   },
   card: {
@@ -481,7 +535,7 @@ export const items = {
     state: [],
     tokens: ['--diya-text-caption', '--diya-radius-surface', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-surface',
       '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-shadow-raised',
-      '--diya-text-body', '--diya-text-title'],
+      '--diya-text-body', '--diya-text-title', '--diya-color-heading', '--diya-height-control-small'],
     messages: null,
   },
   table: {
@@ -496,7 +550,7 @@ export const items = {
       '--diya-color-hover', '--diya-color-line', '--diya-color-muted', '--diya-color-raised',
       '--diya-color-recessed', '--diya-color-selected', '--diya-color-surface', '--diya-color-text',
       '--diya-corner-scale', '--diya-elevation', '--diya-leading-tight', '--diya-shadow-raised',
-      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-field', '--diya-color-field-line', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-popup'],
     messages: 'table',
   },
   'data-viz': {
@@ -514,7 +568,9 @@ export const items = {
       '--diya-color-destructive', '--diya-color-hover', '--diya-color-line', '--diya-color-muted',
       '--diya-color-raised', '--diya-color-selected', '--diya-color-text', '--diya-corner-scale',
       '--diya-leading-tight', '--diya-shadow-raised', '--diya-text-body', '--diya-text-caption',
-      '--diya-text-display', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-display', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'chart',
   },
   form: {
@@ -533,7 +589,9 @@ export const items = {
     tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line',
       '--diya-color-muted', '--diya-color-raised', '--diya-color-selected', '--diya-color-surface',
       '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-text-body',
-      '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'form',
   },
   wizard: {
@@ -548,7 +606,9 @@ export const items = {
     tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line',
       '--diya-color-muted', '--diya-color-raised', '--diya-color-selected', '--diya-color-surface',
       '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-text-body',
-      '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'wizard',
   },
   'file-upload': {
@@ -560,7 +620,9 @@ export const items = {
     tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover',
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-selected',
       '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight',
-      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: 'fileUpload',
   },
   chatbot: {
@@ -581,7 +643,7 @@ export const items = {
       '--diya-color-muted', '--diya-color-raised', '--diya-color-selected', '--diya-color-surface',
       '--diya-color-text', '--diya-corner-scale', '--diya-elevation', '--diya-leading-tight',
       '--diya-text-body', '--diya-text-caption', '--diya-text-display', '--diya-text-large',
-      '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit'],
+      '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-duration-medium', '--diya-ease-enter', '--diya-ease-exit', '--diya-color-focus', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small'],
     messages: 'chatbot',
   },
   dialog: {
@@ -594,7 +656,9 @@ export const items = {
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-scrim',
       '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale',
       '--diya-leading-tight', '--diya-shadow-raised', '--diya-text-body', '--diya-text-caption',
-      '--diya-text-large', '--diya-text-title', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-large', '--diya-text-title', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small', '--diya-radius-modal',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium'],
     messages: 'dialog',
   },
   drawer: {
@@ -606,7 +670,11 @@ export const items = {
     },
     children: { allowed: true, accepts: 'any', content: ['text'], multiple: true },
     state: [{ value: 'open', onChange: 'onOpenChange' }],
-    tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-scrim', '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-shadow-raised', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move'],
+    tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-scrim', '--diya-color-selected', '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight', '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-shadow-raised', '--diya-duration-slow', '--diya-ease-enter', '--diya-ease-exit', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium',
+      // Its open edge is the modal corner (1.2).
+      '--diya-radius-modal'],
     messages: 'drawer',
   },
   'content-state': {
@@ -618,7 +686,9 @@ export const items = {
     tokens: ['--diya-radius-surface', '--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover',
       '--diya-color-line', '--diya-color-muted', '--diya-color-raised', '--diya-color-selected',
       '--diya-color-surface', '--diya-color-text', '--diya-corner-scale', '--diya-leading-tight',
-      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move'],
+      '--diya-text-body', '--diya-text-caption', '--diya-text-large', '--diya-text-title', '--diya-duration-fast', '--diya-ease-move', '--diya-color-focus', '--diya-color-heading', '--diya-height-control-large', '--diya-height-control-medium', '--diya-height-control-small',
+      // Button's loading spinner (1.2).
+      '--diya-duration-medium', '--diya-ease-enter'],
     messages: null,
   },
 }
@@ -644,12 +714,43 @@ const motion = {
   '--diya-ease-move': { group: 'motion', kind: 'easing', pairsWith: [], ...v1_1 },
 }
 
+// Theming tokens, added in 1.2. None is declared on .diya-root: each is read with today's look
+// as its fallback, so `defaults` is written here (the stylesheet scan can't read a nested var()
+// or a calc()). The field defaults are what the private field fill and edge resolve to.
+const v1_2 = { since: '1.2.0' }
+const theming = {
+  '--diya-color-heading': { group: 'text', kind: 'color', pairsWith: readable, ...v1_2,
+    defaults: { light: 'var(--diya-color-text)', dark: 'var(--diya-color-text)' },
+    description: 'Component titles: Card, Dialog, Drawer, Page Header, Table, Form, Wizard, Content State, Data Viz and Prose headings. Defaults to the text color. Needs 4.5:1 against the surfaces.' },
+  '--diya-color-focus': { group: 'states', kind: 'color', pairsWith: readable, ...v1_2,
+    defaults: { light: 'var(--diya-color-text)', dark: 'var(--diya-color-text)' },
+    description: 'Every focus ring. Needs 3:1 against surface, raised and recessed; in Light, at least 5.1:1 against white, so it still reaches 3:1 over Glass Light.' },
+  '--diya-color-field': { group: 'fields', kind: 'color', pairsWith: ['--diya-color-text', '--diya-color-muted', '--diya-color-field-line'], ...v1_2,
+    defaults: { light: 'var(--diya-color-raised)', dark: 'var(--diya-color-hover)' },
+    description: 'The fill of every field. Under Glass it is laid at the glass strength, so fields stay see-through.' },
+  '--diya-color-field-line': { group: 'fields', kind: 'color', pairsWith: ['--diya-color-field', '--diya-color-surface'], ...v1_2,
+    defaults: { light: 'color-mix(in srgb, var(--diya-color-muted) 70%, transparent)', dark: 'color-mix(in srgb, var(--diya-color-muted) 70%, transparent)' },
+    description: "The edge needs 3:1 against the field fill and against the page behind it. A color you set is used as is in every appearance, so in Light use at least 3.8:1 against white; it then still holds 3:1 over Glass. DIYA's default edge follows the muted text color, which Glass makes stronger, so it holds on its own." },
+  '--diya-height-control-small': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-medium', '--diya-height-control-large'], ...v1_2,
+    description: 'Buttons (and icon-only squares), every field, Tabs and calendar days: 32, 40 and 48px. Set the three together. Type sizes don\'t change. Combobox can\'t go below 26px (32px at large).' },
+  '--diya-height-control-medium': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-small', '--diya-height-control-large'], ...v1_2,
+    description: 'Buttons (and icon-only squares), every field, Tabs and calendar days: 32, 40 and 48px. Set the three together. Type sizes don\'t change. Combobox can\'t go below 26px (32px at large).' },
+  '--diya-height-control-large': { group: 'size', kind: 'length', pairsWith: ['--diya-height-control-small', '--diya-height-control-medium'], ...v1_2,
+    description: 'Buttons (and icon-only squares), every field, Tabs and calendar days: 32, 40 and 48px. Set the three together. Type sizes don\'t change. Combobox can\'t go below 26px (32px at large).' },
+  '--diya-radius-popup': { group: 'shape', kind: 'length', pairsWith: [], ...v1_2,
+    defaults: { light: 'calc(16px * var(--diya-corner-scale, 1))', dark: 'calc(16px * var(--diya-corner-scale, 1))' },
+    description: 'Menu, Popover and the Combobox and Date Picker popups.' },
+  '--diya-radius-modal': { group: 'shape', kind: 'length', pairsWith: [], ...v1_2,
+    defaults: { light: 'calc(22px * var(--diya-corner-scale, 1))', dark: 'calc(22px * var(--diya-corner-scale, 1))' },
+    description: "Dialog and the Drawer's open edge; square when a Drawer fills a phone." },
+}
+
 export const tokens = {
-  '--diya-color-text': { group: 'text', kind: 'color', pairsWith: readable },
-  '--diya-color-muted': { group: 'text', kind: 'color', pairsWith: readable },
-  '--diya-color-surface': { group: 'surfaces', kind: 'color', pairsWith: ink },
-  '--diya-color-recessed': { group: 'surfaces', kind: 'color', pairsWith: ink },
-  '--diya-color-raised': { group: 'surfaces', kind: 'color', pairsWith: ink },
+  '--diya-color-text': { group: 'text', kind: 'color', pairsWith: [...readable, '--diya-color-field'] },
+  '--diya-color-muted': { group: 'text', kind: 'color', pairsWith: [...readable, '--diya-color-field'] },
+  '--diya-color-surface': { group: 'surfaces', kind: 'color', pairsWith: [...ink, '--diya-color-heading', '--diya-color-focus', '--diya-color-field-line'] },
+  '--diya-color-recessed': { group: 'surfaces', kind: 'color', pairsWith: [...ink, '--diya-color-heading', '--diya-color-focus'] },
+  '--diya-color-raised': { group: 'surfaces', kind: 'color', pairsWith: [...ink, '--diya-color-heading', '--diya-color-focus'] },
   '--diya-color-line': { group: 'lines', kind: 'color', pairsWith: [] },
   '--diya-color-accent': { group: 'actions', kind: 'color', pairsWith: ['--diya-color-accent-text'], setBy: 'DiyaProvider.brandColor' },
   '--diya-color-accent-text': { group: 'actions', kind: 'color', pairsWith: ['--diya-color-accent'], setBy: 'DiyaProvider.brandColor' },
@@ -683,4 +784,5 @@ export const tokens = {
   '--diya-radius-surface': { group: 'shape', kind: 'length', pairsWith: [] },
   ...space,
   ...motion,
+  ...theming,
 }

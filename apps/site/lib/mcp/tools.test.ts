@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { snippetFor } from '../../components/code/snippets'
 import { EXPORT_NAMES } from '../../components/reference/api'
 import { componentIds, patternIds } from '../catalog-route'
-import { MCP_API, mcpEntries } from './catalog'
+import { MCP_API, mcpEntries, resetMcpEntriesForTests } from './catalog'
 import { getComponent, getSetup, getTheme, listTokens, rulesResource, searchComponents } from './tools'
 
 // Building the catalog index reads every complete file once; give a cold, loaded runner room.
@@ -150,5 +150,100 @@ describe('what an agent reads, word for word', () => {
     ['list_tokens: space', () => listTokens({ group: 'space' })],
   ])('%s', (_, output) => {
     expect(output()).toMatchSnapshot()
+  })
+})
+
+/*
+ * 1.2: toast() first for a toast, Field for a control DIYA doesn't make, and
+ * utilities (api.json kind "utility") told apart from components.
+ */
+describe('toast(), Field and utilities', () => {
+  afterEach(() => {
+    delete (MCP_API.items as Record<string, unknown>)['sample-utility']
+    delete (MCP_API.components as Record<string, unknown>).SampleUtility
+    resetMcpEntriesForTests()
+  })
+
+  it('answers "toast" with toast() before <Toast>’s props', () => {
+    const text = getComponent({ name: 'toast' })
+    expect(text).toMatch(/^# Toast \(`Toast`\)/)
+    const lead = text.indexOf('Most toasts need no component: call `toast({ title, description, tone })` from the handler')
+    expect(lead).toBeGreaterThan(0)
+    expect(lead).toBeLessThan(text.indexOf('## Props'))
+    expect(text).toContain("import { toast } from '@idyeah/diya'\n\ntoast({ tone: 'success', title: 'Draft saved'")
+    expect(text).toContain('An Undo is its `action`. Calling again with the same `id` updates that toast in place')
+    expect(text).toContain('type ToastOptions = {')
+    expect(getComponent({ name: 'toast()' }).split('\n')[0]).toBe(text.split('\n')[0])
+  })
+
+  it('finds Field for a control DIYA doesn’t make, with its page, guidance and complete file', () => {
+    for (const query of ['label and error around a hosted iframe', 'stripe card field', 'field around my own time input'])
+      expect(searchComponents({ query }).text.split('\n').find((line) => line.startsWith('1. ')), query).toContain("import { Field } from '@idyeah/diya'")
+    const text = getComponent({ name: 'Field' })
+    expect(text).toContain('When: For a control DIYA doesn’t make')
+    expect(text).toContain('Catalog: https://diya13.ai/explore?area=components&component=field')
+    expect(text).toContain('<input')
+  })
+
+  // QA-SITE-02 and DS-SITE-04: "field" alone or with a generic word is DIYA's Text Input; with another
+  // control's name it finds that control; Field leads only when the query names someone else's control.
+  it.each([
+    ['field', 'TextInput'],
+    ['fields', 'TextInput'],
+    ['text field', 'TextInput'],
+    ['email field', 'TextInput'],
+    ['password field', 'TextInput'],
+    ['form field', 'TextInput'],
+    ['date field', 'DatePicker'],
+    ['select field', 'Select'],
+    ['dropdown field', 'Select'],
+    ['search field', 'Search'],
+    ['multiline field', 'TextArea'],
+    ['checkbox field', 'Checkbox'],
+    ['checkbox', 'Checkbox'],
+    ['remember me', 'Checkbox'],
+    ['keep me signed in', 'Checkbox'],
+    ['stay signed in', 'Checkbox'],
+    ['opt in', 'Checkbox'],
+    ['subscribe', 'Checkbox'],
+    ['checkboxes', 'Choice'],
+    ['spinner', 'Spinner'],
+    ['loading spinner', 'Spinner'],
+    ['file field', 'FileUpload'],
+    ['combobox field', 'Combobox'],
+    ['card', 'Card'],
+    ['card field', 'Field'],
+    ['time field', 'Field'],
+    ['stripe', 'Field'],
+    ['hosted iframe', 'Field'],
+  ])('search "%s" leads with %s', (query, first) => {
+    const lines = searchComponents({ query }).text.split('\n').filter((line) => /^\d+\. /.test(line))
+    expect(lines[0], query).toContain(`import { ${first} } from '@idyeah/diya'`)
+  })
+
+  // W13: Field's exact name still lists it, second, never first.
+  it.each(['field', 'fields', 'Field'])('search "%s" lists Text Input, then Field', (query) => {
+    const lines = searchComponents({ query }).text.split('\n').filter((line) => /^\d+\. /.test(line))
+    expect(lines[0]).toContain("import { TextInput } from '@idyeah/diya'")
+    expect(lines[1]).toContain("import { Field } from '@idyeah/diya'")
+  })
+
+  it('never lets Field win on the everyday word "field" alone', () => {
+    for (const query of ['text field', 'date field', 'select field'])
+      expect(searchComponents({ query }).text, query).not.toContain("import { Field } from")
+    expect(getComponent({ name: 'field', include: ['props'] })).toMatch(/^# Field \(`Field`\)/)
+  })
+
+  it('marks a utility as one: no catalog page, never a component', () => {
+    ;(MCP_API.items as Record<string, unknown>)['sample-utility'] = {
+      kind: 'utility', title: 'Sample Utility', stability: 'stable', since: '1.2.0', exports: [{ entry: '.', name: 'SampleUtility' }],
+      requires: { provider: false, peers: [] }, slots: {}, children: { allowed: true }, state: [], tokens: [], messages: null,
+    }
+    ;(MCP_API.components as Record<string, unknown>).SampleUtility = { description: 'Words only a screen reader hears.', entry: '.', props: {} }
+    resetMcpEntriesForTests()
+    expect(searchComponents({ query: 'sample utility' }).text).toContain("1. Sample Utility · `import { SampleUtility } from '@idyeah/diya'` · utility")
+    const text = getComponent({ name: 'SampleUtility' })
+    expect(text.split('\n')[0]).toBe('# Sample Utility (`SampleUtility`) · utility · stable since 1.2.0')
+    expect(text.trimEnd().split('\n').at(-1)).toBe('A utility: not counted among the components, and no catalog page.')
   })
 })

@@ -2,7 +2,7 @@
 // Waitlist & coming soon: a DIYA screen. Install: npm i @idyeah/diya lucide-react
 // Next.js: save as app/waitlist/page.tsx. Vite: save as src/Waitlist.tsx and render it inside your DiyaProvider.
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode, type Ref } from 'react'
-import { Accordion, Alert, Avatar, Button, List, Tag, TextInput, TextLink, Toast, useDiyaAppearance } from '@idyeah/diya'
+import { Accordion, Alert, Avatar, Button, List, Tag, TextInput, TextLink, toast, useDiyaAppearance } from '@idyeah/diya'
 import { ArrowLeft, ArrowRight, CalendarRange, Check, Copy, LucideProvider, MapPinned, Vote, WifiOff } from 'lucide-react'
 
 // Which page this is: 'waitlist' before you launch, 'maintenance' during planned downtime.
@@ -177,15 +177,14 @@ function Join({ titleRef, onJoined }: ViewProps & { onJoined: (joined: Joined) =
 }
 
 function Placed({ titleRef, joined }: ViewProps & { joined: Joined }) {
-  const [toast, setToast] = useState<string>()
   const link = INVITE_URL + joined.code
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(link)
-      setToast('Link copied. Paste it anywhere your friends will see it.')
+      toast({ id: 'waitlist-copy', tone: 'success', title: 'Link copied', description: 'Paste it anywhere your friends will see it.' })
     } catch {
-      setToast('Couldn’t copy. Select the link and copy it yourself.')
+      toast({ id: 'waitlist-copy', tone: 'warning', title: 'Couldn’t copy the link', description: 'Select it and copy it yourself.' })
     }
   }
 
@@ -199,7 +198,6 @@ function Placed({ titleRef, joined }: ViewProps & { joined: Joined }) {
           <Button size="large" variant="outline" onClick={copy}><Copy /> Copy link</Button>
         </div>
       </div>
-      {toast && <Toast tone="success" onDismiss={() => setToast(undefined)}>{toast}</Toast>}
     </Intro>
   )
 }

@@ -99,6 +99,9 @@ export function motionTiming(node: HTMLElement, time: string, curve: string) {
   return { duration: duration > 0 ? duration : 0, easing, style }
 }
 
+/** The id of a copy's exit animation, so code that times other motion around it can find it. */
+export const EXIT_ANIMATION = 'diya-exit'
+
 /**
  * Plays an exit on a copy of `node`, appended to `parent` and fixed where the node was, so the
  * component can go at once: a host can unmount it, or show what replaces it, straight away. The
@@ -107,8 +110,8 @@ export function motionTiming(node: HTMLElement, time: string, curve: string) {
  * the Web Animations API (jsdom, happy-dom) or in a hidden tab. `frames` gets the copy's computed
  * style, for the motion distances, and the node's opacity at that moment.
  */
-export function playOnCopy(node: HTMLElement | null | undefined, parent: Element | null | undefined, time: string, frames: (style: CSSStyleDeclaration, opacity: string) => Keyframe[]) {
-  if (!node || !parent || typeof node.animate !== 'function' || node.ownerDocument.hidden) return
+export function playOnCopy(node: HTMLElement | null | undefined, parent: Element | null | undefined, time: string, frames: (style: CSSStyleDeclaration, opacity: string) => Keyframe[], { zIndex = 1200, onDone, offsetY = 0 }: { zIndex?: number; onDone?: () => void; offsetY?: number } = {}) {
+  if (!node || !parent || typeof node.animate !== 'function' || node.ownerDocument.hidden) return false
   const view = node.ownerDocument.defaultView
   if (!view) return
   const box = node.getBoundingClientRect()
@@ -120,17 +123,20 @@ export function playOnCopy(node: HTMLElement | null | undefined, parent: Element
   copy.setAttribute('aria-hidden', 'true')
   copy.inert = true
   Object.assign(copy.style, {
-    position: 'fixed', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`,
-    right: 'auto', bottom: 'auto', margin: '0', zIndex: '1200', pointerEvents: 'none', transition: 'none',
+    position: 'fixed', left: `${box.left}px`, top: `${box.top + offsetY}px`, width: `${box.width}px`, height: `${box.height}px`,
+    right: 'auto', bottom: 'auto', margin: '0', zIndex: String(zIndex), pointerEvents: 'none', transition: 'none',
   })
   parent.append(copy)
   const { duration, easing, style } = motionTiming(copy, time, 'exit')
   if (!duration || !style) {
     copy.remove()
-    return
+    return false
   }
   const animation = copy.animate(frames(style, opacity), { duration, easing, fill: 'forwards' })
-  const cap = setTimeout(() => copy.remove(), EXIT_CAP_MS)
-  const done = () => { clearTimeout(cap); copy.remove() }
+  animation.id = EXIT_ANIMATION
+  let ended = false
+  const done = () => { if (ended) return; ended = true; clearTimeout(cap); copy.remove(); onDone?.() }
+  const cap = setTimeout(done, EXIT_CAP_MS)
   animation.finished.then(done, done)
+  return true
 }

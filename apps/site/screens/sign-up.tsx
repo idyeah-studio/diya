@@ -155,10 +155,10 @@ function FormView({ mode, account, titleRef, go, setAccount, switchMode }: ViewP
       }
     >
       <Stack gap={3}>
-        <Button variant="outline" className="sign-up-wide" loading={busy === 'google'} onClick={() => continueWith('google')}>
+        <Button variant="outline" className="sign-up-wide sign-up-logo-button" loading={busy === 'google'} onClick={() => continueWith('google')}>
           <GoogleLogo /> Continue with Google
         </Button>
-        <Button variant="outline" className="sign-up-wide" loading={busy === 'github'} onClick={() => continueWith('github')}>
+        <Button variant="outline" className="sign-up-wide sign-up-logo-button" loading={busy === 'github'} onClick={() => continueWith('github')}>
           <GitHubLogo /> Continue with GitHub
         </Button>
       </Stack>
@@ -440,7 +440,9 @@ const css = `
 .sign-up-hint { margin: 0; color: var(--diya-color-muted); font-size: var(--diya-text-body); line-height: var(--diya-leading-body); text-wrap: pretty; }
 .sign-up-strong { color: var(--diya-color-text); font-weight: 600; overflow-wrap: anywhere; }
 .sign-up-wide { width: 100%; }
-.sign-up-logo { width: 20px; height: 20px; flex-shrink: 0; margin-inline-end: 2px; }
+.sign-up-logo { width: 20px; height: 20px; flex-shrink: 0; }
+/* The logo sits 10px from the words through the Button's own gap, not a margin, so a loading spinner centers on it. */
+.sign-up-logo-button { column-gap: 10px; }
 .sign-up-github { fill: currentColor; fill: light-dark(#000, #fff); }
 .sign-up-google-sweep {
   width: 100%;

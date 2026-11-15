@@ -43,3 +43,29 @@ describe('brand tokens', () => {
     expect(resolveBrand('nope').light.accent).toBe('#262626')
   })
 })
+
+// The 1.2 theming tokens have no value on .diya-root; a nested provider resets them to their
+// fallback (initial) inside @layer diya. A brand file on .diya-root is unlayered, so it must
+// still win on every nested provider. (That an outer provider's style stays out of a nested
+// one needs real inheritance, which happy-dom doesn't do for custom properties: tokens.spec.ts
+// proves it in Chromium, WebKit and Firefox.)
+describe('the 1.2 theming tokens through nested providers', () => {
+  const nine = ['--diya-color-focus', '--diya-color-heading', '--diya-color-field', '--diya-color-field-line', '--diya-height-control-small', '--diya-height-control-medium', '--diya-height-control-large', '--diya-radius-popup', '--diya-radius-modal']
+
+  it('a brand file on .diya-root reaches a nested provider over the nested reset', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { resolve } = await import('node:path')
+    const css = readFileSync(resolve(process.cwd(), 'dist/styles.css'), 'utf8')
+    expect(css).toContain('.diya-root .diya-root {')
+    document.head.innerHTML = ''
+    for (const text of [css, `.diya-root { ${nine.map(name => `${name}: 9px`).join('; ')} }`]) {
+      const sheet = document.createElement('style')
+      sheet.textContent = text
+      document.head.append(sheet)
+    }
+    document.body.innerHTML = '<div class="diya-root" data-theme="light"><section><div class="diya-root" data-theme="dark" id="nested"></div></section></div>'
+    const nested = document.getElementById('nested')!
+    expect(nested.matches('.diya-root .diya-root')).toBe(true)
+    expect(nine.map(name => getComputedStyle(nested).getPropertyValue(name).trim())).toEqual(nine.map(() => '9px'))
+  })
+})
