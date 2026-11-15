@@ -103,8 +103,8 @@ async function pixelDiff(page: Page, a: Buffer, b: Buffer) {
 }
 
 /** Turns loading on (or ends it after `endAfter` ms) and measures the listed Buttons on every frame for `ms`. */
-function frames(page: Page, ids: string[], ms: number, { endAfter, busy = true }: { endAfter?: number; busy?: boolean } = {}) {
-  return page.evaluate(({ ids, ms, endAfter, busy }) => new Promise<Frame[]>((done) => {
+function frames(page: Page, ids: string[], ms: number, { endAfter, busy = true, minFrames = 0, cap = ms }: { endAfter?: number; busy?: boolean; minFrames?: number; cap?: number } = {}) {
+  return page.evaluate(({ ids, ms, endAfter, busy, minFrames, cap }) => new Promise<Frame[]>((done) => {
     const box = (node: Element | Range | null | undefined) => {
       if (!node) return null
       const r = node.getBoundingClientRect()
@@ -147,11 +147,14 @@ function frames(page: Page, ids: string[], ms: number, { endAfter, busy = true }
     const tick = () => {
       const t = performance.now() - start
       out.push(measure(t))
-      if (t < ms) requestAnimationFrame(tick)
+      // Past `ms`, keep going until `minFrames` frames are in, on both sides of the 400ms beat,
+      // or `cap`: a browser that delivers frames sparsely under load still gets its swap sampled.
+      const sides = out.some((frame) => frame.t > 0 && frame.t < 400) && out.some((frame) => frame.t >= 400)
+      if (t < ms || (t < cap && (out.length < minFrames || (minFrames > 0 && !sides)))) requestAnimationFrame(tick)
       else done(out)
     }
     requestAnimationFrame(tick)
-  }), { ids, ms, endAfter, busy })
+  }), { ids, ms, endAfter, busy, minFrames, cap })
 }
 const of = (list: Frame[], id: string) => list.map(({ t, rows }) => ({ t, ...rows.find((row) => row.id === id)! }))
 const center = (b: Box) => [(b.left + b.right) / 2, (b.top + b.bottom) / 2]
@@ -161,8 +164,12 @@ for (const dir of ['ltr', 'rtl'] as const) {
   test(`width and neighbor hold, and nothing moves, on every frame for 700ms (${dir})`, async ({ page }, testInfo) => {
     await openCase(page, testInfo, `case=loading&theme=light&dir=${dir}`)
     const ids = [...grid, ...padded, 'bl-lead', 'bl-lead-pad', 'bl-short', 'bl-icon', 'bl-multi', 'bl-kbd']
-    const list = await frames(page, ids, 700)
+    // At least 700ms and 8 frames, with some before the beat and some after it (so the swap is
+    // inside what's measured), up to 3s: WebKit on a busy CI box can deliver frames sparsely.
+    const list = await frames(page, ids, 700, { minFrames: 8, cap: 3000 })
     expect(list.length).toBeGreaterThan(5)
+    expect(list.some((frame) => frame.t > 0 && frame.t < 400), 'a frame before the beat').toBe(true)
+    expect(list.some((frame) => frame.t >= 400), 'a frame after the beat').toBe(true)
     for (const id of ids) {
       const rows = of(list, id)
       expect(spread(rows.map((row) => row.button.right - row.button.left)), `${id} width`).toBe(0)

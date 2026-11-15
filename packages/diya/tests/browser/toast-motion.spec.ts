@@ -47,16 +47,56 @@ const settle = (page: Page) => page.waitForFunction(() => document.getAnimations
 test.describe('toast motion from an empty stack', () => {
   test('a lone <Toast> rises exactly 12px, with no shift of its own', async ({ page }, testInfo) => {
     await openCase(page, testInfo, 'case=probe&theme=light')
-    const track = await frames(page, "window.comps.add({ title: 'Draft saved', description: 'Saved a moment ago.' })", 400)
-    const seen = track.filter((frame) => frame.live.length)
-    const rest = seen.at(-1)!.live[0].top
-    // The first frame it shows, it's 12px below its resting place, as in 1.1.1: never more, and
-    // at least 11px, so the rise is really there (R11). WebKit's headless frames come about 50ms
-    // apart, so its first sample is already on the way (1.1.1 measures the same, 9–11px).
-    expect(seen[0].live[0].top - rest).toBeLessThanOrEqual(13)
-    expect(seen[0].live[0].top - rest).toBeGreaterThanOrEqual(engine(testInfo) === 'webkit' ? 5 : 11)
-    expect(Math.max(...seen.map((frame) => frame.live[0].top - rest))).toBeLessThanOrEqual(13)
-    expect(seen.some((frame) => frame.live[0].waapi > 0)).toBe(false)
+    // The rise is a CSS transition, so it is read from its own clock, not from frames, whose
+    // delivery under load (WebKit on a busy CI box) can come late enough that it's nearly done.
+    // The moment the toast is in the page, its transitions are paused, then set to points in
+    // their duration, and the box is measured at each.
+    const run = await page.evaluate(() => new Promise<{ duration: number; samples: { at: number; offset: number; left: number; opacity: number }[]; own: number }>((done) => {
+      const list = document.querySelector('.diya-toast-list')!
+      const observer = new MutationObserver(() => {
+        const slot = [...list.querySelectorAll<HTMLElement>(':scope > .diya-toast')].find((node) => node.querySelector('.diya-alert'))
+        if (!slot) return
+        const animations = slot.getAnimations()
+        const moving = animations.filter((animation) => 'transitionProperty' in animation)
+        if (!moving.length) return
+        observer.disconnect()
+        const own = animations.length - moving.length
+        for (const animation of moving) animation.pause()
+        const duration = Math.max(...moving.map((animation) => Number(animation.effect!.getComputedTiming().endTime)))
+        const at = (time: number) => {
+          for (const animation of moving) animation.currentTime = time
+          const box = slot.getBoundingClientRect()
+          return { at: time, top: box.top, left: box.left, opacity: Number(getComputedStyle(slot).opacity) }
+        }
+        const points = [0, 0.1, 0.25, 0.5, 0.75, 1].map((fraction) => at(fraction * duration))
+        const rest = points.at(-1)!.top
+        for (const animation of moving) animation.finish()
+        done({ duration, own, samples: points.map((point) => ({ at: point.at / duration, offset: point.top - rest, left: point.left, opacity: point.opacity })) })
+      })
+      observer.observe(list, { childList: true, subtree: true })
+      ;(window as any).comps.add({ title: 'Draft saved', description: 'Saved a moment ago.' })
+    }))
+    const { samples } = run
+    expect(run.duration).toBeGreaterThan(0)
+    // At its start it's 12px below its resting place, exactly (R11), on any engine and any load.
+    expect(samples[0].offset).toBeGreaterThanOrEqual(11.5)
+    expect(samples[0].offset).toBeLessThanOrEqual(12.5)
+    expect(samples[0].opacity).toBe(0)
+    // It eases to rest: never more than 12, never going back, still on its way at the middle,
+    // and it ends at rest and fully there. (An ease-out has covered over half by the middle.)
+    for (const [index, sample] of samples.entries()) {
+      expect(sample.offset, `offset at ${(sample.at * 100).toFixed(0)}%`).toBeLessThanOrEqual(12.5)
+      if (index) expect(sample.offset, `offset at ${(sample.at * 100).toFixed(0)}%`).toBeLessThan(samples[index - 1].offset)
+    }
+    expect(samples[3].offset).toBeLessThan(6)
+    expect(samples[3].offset).toBeGreaterThan(0)
+    expect(Math.abs(samples.at(-1)!.offset)).toBeLessThan(0.01)
+    expect(samples.at(-1)!.opacity).toBe(1)
+    // No shift of its own: no sideways move and no Web Animations on the toast but the rise.
+    expect(Math.max(...samples.map((sample) => sample.left)) - Math.min(...samples.map((sample) => sample.left))).toBeLessThan(0.01)
+    expect(run.own).toBe(0)
+    // And it settles with nothing left running.
+    await settle(page)
   })
 
   test('the first toast never goes below its resting place when a second arrives', async ({ page }, testInfo) => {
