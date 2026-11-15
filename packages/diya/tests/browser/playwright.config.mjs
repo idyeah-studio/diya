@@ -3,7 +3,11 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const port = Number(process.env.DIYA_HARNESS_PORT ?? 4710)
-const engines = { chromium: devices['Desktop Chrome'], webkit: devices['Desktop Safari'], firefox: devices['Desktop Firefox'] }
+// Chromium draws text without subpixel (LCD) antialiasing, as it already does on macOS. On Linux it
+// switches between subpixel and gray antialiasing as layers change, which pixel comparisons of the
+// same words would read as a change of color.
+const chromium = { ...devices['Desktop Chrome'], launchOptions: { args: ['--disable-lcd-text'] } }
+const engines = { chromium, webkit: devices['Desktop Safari'], firefox: devices['Desktop Firefox'] }
 const sizes = { desktop: { width: 1440, height: 900 }, phone: { width: 390, height: 844 } }
 const projects = []
 for (const [engine, device] of Object.entries(engines)) {
