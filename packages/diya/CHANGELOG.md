@@ -4,9 +4,7 @@ All notable changes to `@idyeah/diya` are documented here. The format is based
 on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - Unreleased
-
-Not released yet. This entry describes what 1.2.0 will ship.
+## [1.2.0] - 2026-11-14
 
 ### Added
 
@@ -187,6 +185,7 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   label's place: the words turn transparent but keep their width, so the
   button keeps its exact size and nothing moves. An icon-only button swaps its
   icon for the spinner. When loading ends, the label, or the icon, fades back.
+  Edge cases are under "Button `loading`: edge cases" below.
   - Any single `<svg>` rendered first counts as the icon: icons from
     lucide-react or any other library, your own icon and logo components, an
     `<svg>` in a Fragment. An `<img>`, an icon font, or an icon inside your own
@@ -890,6 +889,7 @@ change in any release. The README lists the public tokens.
 - Chatbot and Data Viz (`DataViz`, `Chart`) are `experimental`: outside semver
   until their API settles.
 
+[1.2.0]: https://github.com/idyeah-studio/diya/releases/tag/v1.2.0
 [1.1.1]: https://github.com/idyeah-studio/diya/releases/tag/v1.1.1
 [1.1.0]: https://github.com/idyeah-studio/diya/releases/tag/v1.1.0
 [1.0.1]: https://github.com/idyeah-studio/diya/releases/tag/v1.0.1
