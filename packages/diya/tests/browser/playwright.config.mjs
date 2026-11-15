@@ -22,6 +22,9 @@ export default defineConfig({
   globalSetup: './global-setup.mjs',
   fullyParallel: true,
   workers: process.env.CI ? 2 : 4,
+  // CI's two shared cores sometimes deliver WebKit's frames late enough to trip a timing check that
+  // passes locally under ten CPU burners. One retry on CI; a test that needed it is reported as flaky.
+  retries: process.env.CI ? 1 : 0,
   timeout: 60_000,
   expect: { timeout: 5_000 },
   reporter: process.env.CI ? [['github'], ['list']] : [['list']],
