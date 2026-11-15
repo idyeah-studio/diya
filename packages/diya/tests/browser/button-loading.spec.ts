@@ -864,16 +864,25 @@ for (const theme of ['light', 'dark']) {
   })
 }
 
-// P5 (MOT-O-01): in forced colors a busy Button paints its system colors from the first frame, with
-// no transition from its own (a Destructive red, an app's bg-* with transition-colors): 30ms after
-// loading starts each looks as it did at rest (to a few levels: Chromium's pill edge, QA-M-04).
+// P5 (MOT-O-01): in forced colors loading changes nothing before the beat, with no transition from
+// a Button's own colors (a Destructive red, an app's bg-* with transition-colors): 30ms after loading
+// starts each looks as it did at rest (to a few levels: Chromium's pill edge, QA-M-04). Its paint
+// inputs hold too, the forcing and the colors under it: at rest Chromium on Linux draws a forced
+// app-styled Button's words (fill text-white) in gray antialiasing, and unforced in ButtonText in
+// heavier subpixel color, about 100 levels on the glyphs' edges and no other change; macOS draws
+// both alike, so its pixels can't see it. Disabled links keep GrayText (Q4).
 for (const theme of ['light', 'dark']) {
   test(`forced colors (${theme}): no color flash as loading starts (P5)`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name.split('-')[0] !== 'chromium', 'forced colors are emulated in Chromium')
     await page.emulateMedia({ forcedColors: 'active', colorScheme: theme as 'light' | 'dark' })
-    await openCase(page, testInfo, `case=loading&theme=${theme}&lean=1&dz=1&fcapp=1`)
-    const ids = ['bl-dz', 'bl-medium-solid', 'bl-app-transition', 'bl-app-violet']
+    await openCase(page, testInfo, `case=loading&theme=${theme}&lean=1&dz=1&fcapp=1&dis=1`)
+    const ids = ['bl-dz', 'bl-medium-solid', 'bl-app-transition', 'bl-app-violet', 'bl-app-link', 'bl-app-disabled', 'bl-dis-link', 'bl-dis-child']
     const shot = (id: string) => page.locator(`#${id}`).screenshot()
+    const inputs = () => page.evaluate((ids) => Object.fromEntries(ids.map((id) => {
+      const s = getComputedStyle(document.getElementById(id)!)
+      return [id, ['forced-color-adjust', 'color', '-webkit-text-fill-color', 'background-color', 'background-image', 'border-top-color', 'box-shadow'].map((name) => `${name}: ${s.getPropertyValue(name)}`)]
+    })), ids)
+    const restInputs = await inputs()
     const rest: Record<string, Buffer> = {}
     for (const id of ids) rest[id] = await shot(id)
     // Loading starts, and anything moving on the Buttons or in them (the spinner's arrive too, so a
@@ -888,6 +897,7 @@ for (const theme of ['light', 'dark']) {
       }
       return out
     }, ids)
+    expect(await inputs(), '30ms into loading, against rest').toEqual(restInputs)
     for (const id of ids) {
       const busy = await shot(id)
       const diff = await pixelDiff(page, busy, rest[id])

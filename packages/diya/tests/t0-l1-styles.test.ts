@@ -249,23 +249,20 @@ describe('motion house rules', () => {
 
   // O4, P2, P3, P4, P5, Q1 (named edits): the only !important declarations are the loading Button's own
   // choreography, which neither an app's animation on the Button nor a reduced-motion reset that
-  // forces every delay may replace, and a busy Button's system colors in forced colors, which an
-  // app's own colors may not replace. Each is named here; nothing else.
+  // forces every delay may replace, and its transitions in forced colors. (P5 on Linux: a busy
+  // Button's system colors come from its hide's keyframes, on the beat, and no longer need it.)
+  // Each is named here; nothing else.
   it('adds no !important, except to the loading Button\'s own choreography and its forced colors', () => {
     const important = [...bare.matchAll(/([^{}]*)\{([^{}]*!\s*important[^{}]*)\}/g)].map((m) => `${m[1].trim()} { ${m[2].trim()} }`.replace(/\s+/g, ' '))
     expect(important).toEqual([
-      // P2: a busy Button's system colors in forced colors
-      ".diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) { forced-color-adjust: none; color: ButtonText !important; background-color: ButtonFace !important; background-image: none !important; border-color: ButtonText !important; box-shadow: none !important; }",
-      // P2: and GrayText when disabled (Q4: a button, link or asChild, by Q3's mark)
-      ".diya-root .diya-button[aria-busy='true'][data-busy-disabled]:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) { color: GrayText !important; border-color: GrayText !important; }",
-      // P5: and no transition into them as loading starts
+      // P5: no transition into a busy Button's system colors as loading starts
       ".diya-root .diya-button[aria-busy='true'] { transition: none !important; }",
       // P5: nor from them as it ends: in forced colors a Button transitions only what moves
       ".diya-root .diya-button { transition-property: opacity, scale, translate, rotate, transform !important; }",
       // P3: the Button's spinner arrives on the beat
       ".diya-root .diya-button-spinner { animation: diya-spinner-arrive 0s linear var(--diya-internal-beat) both !important; }",
       // O4 (P1: not an empty Button): the Button's hide
-      ".diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :empty) { animation: diya-button-hide 0s linear var(--diya-internal-beat) both !important; }",
+      ".diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :empty) { animation: diya-button-hide 0s linear var(--diya-internal-beat) forwards !important; }",
       // O4: its turn
       ".diya-root .diya-button[aria-busy='true'][data-busy-turn='b']:not([data-icon-only='true'], :empty) { animation-name: diya-button-hide-again !important; }",
       // Q1: where :has() works, no hide on a Button that doesn't hold its spinner
@@ -559,7 +556,12 @@ describe('Button loading (F12, F13)', () => {
     // O4 (named edit): the Button's own hide and fade back are important, so an app's animation on
     // the Button can't replace them.
     // P1 (named edit): not an empty Button (an asChild <input> or <img>, which can't hold the spinner).
-    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\]:not\(\[data-icon-only='true'\], :empty\) \{\s*animation: diya-button-hide 0s linear var\(--diya-internal-beat\) both !important;\s*\}/)
+    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\]:not\(\[data-icon-only='true'\], :empty\) \{\s*animation: diya-button-hide 0s linear var\(--diya-internal-beat\) forwards !important;\s*\}/)
+    // P5 on Linux: in forced colors the hide also unforces the Button and paints its system colors, on
+    // the beat and never before it (filled forwards only).
+    expect(bare).toMatch(/@media \(forced-colors: active\) \{\s*@keyframes diya-button-hide \{ to \{ --diya-internal-busy-adjust: none; color: var\(--diya-internal-busy-ink\); background-color: ButtonFace; background-image: none; border-color: var\(--diya-internal-busy-ink\); box-shadow: none; -webkit-text-fill-color: transparent;[^}]*\} \}\s*@keyframes diya-button-hide-again \{ to \{ --diya-internal-busy-adjust: none; color: var\(--diya-internal-busy-ink\); background-color: ButtonFace; background-image: none; border-color: var\(--diya-internal-busy-ink\); box-shadow: none; -webkit-text-fill-color: transparent;/)
+    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\] \{\s*forced-color-adjust: var\(--diya-internal-busy-adjust\);\s*--diya-internal-busy-ink: ButtonText;\s*\}/)
+    expect(bare).toMatch(/\.diya-root \.diya-button\[aria-busy='true'\]\[data-busy-disabled\] \{\s*--diya-internal-busy-ink: GrayText;\s*\}/)
     expect(bare).toMatch(/\.diya-root \.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\], \[data-icon-only='true'\]\) \{\s*animation: diya-button-return-text var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\) !important;\s*\}/)
     expect(bare).toMatch(/\.diya-button\[data-returning='true'\]:not\(\[aria-busy='true'\]\) > \.diya-button-label > \*,[^{]*\{\s*animation: diya-button-return var\(--diya-internal-duration-fast\) var\(--diya-ease-enter\) !important;\s*\}/)
     expect(bare).toMatch(/@keyframes diya-button-hide \{ to \{ -webkit-text-fill-color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; \} \}/)

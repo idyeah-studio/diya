@@ -366,24 +366,22 @@
   .diya-root .diya-button[data-variant='destructive'] { color: ButtonText; }
   .diya-root .diya-button[data-variant='destructive']:disabled { color: GrayText; }
 }
-/* Forced colors repaint the words whatever their fill, so while busy the Button stops being forced
-   and paints the same system colors itself; its fill can then go on the beat. The label's elements
-   stay forced. A leading icon's Button keeps its words, and an icon-only one hides its icon by
-   opacity, so neither needs it. Nothing changes at rest (O1). */
+/* Forced colors repaint the words whatever their fill, so on the beat a busy Button stops being
+   forced and paints the same system colors itself, and its fill goes: the hide does it, with its
+   forced-colors keyframes (below). Until the beat nothing changes, not even how the words are drawn:
+   Chromium on Linux draws a forced Button's words otherwise once it's unforced, or once an app's
+   own text color (text-white) gives way to a system color (P5). The label's elements stay forced.
+   A leading icon's Button keeps its words and an icon-only one hides its icon by opacity, so
+   neither runs the hide. Nothing changes at rest (O1). */
 @media (forced-colors: active) {
-  .diya-root .diya-button[aria-busy='true']:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) {
-    forced-color-adjust: none;
-    /* !important, as forced colors would be: else an app's own colors win (P2). */
-    color: ButtonText !important;
-    background-color: ButtonFace !important;
-    background-image: none !important;
-    border-color: ButtonText !important;
-    box-shadow: none !important;
+  .diya-root .diya-button[aria-busy='true'] {
+    /* Unset until the hide sets it, so it inherits as at rest. */
+    forced-color-adjust: var(--diya-internal-busy-adjust);
+    --diya-internal-busy-ink: ButtonText;
   }
   /* Disabled too, a button, a link or asChild alike (Q3's mark; a link can't be :disabled, Q4). */
-  .diya-root .diya-button[aria-busy='true'][data-busy-disabled]:not([data-icon-only='true'], :has(> .diya-button-leading > .diya-button-leading-content > svg:only-child)) {
-    color: GrayText !important;
-    border-color: GrayText !important;
+  .diya-root .diya-button[aria-busy='true'][data-busy-disabled] {
+    --diya-internal-busy-ink: GrayText;
   }
   .diya-root .diya-button[aria-busy='true'] > .diya-button-label > *,
   .diya-root .diya-button[aria-busy='true'] > .diya-button-leading > .diya-button-leading-content > * {
@@ -1088,8 +1086,8 @@
     border-color: GrayText;
   }
 
-  /* Busy, not disabled (F13). */
-  .diya-root .diya-button[aria-busy='true']:not(:disabled) {
+  /* Busy, not disabled (F13); a disabled link or asChild Button keeps GrayText before the beat. */
+  .diya-root .diya-button[aria-busy='true']:not(:disabled, [data-busy-disabled]) {
     color: ButtonText;
     border-color: ButtonText;
   }
@@ -3838,8 +3836,9 @@
   /* !important, as on the turn, the fade back and the leading icon's rule below: an animation an app
      puts on the Button (its own class, a utility such as animate-pulse, an inline style) would
      otherwise replace these, and the words would stay under the spinner. Theirs pauses until the
-     label is back (O4). */
-  animation: diya-button-hide 0s linear var(--diya-internal-beat) both !important;
+     label is back (O4). Forwards: filled backwards, Chromium in forced colors would recolor a link
+     before the beat (P5). */
+  animation: diya-button-hide 0s linear var(--diya-internal-beat) forwards !important;
 }
 /* A new spinner (loading that stopped and restarted within one frame) gets the other name, so the
    Button's hide restarts with it: the same keyframes, a new beat (data-busy-turn, set by Button). */
@@ -3919,6 +3918,13 @@
 @keyframes diya-button-hide-part { to { opacity: 0; } }
 @keyframes diya-button-hide { to { -webkit-text-fill-color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; } }
 @keyframes diya-button-hide-again { to { -webkit-text-fill-color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; } }
+/* In forced colors the hide also stops the forcing (O1) and paints the system colors, ButtonText on
+   ButtonFace or GrayText when disabled, over an app's own colors, inline styles too (P2): from the
+   beat on, never before it (P5). */
+@media (forced-colors: active) {
+  @keyframes diya-button-hide { to { --diya-internal-busy-adjust: none; color: var(--diya-internal-busy-ink); background-color: ButtonFace; background-image: none; border-color: var(--diya-internal-busy-ink); box-shadow: none; -webkit-text-fill-color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; } }
+  @keyframes diya-button-hide-again { to { --diya-internal-busy-adjust: none; color: var(--diya-internal-busy-ink); background-color: ButtonFace; background-image: none; border-color: var(--diya-internal-busy-ink); box-shadow: none; -webkit-text-fill-color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; } }
+}
 /* Their own names: the hide uses diya-spinner-arrive, and an animation that keeps its name doesn't replay. */
 @keyframes diya-button-return { from { opacity: 0; } }
 @keyframes diya-button-return-text { from { color: transparent; -webkit-text-stroke-color: transparent; text-shadow: none; text-decoration-color: transparent; } }

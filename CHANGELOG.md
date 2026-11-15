@@ -260,9 +260,10 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
   too.
 - Under Reduce Motion the spinner breathes in place.
 - In forced colors (such as Windows high contrast), a busy Button hides its
-  words too and draws the system's button colors and border (the system's
-  disabled color if it's also disabled), with no background image or
-  shadow, over any colors you set on the Button. When
+  words too and, on the beat, draws the system's button colors and border
+  (the system's disabled color if it's also disabled), with no background
+  image or shadow, over any colors you set on the Button without
+  `!important`. Until the beat it looks as it did at rest. When
   loading ends, the words come back at once, without a fade. In forced
   colors a Button transitions only opacity, scale, translate, rotate and
   transform.
