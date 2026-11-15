@@ -1,6 +1,6 @@
 // Spinner (1.2) in a real browser: the 400ms beat and its fade, the turn surviving a busy main
 // thread (MOT-1.2-01/02), and the ring centered on the cap height of the text beside it.
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { homedir, platform, tmpdir } from 'node:os'
@@ -26,7 +26,7 @@ function ffmpeg() {
   throw new Error(`No ffmpeg under ${cache}: run "pnpm exec playwright install ffmpeg" (Playwright records video with it).`)
 }
 
-/** Per frame of the recording: the flag's mean red and green, and how much the ring changed since the frame before (mean channel difference). */
+/** Per frame of the recording: the flag's mean red and green, how much the ring changed since the frame before (mean channel difference), and the ring's mean brightness. */
 async function readFrames(browser: Browser, flags: string[], rings: string[]) {
   const page = await browser.newPage()
   try {
@@ -54,11 +54,28 @@ async function readFrames(browser: Browser, flags: string[], rings: string[]) {
         for (let i = 0; i < data.length; i += 4) difference += Math.abs(data[i] - before[i]) + Math.abs(data[i + 1] - before[i + 1]) + Math.abs(data[i + 2] - before[i + 2])
         return difference / (data.length / 4)
       })
-      return { flag, change }
+      const brightness = ring.map((data) => {
+        let sum = 0
+        for (let i = 0; i < data.length; i += 4) sum += (data[i] + data[i + 1] + data[i + 2]) / 3
+        return sum / (data.length / 4)
+      })
+      return { flag, change, brightness }
     }, [flags, rings] as const)
   } finally {
     await page.close()
   }
+}
+
+/** How long (ms) an ease-in-out (cubic-bezier(.42, 0, .58, 1)) animation of `duration` ms stays within `fraction` of the whole change from one end, counting both sides of the turn. */
+function turningTime(fraction: number, duration: number) {
+  const bezier = (u: number, a: number, b: number) => 3 * (1 - u) ** 2 * u * a + 3 * (1 - u) * u ** 2 * b + u ** 3
+  let lo = 0, hi = 1
+  for (let step = 0; step < 40; step++) {
+    const mid = (lo + hi) / 2
+    if (1 - bezier(mid, 0, 1) > fraction) lo = mid
+    else hi = mid
+  }
+  return 2 * (1 - bezier(lo, 0.42, 0.58)) * duration
 }
 
 /** Samples #sp-new's opacity and words on every frame for `ms` after the Toggle click mounts it. */
@@ -119,29 +136,68 @@ for (const motion of ['system', 'reduced'] as const) {
       const video = page.video()!
       await context.close()
       const file = await video.path()
+      const rate = /([\d.]+)(k?) tbr/.exec(spawnSync(ffmpeg(), ['-i', file], { encoding: 'utf8' }).stderr)
+      const tick = rate ? 1000 / (Number(rate[1]) * (rate[2] ? 1000 : 1)) : 1
       const frames = (crop: number[], name: string) => {
         const out = join(dir, name)
         mkdirSync(out)
-        execFileSync(ffmpeg(), ['-loglevel', 'error', '-i', file, '-vsync', 'passthrough', '-vf', `crop=${crop[2]}:${crop[3]}:${crop[0]}:${crop[1]}`, join(out, '%05d.png')])
-        return readdirSync(out).sort().map((frame) => readFileSync(join(out, frame)).toString('base64'))
+        execFileSync(ffmpeg(), ['-loglevel', 'error', '-i', file, '-vsync', 'passthrough', '-frame_pts', '1', '-vf', `crop=${crop[2]}:${crop[3]}:${crop[0]}:${crop[1]}`, join(out, '%05d.png')])
+        // Named by presentation time, so the frames carry their own clock: in ms from a variable-rate
+        // recording (Linux, "1k tbr"), in frames of its constant rate otherwise (macOS, "23.92 tbr").
+        const names = readdirSync(out).sort((a, b) => parseInt(a) - parseInt(b))
+        return { ms: names.map((name) => parseInt(name) * tick), images: names.map((name) => readFileSync(join(out, name)).toString('base64')) }
       }
-      const read = await readFrames(browser, frames([flag[0] + 6, flag[1] + 6, 12, 12], 'flag'), frames(ring, 'ring'))
+      const flagFrames = frames([flag[0] + 6, flag[1] + 6, 12, 12], 'flag')
+      const ringFrames = frames(ring, 'ring')
+      const read = await readFrames(browser, flagFrames.images, ringFrames.images)
+      const ms = ringFrames.ms
       // The flag is red for the whole block.
       const red = read.flag.map(([r, g], index) => (r > 150 && g < 100 ? index : -1)).filter((index) => index >= 0)
       expect(red.length, 'frames while blocked').toBeGreaterThan(30)
+      const first = red[0] + 2, last = red.at(-1)! - 1
       let changed = 0, total = 0
-      for (let index = red[0] + 2; index <= red.at(-1)! - 1; index++) {
+      for (let index = first; index <= last; index++) {
         total++
         if (read.change[index] > 1) changed++
       }
-      // A turn changes every frame; a breathe slows at its ends, so most frames.
-      if (changed / total <= (motion === 'system' ? 0.9 : 0.6)) {
+      let failure = ''
+      let detail = ''
+      if (motion === 'system') {
+        // A turn changes every frame.
+        detail = `${changed}/${total} frames changed while blocked`
+        if (changed / total <= 0.9) failure = detail
+      } else {
+        // A breathe is a slow opacity ramp: less than a level per frame, and the Linux recorder
+        // emits frames at ~100/s and repeats them, so counting changed frames measures the
+        // recorder. Measure the ring's brightness over time instead (it averages out the encoder's
+        // noise). `swing` is the breathe's whole range in the recording; a 2s block holds a whole
+        // half-breath, so at least half of that range must be crossed during it (>= 0.4, with slack).
+        // The swing is read from the settled page around the block (the recording opens on blank frames).
+        const level = read.brightness
+        const around = level.filter((_, index) => ms[index] >= ms[red[0]] - 300 && ms[index] <= ms[red.at(-1)!] + 700)
+        const swing = Math.max(...around) - Math.min(...around)
+        const inBlock = level.slice(first, last + 1)
+        const crossed = Math.max(...inBlock) - Math.min(...inBlock)
+        // The longest time the brightness stays within one level. The keyframe eases in and out
+        // over 2s (opacity .25 to .7, cubic-bezier(.42, 0, .58, 1)), so near each end it turns
+        // slowly: the time spent within `one level / swing` of an end is the natural stall.
+        let stall = 0, lo = first
+        for (let hi = first; hi <= last; hi++) {
+          while (Math.max(...level.slice(lo, hi + 1)) - Math.min(...level.slice(lo, hi + 1)) >= 1) lo++
+          stall = Math.max(stall, ms[hi] - ms[lo])
+        }
+        const natural = turningTime(1 / swing, 2000)
+        const allowed = natural * 1.25 + 100
+        detail = `ring brightness crossed ${crossed.toFixed(1)} of a ${swing.toFixed(1)} level swing while blocked; longest hold ${Math.round(stall)}ms, natural turn ${natural.toFixed(0)}ms (allowed ${allowed.toFixed(0)}ms)`
+        if (swing < 6 || crossed < 0.4 * swing || stall > allowed) failure = detail
+      }
+      if (failure) {
         // On a failure, the recording and the per-frame numbers are kept in the results folder (CI uploads it).
         mkdirSync(testInfo.outputDir, { recursive: true })
         copyFileSync(file, testInfo.outputPath('recording.webm'))
-        writeFileSync(testInfo.outputPath('frames.json'), JSON.stringify({ red, change: read.change, flag: read.flag }, null, 1))
+        writeFileSync(testInfo.outputPath('frames.json'), JSON.stringify({ red, ms, change: read.change, brightness: read.brightness, flag: read.flag }, null, 1))
       }
-      expect(changed / total, `${changed}/${total} frames changed while blocked`).toBeGreaterThan(motion === 'system' ? 0.9 : 0.6)
+      expect(failure, detail).toBe('')
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
