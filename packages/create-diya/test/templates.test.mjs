@@ -117,7 +117,7 @@ test('builds the Dashboard template from an Oriel folder and rewrites the packag
       name: 'oriel',
       private: true,
       scripts: { dev: 'next dev --hostname 127.0.0.1 --port 3212', build: 'next build' },
-      dependencies: { '@idyeah/diya': 'file:../../artifacts/idyeah-diya-1.0.0.tgz', next: '^16.4.2' },
+      dependencies: { '@idyeah/diya': 'file:../../artifacts/idyeah-diya-1.0.0.tgz', next: '^16.4.6' },
     }),
     'app/providers.tsx': "export const DEFAULT_LOOK = { theme: 'system', brandColor: '', glass: false }\n",
     'components/Shell.tsx': SHELL,
