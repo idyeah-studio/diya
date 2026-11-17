@@ -4,6 +4,18 @@ All notable changes to `@idyeah/diya` are documented here. The format is based
 on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-11-17
+
+### Security
+
+- The starters `npm create diya` makes now use Next.js 16.4.6. The Dashboard
+  starter pinned 16.4.2, which is affected by two moderate Next.js advisories
+  (GHSA-mfr8-8qww-v76h and GHSA-vc7v-qv4w-wrv8); the minimal Next.js starter
+  now asks for at least 16.4.6. If you made an app with an earlier starter,
+  update its `next` to 16.4.6 or later.
+- `@idyeah/diya` itself is unchanged. It moves to 1.2.1 because the two
+  packages release together.
+
 ## [1.2.0] - 2026-11-14
 
 ### Added
@@ -889,6 +901,7 @@ change in any release. The README lists the public tokens.
 - Chatbot and Data Viz (`DataViz`, `Chart`) are `experimental`: outside semver
   until their API settles.
 
+[1.2.1]: https://github.com/idyeah-studio/diya/releases/tag/v1.2.1
 [1.2.0]: https://github.com/idyeah-studio/diya/releases/tag/v1.2.0
 [1.1.1]: https://github.com/idyeah-studio/diya/releases/tag/v1.1.1
 [1.1.0]: https://github.com/idyeah-studio/diya/releases/tag/v1.1.0
