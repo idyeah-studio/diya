@@ -102,7 +102,8 @@
   background: var(--diya-color-raised);
   box-shadow: inset 0 1px 0 #ffffff1f, 0 1px 0 #0006, 0 3px 8px -2px #0007;
 }
-.mcp-page .mcp-copy-key.diya-button[data-state='copied'] {
+/* Copied: pressed in, in every appearance. As specific as the Dark rule above, and after it. */
+.diya-root .mcp-page .mcp-copy-key.diya-button[data-state='copied'] {
   background: transparent;
   box-shadow: inset 0 1px 2px #0000002e, 0 0 0 1px var(--diya-color-line);
 }
@@ -323,8 +324,9 @@
   .waitlist-page .mcp-page .mcp-status {
     min-height: 4.5em;
   }
+  /* Three lines of "didn't answer" fill the kept space; the heading still stands apart. */
   .waitlist-page .mcp-page .mcp-address + h2 {
-    margin-top: 12px;
+    margin-top: 24px;
   }
 }
 
@@ -334,6 +336,10 @@
   .mcp-page .mcp-agent-link.diya-button,
   .mcp-page .mcp-agent-tabs .diya-tab {
     min-height: 44px;
+  }
+  /* The text's first line stays centered on the taller key. */
+  .mcp-page .mcp-copy-text {
+    padding-block: 11px;
   }
   /* A key inside a line of text: its touch area grows, its line doesn't. */
   .mcp-page .mcp-status-again {
