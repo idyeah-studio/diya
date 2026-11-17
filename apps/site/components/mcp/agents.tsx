@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Button } from '@idyeah/diya'
 import { MCP_INSTALL, MCP_URL } from '../reference/api'
-import { CopyCommand } from './CopyCommand'
+import { CopyCommand, isLong } from './CopyCommand'
 
 /** One way in: a line of words, then a link to the agent's installer or something to paste. */
 type Step = { text?: ReactNode; link?: { href: string; label: string }; code?: { code: string; name: string } }
@@ -73,7 +73,7 @@ export function AgentSteps({ agent, copy = true }: { agent: Agent; copy?: boolea
             (copy ? (
               <CopyCommand code={step.code.code} name={step.code.name} />
             ) : (
-              <div className="mcp-copy" data-multiline={step.code.code.includes('\n') || undefined}>
+              <div className="mcp-copy" data-long={isLong(step.code.code) || undefined}>
                 <div className="mcp-copy-row">
                   <code className="mcp-copy-text">{step.code.code}</code>
                 </div>

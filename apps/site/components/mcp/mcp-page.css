@@ -27,7 +27,7 @@
   letter-spacing: -0.01em;
 }
 .waitlist-page .mcp-page b {
-  font-weight: 600;
+  font-weight: 500;
 }
 .waitlist-page .mcp-page q {
   color: var(--diya-color-text);
@@ -97,6 +97,9 @@
   background: #fff;
   color: var(--diya-color-text);
   box-shadow: inset 0 0 0 1px #5260632e, 0 1px 2px #2a302a1f;
+  /* Wide enough for "Copied", so the key doesn't grow when it says so. */
+  min-inline-size: 94px;
+  justify-content: center;
 }
 .diya-root[data-theme='dark'] .mcp-page .mcp-copy-key.diya-button {
   background: var(--diya-color-raised);
@@ -210,7 +213,7 @@
   width: 100%;
 }
 .mcp-page .mcp-agent-tabs .diya-tab {
-  padding-inline: 2px;
+  padding-inline: 0;
 }
 .mcp-page .mcp-agent-tabs .diya-tab-panel {
   margin-top: 20px;
@@ -239,9 +242,10 @@
   margin: 0;
 }
 
-/* Without JavaScript, every agent's steps under their own headings. */
+/* Without JavaScript, every agent's steps under their own headings, a step below "Check it worked". */
 .waitlist-page .mcp-page .mcp-noscript h3 {
-  margin: 28px 0 12px;
+  margin: 24px 0 8px;
+  font-size: var(--diya-text-body);
 }
 
 /* What your agent can ask it: name and line, stacked on phones. */
@@ -280,6 +284,10 @@
 .waitlist-page .mcp-page .mcp-trouble .diya-accordion-heading {
   margin: 0;
 }
+/* Ruled under the last question too, like the list above it. */
+.mcp-page .mcp-trouble .diya-accordion-item:last-child {
+  border-bottom: 1px solid var(--diya-color-line);
+}
 .waitlist-page .mcp-page .mcp-trouble p:last-child {
   margin-bottom: 0;
 }
@@ -310,19 +318,45 @@
   }
 }
 
-/* Inside narrow columns, Copy drops under a command too long for one line; a short one keeps it beside. */
+/*
+ * Inside narrow columns, Copy drops under a long command or config (data-long)
+ * and a short value, such as the address, keeps it beside, even at 320.
+ */
 @media (max-width: 520px) {
   .mcp-page .mcp-copy-row {
-    flex-wrap: wrap;
+    gap: 8px;
+    padding-inline-start: 12px;
   }
-  .mcp-page .mcp-copy-text {
-    flex: 1 1 auto;
+  .mcp-page .mcp-copy[data-long] .mcp-copy-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 12px 12px 16px;
+  }
+  .mcp-page .mcp-copy[data-long] .mcp-copy-text {
+    flex: none;
+    align-self: stretch;
+    padding-block: 0;
   }
 }
 
 @media (max-width: 360px) {
   .waitlist-page .mcp-page .mcp-status {
     min-height: 4.5em;
+  }
+  /*
+   * A short value and the Copy key, at its "Copied" width, share one line even
+   * at 320: the address needs 164px in Chromium and 169px in WebKit.
+   */
+  .mcp-page .mcp-copy:not([data-long]) .mcp-copy-row {
+    gap: 6px;
+  }
+  .mcp-page .mcp-copy:not([data-long]) .mcp-copy-text {
+    font-size: 13px;
+  }
+  .mcp-page .mcp-copy-key.diya-button {
+    min-inline-size: 92px;
+    padding-inline: 11px;
   }
   /* Three lines of "didn't answer" fill the kept space; the heading still stands apart. */
   .waitlist-page .mcp-page .mcp-address + h2 {

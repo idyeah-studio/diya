@@ -188,6 +188,25 @@ describe('copy keys', () => {
     expect(window.getSelection()?.toString()).toBe(MCP_INSTALL.claude)
   })
 
+  it('drop under long commands on phones, and stay beside short values such as the address', () => {
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+    renderPage()
+    const long = (text: string) =>
+      [...document.querySelectorAll('.mcp-copy-text')].find((code) => code.textContent === text)?.closest('.mcp-copy')?.hasAttribute('data-long')
+    expect(long(MCP_URL)).toBe(false)
+    expect(long(MCP_INSTALL.claude)).toBe(true)
+    expect(long(MCP_INSTALL.codex)).toBe(true)
+    expect(long(MCP_INSTALL.cursorJson)).toBe(true)
+  })
+
+  it('look pressed when Copied in Dark too: the Copied rule is as specific as the Dark one, and after it (VIS-01)', () => {
+    const css = readFileSync(join(process.cwd(), 'components/mcp/mcp-page.css'), 'utf8')
+    const dark = css.indexOf(".diya-root[data-theme='dark'] .mcp-page .mcp-copy-key.diya-button {")
+    const copied = css.indexOf(".diya-root .mcp-page .mcp-copy-key.diya-button[data-state='copied'] {")
+    expect(dark).toBeGreaterThan(-1)
+    expect(copied).toBeGreaterThan(dark)
+  })
+
   it('each have their own name', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
     renderPage()

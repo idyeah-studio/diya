@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { PLAIN_WORDS, plainLine } from '../../components/mcp/plain-words'
@@ -40,7 +41,14 @@ describe('what the /mcp page lists', () => {
   })
 
   it('falls back to the server’s own description for a name it doesn’t know yet', () => {
-    expect(plainLine({ kind: 'tool', name: 'get_screen', description: 'One Screen, as a file.' })).toBe('One Screen, as a file.')
-    expect(plainLine({ kind: 'prompt', name: 'build_screen' })).toMatch(/^A prompt\. Builds a whole screen/)
+    const html = (definition: Parameters<typeof plainLine>[0]) => renderToStaticMarkup(plainLine(definition))
+    expect(html({ kind: 'tool', name: 'get_screen', description: 'One Screen, as a file.' })).toBe('One Screen, as a file.')
+    expect(html({ kind: 'prompt', name: 'build_screen' })).toMatch(/^A prompt\. Builds a whole screen/)
+  })
+
+  it('sets identifiers in its lines as code', () => {
+    const html = (name: string) => renderToStaticMarkup(plainLine({ kind: 'tool', name }))
+    expect(html('list_tokens')).toContain('<code>--diya-*</code>')
+    expect(html('get_theme')).toContain('<code>DiyaProvider</code>')
   })
 })

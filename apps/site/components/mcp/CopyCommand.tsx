@@ -4,6 +4,9 @@ import { Button } from '@idyeah/diya'
 import { useAnnounce } from './Announcer'
 
 const COPIED_FOR = 2400
+/** Too long for one line beside Copy on a phone: on narrow screens its Copy key drops under it. */
+export const isLong = (code: string) => code.length > 28 || code.includes('\n')
+
 export const COPY_FAILED = 'Copy didn’t work. The text is selected above; press Command+C or Ctrl+C.'
 
 function CopyIcon({ done }: { done: boolean }) {
@@ -61,7 +64,7 @@ export function CopyCommand({ code, name }: { code: string; name: string }) {
   }
 
   return (
-    <div className="mcp-copy" data-multiline={code.includes('\n') || undefined}>
+    <div className="mcp-copy" data-long={isLong(code) || undefined}>
       <div className="mcp-copy-row">
         <code
           ref={text}
