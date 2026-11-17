@@ -1,0 +1,355 @@
+/* diya13.ai/mcp in a browser: a content page like /changelog, inside WaitlistPage's column. */
+.waitlist-page .mcp-page {
+  --mcp-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* The Get code well (components/code/code.css), per appearance. */
+  --mcp-well: #f3f3f0;
+  --mcp-well-edge: inset 0 1px 2px #2a302a1a, inset 0 0 0 1px #52606333, 0 1px 0 #fff;
+}
+.diya-root[data-theme='dark'] .mcp-page {
+  --mcp-well: #161718;
+  --mcp-well-edge: inset 0 1px 2px #000a, inset 0 0 0 1px #ffffff14, 0 1px 0 #ffffff0a;
+}
+.diya-root[data-glass='true'] .mcp-page {
+  --mcp-well: color-mix(in srgb, #f3f3f0 82%, transparent);
+}
+.diya-root[data-glass='true'][data-theme='dark'] .mcp-page {
+  --mcp-well: color-mix(in srgb, #111213 78%, transparent);
+}
+
+.waitlist-page .mcp-page a:not(.diya-button) {
+  color: var(--diya-color-text);
+}
+.waitlist-page .mcp-page h3:not(.diya-accordion-heading) {
+  margin: 36px 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.waitlist-page .mcp-page b {
+  font-weight: 600;
+}
+.waitlist-page .mcp-page q {
+  color: var(--diya-color-text);
+  font-weight: 500;
+}
+.mcp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The address, its Copy key, then the status line. */
+.waitlist-page .mcp-address {
+  display: grid;
+  gap: 10px;
+  margin-block-start: 32px;
+}
+.waitlist-page .mcp-page .mcp-label {
+  margin: 0;
+  font-weight: 500;
+}
+
+/* A command to paste: the Get code well, with a labeled Copy key beside it. */
+.mcp-page .mcp-copy {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.mcp-page .mcp-copy-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 7px 7px 7px 16px;
+  border-radius: 14px;
+  background: var(--mcp-well);
+  box-shadow: var(--mcp-well-edge);
+}
+.mcp-page .mcp-copy-text {
+  flex: 1;
+  min-width: 0;
+  padding-block: 5px;
+  font: 14px/1.6 var(--mcp-mono);
+  color: var(--diya-color-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.mcp-page .mcp-copy-text:focus {
+  outline: none;
+}
+.mcp-page .mcp-copy-text:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.mcp-page .mcp-copy-key.diya-button {
+  flex: none;
+  gap: 7px;
+  min-height: 32px;
+  padding-inline: 12px;
+  border: 0;
+  font-size: 14px;
+  font-weight: 500;
+  background: #fff;
+  color: var(--diya-color-text);
+  box-shadow: inset 0 0 0 1px #5260632e, 0 1px 2px #2a302a1f;
+}
+.diya-root[data-theme='dark'] .mcp-page .mcp-copy-key.diya-button {
+  background: var(--diya-color-raised);
+  box-shadow: inset 0 1px 0 #ffffff1f, 0 1px 0 #0006, 0 3px 8px -2px #0007;
+}
+.mcp-page .mcp-copy-key.diya-button[data-state='copied'] {
+  background: transparent;
+  box-shadow: inset 0 1px 2px #0000002e, 0 0 0 1px var(--diya-color-line);
+}
+.mcp-page .mcp-copy-key.diya-button:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+}
+/* Copy didn't work: the error color with the "!" glyph (the Oct 31 rule). */
+.waitlist-page .mcp-page .mcp-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: var(--diya-color-error);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.mcp-page .mcp-bang {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  box-sizing: border-box;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/*
+ * The status line: quiet, muted, and the same height in every state, so
+ * nothing below it moves when the answer comes. Two lines are kept for the
+ * longest state, "didn't answer" (three on the narrowest phones).
+ */
+.waitlist-page .mcp-page .mcp-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 3em;
+  margin: 2px 0 0;
+  color: var(--diya-color-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.mcp-page .mcp-status:focus {
+  outline: none;
+}
+.mcp-page .mcp-status-dot {
+  flex: none;
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  margin-top: calc((1.5em - 8px) / 2);
+  border-radius: 50%;
+  /* A border, not a fill, so the dot stays in forced colors. */
+  border: 1.5px solid var(--diya-color-muted);
+}
+.mcp-page .mcp-status[data-state='answering'] .mcp-status-dot {
+  border: 4px solid var(--diya-color-success);
+}
+.mcp-page .mcp-status[data-state='failed'] {
+  color: var(--diya-color-text);
+}
+.mcp-page .mcp-status[data-state='failed'] .mcp-status-dot {
+  border: 4px solid var(--diya-color-error);
+}
+.mcp-page .mcp-status a,
+.mcp-page .mcp-status-again {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--diya-color-text);
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.mcp-page .mcp-status a:hover,
+.mcp-page .mcp-status-again:hover {
+  text-decoration-color: currentColor;
+}
+.mcp-page .mcp-status-again:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* The status line's kept space stands in for part of the 48px before Connect it. */
+.waitlist-page .mcp-page .mcp-address + h2 {
+  margin-top: 27px;
+}
+
+/* Connect it: DIYA Tabs whose rule spans the column (R7), or a native Select on phones. */
+.mcp-page .mcp-connect {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+.mcp-page .mcp-agent-tabs .diya-tab-list {
+  width: 100%;
+}
+.mcp-page .mcp-agent-tabs .diya-tab {
+  padding-inline: 2px;
+}
+.mcp-page .mcp-agent-tabs .diya-tab-panel {
+  margin-top: 20px;
+}
+.mcp-page .mcp-agent-tabs .diya-tab-panel:focus-visible {
+  outline: 2px solid var(--diya-color-text);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+.mcp-page .mcp-agent-select {
+  display: none;
+}
+.mcp-page .mcp-agent {
+  display: grid;
+  gap: 16px;
+}
+.mcp-page .mcp-agent-step {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.mcp-page .mcp-agent-step > .mcp-copy {
+  justify-self: stretch;
+}
+.waitlist-page .mcp-page .mcp-agent-step p {
+  margin: 0;
+}
+
+/* Without JavaScript, every agent's steps under their own headings. */
+.waitlist-page .mcp-page .mcp-noscript h3 {
+  margin: 28px 0 12px;
+}
+
+/* What your agent can ask it: name and line, stacked on phones. */
+.waitlist-page .mcp-page .mcp-defs {
+  margin: 20px 0 0;
+  border-top: 1px solid var(--diya-color-line);
+}
+.mcp-page .mcp-defs > div {
+  display: grid;
+  grid-template-columns: 184px minmax(0, 1fr);
+  gap: 4px 24px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--diya-color-line);
+}
+.mcp-page .mcp-defs dt code {
+  font-size: 14px;
+  font-weight: 500;
+}
+.mcp-page .mcp-defs dd {
+  margin: 0;
+}
+
+/* Not working? DIYA's Accordion, then where to go next. */
+/* The column's full width, its words on the column's edge; the hover wash reaches past it. */
+.mcp-page .mcp-trouble.diya-accordion {
+  max-width: none;
+  margin-block-start: 8px;
+}
+.mcp-page .mcp-trouble .diya-accordion-heading button {
+  width: calc(100% + 24px);
+  margin-inline: -12px;
+}
+.mcp-page .mcp-trouble .diya-accordion-content {
+  padding-inline: 0;
+}
+.waitlist-page .mcp-page .mcp-trouble .diya-accordion-heading {
+  margin: 0;
+}
+.waitlist-page .mcp-page .mcp-trouble p:last-child {
+  margin-bottom: 0;
+}
+.waitlist-page .mcp-page .mcp-stuck {
+  margin-block-start: 20px;
+  color: var(--diya-color-muted);
+}
+
+@media (max-width: 640px) {
+  .mcp-page .mcp-agent-select {
+    display: block;
+    max-width: none;
+    margin-bottom: 16px;
+    --diya-height-control-medium: 44px;
+  }
+  .mcp-page .mcp-connect .mcp-agent-select select {
+    font-size: 16px;
+  }
+  .mcp-page .mcp-agent-tabs .diya-tab-list {
+    display: none;
+  }
+  .mcp-page .mcp-agent-tabs .diya-tab-panel {
+    margin-top: 0;
+  }
+  .mcp-page .mcp-defs > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Inside narrow columns, Copy drops under a command too long for one line; a short one keeps it beside. */
+@media (max-width: 520px) {
+  .mcp-page .mcp-copy-row {
+    flex-wrap: wrap;
+  }
+  .mcp-page .mcp-copy-text {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 360px) {
+  .waitlist-page .mcp-page .mcp-status {
+    min-height: 4.5em;
+  }
+  .waitlist-page .mcp-page .mcp-address + h2 {
+    margin-top: 12px;
+  }
+}
+
+/* Touch: every key 44px tall. */
+@media (pointer: coarse) {
+  .mcp-page .mcp-copy-key.diya-button,
+  .mcp-page .mcp-agent-link.diya-button,
+  .mcp-page .mcp-agent-tabs .diya-tab {
+    min-height: 44px;
+  }
+  /* A key inside a line of text: its touch area grows, its line doesn't. */
+  .mcp-page .mcp-status-again {
+    position: relative;
+  }
+  .mcp-page .mcp-status-again::after {
+    content: '';
+    position: absolute;
+    inset: -12px -6px;
+  }
+}
+
+@media (forced-colors: active) {
+  .mcp-page .mcp-copy-row {
+    border: 1px solid CanvasText;
+  }
+  .mcp-page .mcp-copy-key.diya-button {
+    border: 1px solid ButtonText;
+  }
+}
