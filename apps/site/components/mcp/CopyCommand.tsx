@@ -2,11 +2,9 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button } from '@idyeah/diya'
 import { useAnnounce } from './Announcer'
+import { isLong } from './copy-length'
 
 const COPIED_FOR = 2400
-/** Too long for one line beside Copy on a phone: on narrow screens its Copy key drops under it. */
-export const isLong = (code: string) => code.length > 28 || code.includes('\n')
-
 export const COPY_FAILED = 'Copy didn’t work. The text is selected above; press Command+C or Ctrl+C.'
 
 function CopyIcon({ done }: { done: boolean }) {

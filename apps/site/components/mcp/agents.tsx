@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import { Button } from '@idyeah/diya'
 import { MCP_INSTALL, MCP_URL } from '../reference/api'
-import { CopyCommand, isLong } from './CopyCommand'
+import { CopyCommand } from './CopyCommand'
+import { isLong } from './copy-length'
 
 /** One way in: a line of words, then a link to the agent's installer or something to paste. */
 type Step = { text?: ReactNode; link?: { href: string; label: string }; code?: { code: string; name: string } }
