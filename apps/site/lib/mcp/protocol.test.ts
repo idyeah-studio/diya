@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
+import { NextRequest } from 'next/server'
+import { unstable_doesMiddlewareMatch } from 'next/experimental/testing/server'
 import { MemoryComponentLog, setComponentLog } from './component-log'
+import { MCP_PAGE_PATH } from './negotiate'
 import { MemorySearchLog, setSearchLog } from './query-log'
 
 /*
@@ -11,7 +14,8 @@ import { MemorySearchLog, setSearchLog } from './query-log'
  * collected and run when the test says so.
  */
 const afterWork: (() => unknown)[] = []
-vi.mock('next/server', () => ({
+vi.mock('next/server', async (actual) => ({
+  ...(await actual<typeof import('next/server')>()),
   connection: async () => undefined,
   after: (work: () => unknown) => {
     afterWork.push(work)
@@ -36,10 +40,31 @@ async function routeFetch(input: string | URL | Request, init?: RequestInit) {
   return handler(request)
 }
 
-async function connect() {
+async function connect(fetch = routeFetch) {
   const client = new Client({ name: 'diya-protocol-test', version: '1.0.0' })
-  await client.connect(new StreamableHTTPClientTransport(new URL('/mcp', ORIGIN), { fetch: routeFetch }))
+  await client.connect(new StreamableHTTPClientTransport(new URL('/mcp', ORIGIN), { fetch }))
   return client
+}
+
+const { config, proxy } = await import('../../proxy')
+const PAGE = '<!doctype html><title>the /mcp page</title>'
+/**
+ * The whole site in front of the route, as Next runs it: the proxy runs only
+ * when its matcher says so; a rewrite to the page is answered with a stand-in
+ * page, and everything else reaches app/mcp/route.ts.
+ */
+async function siteFetch(input: string | URL | Request, init?: RequestInit) {
+  const request = new Request(input instanceof Request ? input : new URL(String(input), ORIGIN), init)
+  const headers = Object.fromEntries(request.headers)
+  if (unstable_doesMiddlewareMatch({ config, url: new URL(request.url).pathname, headers })) {
+    const decision = proxy(new NextRequest(request))
+    const rewrite = decision.headers.get('x-middleware-rewrite')
+    if (rewrite) {
+      const page = new URL(rewrite).pathname === MCP_PAGE_PATH
+      return new Response(page ? PAGE : 'unavailable', { status: page ? 200 : 404, headers: { 'Content-Type': 'text/html' } })
+    }
+  }
+  return routeFetch(request)
 }
 
 const textOf = (result: Awaited<ReturnType<Client['callTool']>>) =>
@@ -168,3 +193,51 @@ describe('the /mcp route', () => {
     expect(await response.json()).toMatchObject({ result: { serverInfo: { name: 'diya' } } })
   })
 })
+
+describe('one address for agents and people', () => {
+  const CHROME = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
+
+  it('gives a browser’s GET the page', async () => {
+    const response = await siteFetch('/mcp', { headers: { Accept: CHROME } })
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toContain('text/html')
+    expect(await response.text()).toBe(PAGE)
+  })
+
+  it('answers an MCP POST exactly as before: a real client lists and calls tools through the site', async () => {
+    const client = await connect(siteFetch)
+    expect(client.getServerVersion()).toMatchObject({ name: 'diya' })
+    expect((await client.listTools()).tools).toHaveLength(5)
+    const result = await client.callTool({ name: 'get_component', arguments: { name: 'Switch' } })
+    expect(result.isError).toBeFalsy()
+    await client.close()
+  })
+
+  it('answers a stream GET (text/event-stream) and any other GET with today’s 405 JSON', async () => {
+    for (const accept of ['text/event-stream', '*/*', 'application/json', undefined]) {
+      const response = await siteFetch('/mcp', { headers: accept ? { Accept: accept } : {} })
+      expect(response.status, String(accept)).toBe(405)
+      expect(response.headers.get('allow')).toBe('POST, OPTIONS')
+      expect(response.headers.get('access-control-allow-origin')).toBe('*')
+      expect(await response.json()).toMatchObject({ jsonrpc: '2.0', error: { code: -32000 } })
+    }
+  })
+
+  it('answers the page’s own status check, tools/list without a session, and counts nothing', async () => {
+    const searches = new MemorySearchLog()
+    const components = new MemoryComponentLog()
+    setSearchLog(searches)
+    setComponentLog(components)
+    const response = await siteFetch('/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+    })
+    expect(response.status).toBe(200)
+    expect(response.headers.get('cache-control')).toBe('no-store')
+    expect((await response.json()).result.tools).toHaveLength(5)
+    expect(afterWork).toHaveLength(0)
+    expect(searches.counts.size + components.counts.size).toBe(0)
+  })
+})
+

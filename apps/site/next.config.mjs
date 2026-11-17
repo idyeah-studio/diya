@@ -7,6 +7,9 @@ const nextConfig = {
   // The Screens preview frame is a static Vite build in public/screens-frame
   // (see screens-frame/). Its page answers at /screens-frame?screen=<id>.
   rewrites: async () => [{ source: '/screens-frame', destination: '/screens-frame/index.html' }],
+  // /mcp is a page for browsers and the MCP server for agents, chosen by
+  // Accept (proxy.ts), so no cache may hand one the other's answer.
+  headers: async () => [{ source: '/mcp', headers: [{ key: 'Vary', value: 'Accept' }] }],
 }
 
 export default nextConfig

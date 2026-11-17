@@ -62,7 +62,21 @@ const MCP_INITIALIZE = JSON.stringify({
   method: 'initialize',
   params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'diya-production-gates', version: '1' } },
 })
-const mcpCases = (preview) => preview ? [['/mcp', 'MCP', 200], ['/mcp', 'GET', 405]] : [['/mcp', 'MCP', 404], ['/mcp', 'GET', 404]]
+/* The same address is a page for people: 'PAGE' is a browser's GET (Accept:
+   text/html), 'SSE' an MCP client's stream GET, which keeps the server's 405.
+   Before launch the page's internal path is closed too. */
+export const BROWSER_ACCEPT = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+const MCP_PAGE_PATH = '/diya-mcp-page'
+const mcpCases = (preview) => preview
+  ? [['/mcp', 'MCP', 200], ['/mcp', 'GET', 405], ['/mcp', 'SSE', 405], ['/mcp', 'PAGE', 200]]
+  : [['/mcp', 'MCP', 404], ['/mcp', 'GET', 404], ['/mcp', 'SSE', 404], ['/mcp', 'PAGE', 404], [MCP_PAGE_PATH, 'PAGE', 404]]
+
+/** A browser at /mcp gets DIYA's MCP server page, as HTML, at that address. */
+export function mcpPageContract(response) {
+  if (!/<h1\b[^>]*>DIYA’s MCP server<\/h1>/.test(response?.body ?? '')) throw new Error('/mcp did not give a browser the page')
+  if (!/text\/html/.test(response.contentType ?? '')) throw new Error('/mcp page must be HTML')
+  return { h1: 'DIYA’s MCP server', contentType: response.contentType }
+}
 
 /** An open /mcp must introduce itself as DIYA's server, uncached. */
 export function mcpContract(response) {
@@ -245,12 +259,15 @@ export async function verifyProductionGates({ root = appRoot, signal } = {}) {
       for (const [path, method, expected] of cases) {
         signal?.throwIfAborted()
         const response = await fetch(origin + path, {
-          method: method === 'MCP' ? 'POST' : method, redirect: 'manual', signal: AbortSignal.any([AbortSignal.timeout(5000), ...(signal ? [signal] : [])]),
+          method: method === 'MCP' ? 'POST' : method === 'PAGE' || method === 'SSE' ? 'GET' : method, redirect: 'manual', signal: AbortSignal.any([AbortSignal.timeout(5000), ...(signal ? [signal] : [])]),
           ...(method === 'POST' ? { headers: { Origin: origin, 'Content-Type': 'application/json' }, body: '{}' } : {}),
           ...(method === 'MCP' ? { headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' }, body: MCP_INITIALIZE } : {}),
+          ...(method === 'PAGE' ? { headers: { Accept: BROWSER_ACCEPT } } : {}),
+          ...(method === 'SSE' ? { headers: { Accept: 'text/event-stream' } } : {}),
         })
         if (path === '/api/launch' || (path === screenRequestsPath && method === 'GET')) pages.set(path, { cacheControl: response.headers.get('cache-control'), body: await response.text() })
         else if (method === 'MCP') pages.set('MCP', { cacheControl: response.headers.get('cache-control'), body: await response.text() })
+        else if (method === 'PAGE' && path === '/mcp') pages.set('PAGE', { contentType: response.headers.get('content-type'), body: await response.text() })
         else if (method === 'GET' && !path.startsWith('/api/')) pages.set(path, await response.text())
         else await response.body?.cancel()
         const check = { previewFlag: flag, path, method, expected, status: response.status }
@@ -284,7 +301,12 @@ export async function verifyProductionGates({ root = appRoot, signal } = {}) {
       if (!/^Disallow:\s*\/screens-frame\s*$/im.test(robots)) throw new Error('Crawler rules must keep the Screens preview frame out')
       crawlerRules.push({ previewFlag: flag, allow: '/', previewNoindexReadable: true })
       launch.push({ previewFlag: flag, ...launchContract(pages.get('/api/launch'), flag === '0' ? pages.get('/') : null) })
-      if (flag === '1') mcp.push({ previewFlag: flag, ...mcpContract(pages.get('MCP')) })
+      if (flag === '1') {
+        mcp.push({ previewFlag: flag, ...mcpContract(pages.get('MCP')) })
+        const page = pages.get('PAGE')
+        documentContract(page.body, true, '/mcp')
+        mcp.push({ previewFlag: flag, path: '/mcp', ...mcpPageContract(page), indexing: 'noindex, nofollow', canonical: canonicalFor('/mcp').at(-1) })
+      }
       if (flag === '0') screenRequests.push({ previewFlag: flag, ...screenRequestsClosedContract(pages.get(screenRequestsPath)) })
     } finally {
       signal?.removeEventListener('abort', stop)
