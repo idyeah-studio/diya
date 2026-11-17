@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import test from 'node:test'
-import { LAUNCHED_CARD, SITE, launchContract, launchedCardContract, mcpContract, retiredRoutesBuilt, screenRequestsClosedContract, serverEnv, siteConstant, verifyProductionGates } from './verify-production-gates.mjs'
+import { LAUNCHED_CARD, SITE, launchContract, launchedCardContract, mcpContract, mcpPageContract, retiredRoutesBuilt, screenRequestsClosedContract, serverEnv, siteConstant, verifyProductionGates } from './verify-production-gates.mjs'
 
 // A real child HTTP process exercises the runner's failure/cleanup behavior
 // without requiring a production build or duplicating Next's route logic.
@@ -177,3 +177,11 @@ test('the launched page names the launch card in og:image and twitter:image', ()
   assert.throws(() => launchedCardContract([og(card)]), /twitter:image/)
   assert.throws(() => launchedCardContract([og(card), og(card), tw(card)]), /og:image/)
 })
+
+test('a browser at /mcp must get the readable page, as HTML', () => {
+  const body = '<html><main id="content"><h1 id="mcp-heading">DIYA’s MCP server</h1></main></html>'
+  assert.deepEqual(mcpPageContract({ body, contentType: 'text/html; charset=utf-8' }), { h1: 'DIYA’s MCP server', contentType: 'text/html; charset=utf-8' })
+  assert.throws(() => mcpPageContract({ body: '{"jsonrpc":"2.0","error":{"code":-32000}}', contentType: 'application/json' }), /did not give a browser the page/)
+  assert.throws(() => mcpPageContract({ body, contentType: 'application/json' }), /must be HTML/)
+})
+

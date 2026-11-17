@@ -163,7 +163,7 @@ ${RULES}
 
 - [Everything in one file](${SITE}/llms-full.txt): every component and pattern with props, guidance and a complete example, plus the public tokens
 - [api.json](${SITE}/api.json): the same API, machine-readable (schema v${API.schemaVersion}); also shipped as \`${API.package}/api.json\`
-- [MCP server](${MCP_URL}): connect Claude Code, Cursor or VS Code once, and your editor looks DIYA up while it writes: components, props, complete files and theming. Read-only, no account. Claude Code: \`${MCP_INSTALL.claude}\`
+- [MCP server](${MCP_URL}): connect your agent once, and it looks DIYA up while it writes: components, props, complete files and theming. Read-only, no account. The page there shows how for Claude Code, Cursor, VS Code, Codex and others. Claude Code: \`${MCP_INSTALL.claude}\`
 - [Catalog](${SITE}/explore): live playgrounds
 
 ## Components

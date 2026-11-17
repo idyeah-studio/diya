@@ -56,9 +56,11 @@ export { SITE }
 /** DIYA's hosted MCP server: stateless, read-only, gated with the catalog. */
 export const MCP_URL = `${SITE}/mcp`
 const mcpEntry = { url: MCP_URL }
-/** One line or link per editor, for the "Connect your editor" popover, llms.txt and the README. */
+/** One line or link per agent, for the "Connect your editor" popover, the /mcp page, llms.txt and the README. */
 export const MCP_INSTALL = {
   claude: `claude mcp add --transport http diya ${MCP_URL}`,
+  /** Codex's own form for a streamable HTTP server (`codex mcp add <name> --url <url>`). */
+  codex: `codex mcp add diya --url ${MCP_URL}`,
   cursorJson: JSON.stringify({ mcpServers: { diya: mcpEntry } }, null, 2),
   /** Cursor's install link: the server's mcp.json entry, base64-encoded, with the name beside it. */
   cursorLink: `cursor://anysphere.cursor-deeplink/mcp/install?name=diya&config=${btoa(JSON.stringify(mcpEntry))}`,
