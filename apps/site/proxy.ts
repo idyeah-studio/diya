@@ -5,7 +5,8 @@ import { MCP_PAGE_PATH, wantsMcpPage } from './lib/mcp/negotiate'
 // Before launch, without the preview flag, the catalog's pages use the normal
 // 404 renderer, so they send recovery HTML even without JavaScript. Keep this
 // destination unmatched. From LAUNCH_AT they are public.
-const gated = new Set(['/explore', '/ask', '/changelog'])
+// The /mcp page's internal path is gated the same way.
+const gated = new Set(['/explore', '/ask', '/changelog', MCP_PAGE_PATH])
 const unavailable = '/diya-preview-unavailable'
 
 export function proxy(request: NextRequest) {
@@ -35,7 +36,8 @@ export const config = {
       missing: [{ type: 'header', key: 'accept', value: '(.*)text/event-stream(.*)' }],
     },
     { source: '/mcp', has: [{ type: 'header', key: 'rsc', value: '1' }] },
-    // Not the page's internal path: some servers run the proxy again on a
-    // rewrite's destination. Its canonical URL is /mcp.
+    // Once the catalog is open some servers run the proxy again on a
+    // rewrite's destination, so this path then passes through untouched.
+    '/diya-mcp-page',
   ],
 }

@@ -64,12 +64,13 @@ const MCP_INITIALIZE = JSON.stringify({
 })
 /* The same address is a page for people: 'PAGE' is a browser's GET (Accept:
    text/html), 'SSE' an MCP client's stream GET, which keeps the server's 405.
-   Before launch the page's internal path is closed too. */
+   Before launch the page's internal path is closed too, with the same
+   recovery HTML as the catalog's pages. */
 export const BROWSER_ACCEPT = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
 const MCP_PAGE_PATH = '/diya-mcp-page'
 const mcpCases = (preview) => preview
   ? [['/mcp', 'MCP', 200], ['/mcp', 'GET', 405], ['/mcp', 'SSE', 405], ['/mcp', 'PAGE', 200]]
-  : [['/mcp', 'MCP', 404], ['/mcp', 'GET', 404], ['/mcp', 'SSE', 404], ['/mcp', 'PAGE', 404], [MCP_PAGE_PATH, 'PAGE', 404]]
+  : [['/mcp', 'MCP', 404], ['/mcp', 'GET', 404], ['/mcp', 'SSE', 404], ['/mcp', 'PAGE', 404], [MCP_PAGE_PATH, 'GET', 404]]
 
 /** A browser at /mcp gets DIYA's MCP server page, as HTML, at that address. */
 export function mcpPageContract(response) {
@@ -285,7 +286,7 @@ export async function verifyProductionGates({ root = appRoot, signal } = {}) {
         documents.push({ previewFlag: flag, path, indexing: document.indexing, canonical: canonicalFor(path).at(-1) })
         if (flag === '0' && path === '/') assets.push(...await brandAssets(origin, document, signal))
       }
-      for (const path of flag === '1' ? ['/missing-launch-review-route'] : ['/explore', componentPath, screensPath, '/missing-launch-review-route']) {
+      for (const path of flag === '1' ? ['/missing-launch-review-route'] : ['/explore', componentPath, screensPath, MCP_PAGE_PATH, '/missing-launch-review-route']) {
         const html = pages.get(path)
         const recovery = [...html.matchAll(/<a\b[^>]*>/gi)].map(([tag]) => attributes(tag))
         const noindex = [...html.matchAll(/<meta\b[^>]*>/gi)].map(([tag]) => attributes(tag)).some(meta => meta.name === 'robots' && (meta.content ?? '').split(/\s*,\s*/).includes('noindex'))

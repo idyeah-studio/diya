@@ -70,6 +70,19 @@ describe('the proxy at /mcp', () => {
     }
   })
 
+  it('sends the page’s internal path to the branded 404 before launch, and leaves it alone once open (QA-01)', () => {
+    const internal = () => proxy(new NextRequest(`https://diya13.ai${MCP_PAGE_PATH}`, { headers: { accept: BROWSERS.chrome } }))
+    vi.stubEnv('DIYA_NOW', '2026-11-01T12:00:00Z')
+    vi.stubEnv('DIYA_CATALOG_PREVIEW', '0')
+    expect(internal().headers.get('x-middleware-rewrite')).toBe('https://diya13.ai/diya-preview-unavailable')
+    // Open: a server that runs the proxy again on the rewrite's destination still gets the page.
+    vi.stubEnv('DIYA_CATALOG_PREVIEW', '1')
+    expect(internal().headers.get('x-middleware-next')).toBe('1')
+    vi.stubEnv('DIYA_CATALOG_PREVIEW', '0')
+    vi.stubEnv('DIYA_NOW', '2026-11-17T12:00:00Z')
+    expect(internal().headers.get('x-middleware-next')).toBe('1')
+  })
+
   it('is gated like the server: before launch without the flag, a browser gets the server’s 404', () => {
     vi.stubEnv('DIYA_NOW', '2026-11-01T12:00:00Z')
     vi.stubEnv('DIYA_CATALOG_PREVIEW', '0')
@@ -96,8 +109,8 @@ describe('the proxy’s matcher', () => {
     expect(matches()).toBe(false)
   })
 
-  it('still covers the gated catalog pages, and never the page’s own path, which a server may run it on again', () => {
-    for (const url of ['/explore', '/ask', '/changelog']) expect(unstable_doesMiddlewareMatch({ config, url }), url).toBe(true)
-    for (const url of ['/', MCP_PAGE_PATH]) expect(unstable_doesMiddlewareMatch({ config, url, headers: { accept: BROWSERS.chrome } }), url).toBe(false)
+  it('still covers the gated catalog pages and the page’s internal path, and never the landing', () => {
+    for (const url of ['/explore', '/ask', '/changelog', MCP_PAGE_PATH]) expect(unstable_doesMiddlewareMatch({ config, url }), url).toBe(true)
+    expect(unstable_doesMiddlewareMatch({ config, url: '/', headers: { accept: BROWSERS.chrome } })).toBe(false)
   })
 })
