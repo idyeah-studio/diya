@@ -292,7 +292,8 @@
     display: block;
     max-width: none;
     margin-bottom: 16px;
-    --diya-height-control-medium: 44px;
+    /* The select itself is 44px: its frame's 1px border sits outside it. */
+    --diya-height-control-medium: 46px;
   }
   .mcp-page .mcp-connect .mcp-agent-select select {
     font-size: 16px;
