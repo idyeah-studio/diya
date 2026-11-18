@@ -5,11 +5,17 @@ import { GITHUB_URL, NPM_URL } from '../site/links'
  * Every page that shows these is gated with the catalog (lib/catalog-route).
  */
 
+/** The studio named in the footer. */
+export const STUDIO = {
+  name: 'IDYeah Studio',
+  url: 'https://www.idyeah.studio',
+} as const
+
 /** The maintainer named in the footer and on /changelog. */
 export const MAINTAINER = {
   name: 'Vishal Mehta',
-  // The studio's site.
-  url: 'https://idyeah.studio',
+  // Their page on the studio's site.
+  url: 'https://www.idyeah.studio/person',
 } as const
 
 /** The stated release cadence, word for word wherever it appears. */

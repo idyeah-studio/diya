@@ -7,8 +7,8 @@
 .site-foot .cm-trust { margin-top: 14px; }
 .site-foot .site-foot-brand .cm-trust p { margin: 0; max-width: 40ch; font-size: 15px; line-height: 1.5; color: var(--diya-color-muted); }
 .site-foot .site-foot-brand .cm-trust p + p { margin-top: 4px; }
-.site-foot .cm-trust a { color: var(--diya-color-text); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 4px; }
-.site-foot .cm-trust a:hover { text-decoration-color: currentColor; }
+.site-foot .cm-trust a, .site-foot .site-foot-brand > p a { color: var(--diya-color-text); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 4px; }
+.site-foot .cm-trust a:hover, .site-foot .site-foot-brand > p a:hover { text-decoration-color: currentColor; }
 .site-foot ul.cm-checks { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 16px; }
 
 /* Catalog sidebar foot: two rows built like the sidebar's own items (same

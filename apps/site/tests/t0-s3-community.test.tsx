@@ -8,7 +8,7 @@ import { AppearanceProvider } from '../app/Appearance'
 import { CatalogSearchProvider } from '../components/CatalogSearchProvider'
 import { ProPage } from '../components/catalog/ProPage'
 import { ChangelogView, parseChangelog, plainText } from '../components/community/changelog'
-import { CADENCE, MAINTAINER, NEW_REQUEST_URL } from '../components/community/links'
+import { CADENCE, MAINTAINER, NEW_REQUEST_URL, STUDIO } from '../components/community/links'
 import { TrustBlock } from '../components/community/TrustBlock'
 import { SiteFooter } from '../components/site/SiteFooter'
 
@@ -96,6 +96,13 @@ describe('trust block', () => {
     )
     const footer = screen.getByRole('contentinfo')
     expect(within(footer).getByRole('link', { name: MAINTAINER.name }).getAttribute('href')).toBe(MAINTAINER.url)
+    // The studio and the maintainer are plain followed links to the studio's site.
+    const studio = within(footer).getByRole('link', { name: STUDIO.name })
+    const maintainer = within(footer).getByRole('link', { name: MAINTAINER.name })
+    expect(studio.getAttribute('href')).toBe('https://www.idyeah.studio')
+    expect(maintainer.getAttribute('href')).toBe('https://www.idyeah.studio/person')
+    for (const link of [studio, maintainer]) expect(link.hasAttribute('rel')).toBe(false)
+    expect(footer.textContent).toContain('DIYA is made by IDYeah Studio.Maintained by Vishal Mehta.')
     expect(footer.textContent).toContain(CADENCE)
     const checks = within(footer).getByRole('list', { name: 'Checks you can verify' })
     expect(
