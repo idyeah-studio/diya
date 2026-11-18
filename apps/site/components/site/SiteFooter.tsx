@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { CommunityStyles } from '../community/CommunityStyles'
-import { ASK_PATH, CHANGELOG_PATH } from '../community/links'
+import { ASK_PATH, CHANGELOG_PATH, STUDIO } from '../community/links'
 import { TrustBlock } from '../community/TrustBlock'
 import { FlameMark } from './FlameMark'
 import { GITHUB_URL, LICENSE_URL, NPM_URL } from './links'
@@ -26,7 +26,9 @@ export function SiteFooter() {
             <Link href="/" aria-label="DIYA home" className="site-foot-home">
               <FlameMark decorative />
             </Link>
-            <p>DIYA is made by IDYeah Studio.</p>
+            <p>
+              DIYA is made by <a href={STUDIO.url}>{STUDIO.name}</a>.
+            </p>
             <TrustBlock />
           </div>
           <div role="group" aria-labelledby="site-foot-get">

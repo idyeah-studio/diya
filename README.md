@@ -949,3 +949,5 @@ kind of app: dashboards, settings, sign-up flows, landing pages, admin tools. It
 2. Pro never gets a component the library lacks.
 3. Pro's code needs nothing from us but `@idyeah/diya`.
 4. Library screens stay free and MIT. Relight's screens are yours.
+
+Made by [IDYeah Studio](https://www.idyeah.studio).
