@@ -7,7 +7,6 @@ import { isLaunched, launchNow } from '../lib/launch'
 import { catalogIsOpen } from '../lib/catalog-route'
 import { SITE } from '../lib/site'
 import { SiteAnalytics } from '../components/site/SiteAnalytics'
-import { screens } from '../components/screens/screens-data'
 
 const title = 'DIYA — Components and patterns. In code.'
 const description = 'A library for your next app. Thoughtfully built UI components and patterns, ready to work together. Coming soon.'
@@ -43,9 +42,9 @@ const metadata: Metadata = {
   icons,
 }
 
-// Counted, not typed, so the descriptions stay true as Screens grow. The share
-// card rounds instead ("30+ screens"), since a picture is slow to remake.
-const readyScreens = screens.filter((screen) => screen.status === 'ready').length
+// The descriptions and the share card round the counts ("40+ components and
+// patterns", "30+ screens"), so they stay true as the library grows.
+// tests/counts.test.ts fails when a rounded claim falls behind or runs ahead.
 
 // From the launch moment: the copy deck's title, description and social card,
 // with a new image file name (so LinkedIn and X don't reuse the cached
@@ -59,13 +58,13 @@ const launchedImage = {
 }
 const launchedSocial = {
   title: 'DIYA — a library for your next app',
-  description: `33 components, 13 patterns and ${readyScreens} screens for React. Free, MIT, yours to own.`,
+  description: '40+ components and patterns, and 30+ screens for React. Free, MIT, yours to own.',
 }
 const launchedMetadata: Metadata = {
   ...metadata,
   title: 'DIYA — React components and patterns, free under MIT',
   description:
-    `33 components, 13 patterns and ${readyScreens} screens for React, with Light, Dark and Glass. Free, MIT, yours to own. npm install @idyeah/diya`,
+    '40+ components and patterns, and 30+ screens for React, with Light, Dark and Glass. Free, MIT, yours to own. npm install @idyeah/diya',
   openGraph: { ...launchedSocial, type: 'website', siteName: 'DIYA', url: '/', images: [launchedImage] },
   twitter: { card: 'summary_large_image', ...launchedSocial, images: [launchedImage] },
   icons,

@@ -19,8 +19,9 @@ import { useState, type ReactNode } from 'react'
 import { useAppearance, type Theme } from '../../app/Appearance'
 
 /** The parts sheet: eleven working components under a nested provider, so its
-    Finish control re-themes the sheet and nothing else on the page. */
-export function PartsSheet() {
+    Finish control re-themes the sheet and nothing else on the page. `components`
+    and `patterns` are the library's counts, which the page reads from its API. */
+export function PartsSheet({ components, patterns }: { components: number; patterns: number }) {
   const site = useAppearance()
   const [chosenTheme, setTheme] = useState<Theme | null>(null)
   const [chosenGlass, setGlass] = useState<boolean | null>(null)
@@ -31,7 +32,7 @@ export function PartsSheet() {
     <div className="ld-sheet-block">
       <div className="ld-sub-head">
         <div>
-          <h3>33 components.</h3>
+          <h3>{components} components.</h3>
           <p>Button to Date Picker, built to work with a keyboard and a screen reader.</p>
         </div>
         <div className="ld-finish" role="group" aria-label="Finish of the sheet below">
@@ -108,8 +109,8 @@ export function PartsSheet() {
             </Cell>
             <div className="ld-cell" data-more="">
               <Link className="ld-more" href="/explore?area=components">
-                All 33 components
-                <span>And the 13 patterns below. →</span>
+                All {components} components
+                <span>And the {patterns} patterns below. →</span>
               </Link>
             </div>
           </div>

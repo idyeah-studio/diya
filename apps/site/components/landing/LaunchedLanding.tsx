@@ -17,9 +17,14 @@ import {
 import { LandingStyles } from './LandingStyles'
 import { OrielBand } from './OrielBand'
 import { screens, thumbnailSrc } from '../screens/screens-data'
+import { API } from '../reference/api'
 
 // The screens the landing shows, in gallery order; the count follows the registry.
 const readyScreens = screens.filter((screen) => screen.status === 'ready')
+// Counted from the package's own API, so the headings stay true as it grows.
+const counted = (kind: string) => Object.values(API.items as Record<string, { kind: string }>).filter((item) => item.kind === kind).length
+const COMPONENTS = counted('component')
+const PATTERNS = counted('pattern')
 const FEATURED = ['dashboard', 'pricing', 'listing']
 const featuredScreens = readyScreens.filter((screen) => FEATURED.includes(screen.id))
 
@@ -71,7 +76,7 @@ export function LaunchedLanding() {
             <div className="ld-hero-copy">
               <h1 id="hero-title">A library for your next app.</h1>
               <p className="ld-lede">
-                <b>33 components, 13 patterns and {readyScreens.length} screens for React.</b> Free, MIT, yours to own.
+                <b>40+ components and patterns, and 30+ screens for React.</b> Free, MIT, yours to own.
               </p>
               <div className="ld-actions">
                 <CreateChip />
@@ -100,11 +105,11 @@ export function LaunchedLanding() {
               <p>One install. Nothing held back for later.</p>
               <InstallLine />
             </div>
-            <PartsSheet />
+            <PartsSheet components={COMPONENTS} patterns={PATTERNS} />
             <div className="ld-patterns">
               <div className="ld-sub-head">
                 <div>
-                  <h3>13 patterns.</h3>
+                  <h3>{PATTERNS} patterns.</h3>
                   <p>Tables, forms, wizards, charts, a chatbot: the bigger pieces, already put together.</p>
                 </div>
               </div>
