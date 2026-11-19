@@ -9,6 +9,7 @@ import { REFRESH_TIMEOUT_MS, ZERO_HOLD_MS } from '../components/ConceptLanding'
 import { LAUNCH_SIGNAL_KEY } from '../components/landing/launch-signal'
 import { SiteHeader } from '../components/site/SiteHeader'
 import { LAUNCH_AT } from '../lib/launch'
+import { API } from '../components/reference/api'
 
 const refresh = vi.fn()
 // next/dynamic needs the Next bundler; here the islands load directly.
@@ -96,7 +97,7 @@ describe('the time switch on the server', () => {
     const after = await generateMetadata()
     expect(after.title).toBe('DIYA — React components and patterns, free under MIT')
     expect(after.description).toBe(
-      '33 components, 13 patterns and 34 screens for React, with Light, Dark and Glass. Free, MIT, yours to own. npm install @idyeah/diya',
+      '40+ components and patterns, and 30+ screens for React, with Light, Dark and Glass. Free, MIT, yours to own. npm install @idyeah/diya',
     )
     expect((after.openGraph as { title?: string }).title).toBe('DIYA — a library for your next app')
     const card = {
@@ -263,7 +264,7 @@ describe('the launched landing', () => {
     expect(container.querySelector('section#pro')).toBeTruthy()
     const text = container.textContent ?? ''
     for (const line of [
-      '33 components, 13 patterns and 34 screens for React. Free, MIT, yours to own.',
+      '40+ components and patterns, and 30+ screens for React. Free, MIT, yours to own.',
       'Explore the library',
       'What’s in the package',
       'One install. Nothing held back for later.',
@@ -280,6 +281,11 @@ describe('the launched landing', () => {
       'DIYA is made by IDYeah Studio.',
       'First lit on 7 November 2026, the eve of Diwali.',
     ])
+      expect(text).toContain(line)
+    // The section headings count the package's own API, so they need no edit when it grows.
+    const kinds = Object.values(API.items as Record<string, { kind: string }>).map((item) => item.kind)
+    const count = (kind: string) => kinds.filter((k) => k === kind).length
+    for (const line of [`${count('component')} components.`, `All ${count('component')} components`, `And the ${count('pattern')} patterns below.`, `${count('pattern')} patterns.`])
       expect(text).toContain(line)
     // The Appearance panel's own copy is phase B's (app/Appearance.tsx).
     const ours = `${container.querySelector('main')?.textContent} ${container.querySelector('footer')?.textContent}`
