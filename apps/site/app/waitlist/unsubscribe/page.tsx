@@ -8,7 +8,7 @@ import { TokenForm } from '../../../components/waitlist/TokenForm'
 import { CONTACT_EMAIL } from '../../../lib/waitlist/config'
 
 export const metadata: Metadata = {
-  title: 'Leave the Relight list · DIYA',
+  title: 'Leave the Relight list — DIYA',
   robots: { index: false, follow: false },
   referrer: 'no-referrer',
 }

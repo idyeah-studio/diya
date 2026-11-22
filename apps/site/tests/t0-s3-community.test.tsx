@@ -180,7 +180,7 @@ describe('/ask and /changelog', () => {
     screen.getByRole('heading', { level: 1, name: 'What should DIYA have next?' })
     screen.getByRole('heading', { level: 2, name: 'What makes a good request' })
     expect(screen.getByRole('link', { name: 'Ask on GitHub' }).getAttribute('href')).toBe(NEW_REQUEST_URL)
-    expect(document.body.textContent).toContain('I read every one')
+    expect(document.body.textContent).toContain('I read every request')
   })
 
   it('open in a preview build: /changelog renders the SDK changelog under the trust list', async () => {

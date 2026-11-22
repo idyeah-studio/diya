@@ -31,6 +31,8 @@ export const NEW_ISSUE_URL = `${GITHUB_URL}/issues/new/choose`
 export const ASK_PATH = '/ask'
 /** The on-site changelog, rendered from the SDK's CHANGELOG.md. */
 export const CHANGELOG_PATH = '/changelog'
+/** DIYA's MCP server: the page for people, at the address agents connect to. */
+export const MCP_PATH = '/mcp'
 
 /**
  * The checks a stranger can verify for themselves, as plain links rather

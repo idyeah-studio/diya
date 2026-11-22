@@ -77,12 +77,40 @@
   .component-browser .catalog-foot .site-chip[data-variant='compact'] .site-chip-key { width: 32px; padding: 0; justify-content: center; }
 }
 
-/* A long list fades at its scrolling edges instead of stopping at a hard one. */
+/* A long list fades at its scrolling edges instead of stopping at a hard one. The fade is a
+   mask, so it fades into whatever is behind the list (the sidebar's own ground in Light, Dark
+   and Glass), never a fixed color. The bottom fade is 64px, taller than a row, so part of a row is always
+   fading there, and it shows only while more of the list is below: the list's own scroll
+   drives --catalog-list-end from 0 (more below) to 1 (at the end, no fade) over its last 64px.
+   A list too short to scroll has an inactive timeline and keeps the initial 1: no fade. Browsers
+   without scroll-driven animations (Firefox) can't tell where the list ends, so they keep the
+   fade on at 20px, the list's bottom padding, where it never dims a row at the end. */
+@property --catalog-list-end {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+@keyframes catalog-list-end {
+  from { --catalog-list-end: 0; }
+  to { --catalog-list-end: 1; }
+}
 @media (min-width: 901px) {
   :where(html[data-catalog='true']) .catalog-frame .atomic-browser .atomic-navigation {
     padding-top: 10px;
     padding-bottom: 20px;
-    mask-image: linear-gradient(transparent, #000 10px, #000 calc(100% - 20px), transparent);
+    --catalog-list-fade: 20px;
+    mask-image: linear-gradient(transparent, #000 10px, #000 calc(100% - var(--catalog-list-fade)), rgb(0 0 0 / var(--catalog-list-end)));
+  }
+  @supports (animation-timeline: scroll()) {
+    :where(html[data-catalog='true']) .catalog-frame .atomic-browser .atomic-navigation {
+      --catalog-list-fade: 64px;
+      animation: catalog-list-end auto linear both;
+      animation-timeline: scroll(self block);
+      animation-range: calc(100% - 64px) 100%;
+    }
+  }
+  @supports not (animation-timeline: scroll()) {
+    :where(html[data-catalog='true']) .catalog-frame .atomic-browser .atomic-navigation { --catalog-list-end: 0; }
   }
   /* The fade's 10px comes out of the space under Search, so the list starts where it did. */
   :where(html[data-catalog='true']) .catalog-frame .component-browser.atomic-browser .component-browser-heading { padding-bottom: 14px; }

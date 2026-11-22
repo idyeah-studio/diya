@@ -2,21 +2,27 @@ import type { Metadata } from 'next'
 import { connection } from 'next/server'
 import { notFound } from 'next/navigation'
 import { TextLink } from '@idyeah/diya'
-import { DISCUSSIONS_URL, NEW_ISSUE_URL, NEW_REQUEST_URL } from '../../components/community/links'
+import { DISCUSSIONS_URL, MAINTAINER, NEW_ISSUE_URL, NEW_REQUEST_URL } from '../../components/community/links'
 import { WaitlistPage } from '../../components/waitlist/WaitlistPage'
 import { catalogIsOpen } from '../../lib/catalog-route'
 import { isLaunched, launchNow } from '../../lib/launch'
+import { shareCard } from '../../lib/share-card'
 import '../../components/community/community.css'
 
 export async function generateMetadata(): Promise<Metadata> {
   await connection()
   // Before launch the page is a 404, and its title and description stay unsaid too.
   if (!catalogIsOpen()) return {}
-  const indexable = isLaunched(launchNow()) && process.env.DIYA_CATALOG_PREVIEW !== '1'
+  const launched = isLaunched(launchNow())
+  const indexable = launched && process.env.DIYA_CATALOG_PREVIEW !== '1'
+  const title = 'Ask for a component — DIYA'
+  const description = 'What makes a good component request, and where to send it.'
   return {
-    title: 'Ask for a component · DIYA',
-    description: 'What makes a good component request, and where to send it.',
+    title,
+    description,
     alternates: { canonical: '/ask' },
+    // From the launch moment the page has its own share card; a preview before it keeps the site's.
+    ...(launched ? shareCard({ title, description, path: '/ask' }) : {}),
     ...(indexable ? {} : { robots: { index: false, follow: false } }),
   }
 }
@@ -50,8 +56,8 @@ export default async function AskPage() {
         <p className="wp-eyebrow">Ask for a component</p>
         <h1 id="ask-heading">What should DIYA have next?</h1>
         <p className="wp-lede">
-          Requests live in GitHub Discussions, where anyone can add a vote or their own case. I read every one, and the
-          most-wanted shape the next release.
+          Requests live in GitHub Discussions, where anyone can add a vote or their own case. I’m {MAINTAINER.name},
+          DIYA’s maintainer. I read every request, and the most-wanted shape the next release.
         </p>
         <h2>What makes a good request</h2>
         <ol className="cm-tips">

@@ -6,6 +6,7 @@ import './globals.css'
 import { isLaunched, launchNow } from '../lib/launch'
 import { catalogIsOpen } from '../lib/catalog-route'
 import { SITE } from '../lib/site'
+import { shareCard } from '../lib/share-card'
 import { SiteAnalytics } from '../components/site/SiteAnalytics'
 
 const title = 'DIYA — Components and patterns. In code.'
@@ -46,27 +47,20 @@ const metadata: Metadata = {
 // patterns", "30+ screens"), so they stay true as the library grows.
 // tests/counts.test.ts fails when a rounded claim falls behind or runs ahead.
 
-// From the launch moment: the copy deck's title, description and social card,
-// with a new image file name (so LinkedIn and X don't reuse the cached
-// "Coming soon" card). The favicon stays the same.
-const launchedImage = {
-  url: '/social-preview-v7.jpg',
-  type: 'image/jpeg',
-  width: 1200,
-  height: 630,
-  alt: 'DIYA: a library for your next app. 40+ components and patterns, and 30+ screens, for React. Free, MIT, yours to own. npm install @idyeah/diya.',
-}
-const launchedSocial = {
-  title: 'DIYA — a library for your next app',
-  description: '40+ components and patterns, and 30+ screens for React. Free, MIT, yours to own.',
-}
+// From the launch moment: the copy deck's title, description and social card.
+// The card's image is the one every launched page shares (lib/share-card.ts);
+// pages with their own card (the catalog, /ask, /changelog, /mcp) replace
+// this one. The favicon stays the same.
 const launchedMetadata: Metadata = {
   ...metadata,
   title: 'DIYA — React components and patterns, free under MIT',
   description:
     '40+ components and patterns, and 30+ screens for React, with Light, Dark and Glass. Free, MIT, yours to own. npm install @idyeah/diya',
-  openGraph: { ...launchedSocial, type: 'website', siteName: 'DIYA', url: '/', images: [launchedImage] },
-  twitter: { card: 'summary_large_image', ...launchedSocial, images: [launchedImage] },
+  ...shareCard({
+    title: 'DIYA — a library for your next app',
+    description: '40+ components and patterns, and 30+ screens for React. Free, MIT, yours to own.',
+    path: '/',
+  }),
   icons,
 }
 

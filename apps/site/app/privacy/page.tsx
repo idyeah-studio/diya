@@ -6,7 +6,7 @@ import { catalogIsOpen } from '../../lib/catalog-route'
 import { CONTACT_EMAIL, PRIVACY_UPDATED, SENDER_ORG } from '../../lib/waitlist/config'
 
 export const metadata: Metadata = {
-  title: 'Privacy · DIYA',
+  title: 'Privacy — DIYA',
   description: 'What DIYA stores, why, for how long, who helps, your rights, and how to reach us.',
   alternates: { canonical: '/privacy' },
 }

@@ -40,6 +40,8 @@ export function CatalogBrowser({ area, current, page }: { area: CatalogListArea;
   const screens = useListedScreens()
   const groups = (target: CatalogListArea) => (target === 'screens' ? onlyItems(catalogGroups.screens, screens) : catalogGroups[target])
   const own = filterGroups(groups(area), query)
+  // The count beside the list's title: what the list shows, less the screens still to come ("Soon").
+  const total = groups(area).reduce((sum, group) => sum + group.items.filter((item) => !item.soon).length, 0)
   const elsewhere = query.trim()
     ? AREAS.filter((target) => target !== area)
         .map((target) => ({ area: target, items: filterGroups(groups(target), query, false).flatMap((group) => group.items) }))
@@ -206,7 +208,11 @@ export function CatalogBrowser({ area, current, page }: { area: CatalogListArea;
         <aside className={`component-browser atomic-browser${area !== 'components' ? ' pattern-browser' : ''}`} aria-label={words[area].label}>
           <div className="component-browser-heading">
             <div className="catalog-browser-title">
-              <div className="catalog-browser-name">{words[area].title}</div>
+              <div className="catalog-browser-name">
+                {words[area].title}
+                {/* Read as "Patterns, 13". */}
+                <span className="sr-only">,</span> <span className="catalog-browser-count">{total}</span>
+              </div>
             </div>
             {search}
           </div>

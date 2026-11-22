@@ -11,6 +11,8 @@
 
 /* The list's title row. */
 :where(html[data-catalog='true']) .catalog-browser-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* How many the list holds, quiet beside its title ("Patterns 13"), so a list cut by the window's height still says how long it is. */
+:where(html[data-catalog='true']) .catalog-browser-count { margin-left: 4px; color: var(--diya-color-muted); font-size: 15px; font-weight: 400; letter-spacing: 0; font-variant-numeric: tabular-nums; }
 /* Matches from the other area, after a quiet rule. */
 :where(html[data-catalog='true']) .atomic-browser .catalog-elsewhere { padding-top: 16px; border-top: 1px solid color-mix(in srgb, var(--diya-color-line) 60%, transparent); }
 
