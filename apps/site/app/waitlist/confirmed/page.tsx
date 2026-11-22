@@ -18,14 +18,14 @@ const CONTENT: Record<ConfirmedStatus, { title: string; body: string[] }> = {
   founding: {
     title: 'You’re confirmed.',
     body: [
-      'You’re one of the first 200, so early access and the founding price for a year are yours when Relight opens. No card.',
+      'You’re one of the first 50, so early access and the founding price for a year are yours when Relight opens. No card.',
       'It’s quiet from here until Relight is ready. I’ll write then.',
     ],
   },
   listed: {
     title: 'You’re confirmed.',
     body: [
-      'The 200 founding spots have gone, but you’re on the list and you’ll hear the moment Relight opens.',
+      'The 50 founding spots have gone, but you’re on the list and you’ll hear the moment Relight opens.',
       'It’s quiet from here until then.',
     ],
   },

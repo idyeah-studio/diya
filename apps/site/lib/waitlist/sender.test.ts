@@ -55,7 +55,7 @@ describe('Emails', () => {
     const email = confirmationEmail({ confirmUrl: 'https://diya13.ai/waitlist/confirm?token=c', choice: 'admin-table', links })
     expect(email.text.startsWith('Hi,')).toBe(true)
     expect(email.text).toContain('First thing you’d rebuild: an admin table. Noted.')
-    expect(email.text).toContain('The first 200 to confirm get early access')
+    expect(email.text).toContain('The first 50 to confirm get early access')
     expect(email.text).toContain('Vishal\nIDYeah Studio')
     expect(email.html).toContain('>Almost in.</h1>')
     expect(email.html.match(/Confirm my email/g)).toHaveLength(1)
@@ -80,7 +80,7 @@ describe('Emails', () => {
       for (const a of email.attachments!) expect([...a.content.slice(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47])
       // Pictures are named for readers who block them; each Dark twin stays silent.
       expect(email.html).toContain('alt="DIYA"')
-      if (hero) expect(email.html).toMatch(hero === 'founding' ? /alt="A founding ticket: one in 200\."/ : /alt="A rough sketch of a screen/)
+      if (hero) expect(email.html).toMatch(hero === 'founding' ? /alt="A founding ticket: one in 50\."/ : /alt="A rough sketch of a screen/)
       // Relight's name, its tag and the headline are live text, and the headline comes before the drawing.
       expect(email.html).toContain('>Relight</td>')
       expect(email.html).toContain('Coming to DIYA Pro')
@@ -93,13 +93,13 @@ describe('Emails', () => {
     const founding = welcomeEmail({ founding: true, links })
     expect(founding.subject).toBe('Your founding ticket for Relight')
     expect(founding.tag).toBe('waitlist-welcome')
-    expect(founding.text).toContain('One of the first 200 means early access and the founding price for a year.')
+    expect(founding.text).toContain('One of the first 50 means early access and the founding price for a year.')
     expect(founding.text).toContain('Keep this email: it’s your ticket.')
     expect(founding.text).toContain('Leave the list: https://diya13.ai/waitlist/unsubscribe?token=tok')
     expect(founding.headers[1]).toEqual({ name: 'List-Unsubscribe-Post', value: 'List-Unsubscribe=One-Click' })
     const listed = welcomeEmail({ founding: false, links })
     expect(listed.subject).toBe('You’re on the Relight list')
-    expect(listed.text).toContain('The 200 founding spots went fast')
+    expect(listed.text).toContain('The 50 founding spots went fast')
     expect(listed.text).not.toContain('founding price')
   })
 

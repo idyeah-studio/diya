@@ -60,7 +60,7 @@ export default async function Privacy() {
         </li>
         <li>Which form you used: the home page or the catalog.</li>
         <li>When you joined, when we last emailed you, when you confirmed, and when you left, if you did.</li>
-        <li>Whether you were one of the first 200 people to confirm.</li>
+        <li>Whether you were one of the first 50 people to confirm.</li>
         <li>Which version of this page was current when you last signed up.</li>
         <li>
           Scrambled, one-way versions of the confirm and “Leave the list” links we email you, so the links work without
@@ -82,7 +82,7 @@ export default async function Privacy() {
       <ul>
         <li>
           <strong>To run the list you asked to join:</strong> to confirm the address is yours, to welcome you once you do,
-          to tell you when Relight is ready, and to honor the founding offer for the first 200. Your answer to the question helps decide what Relight
+          to tell you when Relight is ready, and to honor the founding offer for the first 50. Your answer to the question helps decide what Relight
           learns first. We rely on your consent for this (GDPR Article 6(1)(a)), given when you join and confirmed with
           the link in our first email.
         </li>
@@ -98,7 +98,7 @@ export default async function Privacy() {
       <p>
         That’s all. We don’t sell your email, rent it, share it with anyone except the services below, or use it for
         advertising. We don’t profile you or make automated decisions about you. The one automatic step is founding
-        status, which goes to the first 200 people to confirm, in the order they confirm.
+        status, which goes to the first 50 people to confirm, in the order they confirm.
       </p>
 
       <h2 id="how-long">How long we keep it</h2>

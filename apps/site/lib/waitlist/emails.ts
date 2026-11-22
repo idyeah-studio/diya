@@ -119,7 +119,7 @@ const HEROES = {
   founding: {
     light: png('founding-hero-light', FOUNDING_HERO_LIGHT_PNG),
     dark: png('founding-hero-dark', FOUNDING_HERO_DARK_PNG),
-    alt: 'A founding ticket: one in 200.',
+    alt: 'A founding ticket: one in 50.',
   },
 }
 type Hero = (typeof HEROES)[keyof typeof HEROES]
@@ -224,7 +224,7 @@ export function confirmationEmail(input: {
 }): ComposedEmail {
   const { confirmUrl, choice, links, postalAddress = POSTAL_ADDRESS_IN_TRANSACTIONAL } = input
   const pick = pickLine(choice)
-  const offer = 'The first 200 to confirm get early access and the founding price for a year. No card needed.'
+  const offer = 'The first 50 to confirm get early access and the founding price for a year. No card needed.'
   const ignore = 'Didn’t sign up? Just ignore this.'
   const text = [
     'Hi,',
@@ -268,15 +268,15 @@ export function welcomeEmail(input: {
   const { founding, links, postalAddress = POSTAL_ADDRESS_IN_TRANSACTIONAL } = input
   const library = libraryLine(links.siteUrl)
   const hero = founding ? HEROES.founding : HEROES.relight
-  const ticket = 'One of the first 200 means early access and the founding price for a year. Keep this email: it’s your ticket.'
+  const ticket = 'One of the first 50 means early access and the founding price for a year. Keep this email: it’s your ticket.'
   const quietNow = 'Now it goes quiet until Relight is ready. Promise.'
-  const later = 'The 200 founding spots went fast, but you’ll hear the moment Relight is ready.'
+  const later = 'The 50 founding spots went fast, but you’ll hear the moment Relight is ready.'
   const lines = founding ? [ticket, quietNow] : [later]
   const text = ['Hi,', ...lines, library.text, SIGNATURE_TEXT, '--', footerText(links, postalAddress)].join('\n\n')
   const body = founding ? p('Hi,') + box(escape(ticket)) + p(escape(quietNow)) : p('Hi,') + p(escape(later))
   const html = page(
     {
-      preheader: founding ? 'One of the first 200. Keep this one.' : 'Confirmed. You’ll hear when Relight is ready.',
+      preheader: founding ? 'One of the first 50. Keep this one.' : 'Confirmed. You’ll hear when Relight is ready.',
       headline: founding ? 'Your founding spot is saved.' : 'You’re on the list.',
       hero,
       body: body + library.html + SIGNATURE_HTML,

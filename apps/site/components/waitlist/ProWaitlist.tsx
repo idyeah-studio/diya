@@ -27,7 +27,7 @@ export const WAITLIST_COPY = {
   submit: 'Join the Relight waitlist',
   busy: 'Joining…',
   busyStatus: 'Adding you to the list.',
-  founding: 'The first 200 on the list get early access and the founding price for a year, no card.',
+  founding: 'The first 50 on the list get early access and the founding price for a year, no card.',
   privacy:
     'Relight news only, and not much of it. We never sell your email, and every message has a one-click way off the list.',
   emailEmpty: 'Add your email so we can tell you when Relight is ready.',
@@ -364,10 +364,10 @@ export function ProWaitlist({ source, headingLevel = 3 }: ProWaitlistProps) {
               Signed up as <strong className="rw-address">{note.hint}</strong>. We’ll write when it’s ready.
             </p>
             {note.confirmed && note.founding === true && (
-              <p>You’re one of the first 200, so early access and the founding price are yours when Relight opens.</p>
+              <p>You’re one of the first 50, so early access and the founding price are yours when Relight opens.</p>
             )}
             {note.confirmed && note.founding === false && (
-              <p>The 200 founding spots had gone when you confirmed, but you’ll hear the moment Relight opens.</p>
+              <p>The 50 founding spots had gone when you confirmed, but you’ll hear the moment Relight opens.</p>
             )}
             {!note.confirmed && <p className="rw-muted">If you haven’t confirmed yet, the link is in our email to you.</p>}
             <Button variant="quiet" className="rw-again" onClick={showForm}>
