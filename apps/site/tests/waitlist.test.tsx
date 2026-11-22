@@ -164,7 +164,7 @@ describe('Relight waitlist form', () => {
     expect(screen.getByText('Maya@Studio.co')).toBeTruthy()
     expect(screen.queryByRole('form')).toBeNull()
     // No number, no founding claim before confirmation.
-    expect(document.body.textContent).not.toMatch(/#\d|number \d|first 200/)
+    expect(document.body.textContent).not.toMatch(/#\d|number \d|first 50/)
   })
 
   it('keeps a masked note, never the address', async () => {
@@ -241,7 +241,7 @@ describe('Relight waitlist form', () => {
     await mount()
     expect(screen.getByRole('heading', { name: 'You’re on the Relight list.' })).toBeTruthy()
     expect(screen.getByText('v•••@idyeah.studio')).toBeTruthy()
-    expect(screen.getByText(/You’re one of the first 200/)).toBeTruthy()
+    expect(screen.getByText(/You’re one of the first 50/)).toBeTruthy()
     // Returning on load never steals focus.
     expect(document.activeElement).toBe(document.body)
     await act(async () => {

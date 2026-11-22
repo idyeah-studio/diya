@@ -251,7 +251,7 @@ describe('Rate limits and the send cap', () => {
   })
 })
 
-describe('Double opt-in and the first 200', () => {
+describe('Double opt-in and the first 50', () => {
   it('only confirmed addresses count, and founding goes by confirmation order', async () => {
     const t = setup()
     const links: string[] = []
@@ -312,7 +312,7 @@ describe('The welcome', () => {
     await confirm(t.deps, confirmLink(t, 'late@x.dev'))
     const welcome = t.sender.sent.find((m) => m.tag === 'waitlist-welcome')!
     expect(welcome.subject).toBe('You’re on the Relight list')
-    expect(welcome.text).toContain('The 200 founding spots went fast')
+    expect(welcome.text).toContain('The 50 founding spots went fast')
     expect(welcome.text).not.toContain('Keep this email')
   })
 

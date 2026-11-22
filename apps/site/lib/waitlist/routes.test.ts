@@ -187,7 +187,7 @@ describe('/api/waitlist/confirm', () => {
     expect(store.byEmail('maya@studio.co')!.confirmedAt).not.toBeNull()
   })
 
-  it('sends past the first 200 to the "listed" page', async () => {
+  it('sends past the first 50 to the "listed" page', async () => {
     await post(person())
     for (let i = 0; i < 200; i++) {
       const s = await store.insertSignup({ email: `f${i}@x.dev`, choice: null, otherText: null, source: 'landing', consentVersion: 'v' }, new Date())

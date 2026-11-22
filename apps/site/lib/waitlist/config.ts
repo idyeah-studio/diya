@@ -17,16 +17,16 @@ export const OTHER_TEXT_MAX = 80
 export const EMAIL_MAX = 254
 
 /** Founding status goes to the first this-many confirmed addresses. */
-export const FOUNDING_LIMIT = 200
+export const FOUNDING_LIMIT = 50
 
 /**
  * Bumped whenever the privacy page or a form's promise changes. Stored with
  * each signup and each screen request. Keep it equal to the privacy page's
  * "Last updated" date.
  */
-export const CONSENT_VERSION = '2026-11-10'
+export const CONSENT_VERSION = '2026-11-22'
 /** The privacy page's "Last updated" line; the date CONSENT_VERSION names. */
-export const PRIVACY_UPDATED = 'November 10, 2026'
+export const PRIVACY_UPDATED = 'November 22, 2026'
 
 /** The sender's legal name. Printed in every email footer and on the privacy page. */
 export const SENDER_ORG = 'IDYeah Studio LLC'

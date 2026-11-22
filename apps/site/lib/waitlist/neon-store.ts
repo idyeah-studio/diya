@@ -36,7 +36,7 @@ export async function countAttemptIn(db: SqlRunner, keyHash: string, windowMs: n
   return Number(row.n)
 }
 
-// Serialises confirmations, so two people confirming at once can't both take the 200th spot.
+// Serialises confirmations, so two people confirming at once can't both take the last founding spot.
 const FOUNDING_LOCK = 73160200
 
 const date = (value: unknown) => (value == null ? null : value instanceof Date ? value : new Date(String(value)))
