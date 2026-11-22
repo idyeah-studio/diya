@@ -44,7 +44,8 @@ describe('Get code: No app yet?', () => {
     const step1 = within(drawer).getByRole('region', { name: 'Step 1: Install' })
     expect(step1.textContent).toContain('No app yet? npm create diya@latest sets up Next.js or Vite with the styles and provider already in place. Then skip to step 3.')
     expect(step1.textContent).toContain('Working in Claude Code or Cursor? Connect your editor once and it fetches this for you.')
-    expect(within(step1).getByRole('link', { name: 'Connect your editor' }).getAttribute('href')).toBe('https://github.com/idyeah-studio/diya#use-it-with-an-ai-editor')
+    // To the MCP server's own page, which shows how for each editor.
+    expect(within(step1).getByRole('link', { name: 'Connect your editor' }).getAttribute('href')).toBe('/mcp')
     await user.click(within(step1).getByRole('tab', { name: 'pnpm' }))
     expect(within(drawer).getByRole('region', { name: 'Step 1: Install' }).textContent).toContain('No app yet? pnpm create diya sets up')
   })

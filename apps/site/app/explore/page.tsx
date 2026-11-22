@@ -30,7 +30,8 @@ import { SpinnerLibrary } from '../../components/SpinnerLibrary'
 import { ButtonLibrary } from '../../components/ButtonLibrary'
 import type { Metadata } from 'next'
 import { catalogIsOpen, resolveCatalogRoute, type CatalogRoute } from '../../lib/catalog-route'
-import { catalogPath, catalogTitle } from '../../lib/catalog-route-meta'
+import { catalogDescription, catalogPath, catalogTitle } from '../../lib/catalog-route-meta'
+import { shareCard } from '../../lib/share-card'
 import { CatalogFrame } from '../../components/catalog/CatalogFrame'
 import { ProPage } from '../../components/catalog/ProPage'
 import { MotionPage } from '../../components/catalog/MotionPage'
@@ -45,7 +46,12 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const route = resolveCatalogRoute(await searchParams)
   if ('redirect' in route) return {}
-  return { title: catalogTitle(route), alternates: { canonical: catalogPath(route) } }
+  const title = catalogTitle(route)
+  const path = catalogPath(route)
+  // Before the launch moment (a preview build) the page keeps the site's card, as it always has.
+  if (!isLaunched(launchNow())) return { title, alternates: { canonical: path } }
+  const description = catalogDescription(route)
+  return { title, description, alternates: { canonical: path }, ...shareCard({ title, description, path }) }
 }
 
 export default async function Explore({ searchParams }: Props) {

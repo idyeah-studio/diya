@@ -96,3 +96,6 @@
 @media (forced-colors: active) {
   .cm-foot-link[aria-current='page'] { outline: 2px solid CanvasText; }
 }
+
+/* The Ask page's lede never leaves one word alone on its last line. */
+.waitlist-page #ask-heading + .wp-lede { text-wrap: pretty; }

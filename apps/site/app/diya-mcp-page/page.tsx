@@ -5,6 +5,7 @@ import { McpPage } from '../../components/mcp/McpPage'
 import { WaitlistPage } from '../../components/waitlist/WaitlistPage'
 import { catalogIsOpen } from '../../lib/catalog-route'
 import { isLaunched, launchNow } from '../../lib/launch'
+import { shareCard } from '../../lib/share-card'
 import { mcpDefinitions } from '../../lib/mcp/definitions'
 
 /*
@@ -16,11 +17,16 @@ import { mcpDefinitions } from '../../lib/mcp/definitions'
 export async function generateMetadata(): Promise<Metadata> {
   await connection()
   if (!catalogIsOpen()) return {}
-  const indexable = isLaunched(launchNow()) && process.env.DIYA_CATALOG_PREVIEW !== '1'
+  const launched = isLaunched(launchNow())
+  const indexable = launched && process.env.DIYA_CATALOG_PREVIEW !== '1'
+  const title = 'MCP server — DIYA'
+  const description = 'Connect your coding agent to DIYA’s read-only MCP server: how, what it can ask, and what the server keeps.'
   return {
-    title: 'MCP server · DIYA',
-    description: 'Connect your coding agent to DIYA’s read-only MCP server: how, what it can ask, and what the server keeps.',
+    title,
+    description,
     alternates: { canonical: '/mcp' },
+    // From the launch moment the page has its own share card; a preview before it keeps the site's.
+    ...(launched ? shareCard({ title, description, path: '/mcp' }) : {}),
     ...(indexable ? {} : { robots: { index: false, follow: false } }),
   }
 }

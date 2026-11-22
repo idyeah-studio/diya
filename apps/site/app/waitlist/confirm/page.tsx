@@ -7,7 +7,7 @@ import { catalogIsOpen } from '../../../lib/catalog-route'
 import { waitlistIsOpen } from '../../../lib/waitlist/open'
 
 export const metadata: Metadata = {
-  title: 'Confirm your spot · DIYA',
+  title: 'Confirm your spot — DIYA',
   robots: { index: false, follow: false },
   referrer: 'no-referrer',
 }

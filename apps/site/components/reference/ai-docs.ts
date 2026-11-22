@@ -4,6 +4,8 @@ import { snippetFor } from '../code/snippets'
 import { nextPath, screens as allScreens, vitePath, type ScreenEntry } from '../screens/screens-data'
 import { API, defaultText, itemReference, itemUrl, MCP_INSTALL, MCP_URL, publicTokens, SITE, type ItemReference } from './api'
 import { guidance } from './guidance'
+import { CHANGELOG_PATH, STUDIO } from '../community/links'
+import { GITHUB_URL, NPM_URL } from '../site/links'
 
 /*
  * The AI channel: /llms.txt, /llms-full.txt and each page's "Copy for AI"
@@ -14,6 +16,9 @@ import { guidance } from './guidance'
 const ids: ItemId[] = [...componentIds, ...patternIds]
 const fence = (language: string, code: string) => `\`\`\`${language}\n${code.trimEnd()}\n\`\`\``
 const cell = (text: string) => text.replace(/\|/g, '\\|').replace(/\n/g, ' ')
+
+/** Who makes DIYA and where to check it, under the summary of llms.txt and llms-full.txt. */
+export const MADE_BY = `Made by [${STUDIO.name}](${STUDIO.url}). Source on [GitHub](${GITHUB_URL}), the package on [npm](${NPM_URL}), and every release in the [Changelog](${SITE}${CHANGELOG_PATH}).`
 
 /** Install and the one-time provider setup, as Markdown. Also served by the MCP server. */
 export const SETUP = `${fence('sh', `npm install ${API.package}`)}
@@ -155,6 +160,8 @@ export function llmsIndex() {
 
 > ${API.package} ${API.version}: React components and patterns for product UI, in Light, Dark and Glass. MIT. No Tailwind needed. Install one package, wrap the app in DiyaProvider, and import what you need.
 
+${MADE_BY}
+
 ${SETUP}
 
 ${RULES}
@@ -189,6 +196,8 @@ export function llmsFull() {
   return `# DIYA, the full reference
 
 > ${API.package} ${API.version}. Every component and pattern, from api.json. Index: ${SITE}/llms.txt
+
+${MADE_BY}
 
 ## Install and set up
 

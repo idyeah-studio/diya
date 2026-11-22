@@ -188,7 +188,10 @@
 .ld-screens-list a:hover .ld-screens-picture img { transform: scale(1.02); }
 :root[data-theme='light'] .ld-screens-picture img[data-theme-image='dark'],
 :root:not([data-theme='light']) .ld-screens-picture img[data-theme-image='light'] { display: none; }
-.ld-screens-name { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 15px; }
+/* The arrow follows its own name, 8px after its last word and on that word's line, never pushed toward the next card's caption. */
+.ld-screens-name { display: block; font-size: 15px; }
+.ld-screens-last { white-space: nowrap; }
+.ld-screens-name .ld-index-go { display: inline-block; margin-inline-start: 8px; }
 .ld-screens-list a:hover .ld-index-go { color: var(--diya-color-text); transform: translateX(3px); }
 .ld-screens-list a:focus-visible, .ld-screens-all:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 4px; }
 
@@ -293,6 +296,8 @@
 .ld-made-of.ld-real { font-size: 15px; }
 .ld-real a { color: var(--diya-color-text); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 4px; border-radius: 4px; }
 .ld-real a:hover { text-decoration-color: currentColor; }
+/* The link's two words stay together on a narrow phone. */
+.ld-sub-head .ld-real a { white-space: nowrap; }
 .ld-real a:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 2px; }
 
 /* Oriel: proof before the pitch. Copy on the left, its four screens as a contents list. */
@@ -406,7 +411,7 @@
     grid-template-columns: none;
     grid-auto-flow: column;
     grid-auto-columns: 80%;
-    gap: 12px;
+    gap: 16px;
     margin: 0 -16px;
     padding: 4px 16px 8px;
     overflow-x: auto;

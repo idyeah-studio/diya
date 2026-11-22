@@ -17,6 +17,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState, type ReactNode } from 'react'
 import { useAppearance, type Theme } from '../../app/Appearance'
+import { MCP_PATH } from '../community/links'
 
 /** The parts sheet: eleven working components under a nested provider, so its
     Finish control re-themes the sheet and nothing else on the page. `components`
@@ -34,6 +35,10 @@ export function PartsSheet({ components, patterns }: { components: number; patte
         <div>
           <h3>{components} components.</h3>
           <p>Button to Date Picker, built to work with a keyboard and a screen reader.</p>
+          <p className="ld-real">
+            Using a coding agent? Connect <a href={MCP_PATH}>DIYA’s MCP server</a> once, and your agent looks
+            DIYA up while it writes.
+          </p>
         </div>
         <div className="ld-finish" role="group" aria-label="Finish of the sheet below">
           {(['light', 'dark'] as const).map((value) => (

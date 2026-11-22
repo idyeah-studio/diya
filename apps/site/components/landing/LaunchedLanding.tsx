@@ -18,6 +18,7 @@ import { LandingStyles } from './LandingStyles'
 import { OrielBand } from './OrielBand'
 import { screens, thumbnailSrc } from '../screens/screens-data'
 import { API } from '../reference/api'
+import { structuredDataScript } from './structured-data'
 
 // The screens the landing shows, in gallery order; the count follows the registry.
 const readyScreens = screens.filter((screen) => screen.status === 'ready')
@@ -68,6 +69,8 @@ export function LaunchedLanding() {
   return (
     <SiteProvider className="site-landing-root">
       <LandingStyles />
+      {/* Who makes DIYA and where its code lives, for search engines (structured-data.ts). Never on the countdown. */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredDataScript() }} />
       <SiteHeader heroId="hero" />
       <main id="content" className="site-landing" tabIndex={-1}>
         <section id="hero" className="ld-hero" aria-labelledby="hero-title">
@@ -147,8 +150,12 @@ export function LaunchedLanding() {
                         ))}
                       </span>
                       <span className="ld-screens-name">
-                        {name}
-                        <span className="ld-index-go" aria-hidden="true">→</span>
+                        {/* The arrow stays with the name's last word, so a wrapped name never strands it. */}
+                        {name.slice(0, name.lastIndexOf(' ') + 1)}
+                        <span className="ld-screens-last">
+                          {name.slice(name.lastIndexOf(' ') + 1)}
+                          <span className="ld-index-go" aria-hidden="true">→</span>
+                        </span>
                       </span>
                     </Link>
                   </li>

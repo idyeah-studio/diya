@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { CommunityStyles } from '../community/CommunityStyles'
-import { ASK_PATH, CHANGELOG_PATH, STUDIO } from '../community/links'
+import { ASK_PATH, CHANGELOG_PATH, MCP_PATH, STUDIO } from '../community/links'
 import { TrustBlock } from '../community/TrustBlock'
 import { FlameMark } from './FlameMark'
 import { GITHUB_URL, LICENSE_URL, NPM_URL } from './links'
@@ -9,9 +9,10 @@ import { SiteStyles } from './SiteStyles'
 /**
  * The colophon footer shared by the landing and the catalog. No props; it
  * needs a DIYA provider (`.diya-root`) above it for its colors. It names the
- * maintainer and the release cadence, links the on-site changelog and the
- * component request page, and links Relight to the landing section. It only
- * renders once the catalog is open, so its links never lead to a 404.
+ * maintainer and the release cadence, links the on-site changelog, the MCP
+ * server's page and the component request page, and links Relight to the
+ * landing section. It only renders once the catalog is open, so its links
+ * never lead to a 404.
  *
  * <SiteFooter />
  */
@@ -43,6 +44,10 @@ export function SiteFooter() {
                 <a href={GITHUB_URL}>
                   GitHub <small>idyeah-studio/diya</small>
                 </a>
+              </li>
+              <li>
+                {/* A plain anchor: /mcp is also the MCP endpoint, which refuses Next's prefetch. */}
+                <a href={MCP_PATH}>MCP server</a>
               </li>
               <li>
                 <a href={LICENSE_URL}>MIT license</a>

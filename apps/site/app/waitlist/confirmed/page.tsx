@@ -9,7 +9,7 @@ import { waitlistIsOpen } from '../../../lib/waitlist/open'
 import { waitlistDeps } from '../../../lib/waitlist/runtime'
 
 export const metadata: Metadata = {
-  title: 'Relight waitlist · DIYA',
+  title: 'Relight waitlist — DIYA',
   robots: { index: false, follow: false },
   referrer: 'no-referrer',
 }

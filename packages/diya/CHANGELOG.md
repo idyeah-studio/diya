@@ -447,8 +447,6 @@ toast that was read twice and an Escape that closed the Dialog under a toast:
 
 ## [1.1.0] - 2026-11-11
 
-On the `next` tag. Becomes 1.1.0 after the preview check.
-
 ### Added
 
 - Motion, on by default. Menu, Popover, Tooltip and the Combobox and Date

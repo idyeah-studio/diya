@@ -1,7 +1,8 @@
 import { TextLink } from '@idyeah/diya'
+import { MCP_PATH } from '../community/links'
 
-/** Where the README shows how to add DIYA's MCP server to an editor. */
-export const CONNECT_EDITOR_HREF = 'https://github.com/idyeah-studio/diya#use-it-with-an-ai-editor'
+/** DIYA's MCP server page, which shows how to connect each editor. */
+export const CONNECT_EDITOR_HREF = MCP_PATH
 
 /** Get code, step 1: an AI editor connected to DIYA's MCP server fetches all of this itself. */
 export function ConnectEditorLine() {

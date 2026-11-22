@@ -8,6 +8,7 @@ import { TrustBlock } from '../../components/community/TrustBlock'
 import { WaitlistPage } from '../../components/waitlist/WaitlistPage'
 import { catalogIsOpen } from '../../lib/catalog-route'
 import { isLaunched, launchNow } from '../../lib/launch'
+import { shareCard } from '../../lib/share-card'
 import '../../components/community/community.css'
 
 // The SDK's own CHANGELOG.md, the same file npm and GitHub show. It ships
@@ -23,11 +24,16 @@ export async function generateMetadata(): Promise<Metadata> {
   await connection()
   // Before launch the page is a 404, and its title and description stay unsaid too.
   if (!catalogIsOpen()) return {}
-  const indexable = isLaunched(launchNow()) && process.env.DIYA_CATALOG_PREVIEW !== '1'
+  const launched = isLaunched(launchNow())
+  const indexable = launched && process.env.DIYA_CATALOG_PREVIEW !== '1'
+  const title = 'Changelog — DIYA'
+  const description = 'Every DIYA release, newest first, with who maintains it and how often it ships.'
   return {
-    title: 'Changelog · DIYA',
-    description: 'Every DIYA release, newest first, with who maintains it and how often it ships.',
+    title,
+    description,
     alternates: { canonical: '/changelog' },
+    // From the launch moment the page has its own share card; a preview before it keeps the site's.
+    ...(launched ? shareCard({ title, description, path: '/changelog' }) : {}),
     ...(indexable ? {} : { robots: { index: false, follow: false } }),
   }
 }
