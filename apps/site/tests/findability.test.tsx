@@ -103,11 +103,14 @@ describe('/mcp is reachable', () => {
     )
     const line = container.querySelector('.ld-sub-head p.ld-real')!
     expect(line.textContent?.replace(/\s+/g, ' ')).toBe(
-      'Using a coding agent? Connect DIYA’s MCP server once, and your agent looks DIYA up while it writes.'
+      'Using a coding agent? Connect DIYA’s MCP server once, and your agent looks DIYA up while it writes. It’s also listed on Glama.'
     )
     const link = within(line as HTMLElement).getByRole('link', { name: 'DIYA’s MCP server' })
     expect(link.getAttribute('href')).toBe('/mcp')
     expect(link.hasAttribute('target')).toBe(false)
+    const glama = within(line as HTMLElement).getByRole('link', { name: 'Glama' })
+    expect(glama.getAttribute('href')).toBe('https://glama.ai/mcp/connectors/ai.diya13/diya')
+    expect(glama.getAttribute('target')).toBe('_blank')
     // A plain anchor, never next/link: /mcp is also the MCP endpoint, and it answers Next's prefetch with a 405.
     for (const file of ['components/landing/PartsSheet.tsx', 'components/site/SiteFooter.tsx'])
       expect(readFileSync(join(__dirname, '..', file), 'utf8'), file).not.toMatch(/<Link[^>]*MCP_PATH/)
