@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { CommunityStyles } from '../community/CommunityStyles'
-import { ASK_PATH, CHANGELOG_PATH, MCP_PATH, STUDIO } from '../community/links'
+import { ASK_PATH, CHANGELOG_PATH, CRIT8_URL, MCP_PATH, STUDIO } from '../community/links'
 import { TrustBlock } from '../community/TrustBlock'
 import { FlameMark } from './FlameMark'
 import { GITHUB_URL, LICENSE_URL, NPM_URL } from './links'
@@ -90,7 +90,9 @@ export function SiteFooter() {
         </div>
         <div className="site-foot-fine">
           <p>
-            Set in DIYA Sans, a modified Mona Sans under the SIL Open Font License. This site is built with DIYA.
+            Set in DIYA Sans, a modified Mona Sans under the SIL Open Font License. This site is built with DIYA and
+            audited with{' '}
+            <a href={CRIT8_URL} target="_blank" rel="noopener">Crit8</a>.
           </p>
           <p>
             <em>First lit on 7 November 2026, the eve of Diwali.</em>

@@ -35,6 +35,8 @@ export const CHANGELOG_PATH = '/changelog'
 export const MCP_PATH = '/mcp'
 /** The MCP server's listing on Glama, a directory of MCP servers. */
 export const GLAMA_LISTING = 'https://glama.ai/mcp/connectors/ai.diya13/diya'
+/** Crit8, the review tool this site was audited with; credited in the footer. */
+export const CRIT8_URL = 'https://crit8.ai'
 
 /**
  * The checks a stranger can verify for themselves, as plain links rather
