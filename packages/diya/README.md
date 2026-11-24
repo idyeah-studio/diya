@@ -117,7 +117,8 @@ claude mcp add --transport http diya https://diya13.ai/mcp
 
 Then ask it: "Build a settings page with DIYA." Prefer files?
 [`/llms.txt`](https://diya13.ai/llms.txt) and `@idyeah/diya/api.json`
-carry the same API.
+carry the same API. The connector is also listed on
+[Glama](https://glama.ai/mcp/connectors/ai.diya13/diya).
 
 ## Notes for your coding agent
 
