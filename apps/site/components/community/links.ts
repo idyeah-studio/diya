@@ -33,6 +33,8 @@ export const ASK_PATH = '/ask'
 export const CHANGELOG_PATH = '/changelog'
 /** DIYA's MCP server: the page for people, at the address agents connect to. */
 export const MCP_PATH = '/mcp'
+/** The MCP server's listing on Glama, a directory of MCP servers. */
+export const GLAMA_LISTING = 'https://glama.ai/mcp/connectors/ai.diya13/diya'
 
 /**
  * The checks a stranger can verify for themselves, as plain links rather
