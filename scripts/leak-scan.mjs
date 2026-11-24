@@ -22,7 +22,6 @@ const leakRules = [
   ['home folder path', new RegExp(decode('L1VzZXJzLw=='))],
   ['personal street address', new RegExp(decode('TWlsbGVyIEF2ZQ=='), 'i')],
   ['personal city', new RegExp(decode('Q3VwZXJ0aW5v'), 'i')],
-  ['internal product domain', new RegExp(decode('Y3JpdDg='), 'i')],
   ['internal package scope', new RegExp(decode('QGtleWEv'), 'i')],
   ['internal app path', new RegExp(decode('YXBwcy93ZWI='))],
   ['internal product name', new RegExp(decode('XGJjcml0XGI='), 'i')],

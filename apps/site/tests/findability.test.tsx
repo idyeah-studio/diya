@@ -95,6 +95,18 @@ describe('/mcp is reachable', () => {
     ])
   })
 
+  it('credits the audit in the fine print, with Crit8 opening in a new tab', () => {
+    const { container } = render(
+      <DiyaProvider>
+        <SiteFooter />
+      </DiyaProvider>
+    )
+    const fine = container.querySelector('.site-foot-fine p')!
+    expect(fine.textContent?.replace(/\s+/g, ' ')).toContain('This site is built with DIYA and audited with Crit8.')
+    const link = within(fine as HTMLElement).getByRole('link', { name: 'Crit8' })
+    expect([link.getAttribute('href'), link.getAttribute('target'), link.hasAttribute('title')]).toEqual(['https://crit8.ai', '_blank', false])
+  })
+
   it('has one line in “What’s in the package”, in the approved words, promising nothing unreleased', () => {
     const { container } = render(
       <Themed>

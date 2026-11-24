@@ -454,10 +454,10 @@ a.site-menu-row:hover, button.site-menu-row:hover { background: var(--diya-color
   border-bottom: 1px solid var(--diya-color-line);
 }
 .site-foot-home { display: block; width: 132px; color: var(--diya-color-text); border-radius: 6px; }
-.site-foot-brand p { margin: 22px 0 0; font-size: 15px; line-height: 1.5; max-width: 30ch; }
+.site-foot-brand p { margin: 22px 0 0; font-size: 14px; line-height: 1.5; max-width: 30ch; }
 .site-foot h2 { margin: 0 0 16px; font-size: 13px; font-weight: 500; letter-spacing: .02em; color: var(--diya-color-muted); }
 .site-foot ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.site-foot a, .site-foot-coming { font-size: 15px; line-height: 1.4; color: var(--diya-color-text); }
+.site-foot a, .site-foot-coming { font-size: 14px; line-height: 1.4; color: var(--diya-color-text); }
 .site-foot a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .site-foot small { margin-left: 6px; color: var(--diya-color-muted); }
 .site-foot-coming { color: var(--diya-color-muted); }
@@ -469,6 +469,8 @@ a.site-menu-row:hover, button.site-menu-row:hover { background: var(--diya-color
   padding-top: 28px;
 }
 .site-foot-fine p { margin: 0; font-size: 13px; line-height: 1.5; }
+.site-foot-fine a { font-size: inherit; line-height: inherit; color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 3px; }
+.site-foot-fine a:hover { text-decoration-color: currentColor; }
 .site-foot-fine p:last-child { display: flex; gap: 24px; flex-wrap: wrap; }
 .site-foot-fine em { font-style: italic; color: var(--diya-color-text); }
 @media (max-width: 760px) {
