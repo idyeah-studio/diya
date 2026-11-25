@@ -245,8 +245,9 @@ html:has(:is(.site-root, .waitlist-page)) .skip-link:focus-visible { outline: 2p
   border: 1px solid var(--diya-color-line);
   color: var(--diya-color-text);
 }
+/* From 1440px the chip clears the nav's three segments by 40px or more; narrower, it would lie on them. */
 .site-top-chip { display: none; }
-@media (min-width: 1240px) {
+@media (min-width: 1440px) {
   .site-top-chip {
     display: block;
     visibility: hidden;
