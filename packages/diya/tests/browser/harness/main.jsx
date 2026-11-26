@@ -723,7 +723,7 @@ function BusyCase() {
   return (
     <div style={{ display: 'flex', gap: 16, padding: 24 }}>
       <Dialog trigger={<Button id="open-busy">Remove workspace</Button>} size={size} title="Remove this workspace?"
-        description={titleOnly ? undefined : LONG_DESCRIPTION} aria-describedby="busy-note" loading={loading}
+        description={titleOnly ? undefined : query.get('desc') === 'fill' ? 'Members of this workspace lose access right away, and links you shared stop working at once.' : LONG_DESCRIPTION} aria-describedby="busy-note" loading={loading}
         confirmLabel="Remove workspace" confirmVariant="destructive" onConfirm={confirm}
         onDismiss={() => note('dismiss')} onOpenChange={(next) => note('open', next)}>
         <p id="busy-note" style={{ margin: 0 }}>Billing records stay for seven years, as the law requires.</p>
@@ -731,10 +731,50 @@ function BusyCase() {
       </Dialog>
       <Button id="open-drawer" onClick={() => setDrawer(true)}>Edit profile</Button>
       <Drawer open={drawer} onOpenChange={(next) => { note('drawer', next); setDrawer(next) }} dismissible={!held} title="Edit profile"
-        description={titleOnly ? undefined : 'Everyone at your company can see this, including people who join after today, so keep it current.'} aria-describedby="drawer-note"
+        description={titleOnly ? undefined : query.get('desc') === 'fill' ? 'Everyone at your company can see this profile, including people who join after today, so keep it current.' : 'Everyone at your company can see this, including people who join after today, so keep it current.'} aria-describedby="drawer-note"
         footer={<><Button variant="quiet" aria-disabled={held} onClick={() => setDrawer(false)}>Cancel</Button><Button loading={held}>Save changes</Button></>}>
         <p id="drawer-note" style={{ margin: 0 }}>Your manager sees changes to your role first.</p>
       </Drawer>
+    </div>
+  )
+}
+
+// 1.3: a long Dialog (title, a two-line description, a paragraph, two fields, a note), open from
+// the start. divided=1 draws the line above the buttons; text=1 makes the body text only (nothing
+// focusable); short=1 makes it fit. window.__settle settles its confirm; window.__showAlert adds an
+// app's own alert at the top of the body.
+const LONG_BODY = 'Moving a workspace changes its address, so links people saved stop working until they are updated. Members keep their roles, files and history. Billing moves with the workspace, and the next invoice goes to the new owner.'
+function LongCase() {
+  const [alert, setAlert] = useState(false)
+  const [region, setRegion] = useState('a')
+  useEffect(() => { window.__showAlert = () => setAlert(true) }, [])
+  const text = query.get('text') === '1'
+  const short = query.get('short') === '1'
+  const confirm = () => new Promise((resolve, reject) => { note('confirm'); window.__settle = { resolve, reject } })
+  return (
+    <div style={{ padding: 24 }}>
+      <Dialog open title="Move this workspace?" divided={query.get('divided') === '1'} showClose={query.get('close') !== '0'}
+        description={short ? 'It keeps its members and files.' : 'Everything in it moves to the new owner’s account, and people with access are told by email.'}
+        confirmLabel="Move workspace" onConfirm={confirm}>
+        {alert && <diya.Alert tone="error" title="The new owner’s account is full" urgent>Ask them to free up space, then try again.</diya.Alert>}
+        {!short && <p style={{ margin: 0 }}>{LONG_BODY}</p>}
+        {!short && !text && <TextInput label="New owner’s email" defaultValue="" />}
+        {!short && !text && <Select label="Region" options={options} value={region} onValueChange={setRegion} />}
+        {!short && text && <p style={{ margin: 0 }}>{LONG_BODY}</p>}
+        {!short && text && <p style={{ margin: 0 }}>{LONG_BODY}</p>}
+        {!short && <p id="long-note" style={{ margin: 0 }}>You can move it back within 30 days.</p>}
+      </Dialog>
+    </div>
+  )
+}
+// 1.3: Buttons made unavailable with aria-disabled, as a link (href) and as your own element
+// (asChild), plus each variant focused from the keyboard. Clicks land in window.__clicked.
+function UnavailableCase() {
+  return (
+    <div style={{ display: 'flex', gap: 16, padding: 32, flexWrap: 'wrap' }}>
+      <Button id="u-href" href="#went-href" aria-disabled onClick={() => clicked('href')}>Billing</Button>
+      <Button id="u-child" asChild aria-disabled onClick={() => clicked('child')}><a href="#went-child">Reports</a></Button>
+      {['solid', 'outline', 'quiet', 'destructive'].map((variant) => <Button key={variant} id={`u-${variant}`} variant={variant} aria-disabled>{variant}</Button>)}
     </div>
   )
 }
@@ -819,7 +859,7 @@ function SignInRhfCase() {
   )
 }
 
-const cases = { busy: BusyCase, signin: SignInCase, 'signin-rhf': SignInRhfCase, rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+const cases = { busy: BusyCase, long: LongCase, unavailable: UnavailableCase, signin: SignInCase, 'signin-rhf': SignInRhfCase, rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; } @keyframes app-pulse { 50% { opacity: 0.5; } } .app-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @layer utilities { .animate-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } .bg-violet-600 { background-color: #7c3aed; } .text-white { color: #fff; } .transition-colors { transition-property: color, background-color, border-color; transition-duration: 150ms; } }'
