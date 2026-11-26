@@ -4,6 +4,111 @@ All notable changes to `@idyeah/diya` are documented here. The format is based
 on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-11-26
+
+### What an existing app will notice
+
+- **A Dialog can't be dismissed while its confirm action runs.** This is on
+  by default. While `loading` is true, or a Promise from `onConfirm` hasn't
+  settled, Escape, the close button, Cancel and a click outside do nothing.
+  The close button and Cancel stay focusable, and look and announce as
+  unavailable (`aria-disabled="true"`). Before, they closed the dialog while
+  the action went on, and its result or error was lost. To let people cancel
+  work in progress, pass `dismissible` and abort the work in `onDismiss`.
+  `open={false}` and `ref.current.close()` still close it. A request that
+  never settles keeps it open, so give requests a timeout, such as
+  `AbortSignal.timeout(15000)`, and throw on failure so the error shows.
+- **A Button with `aria-disabled` (`true` or `"true"`) now acts unavailable,**
+  as it already looked: clicks, Enter and Space do nothing, and it keeps
+  focus, with `href` and `asChild` too. Before, Enter and Space still ran its
+  `onClick`, a link Button followed its link from the keyboard, and with
+  `asChild` an `aria-disabled` on the Button was dropped.
+- **Form's Cancel and Wizard's Back are unavailable, not disabled, while
+  `loading`** (`aria-disabled="true"`), so focus stays on them. Back on the
+  first step is still `disabled`.
+- **Your `aria-describedby` on a Dialog or Drawer is now read,** after the
+  description. Before, DIYA replaced it with its own.
+- **The close button sits in the title row only,** in Dialog and Drawer, and
+  the description runs the full width below it. A Dialog with a close button
+  and no description sits 6px tighter under the title, as one with
+  `showClose={false}` does. A Drawer's close button sits 8px higher, centered
+  on the title's line, so a title-only Drawer header is 16px shorter.
+- **A long Dialog scrolls inside,** between a pinned title row and pinned
+  buttons. The `<dialog>` element no longer scrolls, so setting its
+  `scrollTop` does nothing. A Dialog that fits measures as before.
+- **Types:** Dialog's `description` widens from `string` to `ReactNode`, so
+  code that reads it as a string needs a cast. A translation typed as
+  `DiyaMessages` needs the new key `dialog.working`; one typed as
+  `DiyaMessagesInput` doesn't.
+
+### Added
+
+- Dialog `dismissible`. Leave it out and the dialog can be dismissed except
+  while its confirm action runs. `true` allows it even then (the result is
+  ignored); `false` keeps it open until your code changes `open`.
+- Dialog `loadingLabel` and the message `dialog.working` ("Working…"). If the
+  confirm action is still running at 400ms, as the spinner appears, screen
+  readers hear it once, politely. An empty string says nothing.
+- Drawer `dismissible` (default `true`). `dismissible={!saving}` keeps it
+  open while your footer's work runs, with its close button unavailable.
+- Dialog's `description` takes block content, such as two paragraphs, like
+  Drawer's; all of it is read. Text renders a `p`, anything else a `div`, with
+  12px between paragraphs.
+- `api.json`: the three props with `since: "1.3.0"`, Dialog's `description`
+  slot and `dialog.working`. Additive; `schemaVersion` stays 1.
+
+### Changed
+
+- While a Dialog or Drawer can't be dismissed, Escape's keydown is stopped at
+  the window, which holds in Chromium, WebKit and Firefox (a `cancel` handler
+  alone lets Chromium's second Escape through). A popup open inside, such as a
+  Menu or Select, still closes first. Your `onCancel` runs first, and its
+  `preventDefault()` is honored. If the browser closes it anyway, it opens
+  again with focus where it was.
+- The close button and Cancel dim on the confirm button's 400ms beat, as its
+  spinner arrives, so a quick save doesn't flicker; under `motion="off"`, at
+  once on the beat. A Drawer's close button and unavailable footer Buttons do
+  the same while a footer Button is `loading`. A Button that was already
+  unavailable stays dim. In forced colors the close button turns `GrayText`.
+- Focused from the keyboard, an unavailable Button in DIYA's colors keeps a
+  full-strength focus ring and dims its words to 40%. One with your own
+  classes or inline colors dims as a whole, ring included.
+- A long Dialog: hairlines show where content is out of sight (`divided`
+  keeps its line). It opens at its title every time. An `onConfirm` error
+  shows right above the buttons. An alert your code adds in the body is
+  scrolled into view without moving focus. A body that overflows with nothing
+  focusable in it becomes a Tab stop, so the keyboard can scroll it.
+- Dialog and Drawer keep clear of a phone's notch and home indicator when your
+  page uses `viewport-fit=cover`. A Dialog 480px tall or less takes the 24px
+  phone padding. Fitting above the on-screen keyboard isn't in this release.
+- The description's first line keeps clear of the close button's focus ring,
+  and descriptions avoid a lone last word (`text-wrap: pretty`). Dialog's
+  close button is centered on the title's line, 2px higher.
+
+### Fixed
+
+- A Drawer `description` holding paragraphs rendered a `p` inside a `p`.
+- Dialog and Drawer dropped your `aria-describedby`, and Button's
+  `aria-disabled` didn't stop Enter, Space or a link (both above).
+
+### For your tests
+
+- jest-dom's `toBeDisabled()` checks only `disabled`, so it now fails on
+  Form's Cancel and Wizard's Back while `loading`. Use
+  `toHaveAttribute('aria-disabled', 'true')`. Playwright's `toBeDisabled()`
+  counts `aria-disabled`.
+- Dismissing a working Dialog now leaves it open: settle the work first, or
+  pass `dismissible`. `fireEvent.click` on a Button with `aria-disabled`
+  doesn't call `onClick`.
+- DOM (not covered by semver): Dialog's description and body sit in
+  `.diya-dialog-scroll`; the title and Drawer's header lose their wrapping
+  `div`; Drawer's description has the class `diya-drawer-description`.
+
+### Screens
+
+- AI, API keys, Profile, Task list and Resource table lock while they save.
+  The last three use Drawer `dismissible`, so they need 1.3.0.
+
 ## [1.2.1] - 2026-11-17
 
 ### Security
@@ -899,6 +1004,7 @@ change in any release. The README lists the public tokens.
 - Chatbot and Data Viz (`DataViz`, `Chart`) are `experimental`: outside semver
   until their API settles.
 
+[1.3.0]: https://github.com/idyeah-studio/diya/releases/tag/v1.3.0
 [1.2.1]: https://github.com/idyeah-studio/diya/releases/tag/v1.2.1
 [1.2.0]: https://github.com/idyeah-studio/diya/releases/tag/v1.2.0
 [1.1.1]: https://github.com/idyeah-studio/diya/releases/tag/v1.1.1
