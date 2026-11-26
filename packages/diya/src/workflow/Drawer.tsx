@@ -5,7 +5,8 @@ import { Icon } from '../Icon.js'
 import { PortalContainerContext, useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
-import { useHoldOpen, showAgain } from '../internal/hold-open.js'
+import { useHoldOpen } from '../internal/hold-open.js'
+import { useShowAgain } from '../internal/show-again.js'
 import { pushModal, removeModal } from '../internal/modal-stack.js'
 import { inertWhileExiting } from '../internal/presence.js'
 import { opener, watchPresses } from '../internal/opener.js'
@@ -60,9 +61,8 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
   held.current = !dismissible
   const openNow = useRef(open)
   openNow.current = open
-  // A close request the browser wouldn't let us stop, and where focus was then.
-  const forced = useRef<{ focus: Element | null } | null>(null)
   useHoldOpen(dialog, open, held)
+  const showAgain = useShowAgain()
   function requestClose() {
     if (!held.current) onOpenChange(false)
   }
@@ -109,20 +109,14 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
       onCancel?.(event)
       if (event.defaultPrevented) return
       event.preventDefault()
-      if (held.current) {
-        // One the browser won't let us stop closes it next; it's shown again then.
-        if (!event.cancelable) forced.current = { focus: event.currentTarget.ownerDocument.activeElement }
-        return
-      }
+      if (held.current) return showAgain.refused(event)
       onOpenChange(false)
     }}
     onClose={event => {
       onClose?.(event)
       const node = event.currentTarget
-      const refused = forced.current
-      forced.current = null
+      if (showAgain.closed(node, !!held.current && openNow.current)) return
       if (node.open) return
-      if (refused && held.current && openNow.current) return showAgain(node, refused.focus)
       removeModal(node)
       restoreFocus()
       if (open) onOpenChange(false)

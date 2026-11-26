@@ -346,10 +346,13 @@ describe('aria-describedby and the description', () => {
     }
   })
 
-  it('the close button sits after the title and description, in the heading itself', () => {
-    render(<DiyaProvider><Dialog open title="Order" description="Placed today." /><Drawer open onOpenChange={() => {}} title="Details" description="Edit it.">Body</Drawer></DiyaProvider>)
+  it('the close button sits in the title row; Dialog\'s description starts its scrolling body, Drawer\'s stays in the header', () => {
+    render(<DiyaProvider><Dialog open title="Order" description="Placed today.">Body</Dialog><Drawer open onOpenChange={() => {}} title="Details" description="Edit it.">Body</Drawer></DiyaProvider>)
     const heading = document.querySelector('.diya-dialog-heading')!
-    expect([...heading.children].map((node) => node.className)).toEqual(['diya-dialog-title', 'diya-dialog-description', 'diya-dialog-close'])
+    expect([...heading.children].map((node) => node.className)).toEqual(['diya-dialog-title', 'diya-dialog-close'])
+    const layout = heading.parentElement!
+    expect([...layout.children].map((node) => node.className)).toEqual(['diya-dialog-heading', 'diya-dialog-scroll', 'diya-dialog-actions'])
+    expect([...layout.children[1].children].map((node) => node.className)).toEqual(['diya-dialog-description', 'diya-dialog-content'])
     const header = document.querySelector('.diya-drawer-modal > header')!
     expect([...header.children].map((node) => node.className.split(' ')[0])).toEqual(['diya-drawer-title', 'diya-drawer-description', 'diya-button'])
   })

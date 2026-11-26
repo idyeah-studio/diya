@@ -125,6 +125,8 @@ it('provider server markup matches 1.1.1', async () => {
     const changed1_3 = (markup: string) => markup
       .replace(/(<div class="diya-dialog-heading">)(<h[1-6] [^>]*class="diya-dialog-title">[^<]*<\/h[1-6]>)/g, '$1<div>$2</div>')
       .replace(/(<header>)(<h[1-6] [^>]*class="diya-drawer-title">[^<]*<\/h[1-6]>)/g, '$1<div>$2</div>')
+      // The body scrolls between the pinned title row and the buttons.
+      .replace(/<div class="diya-dialog-scroll">(<div class="diya-dialog-content">[^<]*<\/div>)<\/div>/g, '$1')
     expect(Object.fromEntries(Object.entries(html).map(([name, markup]) => [name, changed1_2(changed1_3(markup))])))
       .toEqual(JSON.parse(readFileSync(resolve(process.cwd(), 'tests/fixtures/provider-ssr-1.1.1.json'), 'utf8'))[version])
   }

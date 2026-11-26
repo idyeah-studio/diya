@@ -5,13 +5,15 @@ import { PortalContainerContext, useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
 import { announcePolite, forgetPolite } from '../internal/announce.js'
-import { useHoldOpen, showAgain } from '../internal/hold-open.js'
+import { useHoldOpen } from '../internal/hold-open.js'
+import { useShowAgain } from '../internal/show-again.js'
 import { pushModal, removeModal } from '../internal/modal-stack.js'
 import { inertWhileExiting } from '../internal/presence.js'
 import { opener, watchPresses } from '../internal/opener.js'
 import { watchForStrayPopups } from '../internal/stray-popups.js'
 import { composeRefs, renderSlot } from '../internal/slot.js'
 import { dialogMessages } from './messages.js'
+import { useScrollArea } from './scroll.js'
 
 declare module '../messages.js' {
   interface DiyaMessages {
@@ -120,9 +122,11 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
   // action starts, before the next render, is already refused.
   const lockedNow = useRef(locked)
   lockedNow.current = locked
-  // A close request the browser wouldn't let us stop, and where focus was then.
-  const forced = useRef<{ focus: Element | null } | null>(null)
   useHoldOpen(dialog, open, lockedNow)
+  const showAgain = useShowAgain()
+  // The description and the body scroll between the pinned title row and the buttons.
+  const scroller = useRef<HTMLDivElement | null>(null)
+  useScrollArea(scroller, open)
   function change(next: boolean) {
     openNow.current = next
     if (controlledOpen === undefined) setLocalOpen(next)
@@ -156,6 +160,8 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
       // The opener, even when a click in Safari left focus on <body> (F2).
       previousFocus.current = opener(document)
       setError('')
+      // It stays mounted between openings: every opening starts at the title.
+      if (scroller.current) scroller.current.scrollTop = 0
       node.inert = false
       // Safari applies inert through style: read layout so it's lifted before showModal()
       // picks what to focus, or a dialog reopened mid-exit opens with focus on <body>.
@@ -214,11 +220,6 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
     <div className="diya-dialog-layout" data-busy={busy || undefined}>
       <div className="diya-dialog-heading">
         <Heading id={id + '-title'} className="diya-dialog-title">{title}</Heading>
-        {described && (
-          <Description id={id + '-description'} className="diya-dialog-description">
-            {description}
-          </Description>
-        )}
         {showClose && (
           <button
             type="button"
@@ -241,7 +242,16 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
           </button>
         )}
       </div>
-      {children && <div className="diya-dialog-content">{children}</div>}
+      {(described || children) && (
+        <div ref={scroller} className="diya-dialog-scroll">
+          {described && (
+            <Description id={id + '-description'} className="diya-dialog-description">
+              {description}
+            </Description>
+          )}
+          {children && <div className="diya-dialog-content">{children}</div>}
+        </div>
+      )}
       {error && (
         <p className="diya-workflow-error" role="alert">
           {error}
@@ -277,20 +287,14 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
           onCancel?.(event)
           if (event.defaultPrevented) return
           event.preventDefault()
-          if (lockedNow.current) {
-            // One the browser won't let us stop closes it next; it's shown again then.
-            if (!event.cancelable) forced.current = { focus: event.currentTarget.ownerDocument.activeElement }
-            return
-          }
+          if (lockedNow.current) return showAgain.refused(event)
           dismiss()
         }}
         onClose={(event) => {
           onClose?.(event)
           const node = event.currentTarget
-          const refused = forced.current
-          forced.current = null
+          if (showAgain.closed(node, lockedNow.current && openNow.current)) return
           if (node.open) return
-          if (refused && lockedNow.current && openNow.current) return showAgain(node, refused.focus)
           removeModal(node)
           operation.current += 1
           setPending(false)

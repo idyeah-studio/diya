@@ -26,13 +26,3 @@ export function useHoldOpen(dialog: RefObject<HTMLDialogElement | null>, open: b
   }, [open])
 }
 
-/**
- * A close request the browser won't let anyone stop (Android's back gesture, or a second request
- * without a new user activation) closes the modal right after its `cancel`. Shows it again, with
- * focus back where it was, so nobody believes they cancelled work that goes on.
- */
-export function showAgain(node: HTMLDialogElement, focus: Element | null) {
-  if (typeof node.showModal === 'function') node.showModal()
-  else node.setAttribute('open', '')
-  if (focus && node.contains(focus)) (focus as HTMLElement).focus?.()
-}

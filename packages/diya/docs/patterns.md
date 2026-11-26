@@ -128,6 +128,14 @@ and loading controls. With your own `footer`, pass `loading` (or
 wait, and your Cancel looks, announces and acts unavailable. A Drawer works
 the same way with `dismissible={!working}`.
 
+A long Dialog keeps its title and buttons in view: the description and the
+body scroll between them, with a hairline where content goes out of sight,
+and it opens at its title every time. An error from `onConfirm` shows right
+above the buttons. An alert your code adds inside the body is scrolled into
+view without moving focus. The `dialog` element itself no longer scrolls, so
+don't set its `scrollTop`. Dialog and Drawer keep clear of a phone's notch and
+home indicator when your page uses `viewport-fit=cover`.
+
 Text people must hear before they decide goes in `description`; it can hold
 two paragraphs. If it has to sit lower in the body, give it an `id` and pass
 `aria-describedby`; it's read after the description. Don't describe a dialog

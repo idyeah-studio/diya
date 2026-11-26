@@ -79,6 +79,8 @@ dist/dialog/Dialog.d.ts
 dist/dialog/Dialog.js
 dist/dialog/messages.d.ts
 dist/dialog/messages.js
+dist/dialog/scroll.d.ts
+dist/dialog/scroll.js
 dist/field/Field.d.ts
 dist/field/Field.js
 dist/field/messages.d.ts
@@ -112,6 +114,8 @@ dist/internal/pointer.d.ts
 dist/internal/pointer.js
 dist/internal/presence.d.ts
 dist/internal/presence.js
+dist/internal/show-again.d.ts
+dist/internal/show-again.js
 dist/internal/slot.d.ts
 dist/internal/slot.js
 dist/internal/stray-popups.d.ts

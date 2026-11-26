@@ -395,7 +395,8 @@ describe('theming tokens (1.2)', () => {
       if (/diya-chat-attach/.test(ring)) { expect(ring).toContain('var(--diya-color-focus, currentColor)'); continue }
       expect(ring, ring).toMatch(/var\(--diya-color-focus, var\(--diya-color-text\)\)/)
     }
-    expect(rings.filter(ring => !exceptions.test(ring)).length).toBe(31)
+    // 1.3: Dialog's scrolling body, a Tab stop when it overflows with nothing focusable inside.
+    expect(rings.filter(ring => !exceptions.test(ring)).length).toBe(32)
   })
 
   it('the nested root resets the nine 1.2 tokens to initial, inside @layer diya', () => {
@@ -474,7 +475,11 @@ describe('theming tokens (1.2)', () => {
 
   it('the Drawer is square at max-width 440px', () => {
     const phone = distRules.filter(rule => rule.at.some(at => at.includes('(max-width: 440px)')) && rule.selector.includes('diya-drawer-modal'))
-    expect(phone.map(rule => [rule.selector.replace(/\s+/g, ' '), rule.body.trim()])).toEqual([[".diya-root .diya-drawer-modal, .diya-root .diya-drawer-modal[data-side='left']", 'border-radius: 0;']])
+    // 1.3: filling the screen, both of its sides keep clear of a phone's safe-area insets.
+    expect(phone.map(rule => [rule.selector.replace(/\s+/g, ' '), rule.body.trim()])).toEqual([
+      [".diya-root .diya-drawer-modal, .diya-root .diya-drawer-modal[data-side='left']", '--diya-internal-drawer-start: max(24px, env(safe-area-inset-left, 0px) + 12px); --diya-internal-drawer-end: max(24px, env(safe-area-inset-right, 0px) + 12px);'],
+      [".diya-root .diya-drawer-modal, .diya-root .diya-drawer-modal[data-side='left']", 'border-radius: 0;'],
+    ])
   })
 })
 

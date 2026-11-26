@@ -412,8 +412,10 @@ not communicate status. Icon-only buttons need their own `aria-label`.
   element, pass `loading` from the start (`loading={false}`). In tests, find
   it by role: `getByRole('button', { name: 'Save', busy: true })`. `disabled`
   sets the native attribute and takes the button out of the tab order.
-  `aria-disabled` on a Button makes it unavailable but focusable: it looks
-  unavailable, and clicks, Enter and Space do nothing. Use it when focus may
+  `aria-disabled` on a Button makes it unavailable but focusable, with `href`
+  and `asChild` too: it looks unavailable, and clicks, Enter and Space do
+  nothing. Its focus ring keeps full strength. If you set a Button's colors
+  yourself, they show at full strength while it has the ring. Use it when focus may
   be on the button as it becomes unavailable, such as a Cancel while its form
   saves.
 - **Icons:** any React icon can go in an icon slot. Give icon-only buttons an
