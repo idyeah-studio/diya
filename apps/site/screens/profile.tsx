@@ -258,10 +258,10 @@ function EditDrawer({ open, person, onOpenChange, onSaved }: {
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} title="Edit profile" description="Everyone at your company can see this."
+    <Drawer open={open} onOpenChange={onOpenChange} dismissible={!busy} title="Edit profile" description="Everyone at your company can see this."
       footer={
         <div className="profile-drawer-actions">
-          <Button variant="quiet" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="quiet" aria-disabled={busy} onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button type="submit" form="profile-edit" loading={busy}>Save changes</Button>
         </div>
       }>

@@ -149,7 +149,10 @@ export const variants: Record<ItemId, { playground: Playground; options?: Record
     { playground: { Type: 'Floating', Options: ['Timestamps'] } },
     { playground: { Type: 'Full-page' } },
   ],
-  dialog: [{ playground: { Size: 'Large', Options: ['Divider'] } }],
+  dialog: [
+    { playground: { Size: 'Large', Options: ['Divider'] } },
+    { playground: { Options: ['Description', 'Close button', 'Slow confirm'] } },
+  ],
   drawer: [{ playground: { Position: 'Left', Options: ['Description'] } }],
   'empty-state': [
     { playground: { Type: 'Error', Options: [] } },

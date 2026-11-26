@@ -21,6 +21,7 @@ export function DialogLibrary() {
   const [description, setDescription] = useState(true)
   const [close, setClose] = useState(true)
   const [divider, setDivider] = useState(false)
+  const [slow, setSlow] = useState(false)
   const [name, setName] = useState('Website launch')
   const [savedName, setSavedName] = useState('Website launch')
   const [message, setMessage] = useState('')
@@ -29,17 +30,22 @@ export function DialogLibrary() {
     description: description ? 'Update the name people see across your project.' : undefined,
     size: size.toLowerCase() as 'small' | 'medium' | 'large',
     showClose: close, divided: divider, confirmDisabled: !name.trim(),
-    onConfirm: () => { setSavedName(name.trim()); setName(name.trim()); setMessage('Project name saved in this preview.') },
+    // Slow confirm takes 2 seconds, so the working state can be seen and tried.
+    onConfirm: async () => {
+      if (slow) await new Promise((done) => setTimeout(done, 2000))
+      setSavedName(name.trim()); setName(name.trim()); setMessage('Project name saved in this preview.')
+    },
     onDismiss: () => { setName(savedName); setMessage('Changes discarded.') },
+    loadingLabel: slow ? 'Saving the project name…' : undefined,
   }
   const field = <TextInput label="Project name" value={name} onValueChange={setName} required maxLength={80} />
   return <main id="content" className="gallery-study component-library pattern-library"><div className="gallery-study-backdrop" aria-hidden="true" /><PatternSidebar current="dialog" />
     <div className="component-document"><header className="component-document-heading"><h1>Dialog</h1><LibraryActions id="dialog" /></header>
       <section className="pattern-stage" aria-label="Dialog playground"><div className="pattern-controls">
         <PreviewSetting label="Size" options={['Small','Medium','Large']} value={size} onChange={setSize} />
-        <PreviewOptions items={[{label:'Description',checked:description,onChange:setDescription},{label:'Close button',checked:close,onChange:setClose},{label:'Divider',checked:divider,onChange:setDivider}]} />
+        <PreviewOptions items={[{label:'Description',checked:description,onChange:setDescription},{label:'Close button',checked:close,onChange:setClose},{label:'Divider',checked:divider,onChange:setDivider},{label:'Slow confirm',checked:slow,onChange:setSlow}]} />
         <CustomizationScope id="dialog" canvas={false}><div className="dialog-pattern-launch"><Dialog {...props} trigger={<Button variant="outline">Open dialog</Button>}>{field}</Dialog></div></CustomizationScope>
       </div><CustomizationScope id="dialog"><div className="pattern-canvas dialog-pattern-canvas"><Dialog {...props} role="group" style={specimen}>{field}</Dialog></div></CustomizationScope><p className="pattern-feedback" role="status">{message}</p></section>
-      <div className="pattern-notes"><span>Built with</span><div><a href="/explore?area=components&component=text-input">Text Input</a><a href="/explore?area=components&component=button">Button</a></div><p>Open the dialog to try keyboard navigation, Escape, and returning focus to the trigger.</p></div>
+      <div className="pattern-notes"><span>Built with</span><div><a href="/explore?area=components&component=text-input">Text Input</a><a href="/explore?area=components&component=button">Button</a></div><p>Open the dialog to try keyboard navigation, Escape, and returning focus to the trigger. With Slow confirm on, try Escape and Cancel while it saves.</p></div>
     </div></main>
 }

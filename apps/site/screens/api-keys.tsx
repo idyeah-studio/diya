@@ -247,13 +247,13 @@ function CreateKeyDialog({ open, env, keys, onOpenChange, onCreated }: {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title={secret ? 'Copy your new key' : 'Create an API key'}
+    <Dialog open={open} onOpenChange={onOpenChange} loading={busy} title={secret ? 'Copy your new key' : 'Create an API key'}
       description={secret ? `${name.trim()} is ready.` : `For ${env === 'live' ? 'production' : 'the sandbox'}. You choose what it can do.`}
       footer={secret ? (
         <Button onClick={() => onOpenChange(false)}>Done</Button>
       ) : (
         <div className="api-keys-dialog-actions">
-          <Button variant="quiet" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="quiet" aria-disabled={busy} onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button type="submit" form="api-keys-create" loading={busy}>Create key</Button>
         </div>
       )}>

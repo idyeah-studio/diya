@@ -2090,8 +2090,9 @@ function dialog(p: Playground): Snippet {
         showClose: !on(p, 'Options', 'Close button', true) && raw('false'),
         divided: on(p, 'Options', 'Divider', false),
         confirmDisabled: raw('!projectName.trim()', name),
-        onConfirm: v('saveName', VOID),
+        onConfirm: v('saveName', on(p, 'Options', 'Slow confirm', false) ? '() => Promise<void>' : VOID),
         onDismiss: v('discardChanges', VOID),
+        loadingLabel: on(p, 'Options', 'Slow confirm', false) && 'Saving the project name…',
       },
       h('TextInput', {
         label: 'Project name',
