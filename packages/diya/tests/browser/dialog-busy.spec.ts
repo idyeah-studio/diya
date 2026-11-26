@@ -527,3 +527,101 @@ test.describe('unavailable Buttons', () => {
     expect(checked).toBe(4)
   })
 })
+
+test.describe('round three: visual review', () => {
+  test('VIS-06: the line under the title stops short of the focused close button\'s ring', async ({ page }, testInfo) => {
+    test.skip(isPhone(testInfo), 'sets its own sizes')
+    await page.setViewportSize({ width: 390, height: 600 })
+    await openCase(page, testInfo, 'case=long')
+    await expect(dialog(page)).toHaveAttribute('open', '')
+    await page.keyboard.press('Shift')
+    await page.getByRole('button', { name: 'Close dialog' }).focus()
+    await page.evaluate(() => { const node = document.querySelector('.diya-dialog-scroll')!; node.scrollTop = (node.scrollHeight - node.clientHeight) / 2 })
+    await expect.poll(() => page.evaluate(() => Number(getComputedStyle(document.querySelector('.diya-dialog-heading')!, '::after').opacity))).toBe(1)
+    const gap = await page.evaluate(() => {
+      const heading = document.querySelector('.diya-dialog-heading')!
+      const close = document.querySelector('.diya-dialog-close')!
+      const style = getComputedStyle(close)
+      const ringLeft = close.getBoundingClientRect().left - Number.parseFloat(style.outlineOffset) - Number.parseFloat(style.outlineWidth)
+      const lineRight = heading.getBoundingClientRect().right - Number.parseFloat(getComputedStyle(heading, '::after').right)
+      return { visible: close.matches(':focus-visible'), gap: ringLeft - lineRight }
+    })
+    expect(gap.visible).toBe(true)
+    expect(gap.gap).toBeGreaterThanOrEqual(4)
+  })
+
+  test('VIS-07: a Button in your own colors still reads as unavailable while focused', async ({ page }, testInfo) => {
+    await openCase(page, testInfo, 'case=unavailable')
+    for (const id of ['u-app', 'u-app-inline', 'u-href', 'u-child', 'u-quiet']) {
+      await page.keyboard.press('Shift')
+      await page.focus(`#${id}`)
+      const state = await page.locator(`#${id}`).evaluate((node) => ({ visible: node.matches(':focus-visible'), opacity: Number(getComputedStyle(node).opacity), color: getComputedStyle(node).color, outline: getComputedStyle(node).outlineStyle }))
+      expect(state.visible, id).toBe(true)
+      expect(state.outline, id).toBe('solid')
+      // Your colors: the whole Button dims, ring included. DIYA's: full-strength ring, words at 40%.
+      if (id.startsWith('u-app')) expect(state.opacity, id).toBeCloseTo(0.4, 2)
+      else { expect(state.opacity, id).toBe(1); expect(state.color, id).toMatch(/\/ 0\.4\)$/) }
+    }
+  })
+
+  for (const where of ['dialog', 'drawer'] as const) {
+    test(`VIS-08: a ${where} footer button that was already unavailable stays dim while work starts`, async ({ page }, testInfo) => {
+      await openCase(page, testInfo, `case=busy&perm=1${where === 'drawer' ? '&drawer=1' : ''}`)
+      if (where === 'dialog') { await page.focus('#open-busy'); await page.keyboard.press('Enter') }
+      await expect(page.locator(where === 'dialog' ? 'dialog.diya-dialog' : 'dialog.diya-drawer-modal')).toHaveAttribute('open', '')
+      await page.waitForTimeout(400)
+      // Focus elsewhere, so every button dims as a whole.
+      await page.locator(where === 'dialog' ? '#busy-note' : '#drawer-note').evaluate((node) => { node.setAttribute('tabindex', '-1'); (node as HTMLElement).focus() })
+      // Sampled in the page, timed from the moment the work starts.
+      const samples = await page.evaluate(async ([where]) => {
+        const modal = document.querySelector(where === 'dialog' ? 'dialog.diya-dialog' : 'dialog.diya-drawer-modal')!
+        const perm = modal.querySelector(`#perm-${where}`)!
+        const cancel = [...modal.querySelectorAll('.diya-button')].find((node) => node.textContent === 'Cancel')!
+        const read = () => [perm, cancel].map((node) => Math.round(Number(getComputedStyle(node).opacity) * 100) / 100)
+        const before = read()
+        const start = performance.now()
+        const w = window as unknown as { __setLoading: (value: boolean) => void; __setHeld: (value: boolean) => void }
+        if (where === 'dialog') w.__setLoading(true)
+        else w.__setHeld(true)
+        const at = async (ms: number) => { await new Promise((done) => setTimeout(done, Math.max(0, start + ms - performance.now()))); return { ms: Math.round(performance.now() - start), values: read() } }
+        return { before, samples: [await at(30), await at(350), await at(700)] }
+      }, [where] as const)
+      expect(samples.before).toEqual([0.4, 1])
+      const [early, mid, late] = samples.samples
+      // Publish stays at 0.4 throughout; Cancel waits for the beat (sampled before 400ms where the page kept time).
+      for (const sample of [early, mid, late]) expect(sample.values[0], `Publish at ${sample.ms}ms`).toBe(0.4)
+      if (early.ms < 380) expect(early.values[1], `Cancel at ${early.ms}ms`).toBe(1)
+      if (mid.ms < 380) expect(mid.values[1], `Cancel at ${mid.ms}ms`).toBe(1)
+      expect(late.values[1], `Cancel at ${late.ms}ms`).toBeLessThan(0.6)
+      await expect.poll(() => page.evaluate(([where]) => Math.round(Number(getComputedStyle([...document.querySelectorAll(`dialog[open] .diya-button`)].find((node) => node.textContent === 'Cancel')!).opacity) * 100) / 100, [where] as const)).toBe(0.4)
+    })
+  }
+
+  test('VIS-09: a focused text-only body draws one rounded ring and no hairlines', async ({ page }, testInfo) => {
+    test.skip(isPhone(testInfo), 'sets its own sizes')
+    await page.setViewportSize({ width: 390, height: 600 })
+    await openCase(page, testInfo, 'case=long&text=1')
+    await expect(dialog(page)).toHaveAttribute('open', '')
+    await page.waitForTimeout(400)
+    await page.getByRole('button', { name: 'Close dialog' }).focus()
+    await page.keyboard.press(engine(testInfo) === 'webkit' ? 'Alt+Tab' : 'Tab')
+    await page.evaluate(() => { const node = document.querySelector('.diya-dialog-scroll')!; node.scrollTop = (node.scrollHeight - node.clientHeight) / 2 })
+    await page.waitForTimeout(300)
+    const state = await page.evaluate(() => {
+      const scroller = document.querySelector('.diya-dialog-scroll')!
+      const line = (selector: string) => Number(getComputedStyle(document.querySelector(selector)!, selector.includes('heading') ? '::after' : '::before').opacity)
+      return { focused: scroller === document.activeElement, radius: getComputedStyle(scroller).borderTopLeftRadius, top: line('.diya-dialog-heading'), bottom: line('.diya-dialog-actions') }
+    })
+    expect(state).toEqual({ focused: true, radius: '6px', top: 0, bottom: 0 })
+  })
+
+  test('VIS-11: a phone on its side takes the phone padding', async ({ page }, testInfo) => {
+    test.skip(isPhone(testInfo), 'sets its own sizes')
+    await page.setViewportSize({ width: 844, height: 390 })
+    await openCase(page, testInfo, 'case=long')
+    await expect(dialog(page)).toHaveAttribute('open', '')
+    expect(await page.evaluate(() => getComputedStyle(document.querySelector('.diya-dialog-layout')!).paddingTop)).toBe('24px')
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.querySelector('.diya-dialog-layout')!).paddingTop)).toBe('28px')
+  })
+})

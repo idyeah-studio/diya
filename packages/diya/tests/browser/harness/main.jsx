@@ -725,6 +725,7 @@ function BusyCase() {
       <Dialog trigger={<Button id="open-busy">Remove workspace</Button>} size={size} title="Remove this workspace?"
         description={titleOnly ? undefined : query.get('desc') === 'fill' ? 'Members of this workspace lose access right away, and links you shared stop working at once.' : LONG_DESCRIPTION} aria-describedby="busy-note" loading={loading}
         confirmLabel="Remove workspace" confirmVariant="destructive" onConfirm={confirm}
+        footer={query.get('perm') === '1' ? <><Button id="perm-dialog" variant="outline" aria-disabled>Publish</Button><Button variant="quiet" aria-disabled={loading}>Cancel</Button><Button loading={loading}>Save</Button></> : undefined}
         onDismiss={() => note('dismiss')} onOpenChange={(next) => note('open', next)}>
         <p id="busy-note" style={{ margin: 0 }}>Billing records stay for seven years, as the law requires.</p>
         {query.get('popups') === '1' && <BusyPopups />}
@@ -732,7 +733,7 @@ function BusyCase() {
       <Button id="open-drawer" onClick={() => setDrawer(true)}>Edit profile</Button>
       <Drawer open={drawer} onOpenChange={(next) => { note('drawer', next); setDrawer(next) }} dismissible={!held} title="Edit profile"
         description={titleOnly ? undefined : query.get('desc') === 'fill' ? 'Everyone at your company can see this profile, including people who join after today, so keep it current.' : 'Everyone at your company can see this, including people who join after today, so keep it current.'} aria-describedby="drawer-note"
-        footer={<><Button variant="quiet" aria-disabled={held} onClick={() => setDrawer(false)}>Cancel</Button><Button loading={held}>Save changes</Button></>}>
+        footer={<>{query.get('perm') === '1' && <Button id="perm-drawer" variant="outline" aria-disabled>Publish</Button>}<Button variant="quiet" aria-disabled={held} onClick={() => setDrawer(false)}>Cancel</Button><Button loading={held}>Save changes</Button></>}>
         <p id="drawer-note" style={{ margin: 0 }}>Your manager sees changes to your role first.</p>
       </Drawer>
     </div>
@@ -775,6 +776,8 @@ function UnavailableCase() {
       <Button id="u-href" href="#went-href" aria-disabled onClick={() => clicked('href')}>Billing</Button>
       <Button id="u-child" asChild aria-disabled onClick={() => clicked('child')}><a href="#went-child">Reports</a></Button>
       {['solid', 'outline', 'quiet', 'destructive'].map((variant) => <Button key={variant} id={`u-${variant}`} variant={variant} aria-disabled>{variant}</Button>)}
+      <Button id="u-app" variant="quiet" className="app-teal" aria-disabled>Cancel</Button>
+      <Button id="u-app-inline" style={{ background: '#0f766e', color: '#fff' }} aria-disabled>Inline</Button>
     </div>
   )
 }
@@ -862,7 +865,7 @@ function SignInRhfCase() {
 const cases = { busy: BusyCase, long: LongCase, unavailable: UnavailableCase, signin: SignInCase, 'signin-rhf': SignInRhfCase, rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
-style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; } @keyframes app-pulse { 50% { opacity: 0.5; } } .app-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @layer utilities { .animate-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } .bg-violet-600 { background-color: #7c3aed; } .text-white { color: #fff; } .transition-colors { transition-property: color, background-color, border-color; transition-duration: 150ms; } }'
+style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-teal { background: #0f766e; color: #fff; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; } @keyframes app-pulse { 50% { opacity: 0.5; } } .app-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @layer utilities { .animate-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } .bg-violet-600 { background-color: #7c3aed; } .text-white { color: #fff; } .transition-colors { transition-property: color, background-color, border-color; transition-duration: 150ms; } }'
 document.head.append(style)
 document.documentElement.dataset.react = version
 const app = which === 'theme' || (which === 'tokens' && query.get('outer') === '1')
