@@ -228,6 +228,8 @@ test.describe('a Drawer that can\'t be dismissed', () => {
     expect(await isOpen(drawer)).toBe(true)
     expect((await log(page)).filter(({ event, detail }) => event === 'drawer' && detail === false)).toEqual([])
     await page.evaluate(() => (window as unknown as { __setHeld: (value: boolean) => void }).__setHeld(false))
+    // Once the app's change has rendered.
+    await expect(page.getByRole('button', { name: 'Close drawer', disabled: true })).toHaveCount(0)
     await close.focus()
     await page.keyboard.press('Escape')
     await expect(drawer).not.toHaveAttribute('open', '')
