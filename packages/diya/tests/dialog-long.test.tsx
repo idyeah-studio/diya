@@ -2,6 +2,8 @@
 // scroll between them. HappyDOM has no layout, so sizes are stubbed here; the browser checks
 // (tests/browser/dialog-busy.spec.ts) measure the real thing. Also: Button's aria-disabled holds
 // with href and asChild.
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -150,5 +152,36 @@ describe("Button's aria-disabled holds on every path", () => {
     await user.click(screen.getByRole('link', { name: 'B' }))
     expect(clicked).toHaveBeenCalledTimes(2)
     expect(within(document.body).getByRole('link', { name: 'A' }).hasAttribute('aria-disabled')).toBe(false)
+  })
+})
+
+// The visual review's second pass (VIS-06 to VIS-11), read from the stylesheet; the browser checks
+// measure them in Chromium, WebKit and Firefox.
+describe('the stylesheet', () => {
+  const css = readFileSync(resolve(process.cwd(), 'dist/styles.css'), 'utf8').replace(/\s+/g, ' ')
+
+  it('VIS-06: the line under the title stops short of the focused close button', () => {
+    expect(css).toContain(".diya-root .diya-dialog-heading:has(> .diya-dialog-close:focus-visible)::after { inset-inline-end: 36px; }")
+  })
+
+  it('VIS-07: only a Button in DIYA\'s own colors trades its opacity for dimmed colors when focused', () => {
+    const focused = css.match(/[^{}]*\.diya-button[^{}]*\[aria-disabled='true'\][^{}]*:focus-visible \{[^}]*opacity: 1;/g) ?? []
+    expect(focused).toHaveLength(1)
+    expect(focused[0]).toContain(":is([class='diya-button']):not([aria-busy='true'], [style*='color'], [style*='background'], [style*='border'])")
+  })
+
+  it('VIS-08: the beat is a transition, so a button already unavailable has nothing to change', () => {
+    expect(css).not.toMatch(/@keyframes diya-(button|dialog)-unavailable/)
+    expect(css).toContain("@property --diya-internal-unavailable { syntax: '<number>'; inherits: false; initial-value: 0; }")
+    expect(css.match(/transition: --diya-internal-unavailable var\(--diya-internal-duration-medium\) var\(--diya-ease-enter\) var\(--diya-internal-beat, 400ms\);/g)).toHaveLength(2)
+  })
+
+  it('VIS-09: a focused scroller has rounded corners and hides the hairlines', () => {
+    expect(css).toMatch(/\.diya-dialog-scroll:focus-visible \{[^}]*border-radius: var\(--diya-radius-control/)
+    expect(css).toContain('.diya-root .diya-dialog-layout:has(> .diya-dialog-scroll:focus-visible) > .diya-dialog-heading::after')
+  })
+
+  it('VIS-11: a phone on its side takes the phone padding', () => {
+    expect(css).toContain('@media (max-width: 600px), (max-height: 480px) { .diya-root .diya-dialog-layout { --diya-internal-dialog-pad: 24px; } }')
   })
 })

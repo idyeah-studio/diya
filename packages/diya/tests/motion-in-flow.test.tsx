@@ -202,14 +202,11 @@ describe('Progress and loading rows', () => {
     // 1.2 step 8 (E2, E3, motion.md §1–2): Spinner's arrive and turn, and Button's room for its spinner.
     // F12 drops Button's slide, and its diya-button-make-room keyframe with it; L2 adds Button's fade
     // back, diya-button-return.
-    // 1.3: Button's unavailable dim, which a working Dialog or Drawer brings in on the beat.
-    expect(css.match(/@keyframes [\w-]+/g)).toEqual(['@keyframes diya-button-unavailable', '@keyframes diya-progress-travel', '@keyframes diya-progress-spin', '@keyframes diya-progress-breathe',
+    expect(css.match(/@keyframes [\w-]+/g)).toEqual(['@keyframes diya-progress-travel', '@keyframes diya-progress-spin', '@keyframes diya-progress-breathe',
       // M2: the label's wrapper has no box, so its words hide and come back from the Button; N1: the
       // hide has a second name, so a new spinner restarts it. O9 (named edit): a Spinner of your own
       // in the label hides by its own name, after its arrive.
       '@keyframes diya-spinner-arrive', '@keyframes diya-spinner-turn',
-      // 1.3: a working Dialog's close button dims on the confirm button's beat.
-      '@keyframes diya-dialog-unavailable',
       // P4 (named edit): forced colors' fade back, which touches no color.
       // P5 on Linux: the hide's forced-colors keyframes, under the same names.
       '@keyframes diya-button-return-forced', '@keyframes diya-button-hide-part', '@keyframes diya-button-hide', '@keyframes diya-button-hide-again', '@keyframes diya-button-hide', '@keyframes diya-button-hide-again', '@keyframes diya-button-return', '@keyframes diya-button-return-text', '@keyframes diya-skeleton-pulse'])

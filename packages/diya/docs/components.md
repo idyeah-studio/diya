@@ -414,8 +414,9 @@ not communicate status. Icon-only buttons need their own `aria-label`.
   sets the native attribute and takes the button out of the tab order.
   `aria-disabled` on a Button makes it unavailable but focusable, with `href`
   and `asChild` too: it looks unavailable, and clicks, Enter and Space do
-  nothing. Its focus ring keeps full strength. If you set a Button's colors
-  yourself, they show at full strength while it has the ring. Use it when focus may
+  nothing. In DIYA's own colors its focus ring keeps full strength. A Button
+  with your own classes or inline colors dims as a whole, ring included, so
+  it never looks available while it has focus. Use it when focus may
   be on the button as it becomes unavailable, such as a Cancel while its form
   saves.
 - **Icons:** any React icon can go in an icon slot. Give icon-only buttons an

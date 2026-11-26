@@ -302,45 +302,46 @@
 }
 
 /* A disabled link or asChild element can't use :disabled. An unavailable Button (aria-disabled)
-   dims to 0.4 as well. How much it dims is one number, --diya-internal-unavailable (0 to 1), so
-   a Dialog or Drawer can bring it in on the 400ms beat. */
+   dims to 0.4 as well. How much it dims is one number, --diya-internal-unavailable: 0 when
+   available, 1 when not, so a Dialog or Drawer can bring the change in on the 400ms beat. */
 .diya-root .diya-button[aria-disabled='true'] {
+  --diya-internal-unavailable: 1;
   opacity: calc(1 - 0.6 * var(--diya-internal-unavailable, 1));
   cursor: not-allowed;
   pointer-events: none;
 }
-/* Focused from the keyboard, an unavailable Button keeps focus on purpose, so its ring must keep
-   full strength: its own colors dim instead of the whole element, which looks the same on DIYA's
-   variants. A Button whose colors you set yourself shows them at full strength while it has the
-   ring. */
-.diya-root .diya-button[aria-disabled='true']:not([aria-busy='true']):focus-visible {
+/* Focused from the keyboard, an unavailable Button keeps focus on purpose, so its ring should keep
+   full strength: in DIYA's own colors, its colors dim instead of the whole element, which looks
+   the same. Only DIYA knows those colors, so a Button with your own classes or inline colors keeps
+   dimming as a whole, ring included: it must never look available while it has focus. */
+.diya-root .diya-button[aria-disabled='true']:is([class='diya-button']):not([aria-busy='true'], [style*='color'], [style*='background'], [style*='border']):focus-visible {
   --diya-internal-unavailable-mix: calc(100% - 60% * var(--diya-internal-unavailable, 1));
   opacity: 1;
   background-color: color-mix(in srgb, var(--diya-color-accent) var(--diya-internal-unavailable-mix), transparent);
   color: color-mix(in srgb, var(--diya-color-accent-text) var(--diya-internal-unavailable-mix), transparent);
 }
-.diya-root .diya-button[data-variant='outline'][aria-disabled='true']:not([aria-busy='true']):focus-visible {
+.diya-root .diya-button[data-variant='outline'][aria-disabled='true']:is([class='diya-button']):not([aria-busy='true'], [style*='color'], [style*='background'], [style*='border']):focus-visible {
   background-color: color-mix(in srgb, var(--diya-internal-outline-fill) var(--diya-internal-unavailable-mix), transparent);
   border-color: color-mix(in srgb, var(--diya-color-line) var(--diya-internal-unavailable-mix), transparent);
   color: color-mix(in srgb, var(--diya-color-text) var(--diya-internal-unavailable-mix), transparent);
 }
-.diya-root .diya-button[data-variant='quiet'][aria-disabled='true']:not([aria-busy='true']):focus-visible {
+.diya-root .diya-button[data-variant='quiet'][aria-disabled='true']:is([class='diya-button']):not([aria-busy='true'], [style*='color'], [style*='background'], [style*='border']):focus-visible {
   background-color: transparent;
   color: color-mix(in srgb, var(--diya-color-text) var(--diya-internal-unavailable-mix), transparent);
 }
-.diya-root .diya-button[data-variant='destructive'][aria-disabled='true']:not([aria-busy='true']):focus-visible {
+.diya-root .diya-button[data-variant='destructive'][aria-disabled='true']:is([class='diya-button']):not([aria-busy='true'], [style*='color'], [style*='background'], [style*='border']):focus-visible {
   background-color: color-mix(in srgb, var(--diya-color-destructive) var(--diya-internal-unavailable-mix), transparent);
   color: color-mix(in srgb, var(--diya-color-raised) var(--diya-internal-unavailable-mix), transparent);
 }
 /* Unavailable, it changes look at once, focused or not: no color fade against an opacity that
    switches instantly. (Leaving it, the hover colors' fade comes back.) */
 .diya-root .diya-button[aria-disabled='true']:not([aria-busy='true']) { transition-duration: 0s; }
-/* The beat: from not dimmed to dimmed, over medium, 400ms after the work starts. */
 @media (forced-colors: active) {
   .diya-root .diya-button[aria-disabled='true']:not([aria-busy='true']):focus-visible { background-color: ButtonFace; border-color: GrayText; color: GrayText; }
 }
-@property --diya-internal-unavailable { syntax: '<number>'; inherits: false; initial-value: 1; }
-@keyframes diya-button-unavailable { from { --diya-internal-unavailable: 0; } }
+/* Registered, so a Dialog or Drawer can ease it in on the beat (a transition, so a Button that was
+   already unavailable, and already 1, never brightens). Without @property it changes at once. */
+@property --diya-internal-unavailable { syntax: '<number>'; inherits: false; initial-value: 0; }
 
 /* Loading looks busy, not disabled (F13): full color and the progress cursor. It stays focusable
    and inert: the button takes its own clicks, and drops them. A Button that is disabled as well
@@ -2159,7 +2160,7 @@
 .diya-root .diya-dialog-scroll { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; margin: 8px calc(-1 * var(--diya-internal-dialog-pad)) calc(var(--diya-internal-dialog-pad) - 8px); padding: 0 var(--diya-internal-dialog-pad) 8px; }
 /* With no description, the body starts at the column's gap under the title. */
 .diya-root .diya-dialog-scroll > .diya-dialog-content:first-child { margin-top: calc(var(--diya-internal-dialog-pad) - 8px); }
-.diya-root .diya-dialog-scroll:focus-visible { outline: 2px solid var(--diya-color-focus, var(--diya-color-text)); outline-offset: -2px; }
+.diya-root .diya-dialog-scroll:focus-visible { outline: 2px solid var(--diya-color-focus, var(--diya-color-text)); outline-offset: -2px; border-radius: var(--diya-radius-control, calc(6px * var(--diya-corner-scale, 1))); }
 .diya-root .diya-dialog .diya-dialog-description { margin: 0; line-height: 1.6; overflow-wrap: anywhere; }
 .diya-root .diya-dialog-scroll > .diya-dialog-description + .diya-dialog-content { margin-top: var(--diya-internal-dialog-pad); }
 /* The description's first line keeps clear of the close button's focus ring (the ring plus 5px);
@@ -2181,11 +2182,16 @@
 .diya-root .diya-dialog-heading::after,
 .diya-root .diya-dialog-scroll + :is(.diya-workflow-error, .diya-dialog-actions)::before { content: ''; position: absolute; inset-inline: 0; height: 1px; background: var(--diya-color-line); opacity: 0; pointer-events: none; transition: opacity var(--diya-internal-duration-fast) var(--diya-ease-move); }
 .diya-root .diya-dialog-heading::after { top: calc(100% + 8px); }
+/* While the close button has the ring, the line under the title stops 5px short of it. */
+.diya-root .diya-dialog-heading:has(> .diya-dialog-close:focus-visible)::after { inset-inline-end: 36px; }
 .diya-root .diya-dialog-scroll + :is(.diya-workflow-error, .diya-dialog-actions) { position: relative; }
 .diya-root .diya-dialog-scroll + :is(.diya-workflow-error, .diya-dialog-actions)::before { top: calc(8px - var(--diya-internal-dialog-pad)); }
 .diya-root .diya-dialog-layout[data-scrolled] > .diya-dialog-heading::after,
 .diya-root .diya-dialog-layout[data-more] > .diya-dialog-scroll + :is(.diya-workflow-error, .diya-dialog-actions:not([data-divider]))::before { opacity: 1; }
 @media (forced-colors: active) { .diya-root .diya-dialog-heading::after, .diya-root .diya-dialog-scroll + :is(.diya-workflow-error, .diya-dialog-actions)::before { background: CanvasText; } }
+/* The ring marks the scroller's edges while it has focus, so the hairlines step aside. */
+.diya-root .diya-dialog-layout:has(> .diya-dialog-scroll:focus-visible) > .diya-dialog-heading::after,
+.diya-root .diya-dialog-layout:has(> .diya-dialog-scroll:focus-visible) > .diya-dialog-scroll + :is(.diya-workflow-error, .diya-dialog-actions)::before { opacity: 0; }
 /* Unavailable while the dialog can't be dismissed: the icon dims, not the button, so its focus
    ring keeps full strength. */
 .diya-root .diya-dialog-close[aria-disabled='true'] { background: transparent; cursor: not-allowed; pointer-events: none; }
@@ -2196,18 +2202,20 @@
    wait is the beat, a literal 400ms; the fade is motion. Your own footer's unavailable buttons
    follow it too. */
 .diya-root .diya-dialog-layout[data-busy] .diya-dialog-close[aria-disabled='true'] > svg {
-  animation: diya-dialog-unavailable var(--diya-internal-duration-medium) var(--diya-ease-enter) 400ms both;
+  transition: opacity var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat, 400ms);
 }
+/* A transition, not an animation: a button that was already unavailable before the work started
+   has nothing to change, so it stays dim throughout. */
 .diya-root .diya-dialog-layout[data-busy] .diya-dialog-actions .diya-button:not([aria-busy='true'])[aria-disabled='true'] {
-  animation: diya-button-unavailable var(--diya-internal-duration-medium) var(--diya-ease-enter) 400ms both;
+  transition: --diya-internal-unavailable var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat, 400ms);
 }
-@keyframes diya-dialog-unavailable { from { opacity: 1; } }
 .diya-root .diya-dialog .diya-dialog-content { margin: 0; display: grid; gap: 20px; }
 .diya-root .diya-dialog-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap:wrap; gap: 12px; }
 .diya-root :is(.diya-dialog-actions, .diya-drawer-modal > footer) .diya-button { min-width:0; max-width:100%; white-space:normal; overflow-wrap:anywhere; padding-block:4px; }
 .diya-root .diya-dialog-actions[data-divider] { padding-top: 20px; border-top: 1px solid var(--diya-color-line); }
 .diya-root .diya-dialog-close:focus-visible { outline: 2px solid var(--diya-color-focus, var(--diya-color-text)); outline-offset: 3px; }
-@media (max-width: 600px) {
+/* Phones, upright or on their side, take the tighter padding. */
+@media (max-width: 600px), (max-height: 480px) {
   .diya-root .diya-dialog-layout { --diya-internal-dialog-pad: 24px; }
 }
 .diya-root .diya-dialog .diya-text-field { width: 100%; max-width: none; }
@@ -2463,7 +2471,7 @@
    its 400ms beat, as a Dialog's do. A drawer that can't be dismissed with nothing working dims at once. */
 .diya-root .diya-drawer-modal:has(> footer .diya-button[aria-busy='true']) > header > .diya-button[aria-disabled='true'],
 .diya-root .diya-drawer-modal:has(> footer .diya-button[aria-busy='true']) > footer .diya-button:not([aria-busy='true'])[aria-disabled='true'] {
-  animation: diya-button-unavailable var(--diya-internal-duration-medium) var(--diya-ease-enter) 400ms both;
+  transition: --diya-internal-unavailable var(--diya-internal-duration-medium) var(--diya-ease-enter) var(--diya-internal-beat, 400ms);
 }
 /* Clear of a phone's notch, home indicator and rounded corners when the page uses
    viewport-fit=cover (env() is 0 otherwise): the drawer is full height, and its screen-side edge,
