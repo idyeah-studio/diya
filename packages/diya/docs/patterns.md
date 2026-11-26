@@ -24,12 +24,12 @@ your page's outline; the heading looks the same at every level.
 | PageHeader | `title`, optional breadcrumbs/description/tags/actions/navigation slots; `headingLevel` (default 2); `surface` (default `true`; `false` sets it straight on the page, as an app screen's title). Omitted slots collapse. |
 | SiteHeader | `brand`, optional navigation items (`{value,label,href?}`) with the current `value` and `onValueChange`; items with `href`, and the brand with `brandHref`, are real links through the provider's `linkComponent`. Controlled search, utilities and avatar slots. Mobile navigation opens/closes automatically. Search and icon hit areas are 40px high; avatar content retains its chosen size inside a centered slot. Narrow headers place Search on its own row. |
 | Card | `title`, optional `description`, `tags`, `actions`, `media`, children and `footer`; `divided`, `shadow`. Images/content belong to the caller. |
-| Dialog | `title`, children, optional `onConfirm`/footer; your own `trigger` element, or controlled `open`/`onOpenChange`. `confirmVariant="destructive"` for an action that deletes; `headingLevel`; size, `divided`, close/dismiss/loading options. |
+| Dialog | `title`, children, optional `onConfirm`/footer; your own `trigger` element, or controlled `open`/`onOpenChange`. `confirmVariant="destructive"` for an action that deletes; `headingLevel`; size, `divided`, close/dismiss/loading options. It can't be dismissed while its confirm action runs; `dismissible` changes that. |
 | Table | Your rows/columns, `label`, `rowLabel`; optional `searchText`, `filterOptions`, `bulkActions`, `onRowOpen`, `rowActions` and selection; sorting, pagination (10 rows by default), density and sticky columns. |
 | FileUpload | Controlled `files`, `onFilesChange`; optional `accept`, `maxBytes`, `onReject`, `multiple` (default off: a new file replaces the last), `disabled`. No network/upload behavior. |
 | Form | Children and a real `onSubmit(event)`; optional `title` with `headingLevel`, actions/cancel/`loading`. Your app validates and handles submission. |
 | Wizard | Steps with unique `id`, label/content, controlled `activeStep`, `onStepChange`, `onComplete`; `orientation` (`'horizontal'`/`'vertical'`), `showStepCount` (default on, "Step 1 of 3"), `loading`. |
-| Drawer | Controlled `open`, `onOpenChange`, title/children; optional description/footer and `side` (`'left'`/`'right'`). Native modal dialog. |
+| Drawer | Controlled `open`, `onOpenChange`, title/children; optional description/footer and `side` (`'left'`/`'right'`). `dismissible={false}` keeps it open while your footer's work runs. Native modal dialog. |
 | ContentState | `title`, optional description/icon/action. Announced as a status; set `urgent` to announce it as an alert. Useful for empty/error states. |
 | SideNavigation | Groups (keyed by `id`) of items (keyed by `value`), controlled `value`. Items with `href` are real links through the provider's `linkComponent`, with `aria-current="page"` on the current one; without `href`, `onValueChange` tells your app which was chosen. Optional brand/collapsed state. `footer` (with `collapsedFooter` for the rail, defaulting to `footer`) holds an account or workspace Menu under the groups, at the bottom when the navigation is given its full height; item styles stay off it. An item's `count` is a quiet number after its label (`99+` above 99, a dot on the icon when collapsed); its accessible name keeps the real count, "Inbox, 12". |
 | Chatbot | Your messages and controlled draft, `onSend`; `layout` (`'embedded'`/`'floating'`/`'full-page'`), `showTimestamps`, `showHeader`; optional attachments, `loading`, stop/retry/copy/open callbacks. Full-page fills its container's height, with the thread scrolling between the header and the composer. No AI service or simulated reply. Experimental in 1.0: props may change in a minor release. |
@@ -115,8 +115,24 @@ own label option.
 
 Dialog confirmation can return `false` to stay open, or a Promise for an
 asynchronous action. A rejected Promise leaves it open and displays an error.
+While the action runs (`loading`, or a Promise that hasn't settled), the
+Dialog can't be dismissed: Escape, the close button, Cancel and a click outside
+wait, and the close button and Cancel look and announce as unavailable. Pass
+`dismissible` to let people cancel work in progress, and abort it in
+`onDismiss`. Make your work settle: give requests a timeout, such as
+`AbortSignal.timeout(15000)`, and throw on failure so the error shows.
 A custom `footer` replaces the built-in actions, so provide your own dismissal
-and loading controls.
+and loading controls. With your own `footer`, pass `loading` (or
+`dismissible={false}`) while your work runs, and give your Cancel
+`aria-disabled={working}`. Escape, the close button and a click outside then
+wait, and your Cancel looks, announces and acts unavailable. A Drawer works
+the same way with `dismissible={!working}`.
+
+Text people must hear before they decide goes in `description`; it can hold
+two paragraphs. If it has to sit lower in the body, give it an `id` and pass
+`aria-describedby`; it's read after the description. Don't describe a dialog
+by a form, a list or anything interactive: a description is read as one flat
+string.
 
 Drawer and Dialog use native modal focus behavior. Keep their open state in
 sync through `onOpenChange`; Escape requests dismissal and closing restores

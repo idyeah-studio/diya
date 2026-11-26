@@ -692,6 +692,53 @@ function DrawerCase() {
   )
 }
 
+// 1.3: a Dialog whose confirm action the test settles (window.__settle), with a note in its body
+// read after the description, and popups inside (popups=1); a Drawer the test locks
+// (window.__setHeld). size=small|medium|large, desc=0 (title only), long=1 (a long description).
+// window.__setLoading sets the Dialog's loading from outside, as an app's own save would.
+const LONG_DESCRIPTION = 'This removes its 14 projects and every file in them. People in the workspace lose access at once, and links you shared stop working.'
+function BusyPopups() {
+  const [combo, setCombo] = useState('')
+  const [date, setDate] = useState('')
+  const [choice, setChoice] = useState('')
+  return (
+    <div style={{ display: 'grid', gap: 12 }}>
+      <Menu label="Workspace actions" items={[{ id: 'm1', label: 'Rename', onSelect: () => clicked('menu') }]} />
+      <Popover label="Workspace filters"><button onClick={() => clicked('popover')}>Inside the popover</button></Popover>
+      <Tooltip content="What removing does"><Button aria-label="About removing">?</Button></Tooltip>
+      <Combobox label="Owner" options={options} value={combo} onValueChange={setCombo} />
+      <DatePicker label="Remove on" value={date} onValueChange={setDate} />
+      <Select label="Region" options={options} value={choice} onValueChange={setChoice} />
+    </div>
+  )
+}
+function BusyCase() {
+  const size = query.get('size') || 'medium'
+  const titleOnly = query.get('desc') === '0'
+  const [loading, setLoading] = useState(false)
+  const [drawer, setDrawer] = useState(query.get('drawer') === '1')
+  const [held, setHeld] = useState(query.get('held') === '1')
+  useEffect(() => { window.__setLoading = setLoading; window.__setHeld = setHeld }, [])
+  const confirm = () => new Promise((resolve, reject) => { note('confirm'); window.__settle = { resolve, reject } })
+  return (
+    <div style={{ display: 'flex', gap: 16, padding: 24 }}>
+      <Dialog trigger={<Button id="open-busy">Remove workspace</Button>} size={size} title="Remove this workspace?"
+        description={titleOnly ? undefined : LONG_DESCRIPTION} aria-describedby="busy-note" loading={loading}
+        confirmLabel="Remove workspace" confirmVariant="destructive" onConfirm={confirm}
+        onDismiss={() => note('dismiss')} onOpenChange={(next) => note('open', next)}>
+        <p id="busy-note" style={{ margin: 0 }}>Billing records stay for seven years, as the law requires.</p>
+        {query.get('popups') === '1' && <BusyPopups />}
+      </Dialog>
+      <Button id="open-drawer" onClick={() => setDrawer(true)}>Edit profile</Button>
+      <Drawer open={drawer} onOpenChange={(next) => { note('drawer', next); setDrawer(next) }} dismissible={!held} title="Edit profile"
+        description={titleOnly ? undefined : 'Everyone at your company can see this, including people who join after today, so keep it current.'} aria-describedby="drawer-note"
+        footer={<><Button variant="quiet" aria-disabled={held} onClick={() => setDrawer(false)}>Cancel</Button><Button loading={held}>Save changes</Button></>}>
+        <p id="drawer-note" style={{ margin: 0 }}>Your manager sees changes to your role first.</p>
+      </Drawer>
+    </div>
+  )
+}
+
 // Choice and Checkbox at every size (1.2 step 9): checked boxes, a mixed Checkbox and a mixed
 // Select all in each size's row.
 function MarksCase() {
@@ -772,7 +819,7 @@ function SignInRhfCase() {
   )
 }
 
-const cases = { signin: SignInCase, 'signin-rhf': SignInRhfCase, rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+const cases = { busy: BusyCase, signin: SignInCase, 'signin-rhf': SignInRhfCase, rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
 style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; } @keyframes app-pulse { 50% { opacity: 0.5; } } .app-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @layer utilities { .animate-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } .bg-violet-600 { background-color: #7c3aed; } .text-white { color: #fff; } .transition-colors { transition-property: color, background-color, border-color; transition-duration: 150ms; } }'

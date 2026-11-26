@@ -207,6 +207,8 @@ describe('Progress and loading rows', () => {
       // hide has a second name, so a new spinner restarts it. O9 (named edit): a Spinner of your own
       // in the label hides by its own name, after its arrive.
       '@keyframes diya-spinner-arrive', '@keyframes diya-spinner-turn',
+      // 1.3: a working Dialog's close and dismiss buttons dim on the confirm button's beat.
+      '@keyframes diya-dialog-unavailable',
       // P4 (named edit): forced colors' fade back, which touches no color.
       // P5 on Linux: the hide's forced-colors keyframes, under the same names.
       '@keyframes diya-button-return-forced', '@keyframes diya-button-hide-part', '@keyframes diya-button-hide', '@keyframes diya-button-hide-again', '@keyframes diya-button-hide', '@keyframes diya-button-hide-again', '@keyframes diya-button-return', '@keyframes diya-button-return-text', '@keyframes diya-skeleton-pulse'])

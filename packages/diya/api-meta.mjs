@@ -649,7 +649,8 @@ export const items = {
   dialog: {
     kind: 'pattern', title: 'Dialog', ...v1,
     exports: ['Dialog'],
-    slots: { footer: { accepts: ['button'], multiple: true } },
+    // description takes text or block content, such as two paragraphs (1.3), as Drawer's does.
+    slots: { description: textSlot, footer: { accepts: ['button'], multiple: true } },
     children: { allowed: true, accepts: 'any', content: ['text'], multiple: true },
     state: [{ value: 'open', onChange: 'onOpenChange' }],
     tokens: ['--diya-radius-control', '--diya-color-destructive', '--diya-color-accent', '--diya-color-accent-text', '--diya-color-error', '--diya-color-hover',

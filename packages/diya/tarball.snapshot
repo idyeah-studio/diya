@@ -98,6 +98,8 @@ dist/internal/field-parts.d.ts
 dist/internal/field-parts.js
 dist/internal/frame-focus.d.ts
 dist/internal/frame-focus.js
+dist/internal/hold-open.d.ts
+dist/internal/hold-open.js
 dist/internal/layout-effect.d.ts
 dist/internal/layout-effect.js
 dist/internal/link.d.ts

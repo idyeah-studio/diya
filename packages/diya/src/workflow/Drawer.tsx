@@ -5,6 +5,7 @@ import { Icon } from '../Icon.js'
 import { PortalContainerContext, useDiyaMessages } from '../DiyaProvider.js'
 import { cx } from '../internal/cx.js'
 import { useClientLayoutEffect } from '../internal/layout-effect.js'
+import { useHoldOpen, showAgain } from '../internal/hold-open.js'
 import { pushModal, removeModal } from '../internal/modal-stack.js'
 import { inertWhileExiting } from '../internal/presence.js'
 import { opener, watchPresses } from '../internal/opener.js'
@@ -21,13 +22,13 @@ declare module '../messages.js' {
 export type DrawerProps = Omit<DialogHTMLAttributes<HTMLDialogElement>, 'title' | 'children' | 'open'> & {
   /** Whether the drawer is shown; the caller owns this state. */
   open: boolean
-  /** Called with false when the person closes it (close button, Escape or the browser); update `open` in response. */
+  /** Called with false when the person closes it (close button, Escape, a click outside or the browser); update `open` in response. Not called while it can't be dismissed. */
   onOpenChange: (open: boolean) => void
   /** Visible heading; it is also the drawer's accessible name. */
   title: string
   /** The title's heading level, 1 to 6; it looks the same at every level. Defaults to 3. */
   headingLevel?: 1 | 2 | 3 | 4 | 5 | 6
-  /** Supporting text under the title, also read as the drawer's description. */
+  /** Supporting text under the title, read as the drawer's description when it opens. Text, or block content such as two paragraphs; all of it is read. To have text in the body read too, give it an `id` and pass it in `aria-describedby`. */
   description?: ReactNode
   /** Scrollable drawer body. */
   children: ReactNode
@@ -37,10 +38,15 @@ export type DrawerProps = Omit<DialogHTMLAttributes<HTMLDialogElement>, 'title' 
   side?: 'left' | 'right'
   /** Shows the close icon button in the header; defaults to true. */
   showClose?: boolean
+  /**
+   * Whether the person can close the drawer: Escape, the close button or a click outside. Defaults to true. Set it to false while your footer's work runs (`dismissible={!saving}`); the close button then looks and announces as unavailable.
+   * @since 1.3.0
+   */
+  dismissible?: boolean
 }
 
-/** A modal panel at the side of the page that traps focus and returns it on close. The ref, `className`, `style` and other attributes go to the native `dialog` element. */
-export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer({ open, onOpenChange, title, headingLevel = 3, description, children, footer, side = 'right', showClose = true, className, onCancel, onClose, onClick, ...props }, ref) {
+/** A modal panel at the side of the page that traps focus and returns it on close. The ref, `className`, `style` and other attributes go to the native `dialog` element; your `aria-describedby` is read after the description. */
+export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer({ open, onOpenChange, title, headingLevel = 3, description, children, footer, side = 'right', showClose = true, dismissible = true, className, onCancel, onClose, onClick, ...props }, ref) {
   const t = useDiyaMessages('drawer', drawerMessages)
   const dialog = useRef<HTMLDialogElement>(null)
   // The element in state too, so popups inside learn where to render once it exists.
@@ -49,6 +55,17 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
   const Heading = `h${headingLevel}` as const
   const returnFocus = useRef<HTMLElement | null>(null)
   const id = useId()
+  // Read by Escape's guard and the close paths, ahead of the next render.
+  const held = useRef(!dismissible)
+  held.current = !dismissible
+  const openNow = useRef(open)
+  openNow.current = open
+  // A close request the browser wouldn't let us stop, and where focus was then.
+  const forced = useRef<{ focus: Element | null } | null>(null)
+  useHoldOpen(dialog, open, held)
+  function requestClose() {
+    if (!held.current) onOpenChange(false)
+  }
   function restoreFocus() {
     if (returnFocus.current?.isConnected) returnFocus.current.focus()
     returnFocus.current = null
@@ -84,17 +101,45 @@ export const Drawer = forwardRef<HTMLDialogElement, DrawerProps>(function Drawer
     const node = dialog.current
     return () => removeModal(node)
   }, [])
-  return <dialog {...props} ref={setDialog} className={cx('diya-workflow-surface diya-drawer-modal', className)} data-side={side} aria-labelledby={`${id}-title`} aria-describedby={description ? `${id}-description` : undefined}
-    onCancel={event => { onCancel?.(event); if (event.defaultPrevented) return; event.preventDefault(); onOpenChange(false) }} onClose={event => { onClose?.(event); if (event.currentTarget.open) return; removeModal(event.currentTarget); restoreFocus(); if (open) onOpenChange(false) }}
+  const described = description != null && description !== false && description !== ''
+  // Text stays a paragraph; block content, such as two paragraphs, goes in a div.
+  const Description = typeof description === 'string' || typeof description === 'number' ? 'p' : 'div'
+  return <dialog {...props} ref={setDialog} className={cx('diya-workflow-surface diya-drawer-modal', className)} data-side={side} aria-labelledby={`${id}-title`} aria-describedby={cx(described && `${id}-description`, props['aria-describedby']) || undefined}
+    onCancel={event => {
+      onCancel?.(event)
+      if (event.defaultPrevented) return
+      event.preventDefault()
+      if (held.current) {
+        // One the browser won't let us stop closes it next; it's shown again then.
+        if (!event.cancelable) forced.current = { focus: event.currentTarget.ownerDocument.activeElement }
+        return
+      }
+      onOpenChange(false)
+    }}
+    onClose={event => {
+      onClose?.(event)
+      const node = event.currentTarget
+      const refused = forced.current
+      forced.current = null
+      if (node.open) return
+      if (refused && held.current && openNow.current) return showAgain(node, refused.focus)
+      removeModal(node)
+      restoreFocus()
+      if (open) onOpenChange(false)
+    }}
     onClick={event => {
       onClick?.(event)
       // A click on the dimmed page (the dialog's backdrop) closes it, as it does a Dialog.
       if (event.target !== event.currentTarget) return
       const box = event.currentTarget.getBoundingClientRect()
-      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) onOpenChange(false)
+      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) requestClose()
     }}>
     <PortalContainerContext.Provider value={element}>
-      <header><div><Heading id={`${id}-title`} className="diya-drawer-title">{title}</Heading>{description && <p id={`${id}-description`}>{description}</p>}</div>{showClose && <Button variant="quiet" iconOnly aria-label={t.close} onClick={() => onOpenChange(false)}><Icon name="close" /></Button>}</header>
+      <header>
+        <Heading id={`${id}-title`} className="diya-drawer-title">{title}</Heading>
+        {described && <Description id={`${id}-description`} className="diya-drawer-description">{description}</Description>}
+        {showClose && <Button variant="quiet" iconOnly aria-label={t.close} aria-disabled={!dismissible || undefined} onClick={requestClose}><Icon name="close" /></Button>}
+      </header>
       <div className="diya-drawer-body">{children}</div>
       {footer && <footer>{footer}</footer>}
     </PortalContainerContext.Provider>

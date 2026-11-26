@@ -62,7 +62,7 @@ const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'in
 // Text holds no state, so a label of plain text needn't keep a wrapper at rest (M3).
 const plainText = (node: ReactNode) => Children.toArray(node).every((part) => typeof part === 'string' || typeof part === 'number')
 
-/** A native button in DIYA's styles, or a link that looks like one with `href` or `asChild`; other button attributes pass through, and `type` defaults to 'button'. */
+/** A native button in DIYA's styles, or a link that looks like one with `href` or `asChild`; other button attributes pass through, and `type` defaults to 'button'. With `aria-disabled` (`true` or `"true"`) a button is unavailable but keeps focus, unlike `disabled`: it looks unavailable, and clicks, Enter and Space do nothing. */
 export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(function Button(buttonProps, ref) {
   const { variant = 'solid', size = 'medium', shape = 'pill', iconOnly = false, loading = false, disabled, children, className, type = 'button', href, target, rel, download, asChild = false, ...props } = buttonProps
   const Link = useDiyaLinkComponent()
@@ -177,10 +177,13 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
   // blocked click (which Enter, Space and a form's implicit submission all go through) make it inert.
   const busy = loading && !disabled
   const button = props as ButtonHTMLAttributes<HTMLButtonElement>
+  // Your own aria-disabled makes it just as inert, so it acts as unavailable as it looks and
+  // announces; it keeps focus, which disabled would drop (Dialog's Cancel while it works).
+  const unavailable = !disabled && (button['aria-disabled'] === true || button['aria-disabled'] === 'true')
   return <button {...button} {...shared} ref={ref as Ref<HTMLButtonElement>} type={type} disabled={!!disabled}
     aria-disabled={busy ? true : button['aria-disabled']}
-    onClickCapture={busy ? stopClick : button.onClickCapture}
-    onKeyDown={busy ? stopActivation : button.onKeyDown}>
+    onClickCapture={busy || unavailable ? stopClick : button.onClickCapture}
+    onKeyDown={busy ? stopActivation : unavailable ? (event: KeyboardEvent<HTMLButtonElement>) => { stopActivation(event); button.onKeyDown?.(event) } : button.onKeyDown}>
     {content(children)}
   </button>
 })

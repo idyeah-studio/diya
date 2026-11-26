@@ -186,7 +186,15 @@ describe('Busy patterns', () => {
     expect(confirm).toHaveBeenCalledOnce()
     expect(submit).not.toHaveBeenCalled()
     expect(step).not.toHaveBeenCalled()
+    // 1.3: while it works the Dialog's Cancel and close button are unavailable and keep focus
+    // (aria-disabled, not disabled).
+    for (const name of ['Cancel', 'Close dialog']) {
+      const button = screen.getByRole('button', { name })
+      expect(button.getAttribute('aria-disabled')).toBe('true')
+      expect(button.hasAttribute('disabled')).toBe(false)
+    }
     await act(async () => finish())
+    expect(screen.queryByRole('dialog')).toBe(null)
   })
 })
 

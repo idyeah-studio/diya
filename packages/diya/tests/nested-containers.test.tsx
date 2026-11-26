@@ -85,8 +85,8 @@ describe('container rules', () => {
         }
         if (parts[index].combinator !== '>') fixed = false
         const anchor = parts[index - 1]?.compound ?? ''
-        // Dialog's heading holds only its own title and description.
-        if (!CONTAINER.test(anchor) || anchor.includes('diya-dialog-heading')) continue
+        // 1.3: Dialog's heading is checked too, since its description can hold your block content.
+        if (!CONTAINER.test(anchor)) continue
         checked++
         const guarded = subject.compound.includes(GUARD)
         // Pinned to the container's own places: every alternative is a parent > child step.
@@ -99,7 +99,8 @@ describe('container rules', () => {
   })
 
   it('pin the surfaces’ own paragraphs where the components render them', () => {
-    const places = pins('.diya-root .diya-workflow-surface p:where(.diya-workflow-surface > *, .diya-workflow-surface > header > *, .diya-drawer-modal > header > div > *, .diya-wizard-body > form > header > *, .diya-upload-drop > *, .diya-content-state > div > *)')
+    // 1.3: Drawer's title and description are its header's own children, as Form's are.
+    const places = pins('.diya-root .diya-workflow-surface p:where(.diya-workflow-surface > *, .diya-workflow-surface > header > *, .diya-wizard-body > form > header > *, .diya-upload-drop > *, .diya-content-state > div > *)')
     const { container } = render(
       <DiyaProvider>
         <Form title="Sign in" description="Use your work email." onSubmit={noop}><span>Fields</span></Form>
@@ -114,7 +115,7 @@ describe('container rules', () => {
     Object.defineProperty(picker, 'files', { configurable: true, value: [new File(['x'], 'notes.txt', { type: 'text/plain' })] })
     fireEvent.change(picker)
     const own = [...container.querySelectorAll('.diya-workflow-surface p')]
-    expect(own.map((node) => node.className || node.textContent)).toEqual(['Use your work email.', 'Edit the project.', 'Start here.', 'PDF or PNG.', 'diya-workflow-error', 'Give your next idea a place to grow.'])
+    expect(own.map((node) => node.className || node.textContent)).toEqual(['Use your work email.', 'diya-drawer-description', 'Start here.', 'PDF or PNG.', 'diya-workflow-error', 'Give your next idea a place to grow.'])
     for (const node of own) expect(places.some((place) => node.matches(place)), node.textContent!).toBe(true)
     // Footers and Wizard's form sit where their child-combinator rules expect them.
     expect(container.querySelector('.diya-project-form > footer')).toBeTruthy()

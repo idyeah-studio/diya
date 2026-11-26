@@ -30,7 +30,7 @@ export type FormProps = Omit<FormHTMLAttributes<HTMLFormElement>, 'title' | 'onS
   submitLabel?: string
   /** Cancel button text; defaults to "Cancel". */
   cancelLabel?: string
-  /** Shows Submit's working indicator, disables Cancel and blocks resubmission; defaults to false. */
+  /** Shows Submit's working indicator, makes Cancel unavailable (it keeps focus) and blocks resubmission; defaults to false. */
   loading?: boolean
 }
 
@@ -39,7 +39,7 @@ export const Form = forwardRef<HTMLFormElement, FormProps>(function Form({ title
   const t = useDiyaMessages('form', formMessages)
   const id = useId()
   const Heading = `h${headingLevel}` as const
-  const footer = actions === undefined ? <>{onCancel && <Button variant="quiet" disabled={loading} onClick={onCancel}>{cancelLabel ?? t.cancel}</Button>}<Button type="submit" loading={loading}>{submitLabel ?? t.submit}</Button></> : actions
+  const footer = actions === undefined ? <>{onCancel && <Button variant="quiet" aria-disabled={loading || undefined} onClick={onCancel}>{cancelLabel ?? t.cancel}</Button>}<Button type="submit" loading={loading}>{submitLabel ?? t.submit}</Button></> : actions
   return <form {...props} ref={ref} className={cx('diya-workflow-surface diya-project-form', className)} aria-labelledby={title ? id : props['aria-labelledby']} aria-busy={loading || undefined} onSubmit={event => { event.preventDefault(); if (!loading) onSubmit(event) }}>
     {(title || description) && <header>{title && <Heading id={id} className="diya-project-form-title">{title}</Heading>}{description && <p>{description}</p>}</header>}
     {children}
