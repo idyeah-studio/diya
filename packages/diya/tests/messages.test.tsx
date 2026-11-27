@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { DatePicker, DiyaProvider, Pagination, Table, Tag, defaultMessages, type DiyaMessagesInput } from '../dist/index.js'
+import { DatePicker, Dialog, DiyaProvider, Pagination, Table, Tag, defaultMessages, type DiyaMessagesInput } from '../dist/index.js'
 
 const columns = [{ key: 'name', label: 'Name', render: (row: { id: string; name: string }) => row.name }]
 
@@ -11,6 +11,20 @@ describe('DiyaProvider messages', () => {
     expect(defaultMessages.pagination.next).toBe('Next')
     expect(defaultMessages.progress.inProgress).toBe('In progress')
     expect(defaultMessages.tag.remove('Paid')).toBe('Remove Paid')
+    expect(defaultMessages.dialog.working).toBe('Working…')
+  })
+
+  it("says Dialog's working message from messages, and loadingLabel wins over it", async () => {
+    const user = userEvent.setup()
+    const polite = () => document.querySelector('dialog .diya-toast-host > [aria-live=polite]')?.textContent ?? ''
+    const never = () => new Promise<void>(() => {})
+    const { unmount } = render(<DiyaProvider messages={{ dialog: { working: 'En cours…' } }}><Dialog title="Supprimer" open onConfirm={never} confirmLabel="Supprimer" /></DiyaProvider>)
+    await user.click(screen.getByRole('button', { name: 'Supprimer' }))
+    await waitFor(() => expect(polite()).toBe('En cours…'), { timeout: 1000 })
+    unmount()
+    render(<DiyaProvider messages={{ dialog: { working: 'En cours…' } }}><Dialog title="Supprimer" open onConfirm={never} confirmLabel="Supprimer" loadingLabel="Suppression…" /></DiyaProvider>)
+    await user.click(screen.getByRole('button', { name: 'Supprimer' }))
+    await waitFor(() => expect(polite()).toBe('Suppression…'), { timeout: 1000 })
   })
 
   it('renders overridden strings and keeps the defaults it was not given', () => {

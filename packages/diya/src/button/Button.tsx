@@ -62,11 +62,14 @@ const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'in
 // Text holds no state, so a label of plain text needn't keep a wrapper at rest (M3).
 const plainText = (node: ReactNode) => Children.toArray(node).every((part) => typeof part === 'string' || typeof part === 'number')
 
-/** A native button in DIYA's styles, or a link that looks like one with `href` or `asChild`; other button attributes pass through, and `type` defaults to 'button'. */
+/** A native button in DIYA's styles, or a link that looks like one with `href` or `asChild`; other button attributes pass through, and `type` defaults to 'button'. With `aria-disabled` (`true` or `"true"`) it's unavailable but keeps focus, unlike `disabled`, with `href` and `asChild` too: it looks unavailable, and clicks, Enter and Space do nothing. */
 export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(function Button(buttonProps, ref) {
   const { variant = 'solid', size = 'medium', shape = 'pill', iconOnly = false, loading = false, disabled, children, className, type = 'button', href, target, rel, download, asChild = false, ...props } = buttonProps
   const Link = useDiyaLinkComponent()
   const inactive = !!disabled || loading
+  // Your own aria-disabled (true or "true") makes it unavailable but focusable, on every path.
+  const isOff = (value: unknown) => value === true || value === 'true'
+  const unavailable = !disabled && !loading && isOff((props as { 'aria-disabled'?: unknown })['aria-disabled'])
   // The label (or icon) fades back when loading ends only if the beat came and hid it: the
   // Button's own spinner arriving (an animation) marks the beat, and the fade back ending clears
   // the mark (L2, M6, M8). A load that ends sooner changes nothing.
@@ -158,7 +161,10 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     // element never takes children, so it never gets the spinner, and keeps its words (P1).
     const bare = own.props.children == null && (!wrapped || (typeof own.type === 'string' && voidTags.has(own.type)))
     const filled = bare ? own : cloneElement(own, undefined, content(own.props.children))
-    return renderSlot(filled, { ...props, ...shared, 'aria-disabled': inactive || undefined, onClickCapture: inactive ? stopClick : undefined, onAuxClickCapture: inactive ? stopClick : undefined }, ref)
+    // Unavailable, set on the Button or on your child: it keeps focus, and clicks (which Enter on a
+    // link or a button goes through) do nothing.
+    const off = inactive || unavailable || isOff((own.props as { 'aria-disabled'?: unknown })['aria-disabled'])
+    return renderSlot(filled, { ...props, ...shared, 'aria-disabled': off || undefined, onClickCapture: off ? stopClick : undefined, onAuxClickCapture: off ? stopClick : undefined }, ref)
   }
   if (href !== undefined) {
     const anchor = props as AnchorHTMLAttributes<HTMLAnchorElement>
@@ -167,20 +173,25 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     // disabled button. Loading: the same Link stays, so nothing in it remounts and focus stays on it,
     // but every click (modified and middle ones too) and Enter do nothing (M7).
     if (disabled) return <a {...anchor} {...shared} ref={anchorRef} role="link" aria-disabled="true" onClickCapture={stopClick}>{content(children)}</a>
+    // Loading, or unavailable through your aria-disabled: the link stays focusable, but every click
+    // (modified and middle ones too) and Enter do nothing.
+    const held = loading || unavailable
     return <Link {...anchor} {...shared} ref={anchorRef} href={href} target={target} rel={rel} download={download}
       aria-disabled={loading ? true : anchor['aria-disabled']}
-      onClickCapture={loading ? stopClick : anchor.onClickCapture}
-      onAuxClickCapture={loading ? stopClick : anchor.onAuxClickCapture}
-      onKeyDown={loading ? (event: KeyboardEvent<HTMLAnchorElement>) => { stopActivation(event); anchor.onKeyDown?.(event) } : anchor.onKeyDown}>{content(children)}</Link>
+      onClickCapture={held ? stopClick : anchor.onClickCapture}
+      onAuxClickCapture={held ? stopClick : anchor.onAuxClickCapture}
+      onKeyDown={held ? (event: KeyboardEvent<HTMLAnchorElement>) => { stopActivation(event); anchor.onKeyDown?.(event) } : anchor.onKeyDown}>{content(children)}</Link>
   }
   // Loading keeps the button in the tab order with focus on it, unlike disabled; aria-disabled and the
   // blocked click (which Enter, Space and a form's implicit submission all go through) make it inert.
   const busy = loading && !disabled
   const button = props as ButtonHTMLAttributes<HTMLButtonElement>
+  // Your own aria-disabled makes it just as inert, so it acts as unavailable as it looks and
+  // announces; it keeps focus, which disabled would drop (Dialog's Cancel while it works).
   return <button {...button} {...shared} ref={ref as Ref<HTMLButtonElement>} type={type} disabled={!!disabled}
     aria-disabled={busy ? true : button['aria-disabled']}
-    onClickCapture={busy ? stopClick : button.onClickCapture}
-    onKeyDown={busy ? stopActivation : button.onKeyDown}>
+    onClickCapture={busy || unavailable ? stopClick : button.onClickCapture}
+    onKeyDown={busy ? stopActivation : unavailable ? (event: KeyboardEvent<HTMLButtonElement>) => { stopActivation(event); button.onKeyDown?.(event) } : button.onKeyDown}>
     {content(children)}
   </button>
 })

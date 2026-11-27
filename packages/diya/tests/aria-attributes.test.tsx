@@ -84,7 +84,9 @@ function Gallery({ children }: { children?: ReactNode }) {
     <Wizard steps={[{ id: 'a', label: 'Details', content: 'One' }, { id: 'b', label: 'Review', content: 'Two' }]} activeStep={0} onStepChange={noop} onComplete={noop} loading />
     <ContentState title="Nothing here" description="Add a project" />
     <Dialog title="Rename" open onOpenChange={noop} onConfirm={noop}>Body</Dialog>
+    <Dialog title="Removing" description={<><p>Its files go too.</p><p>This can't be undone.</p></>} aria-describedby="removing-note" open loading onOpenChange={noop} onConfirm={noop}><p id="removing-note">Billing records stay.</p></Dialog>
     <Drawer title="Details" open onOpenChange={noop}>Body</Drawer>
+    <Drawer title="Saving" description="Your profile." dismissible={false} open onOpenChange={noop}>Body</Drawer>
     {chat()}
     {chat({ layout: 'floating', open: false, onOpenChange: noop })}
     {children}

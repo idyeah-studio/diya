@@ -692,6 +692,96 @@ function DrawerCase() {
   )
 }
 
+// 1.3: a Dialog whose confirm action the test settles (window.__settle), with a note in its body
+// read after the description, and popups inside (popups=1); a Drawer the test locks
+// (window.__setHeld). size=small|medium|large, desc=0 (title only), long=1 (a long description).
+// window.__setLoading sets the Dialog's loading from outside, as an app's own save would.
+const LONG_DESCRIPTION = 'This removes its 14 projects and every file in them. People in the workspace lose access at once, and links you shared stop working.'
+function BusyPopups() {
+  const [combo, setCombo] = useState('')
+  const [date, setDate] = useState('')
+  const [choice, setChoice] = useState('')
+  return (
+    <div style={{ display: 'grid', gap: 12 }}>
+      <Menu label="Workspace actions" items={[{ id: 'm1', label: 'Rename', onSelect: () => clicked('menu') }]} />
+      <Popover label="Workspace filters"><button onClick={() => clicked('popover')}>Inside the popover</button></Popover>
+      <Tooltip content="What removing does"><Button aria-label="About removing">?</Button></Tooltip>
+      <Combobox label="Owner" options={options} value={combo} onValueChange={setCombo} />
+      <DatePicker label="Remove on" value={date} onValueChange={setDate} />
+      <Select label="Region" options={options} value={choice} onValueChange={setChoice} />
+    </div>
+  )
+}
+function BusyCase() {
+  const size = query.get('size') || 'medium'
+  const titleOnly = query.get('desc') === '0'
+  const [loading, setLoading] = useState(false)
+  const [drawer, setDrawer] = useState(query.get('drawer') === '1')
+  const [held, setHeld] = useState(query.get('held') === '1')
+  useEffect(() => { window.__setLoading = setLoading; window.__setHeld = setHeld }, [])
+  const confirm = () => new Promise((resolve, reject) => { note('confirm'); window.__settle = { resolve, reject } })
+  return (
+    <div style={{ display: 'flex', gap: 16, padding: 24 }}>
+      <Dialog trigger={<Button id="open-busy">Remove workspace</Button>} size={size} title="Remove this workspace?"
+        description={titleOnly ? undefined : query.get('desc') === 'fill' ? 'Members of this workspace lose access right away, and links you shared stop working at once.' : LONG_DESCRIPTION} aria-describedby="busy-note" loading={loading}
+        confirmLabel="Remove workspace" confirmVariant="destructive" onConfirm={confirm}
+        footer={query.get('perm') === '1' ? <><Button id="perm-dialog" variant="outline" aria-disabled>Publish</Button><Button variant="quiet" aria-disabled={loading}>Cancel</Button><Button loading={loading}>Save</Button></> : undefined}
+        onDismiss={() => note('dismiss')} onOpenChange={(next) => note('open', next)}>
+        <p id="busy-note" style={{ margin: 0 }}>Billing records stay for seven years, as the law requires.</p>
+        {query.get('popups') === '1' && <BusyPopups />}
+      </Dialog>
+      <Button id="open-drawer" onClick={() => setDrawer(true)}>Edit profile</Button>
+      <Drawer open={drawer} onOpenChange={(next) => { note('drawer', next); setDrawer(next) }} dismissible={!held} title="Edit profile"
+        description={titleOnly ? undefined : query.get('desc') === 'fill' ? 'Everyone at your company can see this profile, including people who join after today, so keep it current.' : 'Everyone at your company can see this, including people who join after today, so keep it current.'} aria-describedby="drawer-note"
+        footer={<>{query.get('perm') === '1' && <Button id="perm-drawer" variant="outline" aria-disabled>Publish</Button>}<Button variant="quiet" aria-disabled={held} onClick={() => setDrawer(false)}>Cancel</Button><Button loading={held}>Save changes</Button></>}>
+        <p id="drawer-note" style={{ margin: 0 }}>Your manager sees changes to your role first.</p>
+      </Drawer>
+    </div>
+  )
+}
+
+// 1.3: a long Dialog (title, a two-line description, a paragraph, two fields, a note), open from
+// the start. divided=1 draws the line above the buttons; text=1 makes the body text only (nothing
+// focusable); short=1 makes it fit. window.__settle settles its confirm; window.__showAlert adds an
+// app's own alert at the top of the body.
+const LONG_BODY = 'Moving a workspace changes its address, so links people saved stop working until they are updated. Members keep their roles, files and history. Billing moves with the workspace, and the next invoice goes to the new owner.'
+function LongCase() {
+  const [alert, setAlert] = useState(false)
+  const [region, setRegion] = useState('a')
+  useEffect(() => { window.__showAlert = () => setAlert(true) }, [])
+  const text = query.get('text') === '1'
+  const short = query.get('short') === '1'
+  const confirm = () => new Promise((resolve, reject) => { note('confirm'); window.__settle = { resolve, reject } })
+  return (
+    <div style={{ padding: 24 }}>
+      <Dialog open title="Move this workspace?" divided={query.get('divided') === '1'} showClose={query.get('close') !== '0'}
+        description={short ? 'It keeps its members and files.' : 'Everything in it moves to the new owner’s account, and people with access are told by email.'}
+        confirmLabel="Move workspace" onConfirm={confirm}>
+        {alert && <diya.Alert tone="error" title="The new owner’s account is full" urgent>Ask them to free up space, then try again.</diya.Alert>}
+        {!short && <p style={{ margin: 0 }}>{LONG_BODY}</p>}
+        {!short && !text && <TextInput label="New owner’s email" defaultValue="" />}
+        {!short && !text && <Select label="Region" options={options} value={region} onValueChange={setRegion} />}
+        {!short && text && <p style={{ margin: 0 }}>{LONG_BODY}</p>}
+        {!short && text && <p style={{ margin: 0 }}>{LONG_BODY}</p>}
+        {!short && <p id="long-note" style={{ margin: 0 }}>You can move it back within 30 days.</p>}
+      </Dialog>
+    </div>
+  )
+}
+// 1.3: Buttons made unavailable with aria-disabled, as a link (href) and as your own element
+// (asChild), plus each variant focused from the keyboard. Clicks land in window.__clicked.
+function UnavailableCase() {
+  return (
+    <div style={{ display: 'flex', gap: 16, padding: 32, flexWrap: 'wrap' }}>
+      <Button id="u-href" href="#went-href" aria-disabled onClick={() => clicked('href')}>Billing</Button>
+      <Button id="u-child" asChild aria-disabled onClick={() => clicked('child')}><a href="#went-child">Reports</a></Button>
+      {['solid', 'outline', 'quiet', 'destructive'].map((variant) => <Button key={variant} id={`u-${variant}`} variant={variant} aria-disabled>{variant}</Button>)}
+      <Button id="u-app" variant="quiet" className="app-teal" aria-disabled>Cancel</Button>
+      <Button id="u-app-inline" style={{ background: '#0f766e', color: '#fff' }} aria-disabled>Inline</Button>
+    </div>
+  )
+}
+
 // Choice and Checkbox at every size (1.2 step 9): checked boxes, a mixed Checkbox and a mixed
 // Select all in each size's row.
 function MarksCase() {
@@ -772,10 +862,10 @@ function SignInRhfCase() {
   )
 }
 
-const cases = { signin: SignInCase, 'signin-rhf': SignInRhfCase, rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
+const cases = { busy: BusyCase, long: LongCase, unavailable: UnavailableCase, signin: SignInCase, 'signin-rhf': SignInRhfCase, rhf: RhfCase, marks: MarksCase, drawer: DrawerCase, heights: HeightsCase, spinner: SpinnerCase, loading: LoadingCase, checkbox: CheckboxCase, providers: ProvidersCase, field: FieldCase, buttons: Buttons, tips: Tips, tabs: TabsCase, accordion: AccordionCase, overlays: Overlays, theme: ThemeCase, progress: ProgressCase, popups: Popups, toast: ToastHost, tokens: Tokens, stack: StackCase, toasts: ToastsCase, probe: ProbeCase }
 const Case = cases[which]
 const style = document.createElement('style')
-style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; } @keyframes app-pulse { 50% { opacity: 0.5; } } .app-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @layer utilities { .animate-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } .bg-violet-600 { background-color: #7c3aed; } .text-white { color: #fff; } .transition-colors { transition-property: color, background-color, border-color; transition-duration: 150ms; } }'
+style.textContent = '.classbg { background: rgb(220 38 38); color: white; } .app-teal { background: #0f766e; color: #fff; } .app-pad { padding: 0 14px; } .app-pad-wide { padding: 0 32px; } .app-pad-10 { padding-inline: 10px; } .app-pad-12 { padding-inline: 12px; } .app-pad-16 { padding-inline: 16px; } @keyframes app-pulse { 50% { opacity: 0.5; } } .app-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @layer utilities { .animate-pulse { animation: app-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } .bg-violet-600 { background-color: #7c3aed; } .text-white { color: #fff; } .transition-colors { transition-property: color, background-color, border-color; transition-duration: 150ms; } }'
 document.head.append(style)
 document.documentElement.dataset.react = version
 const app = which === 'theme' || (which === 'tokens' && query.get('outer') === '1')

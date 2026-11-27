@@ -291,7 +291,8 @@ as its options.
 
 **Which "working" to use.** Ask these in order and stop at the first yes:
 
-1. A button started it: Button `loading`.
+1. A button started it: Button `loading`. A confirm in a Dialog: Dialog
+   `loading`, or a Promise from `onConfirm`.
 2. You know how far along: Progress with a `value`.
 3. You know the layout: show its shape with placeholders.
 4. The whole view waits: circular Progress, large, with words.
@@ -411,6 +412,13 @@ not communicate status. Icon-only buttons need their own `aria-label`.
   element, pass `loading` from the start (`loading={false}`). In tests, find
   it by role: `getByRole('button', { name: 'Save', busy: true })`. `disabled`
   sets the native attribute and takes the button out of the tab order.
+  `aria-disabled` on a Button makes it unavailable but focusable, with `href`
+  and `asChild` too: it looks unavailable, and clicks, Enter and Space do
+  nothing. In DIYA's own colors its focus ring keeps full strength. A Button
+  with your own classes or inline colors dims as a whole, ring included, so
+  it never looks available while it has focus. Use it when focus may
+  be on the button as it becomes unavailable, such as a Cancel while its form
+  saves.
 - **Icons:** any React icon can go in an icon slot. Give icon-only buttons an
   `aria-label`, and hide decorative SVGs from assistive technology.
 - **Slots:** omitted Page Header and Card slots collapse. Put real controls in

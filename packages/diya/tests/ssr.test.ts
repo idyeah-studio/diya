@@ -51,6 +51,29 @@ it('server-renders List marks, Side Navigation counts and a full-page Chatbot', 
   expect(html).toContain('data-presentation="full-page"')
 })
 
+// 1.3: dismissible, loading and a block description render on the server, with nothing for the
+// browser to fix up: the description's id in aria-describedby before yours, the unavailable
+// close and dismiss buttons marked, and no paragraph inside a paragraph.
+it('server-renders a working Dialog with a block description and a Drawer that can\'t be dismissed', () => {
+  const html = renderToString(createElement(core.DiyaProvider, null,
+    createElement(core.Dialog, { title: 'Remove this workspace?', open: true, loading: true, onConfirm: () => {}, confirmLabel: 'Remove', 'aria-describedby': 'note',
+      description: [createElement('p', { key: 'a' }, 'Its projects go too.'), createElement('p', { key: 'b' }, 'Billing records stay.')] }, createElement('p', { id: 'note' }, 'Seven years.')),
+    createElement(core.Dialog, { title: 'Terms', dismissible: false, description: 'Read them first.' }),
+    createElement(core.Drawer, { title: 'Edit profile', open: false, onOpenChange: () => {}, dismissible: false, description: 'Everyone can see this.' }, 'Body'),
+  ))
+  expect(html).toMatch(/<div id="([^"]+)-description" class="diya-dialog-description"><p>Its projects go too.<\/p><p>Billing records stay.<\/p><\/div>/)
+  const id = /<div id="([^"]+)-description" class="diya-dialog-description">/.exec(html)![1]
+  expect(html).toContain(`aria-describedby="${id}-description note"`)
+  expect(html).toContain('<p id="' + /id="([^"]+)-description" class="diya-dialog-description">Read them first./.exec(html)![1] + '-description" class="diya-dialog-description">Read them first.</p>')
+  expect(html.match(/class="diya-dialog-close" aria-label="Close dialog" aria-disabled="true"/g)).toHaveLength(2)
+  expect(html).toMatch(/aria-disabled="true"[^>]*>Cancel<\/button>/)
+  expect(html).toContain('data-busy="true"')
+  expect(html).toMatch(/class="diya-drawer-description">Everyone can see this.<\/p>/)
+  expect(html).toMatch(/aria-label="Close drawer" aria-disabled="true"/)
+  expect(html).not.toMatch(/<p[ >](?:(?!<\/p>).)*<p[ >]/)
+  expect(html).not.toContain('dismissible')
+})
+
 it('renders the motion setting on every provider; a nested provider inherits it', () => {
   const motion = (html: string) => [...html.matchAll(/class="diya-root"[^>]*?data-motion="(\w+)"/g)].map(match => match[1])
   expect(motion(renderToString(createElement(core.DiyaProvider, null, 'Text')))).toEqual(['system'])
@@ -97,7 +120,14 @@ it('provider server markup matches 1.1.1', async () => {
     // (it's centered, so its place doesn't show), so the ring maps back to the dots before them.
     const dots = '<span class="diya-button-progress" aria-hidden="true">···</span>'
     const changed1_2 = (markup: string) => markup.split(`${ring}`).join('\u0000').replace(/>([^<\u0000]*)\u0000/g, `>${dots}$1`).split('\u0000').join(dots).replace(/<span class="diya-button-label">([^<]*)<\/span>/g, '$1').replace(/ data-busy-turn="a"/g, '')
-    expect(Object.fromEntries(Object.entries(html).map(([name, markup]) => [name, changed1_2(markup)])))
+    // 1.3 (named edit): Dialog's and Drawer's close buttons sit in the title row only, so the title
+    // (and the description, when there is one) no longer has a wrapper of its own.
+    const changed1_3 = (markup: string) => markup
+      .replace(/(<div class="diya-dialog-heading">)(<h[1-6] [^>]*class="diya-dialog-title">[^<]*<\/h[1-6]>)/g, '$1<div>$2</div>')
+      .replace(/(<header>)(<h[1-6] [^>]*class="diya-drawer-title">[^<]*<\/h[1-6]>)/g, '$1<div>$2</div>')
+      // The body scrolls between the pinned title row and the buttons.
+      .replace(/<div class="diya-dialog-scroll">(<div class="diya-dialog-content">[^<]*<\/div>)<\/div>/g, '$1')
+    expect(Object.fromEntries(Object.entries(html).map(([name, markup]) => [name, changed1_2(changed1_3(markup))])))
       .toEqual(JSON.parse(readFileSync(resolve(process.cwd(), 'tests/fixtures/provider-ssr-1.1.1.json'), 'utf8'))[version])
   }
 })

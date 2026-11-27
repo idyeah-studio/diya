@@ -37,7 +37,7 @@ export type WizardProps = Omit<HTMLAttributes<HTMLElement>, 'children'> & {
   orientation?: 'horizontal' | 'vertical'
   /** Shows "Step N of M" above the buttons; defaults to true. */
   showStepCount?: boolean
-  /** Shows the forward button's working indicator and blocks navigation; defaults to false. */
+  /** Shows the forward button's working indicator and blocks navigation; Back is unavailable but keeps focus. Defaults to false. */
   loading?: boolean
   /** Accessible name for the whole wizard (not shown); defaults to "Wizard". */
   label?: string
@@ -75,7 +75,7 @@ export const Wizard = forwardRef<HTMLElement, WizardProps>(function Wizard({ ste
       <header><Heading ref={heading} tabIndex={-1} className="diya-wizard-title">{step.title ?? step.label}</Heading>{step.description && <p>{step.description}</p>}</header>
       {step.content}
       {showStepCount && <small className="diya-wizard-summary">{t.step(index + 1, steps.length)}</small>}
-      <footer><Button variant="quiet" disabled={index === 0 || loading} onClick={() => onStepChange(index - 1)}>{backLabel ?? t.back}</Button><Button type="submit" loading={loading}>{last ? completeLabel ?? t.complete : nextLabel ?? t.next}</Button></footer>
+      <footer><Button variant="quiet" disabled={index === 0} aria-disabled={(index > 0 && loading) || undefined} onClick={() => onStepChange(index - 1)}>{backLabel ?? t.back}</Button><Button type="submit" loading={loading}>{last ? completeLabel ?? t.complete : nextLabel ?? t.next}</Button></footer>
     </form></div>
   </section>
 })
