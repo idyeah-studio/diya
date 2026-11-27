@@ -17,7 +17,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState, type ReactNode } from 'react'
 import { useAppearance, type Theme } from '../../app/Appearance'
-import { GLAMA_LISTING, MCP_PATH } from '../community/links'
+import { GLAMA_BADGE, GLAMA_LISTING, MCP_PATH } from '../community/links'
 
 /** The parts sheet: eleven working components under a nested provider, so its
     Finish control re-themes the sheet and nothing else on the page. `components`
@@ -40,6 +40,11 @@ export function PartsSheet({ components, patterns }: { components: number; patte
             DIYA up while it writes. It’s also listed on{' '}
             <a href={GLAMA_LISTING} target="_blank" rel="noopener">Glama</a>.
           </p>
+          {/* Glama's own badge, served by Glama (the privacy page says so). Drawn at 1.3× its 110×20 so its words
+              read at 14px; no referrer is sent with the request. */}
+          <a className="ld-badge" href={GLAMA_LISTING} target="_blank" rel="noopener">
+            <img src={GLAMA_BADGE} alt="DIYA’s MCP connector and its score on Glama" width={143} height={26} loading="lazy" decoding="async" referrerPolicy="no-referrer" />
+          </a>
         </div>
         <div className="ld-finish" role="group" aria-label="Finish of the sheet below">
           {(['light', 'dark'] as const).map((value) => (

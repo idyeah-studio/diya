@@ -128,6 +128,26 @@ describe('/mcp is reachable', () => {
       expect(readFileSync(join(__dirname, '..', file), 'utf8'), file).not.toMatch(/<Link[^>]*MCP_PATH/)
     expect(line.textContent).not.toMatch(/Screens?|Skills?|↗/)
   })
+
+  it('shows Glama’s badge under that line, linked to the listing, large enough to read, with no referrer', () => {
+    const { container } = render(
+      <Themed>
+        <PartsSheet components={33} patterns={13} />
+      </Themed>
+    )
+    const badge = container.querySelector('.ld-sub-head a.ld-badge')!
+    expect(badge.getAttribute('href')).toBe('https://glama.ai/mcp/connectors/ai.diya13/diya')
+    expect(badge.getAttribute('target')).toBe('_blank')
+    const img = badge.querySelector('img')!
+    expect(img.getAttribute('src')).toBe('https://glama.ai/mcp/connectors/ai.diya13/diya/badges/score.svg')
+    expect(img.getAttribute('alt')).toBe('DIYA’s MCP connector and its score on Glama')
+    // Glama draws it 110×20 with 11px words; at 1.3× they read at 14px.
+    expect(Number(img.getAttribute('height'))).toBeGreaterThanOrEqual(26)
+    expect(Number(img.getAttribute('width')) / Number(img.getAttribute('height'))).toBeCloseTo(110 / 20, 1)
+    expect(img.getAttribute('referrerpolicy')).toBe('no-referrer')
+    // The privacy page says where the picture comes from.
+    expect(readFileSync(join(__dirname, '..', 'app/privacy/page.tsx'), 'utf8')).toMatch(/served by Glama/)
+  })
 })
 
 describe('each launched page has its own description and share card', () => {

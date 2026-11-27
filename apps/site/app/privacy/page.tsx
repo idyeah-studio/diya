@@ -261,6 +261,11 @@ export default async function Privacy() {
           reach zero.
         </li>
       </ul>
+      <p>
+        One picture on the home page comes from another company: the badge for DIYA’s MCP connector is served by Glama,
+        a directory of MCP servers. To show it, your browser asks Glama for the image, as it would for any picture, so
+        Glama sees that request (your IP address and browser). We don’t tell Glama which page you were on.
+      </p>
       <p>None of these leave your browser. Clearing this site’s data removes them.</p>
       <p>
         If you connect your editor to DIYA’s MCP server, we count the words it searches for, such as “date range picker”,

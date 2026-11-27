@@ -296,6 +296,8 @@
 .ld-made-of.ld-real { font-size: 15px; }
 .ld-real a { color: var(--diya-color-text); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 4px; border-radius: 4px; }
 .ld-real a:hover { text-decoration-color: currentColor; }
+.ld-badge { display: inline-block; margin-top: 12px; line-height: 0; border-radius: 4px; }
+.ld-badge img { display: block; }
 /* The link's two words stay together on a narrow phone. */
 .ld-sub-head .ld-real a { white-space: nowrap; }
 .ld-real a:focus-visible { outline: 2px solid var(--diya-color-text); outline-offset: 2px; }

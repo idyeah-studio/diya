@@ -120,6 +120,8 @@ Then ask it: "Build a settings page with DIYA." Prefer files?
 carry the same API. The connector is also listed on
 [Glama](https://glama.ai/mcp/connectors/ai.diya13/diya).
 
+[![DIYA MCP connector](https://glama.ai/mcp/connectors/ai.diya13/diya/badges/score.svg)](https://glama.ai/mcp/connectors/ai.diya13/diya)
+
 ## Notes for your coding agent
 
 Apps made with `npm create diya` come with an `AGENTS.md` (and a one-line
