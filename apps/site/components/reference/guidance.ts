@@ -164,7 +164,7 @@ export const guidance: Record<ItemId, Guidance> = {
   },
   popover: {
     use: 'For a small panel of controls beside a button: display preferences, a quick filter.',
-    instead: 'A decision that blocks the page? Dialog. A list of actions? Menu.',
+    instead: 'A decision that blocks the page, or an action that can’t be undone? Dialog. A list of actions? Menu.',
     access: 'Opens from a button with `aria-expanded`. Tab moves through the panel’s content, and closing returns focus to the button.',
   },
   'page-header': {
@@ -217,12 +217,12 @@ export const guidance: Record<ItemId, Guidance> = {
   dialog: {
     use: 'For a short task or decision that has to happen before going on: confirm, rename, a quick form.',
     instead: 'Longer content or a side task? Drawer.',
-    access: 'A modal dialog named by its title. Focus moves in, stays in, and returns to what opened it; Escape closes it.',
+    access: 'A modal dialog named by its title. Focus moves in, stays in, and returns to what opened it; Escape closes it, except while its confirm action runs; then Cancel and the close button are unavailable.',
   },
   drawer: {
     use: 'For a side task with more room than a dialog: details, filters, an edit form.',
     instead: 'A quick yes or no? Dialog.',
-    access: 'Modal like Dialog: named by its title, traps focus, closes with Escape and returns focus.',
+    access: 'Modal like Dialog: named by its title, traps focus, closes with Escape and returns focus. While its own work runs, `dismissible={false}` keeps it open and makes the close button unavailable.',
   },
   'empty-state': {
     use: 'For a region with nothing to show yet, no results, or an error, with the next step.',

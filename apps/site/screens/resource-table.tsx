@@ -376,12 +376,13 @@ function OrderDrawer({ order, onClose, onSaved }: { order?: Order; onClose: () =
     <Drawer
       open={!!order}
       onOpenChange={(next) => !next && onClose()}
+      dismissible={!busy}
       headingLevel={2}
       title={order ? `Order #${order.number}` : 'Order'}
       description={order ? `Placed ${placedAt(order.placed)}` : undefined}
       footer={order && (editing ? (
         <Inline gap={2} justify="end">
-          <Button variant="quiet" onClick={() => setEditing(false)}>Cancel</Button>
+          <Button variant="quiet" aria-disabled={busy} onClick={() => setEditing(false)}>Cancel</Button>
           <Button loading={busy} onClick={save}>Save changes</Button>
         </Inline>
       ) : (

@@ -301,11 +301,11 @@ function TaskDrawer({ task, onClose, onSave, onDelete }: EditProps & { onDelete:
     if (await form.submit(onSave)) onClose()
   }
   return (
-    <Drawer open={!!task} onOpenChange={(open) => !open && onClose()} title="Task details"
+    <Drawer open={!!task} onOpenChange={(open) => !open && onClose()} dismissible={!form.busy} title="Task details"
       description={task ? `${label(task.status)}${overdue(task) ? ', overdue' : ''}` : undefined}
       footer={
         <div className="task-list-drawer-actions">
-          <Button variant="quiet" onClick={() => task && onDelete(task)}><Trash2 /> Delete</Button>
+          <Button variant="quiet" aria-disabled={form.busy} onClick={() => task && onDelete(task)}><Trash2 /> Delete</Button>
           <Button loading={form.busy} onClick={save}>Save changes</Button>
         </div>
       }>

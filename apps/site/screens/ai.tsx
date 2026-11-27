@@ -395,9 +395,10 @@ function RenameDialog(props: { open: boolean; title: string; onClose: () => void
       onDismiss={cancel}
       size="small"
       title="Rename chat"
+      loading={busy}
       footer={
         <>
-          <Button variant="quiet" onClick={cancel}>Cancel</Button>
+          <Button variant="quiet" aria-disabled={busy} onClick={cancel}>Cancel</Button>
           <Button type="submit" form={form} loading={busy}>Save</Button>
         </>
       }
